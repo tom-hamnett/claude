@@ -11,6 +11,7 @@ Usage:
     python main.py gate            Run stage gate review
     python main.py report          Generate weekly report
     python main.py init-db         Initialise the database
+    python main.py prefill         Pre-fill brief from known product context
     python main.py status          Show engine status
     python main.py ui              Launch Streamlit dashboard
     python main.py pipeline        Run full pipeline: strategy -> content -> deploy
@@ -212,8 +213,14 @@ def cmd_ui():
     ])
 
 
+def cmd_prefill():
+    from gtm_engine.discovery.prefill import save_brief
+    save_brief()
+
+
 COMMANDS = {
     "discover": cmd_discover,
+    "prefill": cmd_prefill,
     "strategy": cmd_strategy,
     "content": cmd_content,
     "deploy": cmd_deploy,

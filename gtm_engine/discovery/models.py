@@ -15,6 +15,8 @@ class ProductInfo(BaseModel):
     key_features: list[str] = Field(default_factory=list)
     pricing_model: str = ""
     white_label_potential: str = ""
+    target_users: list[str] = Field(default_factory=list)
+    positioning: str = ""
 
 
 class FounderInfo(BaseModel):
@@ -72,7 +74,9 @@ class ChannelPreferences(BaseModel):
 class GTMBrief(BaseModel):
     """The master context object. Every downstream decision traces back here."""
     version: str = "1.0"
-    product: ProductInfo = Field(default_factory=ProductInfo)
+    umbrella_brand: str = ""  # Overarching brand positioning across all products
+    product: ProductInfo = Field(default_factory=ProductInfo)  # Primary/umbrella product
+    products: list[ProductInfo] = Field(default_factory=list)  # Individual products in portfolio
     founder: FounderInfo = Field(default_factory=FounderInfo)
     market: MarketInfo = Field(default_factory=MarketInfo)
     competition: CompetitionInfo = Field(default_factory=CompetitionInfo)
