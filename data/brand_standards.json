@@ -1,0 +1,124 @@
+{
+  "voice": {
+    "tone_descriptors": [
+      "sharp",
+      "transparent",
+      "authoritative",
+      "anti-guru",
+      "confident without arrogance",
+      "calm",
+      "direct",
+      "precise"
+    ],
+    "forbidden_phrases": [
+      "game-changer",
+      "revolutionary",
+      "unlock your potential",
+      "disruptive",
+      "innovative",
+      "cutting-edge",
+      "best-in-class",
+      "synergy",
+      "leverage",
+      "paradigm shift",
+      "thought leader",
+      "circle back",
+      "deep dive into"
+    ],
+    "vocabulary_level": "Write up. Assume intelligent, sophisticated reader. Never condescend.",
+    "sentence_style": "Short and punchy by default. Considered and layered for long-form.",
+    "philosophy": "Teach, demonstrate, make them reach for it. Never sell. Never push."
+  },
+  "edginess": {
+    "level": 8,
+    "principles": {
+      "say_the_uncomfortable_thing": {
+        "weight": "high",
+        "description": "Find the market truth everyone knows but nobody says, and say it first."
+      },
+      "show_your_work": {
+        "weight": "high",
+        "description": "Transparency about methodology is more disruptive than any bold claim."
+      },
+      "have_a_point_of_view": {
+        "weight": "high",
+        "description": "Every piece must contain a clear, arguable perspective."
+      },
+      "punch_at_the_category": {
+        "weight": "medium",
+        "description": "Challenge the old way of doing things. Never name competitors."
+      },
+      "respect_the_reader": {
+        "weight": "high",
+        "description": "Write up. Assume sophistication. Never condescend."
+      }
+    },
+    "category_norms_to_break": [
+      "Professional tools should be enterprise-priced and enterprise-sold",
+      "Workforce data should be priced per record, scaling with company size",
+      "AI outputs should look confident even when fabricated",
+      "Consulting methodology should be a black box that justifies opacity",
+      "PMO tools should require weeks of configuration before delivering value",
+      "Trading education should come from gurus who claim to never lose"
+    ],
+    "topics_requiring_approval": [
+      "Named companies in critical context",
+      "Legal or financial claims",
+      "Specific return figures for ATLAS",
+      "Client case studies (even anonymised)"
+    ]
+  },
+  "visual": {
+    "colours": {
+      "background": "#0a0a0f",
+      "primary_accent": "#6c63ff",
+      "hot_accent": "#ff6b6b",
+      "gold_accent": "#ffd166",
+      "text": "#e8e8f0",
+      "muted": "#8888a0"
+    },
+    "typography": {
+      "headings": "Playfair Display",
+      "body": "DM Sans"
+    },
+    "image_style": "Data visualisation and clean diagrams over stock photography. Dark backgrounds.",
+    "video_aesthetic": "Talking head with data overlay. Clean B-roll of screens and dashboards. On-screen text for key stats. No flashy transitions."
+  },
+  "content_standards": {
+    "minimum_word_count": {
+      "long_form_article": 800,
+      "substack_post": 600,
+      "linkedin_post": 100,
+      "email": 150,
+      "reddit_post": 200
+    },
+    "cta_standards": {
+      "linkedin": "Soft question or discussion prompt. Never 'sign up now'.",
+      "reddit": "No CTA. Value only. Link in profile if asked.",
+      "email": "Single clear action. Never multiple CTAs.",
+      "substack": "Reply to this email. Or: early access mention, understated.",
+      "twitter": "Thread ends with perspective, not pitch."
+    },
+    "disclosure_requirements": [
+      "ATLAS: 'This is a research tool, not financial advice' on all trading content",
+      "AI-generated content: No disclosure required (it's our methodology, not a deception)",
+      "Data sources: Always cite when using public data",
+      "Affiliate/sponsored: Not applicable (no paid promotion model)"
+    ]
+  },
+  "approval_workflow": {
+    "auto_approve": "Content above quality threshold passing benchmark check",
+    "flag_for_review": [
+      "Content below quality threshold",
+      "High-stakes channels (Hacker News, Product Hunt)",
+      "Boosted Instagram/TikTok posts",
+      "Content referencing specific companies critically"
+    ],
+    "always_require_approval": [
+      "Named companies in negative context",
+      "Legal or financial claims",
+      "Content claiming specific returns or outcomes",
+      "White-label partner communications"
+    ]
+  }
+}

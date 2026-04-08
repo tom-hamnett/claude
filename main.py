@@ -1,20 +1,25 @@
-"""GTM Intelligence Engine — Main entry point.
+"""GTM Intelligence Engine — Quantum Tools
 
 Usage:
-    python main.py discover        Run the discovery interview (CLI)
-    python main.py strategy        Generate strategy from existing brief
-    python main.py content         Generate content batch
-    python main.py deploy          Run deployment cycle (dry run)
-    python main.py deploy --live   Run deployment cycle (auto-publish)
-    python main.py metrics         Collect performance metrics
-    python main.py feedback        Run reprioritisation analysis
-    python main.py gate            Run stage gate review
-    python main.py report          Generate weekly report
-    python main.py init-db         Initialise the database
-    python main.py prefill         Pre-fill brief from known product context
-    python main.py status          Show engine status
-    python main.py ui              Launch Streamlit dashboard
-    python main.py pipeline        Run full pipeline: strategy -> content -> deploy
+    python main.py prefill              Pre-fill brief from Quantum Tools portfolio
+    python main.py discover             Run the discovery interview (CLI)
+    python main.py strategy             Generate strategy from existing brief
+    python main.py brand                Initialise brand standards (Layer 8)
+    python main.py import-ma001         Import The Consultancy Death Spiral (MA-001)
+    python main.py master-asset <topic> Generate a new master asset
+    python main.py derivatives <MA-ID>  Generate ALL derivatives from a master asset
+    python main.py content [N]          Generate content batch (old-style, N pieces)
+    python main.py signal               Live intelligence feed (submit signals)
+    python main.py deploy               Run deployment cycle (dry run)
+    python main.py deploy --live        Run deployment cycle (auto-publish)
+    python main.py metrics              Collect performance metrics
+    python main.py feedback             Run reprioritisation analysis
+    python main.py gate                 Run stage gate review
+    python main.py report               Generate weekly report
+    python main.py init-db              Initialise the database
+    python main.py status               Show engine status
+    python main.py ui                   Launch Streamlit dashboard
+    python main.py pipeline             Run full pipeline
 """
 
 import sys
@@ -218,11 +223,90 @@ def cmd_prefill():
     save_brief()
 
 
+def cmd_brand():
+    from gtm_engine.brand import init_brand_standards, load_brand_standards
+    standards = init_brand_standards()
+    print("Brand standards initialised.")
+    print(f"  Edginess level: {standards['edginess']['level']}/10")
+    print(f"  Forbidden phrases: {len(standards['voice']['forbidden_phrases'])}")
+    print(f"  Visual palette: {standards['visual']['colours']['primary_accent']}")
+
+
+def cmd_import_ma001():
+    """Import the existing master asset MA-001 from disk."""
+    from gtm_engine.content_factory.master_asset import import_existing_master_asset
+    from gtm_engine.config import DATA_DIR
+    from pathlib import Path
+
+    # Check multiple possible locations
+    candidates = [
+        DATA_DIR / "master_asset_001.md",
+        Path("gtm_engine/data/master_asset_001.md"),
+    ]
+    for path in candidates:
+        if path.exists():
+            asset = import_existing_master_asset(path, "MA-001")
+            print(f"Imported: {asset['id']} — {asset['title']}")
+            print(f"Status: {asset['status']}")
+            return
+    print("master_asset_001.md not found. Looked in:", [str(p) for p in candidates])
+
+
+def cmd_master_asset():
+    """Generate a new master asset from a topic."""
+    from gtm_engine.content_factory.master_asset import generate_master_asset
+    brief = _load_brief()
+    strategy = _load_strategy()
+    topic = " ".join(sys.argv[2:]) if len(sys.argv) > 2 else None
+    if not topic:
+        print("Usage: python main.py master-asset <topic>")
+        sys.exit(1)
+    asset = generate_master_asset(topic, brief, strategy)
+    print(f"\nMaster Asset: {asset['id']} — {asset['title']}")
+    print(f"Status: {asset['status']} (benchmark score: {asset.get('benchmark_result', {}).get('score', 'N/A')})")
+
+
+def cmd_derivatives():
+    """Generate all derivatives from a master asset."""
+    from gtm_engine.content_factory.master_asset import load_master_asset, list_master_assets
+    from gtm_engine.content_factory.derivatives import generate_all_derivatives
+
+    asset_id = sys.argv[2] if len(sys.argv) > 2 else None
+    if not asset_id:
+        assets = list_master_assets()
+        if not assets:
+            print("No master assets. Run 'python main.py import-ma001' or 'python main.py master-asset <topic>'")
+            sys.exit(1)
+        print("Available master assets:")
+        for a in assets:
+            print(f"  {a['id']}: {a['title']} ({a['status']})")
+        print(f"\nUsage: python main.py derivatives <asset_id>")
+        sys.exit(1)
+
+    asset = load_master_asset(asset_id)
+    print(f"Generating ALL derivatives from {asset_id}: {asset['title']}")
+    derivatives = generate_all_derivatives(asset)
+    print(f"\nGenerated {len(derivatives)} derivatives:")
+    for d in derivatives:
+        print(f"  [{d['provider']}] {d['format']}: {d['id']} ({d['status']})")
+
+
+def cmd_signal():
+    """Submit a live intelligence signal."""
+    from gtm_engine.intelligence import run_cli_signal_input
+    run_cli_signal_input()
+
+
 COMMANDS = {
     "discover": cmd_discover,
     "prefill": cmd_prefill,
     "strategy": cmd_strategy,
+    "brand": cmd_brand,
+    "import-ma001": cmd_import_ma001,
+    "master-asset": cmd_master_asset,
+    "derivatives": cmd_derivatives,
     "content": cmd_content,
+    "signal": cmd_signal,
     "deploy": cmd_deploy,
     "metrics": cmd_metrics,
     "feedback": cmd_feedback,
