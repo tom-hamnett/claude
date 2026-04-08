@@ -2,32 +2,39 @@
 
 Every strategic decision is structured so downstream layers can consume it
 programmatically, and every decision carries its reasoning for auditability.
+
+All models use populate_by_name=True and extra="ignore" so that slight
+field name variations from Claude API responses don't crash parsing.
 """
 
 from pydantic import BaseModel, ConfigDict, Field
 
+# Shared config: accept aliases AND original names, ignore extra fields
+_TOLERANT = ConfigDict(populate_by_name=True, extra="ignore")
+
 
 class SegmentProfile(BaseModel):
     """A single customer segment with priority ranking and reasoning."""
-    name: str
-    description: str
-    priority_rank: int
+    model_config = _TOLERANT
+    name: str = ""
+    description: str = ""
+    priority_rank: int = 0
     estimated_tam: str = ""
     pain_points: list[str] = Field(default_factory=list)
     buying_triggers: list[str] = Field(default_factory=list)
     objections: list[str] = Field(default_factory=list)
     channels_they_use: list[str] = Field(default_factory=list)
     willingness_to_pay: str = ""
-    reasoning: str = ""  # Why this segment, why this rank
+    reasoning: str = ""
 
 
 class PositioningStatement(BaseModel):
     """Positioning tailored to a specific segment."""
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = _TOLERANT
     segment_name: str = Field(default="", alias="segment")
-    headline: str
-    subheadline: str
-    value_proposition: str
+    headline: str = ""
+    subheadline: str = ""
+    value_proposition: str = ""
     proof_points: list[str] = Field(default_factory=list)
     differentiation: str = ""
     emotional_hook: str = ""
@@ -36,23 +43,25 @@ class PositioningStatement(BaseModel):
 
 class ChannelStrategy(BaseModel):
     """A single channel with impact-to-effort scoring."""
-    channel: str
-    priority_rank: int
-    impact_score: int = Field(ge=1, le=10)
-    effort_score: int = Field(ge=1, le=10)
+    model_config = _TOLERANT
+    channel: str = Field(default="", alias="name")
+    priority_rank: int = 0
+    impact_score: int = Field(default=5, ge=1, le=10)
+    effort_score: int = Field(default=5, ge=1, le=10)
     impact_to_effort_ratio: float = 0.0
     primary_segments: list[str] = Field(default_factory=list)
     content_formats: list[str] = Field(default_factory=list)
     posting_cadence: str = ""
     tone_notes: str = ""
-    quick_win: str = ""  # First thing to do on this channel
+    quick_win: str = ""
     reasoning: str = ""
 
 
 class ContentArchitectureItem(BaseModel):
     """Content plan for a specific channel-segment combination."""
-    channel: str
-    segment: str
+    model_config = _TOLERANT
+    channel: str = ""
+    segment: str = ""
     content_types: list[str] = Field(default_factory=list)
     cadence: str = ""
     tone: str = ""
@@ -63,6 +72,7 @@ class ContentArchitectureItem(BaseModel):
 
 class EdginessFramework(BaseModel):
     """Brand-specific edginess calibration."""
+    model_config = _TOLERANT
     overall_level: int = Field(default=5, ge=1, le=10)
     uncomfortable_truths: list[str] = Field(default_factory=list)
     category_norms_to_break: list[str] = Field(default_factory=list)
@@ -74,6 +84,7 @@ class EdginessFramework(BaseModel):
 
 class GTMStrategy(BaseModel):
     """The complete strategy output. Feeds Layer 3 (Content Factory)."""
+    model_config = _TOLERANT
     version: str = "1.0"
     brief_summary: str = ""
     segments: list[SegmentProfile] = Field(default_factory=list)

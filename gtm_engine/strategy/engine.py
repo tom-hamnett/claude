@@ -178,15 +178,33 @@ def _parse_json_response(text: str) -> dict | list:
 
 
 def _safe_construct(model_cls, data: dict):
-    """Construct a Pydantic model tolerantly — ignore extra fields, handle aliases."""
+    """Construct a Pydantic model tolerantly.
+
+    Handles Claude returning slightly different field names (e.g. 'name' vs
+    'channel', 'segment' vs 'segment_name'). Models now use extra='ignore'
+    and populate_by_name=True, so most variations are handled by Pydantic
+    directly. This wrapper catches anything that still slips through.
+    """
+    # Common field name mappings Claude might use
+    FIELD_ALIASES = {
+        "channel_name": "channel",
+        "segment_name": "segment",
+        "name": "channel",  # ChannelStrategy uses alias name->channel
+    }
+
+    # Apply known aliases if the target field is missing
+    patched = dict(data)
+    model_fields = set(model_cls.model_fields.keys())
+    for alt_name, canonical in FIELD_ALIASES.items():
+        if alt_name in patched and canonical not in patched and canonical in model_fields:
+            patched[canonical] = patched.pop(alt_name)
+
     try:
-        return model_cls(**data)
-    except Exception:
-        # Filter to only known fields and aliases
-        known = set(model_cls.model_fields.keys())
-        aliases = {f.alias for f in model_cls.model_fields.values() if f.alias}
-        filtered = {k: v for k, v in data.items() if k in known or k in aliases}
-        return model_cls(**filtered)
+        return model_cls(**patched)
+    except Exception as e:
+        logger.warning("Model construction fallback for %s: %s", model_cls.__name__, e)
+        # Last resort: just pass what we can
+        return model_cls()
 
 
 def generate_segmentation(brief: GTMBrief) -> list[SegmentProfile]:
