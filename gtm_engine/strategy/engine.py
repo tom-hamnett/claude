@@ -177,13 +177,25 @@ def _parse_json_response(text: str) -> dict | list:
     return json.loads(cleaned)
 
 
+def _safe_construct(model_cls, data: dict):
+    """Construct a Pydantic model tolerantly — ignore extra fields, handle aliases."""
+    try:
+        return model_cls(**data)
+    except Exception:
+        # Filter to only known fields and aliases
+        known = set(model_cls.model_fields.keys())
+        aliases = {f.alias for f in model_cls.model_fields.values() if f.alias}
+        filtered = {k: v for k, v in data.items() if k in known or k in aliases}
+        return model_cls(**filtered)
+
+
 def generate_segmentation(brief: GTMBrief) -> list[SegmentProfile]:
     """Generate customer segmentation with priority ranking and reasoning."""
     logger.info("Generating customer segmentation...")
     prompt = f"GTM Brief:\n{json.dumps(brief.model_dump(), indent=2)}"
     response = call_claude(prompt, system=SEGMENTATION_SYSTEM, max_tokens=4096)
     raw = _parse_json_response(response)
-    segments = [SegmentProfile(**s) for s in raw]
+    segments = [_safe_construct(SegmentProfile, s) for s in raw]
     segments.sort(key=lambda s: s.priority_rank)
 
     log_decision(
@@ -203,7 +215,7 @@ def generate_positioning(brief: GTMBrief, segments: list[SegmentProfile]) -> lis
     )
     response = call_claude(prompt, system=POSITIONING_SYSTEM, max_tokens=4096)
     raw = _parse_json_response(response)
-    positioning = [PositioningStatement(**p) for p in raw]
+    positioning = [_safe_construct(PositioningStatement, p) for p in raw]
 
     log_decision(
         "positioning",
@@ -225,7 +237,7 @@ def generate_channel_strategy(brief: GTMBrief, segments: list[SegmentProfile]) -
 
     channels = []
     for c in raw:
-        ch = ChannelStrategy(**c)
+        ch = _safe_construct(ChannelStrategy, c)
         if ch.impact_score > 0 and ch.effort_score > 0:
             ch.impact_to_effort_ratio = round(ch.impact_score / ch.effort_score, 2)
         channels.append(ch)
@@ -254,7 +266,7 @@ def generate_content_architecture(
     )
     response = call_claude(prompt, system=CONTENT_ARCH_SYSTEM, max_tokens=8192)
     raw = _parse_json_response(response)
-    architecture = [ContentArchitectureItem(**item) for item in raw]
+    architecture = [_safe_construct(ContentArchitectureItem, item) for item in raw]
 
     log_decision(
         "content_architecture",
@@ -273,7 +285,7 @@ def generate_edginess_framework(brief: GTMBrief, segments: list[SegmentProfile])
     )
     response = call_claude(prompt, system=EDGINESS_SYSTEM, max_tokens=4096)
     raw = _parse_json_response(response)
-    framework = EdginessFramework(**raw)
+    framework = _safe_construct(EdginessFramework, raw)
 
     log_decision(
         "edginess",

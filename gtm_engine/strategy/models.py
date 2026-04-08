@@ -4,7 +4,7 @@ Every strategic decision is structured so downstream layers can consume it
 programmatically, and every decision carries its reasoning for auditability.
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class SegmentProfile(BaseModel):
@@ -23,7 +23,8 @@ class SegmentProfile(BaseModel):
 
 class PositioningStatement(BaseModel):
     """Positioning tailored to a specific segment."""
-    segment_name: str
+    model_config = ConfigDict(populate_by_name=True)
+    segment_name: str = Field(default="", alias="segment")
     headline: str
     subheadline: str
     value_proposition: str
