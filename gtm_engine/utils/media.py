@@ -78,13 +78,35 @@ def generate_video(
             logger.error("Video generation returned no results")
             return None
 
-        # Save the video
+        # Save the video — download from URI since .save() doesn't work for remote videos
         video = operation.result.generated_videos[0]
         if output_path is None:
             output_path = OUTPUT_MEDIA_DIR / f"video_{int(time.time())}.mp4"
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        video.video.save(str(output_path))
+
+        # Try direct save first, fall back to downloading from URI
+        try:
+            video.video.save(str(output_path))
+        except Exception:
+            # Download from the video URI
+            import httpx
+            video_uri = video.video.uri if hasattr(video.video, 'uri') else None
+            if video_uri:
+                logger.info("  Downloading video from URI...")
+                resp = httpx.get(video_uri)
+                resp.raise_for_status()
+                output_path.write_bytes(resp.content)
+            else:
+                # Try accessing raw bytes
+                if hasattr(video.video, 'video_bytes'):
+                    output_path.write_bytes(video.video.video_bytes)
+                elif hasattr(video.video, 'data'):
+                    output_path.write_bytes(video.video.data)
+                else:
+                    logger.error("Cannot extract video data — no save/uri/bytes method available")
+                    return None
+
         logger.info("Video saved to %s", output_path)
         return output_path
 
@@ -99,7 +121,7 @@ def generate_video(
 def generate_image(
     prompt: str,
     output_path: Path | None = None,
-    model: str = "imagen-4.0-generate-preview",
+    model: str = "imagen-3.0-generate-002",
     aspect_ratio: str = "1:1",
 ) -> Path | None:
     """Generate an image from a text prompt using Google Imagen.
