@@ -94,7 +94,13 @@ def generate_video(
             video_uri = video.video.uri if hasattr(video.video, 'uri') else None
             if video_uri:
                 logger.info("  Downloading video from URI...")
-                resp = httpx.get(video_uri, follow_redirects=True)
+                # Must include API key for authenticated download
+                download_url = video_uri
+                if "?" in download_url:
+                    download_url += f"&key={GOOGLE_API_KEY}"
+                else:
+                    download_url += f"?key={GOOGLE_API_KEY}"
+                resp = httpx.get(download_url, follow_redirects=True, timeout=120)
                 resp.raise_for_status()
                 output_path.write_bytes(resp.content)
             else:
@@ -140,7 +146,7 @@ def generate_image(
 
     try:
         response = client.models.generate_content(
-            model="gemini-2.0-flash-preview-image-generation",
+            model="gemini-2.0-flash",
             contents=f"Generate an image: {prompt}",
             config=types.GenerateContentConfig(
                 response_modalities=["IMAGE", "TEXT"],

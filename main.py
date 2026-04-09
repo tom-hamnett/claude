@@ -299,6 +299,21 @@ def cmd_derivatives():
         print(f"  [{d['provider']}] {d['format']}: {d['id']} ({d['status']}){media_note}")
 
 
+def cmd_list_models():
+    """List available Google AI models on your account."""
+    from google import genai
+    from gtm_engine.config import GOOGLE_API_KEY
+    client = genai.Client(api_key=GOOGLE_API_KEY)
+    print("Available Google AI models:\n")
+    for model in client.models.list():
+        name = model.name
+        # Show models relevant to media generation
+        if any(kw in name.lower() for kw in ["imagen", "veo", "image", "flash", "gemini"]):
+            methods = getattr(model, 'supported_generation_methods', [])
+            print(f"  {name}")
+    print("\nUse these model names in media.py for image/video generation.")
+
+
 def cmd_signal():
     """Submit a live intelligence signal."""
     from gtm_engine.intelligence import run_cli_signal_input
@@ -315,6 +330,7 @@ COMMANDS = {
     "derivatives": cmd_derivatives,
     "content": cmd_content,
     "signal": cmd_signal,
+    "list-models": cmd_list_models,
     "deploy": cmd_deploy,
     "metrics": cmd_metrics,
     "feedback": cmd_feedback,
