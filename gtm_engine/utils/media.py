@@ -366,7 +366,12 @@ def _get_image_prompt(title: str, subtitle: str = "", style: str = "social") -> 
 # --- Batch media generation for derivatives ---
 
 def _get_reference_images() -> list[Path]:
-    """Load presenter reference images from the data directory."""
+    """Load presenter reference images from the data directory.
+
+    Shuffles the order each time so Veo picks a different starting
+    pose/setting per reel, while keeping the same face throughout.
+    """
+    import random
     from gtm_engine.config import DATA_DIR
     refs = []
     for name in ["presenter_ref_1.png", "presenter_ref_2.png", "presenter_ref_3.png",
@@ -374,7 +379,8 @@ def _get_reference_images() -> list[Path]:
         p = DATA_DIR / name
         if p.exists():
             refs.append(p)
-    return refs[:3]  # Veo supports max 3
+    random.shuffle(refs)
+    return refs[:3]
 
 
 def generate_reel_media(reel_content: dict, title: str = "") -> dict:
