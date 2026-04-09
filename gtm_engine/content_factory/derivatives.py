@@ -109,10 +109,29 @@ Tweet 1: Hook with the key insight. Tweets 2-4: Supporting points. Tweet 5: Pers
 Each tweet under 280 chars. Thread should stand alone without the master asset.
 Return JSON: {"tweets": [{"number": 1, "text": "..."}]}""",
 
-    "reel_script": """Generate a Reel/TikTok script (45-75 seconds) from this master asset.
-Format: [HOOK 0-5s] [TENSION 5-20s] [INSIGHT 20-45s] [CTA 45-60s]
-Include pause markers and emphasis notes. Must work as talking head.
-Return JSON: {"hook": "...", "sections": [{"timestamp": "0-5s", "type": "hook", "script": "...", "direction": "..."}], "total_duration": "60s"}""",
+    "reel_script": """Generate a 20-second social media reel script from this master asset.
+
+CRITICAL: Write EXACTLY what will be spoken aloud. Not notes, not shorthand — the actual
+words the presenter says. 50-60 words maximum (people speak at 150 words per minute).
+
+Structure (3 parts, one continuous monologue):
+- HOOK (0-8s, ~20 words): The provocative opening line that stops the scroll
+- INSIGHT (8-16s, ~20 words): The key point or uncomfortable truth
+- CLOSE (16-20s, ~15 words): A thought that lingers, not a call to action
+
+Also provide a B-roll description — a 3-second visual cutaway (data on screen, city skyline,
+hands on a document) that plays between the hook and insight while the voice continues.
+
+Return JSON:
+{
+    "spoken_script": "the complete spoken text as one paragraph, exactly as said aloud",
+    "hook_text": "the hook portion (first ~20 words)",
+    "insight_text": "the insight portion (~20 words)",
+    "close_text": "the closing portion (~15 words)",
+    "b_roll_description": "what the 3-second cutaway shows",
+    "word_count": 55,
+    "estimated_duration": "20s"
+}""",
 
     "talking_head_script": """Generate a 3-5 minute expert-style video script from this master asset.
 Format: [COLD OPEN 0-20s] [CONTEXT 20-60s] [3 KEY INSIGHTS 60-240s] [CLOSE + CTA]
@@ -273,10 +292,9 @@ def _generate_media_for_derivative(format_name: str, content: dict, master_asset
 
     try:
         if format_name == "reel_script":
-            sections = content.get("sections", [])
-            if sections:
-                media = generate_reel_media(sections, title=title)
-                logger.info("  Generated reel media: %d clips + thumbnail", len(media.get("clips", [])))
+            # Pass the full content dict — new pipeline handles both old and new formats
+            media = generate_reel_media(content, title=title)
+            logger.info("  Reel production: %s", "COMPLETE" if media.get("finished_reel") else "partial")
 
         elif format_name == "talking_head_script":
             # Generate a video clip from the script opening using brand standards

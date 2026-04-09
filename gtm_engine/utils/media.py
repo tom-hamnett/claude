@@ -35,31 +35,50 @@ def generate_video(
     duration: int = 8,
     aspect_ratio: str = "16:9",
     resolution: str = "720p",
+    reference_images: list[Path] | None = None,
 ) -> Path | None:
     """Generate a video clip from a text prompt using Google Veo.
 
+    Pass reference_images (up to 3 paths) for character consistency.
     Returns the path to the saved video file, or None on failure.
-    Costs ~$0.80-3.20 per 8-second clip depending on resolution.
     """
     if not GOOGLE_API_KEY:
-        logger.warning("GOOGLE_API_KEY not set — skipping video generation")
+        logger.warning("GOOGLE_API_KEY not set -- skipping video generation")
         return None
 
     client = _get_client()
     from google.genai import types
 
-    logger.info("Generating video: %s (model=%s, %ds, %s)", prompt[:60], model, duration, resolution)
+    ref_note = f" +{len(reference_images)} refs" if reference_images else ""
+    logger.info("Generating video%s: %s (model=%s, %ds)", ref_note, prompt[:60], model, duration)
 
     try:
-        operation = client.models.generate_videos(
-            model=model,
-            prompt=prompt,
-            config=types.GenerateVideosConfig(
-                number_of_videos=1,
-                duration_seconds=duration,
-                aspect_ratio=aspect_ratio,
-            ),
+        # Build config with optional reference images
+        config = types.GenerateVideosConfig(
+            number_of_videos=1,
+            duration_seconds=duration,
+            aspect_ratio=aspect_ratio,
         )
+
+        # Add reference images for character consistency
+        ref_image_objects = []
+        if reference_images:
+            for ref_path in reference_images[:3]:  # Veo supports up to 3
+                p = Path(ref_path)
+                if p.exists():
+                    ref_image_objects.append(
+                        types.Image.from_file(str(p))
+                    )
+
+        kwargs = {
+            "model": model,
+            "prompt": prompt,
+            "config": config,
+        }
+        if ref_image_objects:
+            kwargs["image"] = ref_image_objects[0]  # Primary reference
+
+        operation = client.models.generate_videos(**kwargs)
 
         # Poll until done (video generation takes 30-120 seconds)
         max_wait = 300  # 5 minutes max
@@ -118,6 +137,98 @@ def generate_video(
 
     except Exception as e:
         logger.error("Video generation failed: %s", e)
+        return None
+
+
+# --- TTS Voice Generation ---
+
+def generate_voiceover(
+    text: str,
+    output_path: Path | None = None,
+    voice_name: str = "Zephyr",
+) -> Path | None:
+    """Generate a voiceover audio file using Google TTS.
+
+    Uses gemini-2.5-flash-preview-tts for consistent British-style voice.
+    Returns the path to the saved WAV file.
+    """
+    if not GOOGLE_API_KEY:
+        logger.warning("GOOGLE_API_KEY not set -- skipping TTS")
+        return None
+
+    client = _get_client()
+    from google.genai import types
+
+    if output_path is None:
+        output_path = OUTPUT_MEDIA_DIR / f"voiceover_{int(time.time())}.wav"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    logger.info("Generating voiceover (%d words): %s...", len(text.split()), text[:60])
+
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.5-flash-preview-tts",
+            contents=text,
+            config=types.GenerateContentConfig(
+                response_modalities=["AUDIO"],
+                speech_config=types.SpeechConfig(
+                    voice_config=types.VoiceConfig(
+                        prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                            voice_name=voice_name,
+                        )
+                    )
+                ),
+            ),
+        )
+
+        # Extract audio data
+        if response.candidates and response.candidates[0].content.parts:
+            audio_data = response.candidates[0].content.parts[0].inline_data.data
+            output_path.write_bytes(audio_data)
+            logger.info("Voiceover saved to %s", output_path)
+            return output_path
+
+        logger.error("TTS returned no audio")
+        return None
+
+    except Exception as e:
+        logger.error("TTS generation failed: %s", e)
+        return None
+
+
+# --- ffmpeg helpers ---
+
+def strip_audio_and_overlay(
+    video_path: str,
+    audio_path: str,
+    output_path: Path | None = None,
+) -> str | None:
+    """Strip audio from a video and overlay a new audio track using ffmpeg."""
+    import subprocess
+
+    if output_path is None:
+        output_path = OUTPUT_MEDIA_DIR / f"final_{int(time.time())}.mp4"
+
+    try:
+        cmd = [
+            "ffmpeg", "-y",
+            "-i", str(video_path),
+            "-i", str(audio_path),
+            "-c:v", "copy",
+            "-map", "0:v:0",
+            "-map", "1:a:0",
+            "-shortest",
+            str(output_path),
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+        if result.returncode == 0:
+            logger.info("Audio overlay complete: %s", output_path)
+            return str(output_path)
+        else:
+            logger.error("Audio overlay failed: %s", result.stderr[:200])
+            return None
+    except Exception as e:
+        logger.error("Audio overlay failed: %s", e)
         return None
 
 
@@ -254,48 +365,129 @@ def _get_image_prompt(title: str, subtitle: str = "", style: str = "social") -> 
 
 # --- Batch media generation for derivatives ---
 
-def generate_reel_media(script_sections: list[dict], title: str = "") -> dict:
-    """Generate video clips and assemble media for a reel script.
+def _get_reference_images() -> list[Path]:
+    """Load presenter reference images from the data directory."""
+    from gtm_engine.config import DATA_DIR
+    refs = []
+    for name in ["presenter_ref_1.png", "presenter_ref_2.png", "presenter_ref_3.png",
+                  "presenter_reference.png"]:
+        p = DATA_DIR / name
+        if p.exists():
+            refs.append(p)
+    return refs[:3]  # Veo supports max 3
 
-    Uses brand standards for consistent presenter, environment, and style.
-    Optimised for 15-20 second social media reels (3 clips max).
-    Structure: Hook (8s) + Insight (8s) + CTA (4s) = ~20 seconds.
+
+def generate_reel_media(reel_content: dict, title: str = "") -> dict:
+    """Full reel production pipeline.
+
+    1. Generate TTS voiceover (consistent voice, sets timing)
+    2. Generate talking head clips with reference images (consistent face, one setting)
+    3. Generate B-roll clip (detail shot, no person)
+    4. Stitch video clips with crossfade
+    5. Strip Veo audio and overlay TTS voiceover
+    6. Generate thumbnail
+
+    Input: reel_content dict from the reel_script derivative (has spoken_script,
+           hook_text, insight_text, close_text, b_roll_description).
     """
-    results = {"clips": [], "thumbnail": None}
+    results = {"clips": [], "thumbnail": None, "voiceover": None, "finished_reel": None}
+    ref_images = _get_reference_images()
+    ts = int(time.time())
 
-    # Generate a thumbnail image
-    thumb_path = generate_image(
-        _get_image_prompt(title, style="thumbnail"),
-        output_path=OUTPUT_MEDIA_DIR / f"thumb_{int(time.time())}.png",
+    # Handle both old format (sections list) and new format (spoken_script)
+    spoken_script = reel_content.get("spoken_script", "")
+    b_roll_desc = reel_content.get("b_roll_description", "City skyline through glass window, soft focus")
+
+    # If old format, extract text from sections
+    if not spoken_script and reel_content.get("sections"):
+        spoken_script = " ".join(
+            s.get("script", s.get("text", ""))
+            for s in reel_content.get("sections", [])
+        )
+
+    if not spoken_script:
+        logger.error("No spoken script found in reel content")
+        return results
+
+    # --- Step 1: Generate TTS voiceover (sets the timing) ---
+    logger.info("Step 1/5: Generating voiceover...")
+    voiceover_path = generate_voiceover(
+        spoken_script,
+        output_path=OUTPUT_MEDIA_DIR / f"vo_{ts}.wav",
     )
-    results["thumbnail"] = str(thumb_path) if thumb_path else None
+    results["voiceover"] = str(voiceover_path) if voiceover_path else None
 
-    # Maximum 3 clips for a reel: Hook, Insight, CTA
-    max_clips = 3
-    clip_durations = [8, 8, 4]  # Hook=8s, Insight=8s, CTA=4s = 20s total
+    # --- Step 2: Generate talking head clips (one setting, reference images) ---
+    logger.info("Step 2/5: Generating talking head clips (same character, same setting)...")
+    setting_prompt = _get_video_prompt(spoken_script[:100], scene_type="discursive")
 
-    for i, section in enumerate(script_sections[:max_clips]):
-        script_text = section.get("script", section.get("text", ""))
-        clip_prompt = _get_video_prompt(script_text, scene_type="talking_head")
-        duration = clip_durations[i] if i < len(clip_durations) else 4
-
+    # Two talking head clips: hook (8s) and insight+close (8s)
+    for i, label in enumerate(["hook", "insight_close"]):
         clip_path = generate_video(
-            clip_prompt,
-            output_path=OUTPUT_MEDIA_DIR / f"reel_clip_{i}_{int(time.time())}.mp4",
+            setting_prompt,
+            output_path=OUTPUT_MEDIA_DIR / f"reel_{label}_{ts}.mp4",
             model="veo-3.1-fast-generate-preview",
-            duration=duration,
+            duration=8,
             aspect_ratio="9:16",
             resolution="720p",
+            reference_images=ref_images,
         )
         if clip_path:
             results["clips"].append(str(clip_path))
 
-    # Stitch clips into one finished reel via ffmpeg
-    if len(results["clips"]) > 1:
-        stitched = stitch_clips(results["clips"], title=title)
-        if stitched:
-            results["finished_reel"] = stitched
+    # --- Step 3: Generate B-roll clip (no person, detail shot) ---
+    logger.info("Step 3/5: Generating B-roll...")
+    broll_prompt = (
+        f"{b_roll_desc}. Cinematic, shallow depth of field, "
+        f"desaturated earth tones, slow subtle movement. No people. "
+        f"Kodak Portra 400 color grade."
+    )
+    broll_path = generate_video(
+        broll_prompt,
+        output_path=OUTPUT_MEDIA_DIR / f"reel_broll_{ts}.mp4",
+        model="veo-3.1-fast-generate-preview",
+        duration=4,
+        aspect_ratio="9:16",
+        resolution="720p",
+    )
+    if broll_path:
+        results["b_roll"] = str(broll_path)
 
+    # --- Step 4: Stitch clips (hook + broll + insight) with crossfade ---
+    logger.info("Step 4/5: Stitching clips...")
+    stitch_order = []
+    if len(results["clips"]) >= 1:
+        stitch_order.append(results["clips"][0])  # Hook
+    if results.get("b_roll"):
+        stitch_order.append(results["b_roll"])  # B-roll intercut
+    if len(results["clips"]) >= 2:
+        stitch_order.append(results["clips"][1])  # Insight + close
+
+    stitched = None
+    if len(stitch_order) > 1:
+        stitched = stitch_clips(stitch_order, title=title,
+                                output_path=OUTPUT_MEDIA_DIR / f"reel_stitched_{ts}.mp4")
+
+    # --- Step 5: Overlay TTS voiceover ---
+    if stitched and voiceover_path:
+        logger.info("Step 5/5: Overlaying voiceover...")
+        final = strip_audio_and_overlay(
+            stitched, str(voiceover_path),
+            output_path=OUTPUT_MEDIA_DIR / f"reel_final_{ts}.mp4",
+        )
+        if final:
+            results["finished_reel"] = final
+    elif stitched:
+        results["finished_reel"] = stitched
+
+    # --- Thumbnail ---
+    thumb_path = generate_image(
+        _get_image_prompt(title, style="thumbnail"),
+        output_path=OUTPUT_MEDIA_DIR / f"thumb_{ts}.png",
+    )
+    results["thumbnail"] = str(thumb_path) if thumb_path else None
+
+    logger.info("Reel production complete: %s", results.get("finished_reel", "no final output"))
     return results
 
 
