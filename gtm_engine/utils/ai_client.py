@@ -74,22 +74,27 @@ def call_openai(
 @retry(wait=wait_exponential(min=2, max=30), stop=stop_after_attempt(4))
 def call_gemini(
     prompt: str,
-    model: str = "gemini-1.5-pro",
+    model: str = "gemini-2.5-flash",
     max_tokens: int = 4096,
     temperature: float = 0.7,
 ) -> str:
-    """Send a prompt to Google Gemini and return the text response."""
-    import google.generativeai as genai
+    """Send a prompt to Google Gemini and return the text response.
+
+    Uses the new google-genai SDK (not the deprecated google-generativeai).
+    """
+    from google import genai
+    from google.genai import types
     from gtm_engine.config import GOOGLE_API_KEY
 
-    genai.configure(api_key=GOOGLE_API_KEY)
-    gen_model = genai.GenerativeModel(model)
+    client = genai.Client(api_key=GOOGLE_API_KEY)
 
     logger.info("Calling Gemini model=%s tokens=%d", model, max_tokens)
-    response = gen_model.generate_content(
-        prompt,
-        generation_config=genai.types.GenerationConfig(
-            max_output_tokens=max_tokens, temperature=temperature
+    response = client.models.generate_content(
+        model=model,
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            max_output_tokens=max_tokens,
+            temperature=temperature,
         ),
     )
     return response.text
@@ -116,7 +121,7 @@ def call_ai(
         return call_openai(prompt, system=system, model=model or "gpt-4o",
                            max_tokens=max_tokens, temperature=temperature)
     elif provider == "gemini":
-        return call_gemini(prompt, model=model or "gemini-1.5-pro",
+        return call_gemini(prompt, model=model or "gemini-2.5-flash",
                            max_tokens=max_tokens, temperature=temperature)
     else:
         raise ValueError(f"Unknown AI provider: {provider}")
