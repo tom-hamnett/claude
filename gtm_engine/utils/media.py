@@ -258,7 +258,8 @@ def generate_reel_media(script_sections: list[dict], title: str = "") -> dict:
     """Generate video clips and assemble media for a reel script.
 
     Uses brand standards for consistent presenter, environment, and style.
-    Each section gets an 8-second clip for better narrative flow.
+    Optimised for 15-20 second social media reels (3 clips max).
+    Structure: Hook (8s) + Insight (8s) + CTA (4s) = ~20 seconds.
     """
     results = {"clips": [], "thumbnail": None}
 
@@ -269,16 +270,20 @@ def generate_reel_media(script_sections: list[dict], title: str = "") -> dict:
     )
     results["thumbnail"] = str(thumb_path) if thumb_path else None
 
-    # Generate video clips for each section
-    for i, section in enumerate(script_sections):
+    # Maximum 3 clips for a reel: Hook, Insight, CTA
+    max_clips = 3
+    clip_durations = [8, 8, 4]  # Hook=8s, Insight=8s, CTA=4s = 20s total
+
+    for i, section in enumerate(script_sections[:max_clips]):
         script_text = section.get("script", section.get("text", ""))
         clip_prompt = _get_video_prompt(script_text, scene_type="talking_head")
+        duration = clip_durations[i] if i < len(clip_durations) else 4
 
         clip_path = generate_video(
             clip_prompt,
             output_path=OUTPUT_MEDIA_DIR / f"reel_clip_{i}_{int(time.time())}.mp4",
-            model="veo-3.1-fast-generate-preview",  # Fast model for reel clips (cheaper)
-            duration=8,
+            model="veo-3.1-fast-generate-preview",
+            duration=duration,
             aspect_ratio="9:16",
             resolution="720p",
         )
