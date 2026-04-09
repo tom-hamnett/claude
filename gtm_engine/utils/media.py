@@ -66,8 +66,9 @@ def generate_video(
             for ref_path in reference_images[:3]:  # Veo supports up to 3
                 p = Path(ref_path)
                 if p.exists():
+                    image_bytes = p.read_bytes()
                     ref_image_objects.append(
-                        types.Image.from_file(str(p))
+                        types.Image(image_bytes=image_bytes)
                     )
 
         kwargs = {
