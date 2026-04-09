@@ -122,7 +122,7 @@ For Twitter/X: Under 280 characters for single tweet, or a thread plan.
 
 Return a JSON object: {"body": "...", "platform": "linkedin|twitter", "hashtags": [...]}
 """,
-        "provider": "openai",
+        "provider": "gemini",
         "max_tokens": 1024,
         "temperature": 0.9,
     },
@@ -138,7 +138,7 @@ Given the original content, produce 2-3 variations that test different:
 Each variant should differ in ONE key dimension so results are attributable.
 Return a JSON array of variant objects: [{"variant_id": "A", "changes": "...", "content": "..."}, ...]
 """,
-        "provider": "openai",
+        "provider": "gemini",
         "max_tokens": 2048,
         "temperature": 0.9,
     },
@@ -154,7 +154,7 @@ You are writing a LinkedIn post optimised for engagement. LinkedIn rewards:
 200-400 words. No corporate jargon. Write like a human, not a brand.
 Return a JSON object: {"body": "...", "hook": "first two lines", "hashtags": [...]}
 """,
-        "provider": "openai",
+        "provider": "gemini",
         "max_tokens": 1536,
         "temperature": 0.85,
     },

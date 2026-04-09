@@ -34,29 +34,32 @@ DERIVATIVE_FORMATS = {
         "channels": ["linkedin"],
     },
     "linkedin_carousel": {
-        "provider": "openai",
-        "description": "6-10 slide arc with text per slide",
+        "provider": "gemini",
+        "description": "6-10 slide arc with text per slide + generated slide images",
         "channels": ["linkedin"],
+        "generates_media": True,
     },
     "short_post_linkedin": {
-        "provider": "openai",
+        "provider": "gemini",
         "description": "3 angle variations for LinkedIn short post",
         "channels": ["linkedin"],
     },
     "short_post_twitter": {
-        "provider": "openai",
+        "provider": "gemini",
         "description": "Twitter/X thread (5 tweets)",
         "channels": ["twitter"],
     },
     "reel_script": {
         "provider": "claude",
-        "description": "45-75 second Reel/TikTok/YouTube Short script",
+        "description": "45-75 second Reel/TikTok/YouTube Short script + generated video clips",
         "channels": ["instagram", "tiktok", "youtube_shorts"],
+        "generates_media": True,
     },
     "talking_head_script": {
         "provider": "claude",
-        "description": "3-5 minute expert style video script",
+        "description": "3-5 minute expert style video script + generated video clips",
         "channels": ["youtube", "linkedin_video"],
+        "generates_media": True,
     },
     "email_broadcast": {
         "provider": "claude",
@@ -75,8 +78,9 @@ DERIVATIVE_FORMATS = {
     },
     "visual_brief": {
         "provider": "gemini",
-        "description": "Art direction for static images",
+        "description": "Art direction + generated social graphic via Imagen",
         "channels": ["instagram", "linkedin"],
+        "generates_media": True,
     },
 }
 
@@ -155,10 +159,13 @@ def generate_derivative(
     master_asset: dict,
     format_name: str,
     run_benchmark: bool = True,
+    generate_media: bool = False,
 ) -> dict:
     """Generate a single derivative from a master asset.
 
     Saves the derivative to the content queue with full metadata tags.
+    If generate_media=True and the format supports it, also generates
+    actual video/image files via Google Veo/Imagen.
     """
     if format_name not in DERIVATIVE_FORMATS:
         raise ValueError(f"Unknown format: {format_name}. Available: {list(DERIVATIVE_FORMATS.keys())}")
@@ -238,21 +245,87 @@ def generate_derivative(
             if benchmark.get("approved"):
                 derivative["status"] = "approved"
 
+    # Generate actual media if this format supports it
+    if fmt_config.get("generates_media") and generate_media:
+        media_paths = _generate_media_for_derivative(format_name, raw, master_asset)
+        if media_paths:
+            derivative["media"] = media_paths
+
     # Save to content queue
     save_json(derivative, CONTENT_QUEUE_DIR / f"{derivative_id}_{format_name}.json")
 
     return derivative
 
 
+def _generate_media_for_derivative(format_name: str, content: dict, master_asset: dict) -> dict:
+    """Generate actual media files (video/images) for a derivative.
+
+    Called automatically when a derivative format has generates_media=True.
+    Uses Google Veo for video, Imagen for images.
+    """
+    from gtm_engine.utils.media import (
+        generate_reel_media, generate_carousel_images,
+        generate_social_graphic, generate_video,
+    )
+
+    title = master_asset.get("title", "")
+    media = {}
+
+    try:
+        if format_name == "reel_script":
+            sections = content.get("sections", [])
+            if sections:
+                media = generate_reel_media(sections, title=title)
+                logger.info("  Generated reel media: %d clips + thumbnail", len(media.get("clips", [])))
+
+        elif format_name == "talking_head_script":
+            # Generate a video clip from the script opening
+            script_text = content.get("script", "")[:200]
+            if script_text:
+                from gtm_engine.utils.media import generate_video, generate_social_graphic
+                thumb = generate_social_graphic(title, style="linkedin")
+                media["thumbnail"] = thumb
+                # Video for the cold open section
+                clip = generate_video(
+                    f"Professional presenter in dark modern office explaining: {script_text}. "
+                    f"Confident, authoritative. Clean lighting.",
+                    duration=8, aspect_ratio="16:9",
+                )
+                media["intro_clip"] = str(clip) if clip else None
+                logger.info("  Generated talking head intro clip + thumbnail")
+
+        elif format_name == "linkedin_carousel":
+            slides = content.get("slides", [])
+            if slides:
+                paths = generate_carousel_images(slides)
+                media["slide_images"] = paths
+                logger.info("  Generated %d carousel slide images", len(paths))
+
+        elif format_name == "visual_brief":
+            # Turn the brief into an actual image
+            concept = content.get("concept", content.get("body", title))
+            if concept:
+                graphic = generate_social_graphic(title, subtitle=concept[:100])
+                media["social_graphic"] = graphic
+                logger.info("  Generated social graphic from visual brief")
+
+    except Exception as e:
+        logger.warning("  Media generation failed for %s: %s", format_name, e)
+
+    return media
+
+
 def generate_all_derivatives(
     master_asset: dict,
     formats: list[str] | None = None,
     run_benchmark: bool = False,
+    generate_media: bool = False,
 ) -> list[dict]:
     """Generate ALL derivative formats from a master asset.
 
     Default behaviour: generate everything. Pass formats= to limit.
     Benchmark checking is off by default for batch runs (run separately).
+    Set generate_media=True to also produce actual video/image files via Google APIs.
     """
     target_formats = formats or list(DERIVATIVE_FORMATS.keys())
     derivatives = []
@@ -264,9 +337,13 @@ def generate_all_derivatives(
 
     for fmt in target_formats:
         try:
-            derivative = generate_derivative(master_asset, fmt, run_benchmark=run_benchmark)
+            derivative = generate_derivative(
+                master_asset, fmt,
+                run_benchmark=run_benchmark,
+                generate_media=generate_media,
+            )
             derivatives.append(derivative)
-            logger.info("  [OK] %s → %s", fmt, derivative["id"])
+            logger.info("  [OK] %s -> %s", fmt, derivative["id"])
         except Exception as e:
             logger.error("  [FAIL] %s: %s", fmt, e)
             continue

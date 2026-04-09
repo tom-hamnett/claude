@@ -7,7 +7,8 @@ Usage:
     python main.py brand                Initialise brand standards (Layer 8)
     python main.py import-ma001         Import The Consultancy Death Spiral (MA-001)
     python main.py master-asset <topic> Generate a new master asset
-    python main.py derivatives <MA-ID>  Generate ALL derivatives from a master asset
+    python main.py derivatives <MA-ID>  Generate ALL text derivatives from a master asset
+    python main.py derivatives <MA-ID> --media  Same + generate video/images via Google
     python main.py content [N]          Generate content batch (old-style, N pieces)
     python main.py signal               Live intelligence feed (submit signals)
     python main.py deploy               Run deployment cycle (dry run)
@@ -284,11 +285,18 @@ def cmd_derivatives():
         sys.exit(1)
 
     asset = load_master_asset(asset_id)
+    with_media = "--media" in sys.argv
     print(f"Generating ALL derivatives from {asset_id}: {asset['title']}")
-    derivatives = generate_all_derivatives(asset)
+    if with_media:
+        print("  (with media generation via Google Veo/Imagen)")
+    derivatives = generate_all_derivatives(asset, generate_media=with_media)
     print(f"\nGenerated {len(derivatives)} derivatives:")
     for d in derivatives:
-        print(f"  [{d['provider']}] {d['format']}: {d['id']} ({d['status']})")
+        media_note = ""
+        if d.get("media"):
+            media_files = [v for v in d["media"].values() if v]
+            media_note = f" + {len(media_files)} media files"
+        print(f"  [{d['provider']}] {d['format']}: {d['id']} ({d['status']}){media_note}")
 
 
 def cmd_signal():
