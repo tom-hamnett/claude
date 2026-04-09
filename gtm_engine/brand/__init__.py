@@ -88,9 +88,95 @@ DEFAULT_BRAND_STANDARDS = {
             "headings": "Playfair Display",
             "body": "DM Sans",
         },
-        "image_style": "Data visualisation and clean diagrams over stock photography. Dark backgrounds.",
-        "video_aesthetic": "Talking head with data overlay. Clean B-roll of screens and dashboards. "
-                          "On-screen text for key stats. No flashy transitions.",
+        "image_style": "Data visualisation and clean diagrams over stock photography. Dark backgrounds. "
+                      "Desaturated earth tones, deep blacks, film grain, Kodak Portra 400 aesthetic.",
+        "video_aesthetic": "The Discursive Portrait — quiet authority, intellectual curiosity. "
+                          "Cinematic documentary style. Never frantic. The weight of the pause.",
+    },
+    "presenter": {
+        "description": (
+            "Male presenter, early 30s to early 40s, English, with a smooth, well-spoken "
+            "British accent. Natural, confident, intelligent delivery — polished but not "
+            "overly formal or theatrical."
+        ),
+        "demeanour": (
+            "Calm, composed, quietly authoritative. Warm and engaging with understated charisma. "
+            "Speaks with clarity and precision but never feels scripted. Subtle confidence — "
+            "more 'assured expert' than 'salesperson'. Light conversational cadence with natural "
+            "pauses and emphasis. Trustworthy, credible, thoughtful."
+        ),
+        "reference_style": (
+            "Similar tonal quality to Tom Hiddleston in The Night Manager, but slightly more "
+            "relaxed and less clipped — closer to a modern professional than a dramatic character."
+        ),
+        "performance_direction": (
+            "Maintain steady eye contact with camera. Minimal but purposeful hand gestures. "
+            "Natural micro-expressions — slight smiles, subtle emphasis. Delivery should feel "
+            "like explaining something important to a peer, not performing. "
+            "Avoid exaggerated energy, hard selling, or overly animated behaviour."
+        ),
+        "directors_note": (
+            "Talk as if you are explaining a secret to an old friend who already respects you. "
+            "You don't need to convince them; you just need to share the truth. If you need to "
+            "stop and think for five seconds, do it. We won't cut it out."
+        ),
+        "wardrobe": (
+            "Smart-casual or business-professional. Tailored blazer, open-collar shirt, "
+            "fine knitwear. Neutral muted tones: navy, grey, white, beige. "
+            "Well-groomed, understated, contemporary."
+        ),
+        "reference_image": "",
+    },
+    "video_production": {
+        "philosophy": "The Discursive Portrait — catching a genius mid-thought in a space they own.",
+        "eyeline": (
+            "Speaker looks 15-20 degrees off-camera, as if talking to a trusted peer just "
+            "out of frame. The viewer is an authorized eavesdropper."
+        ),
+        "pacing": (
+            "Finish a thought, look down at hands or out a window, then start the next sentence. "
+            "Silence creates the 'interesting' quality. Never rush."
+        ),
+        "lighting": {
+            "style": "Chiaroscuro — sculpted shadow with Rembrandt lighting",
+            "key_light": "Large soft source 45 degrees to side and slightly behind. "
+                         "Triangle of light on far cheek, rest in sophisticated shadow.",
+            "negative_fill": "Black flag opposite side to deepen shadows and add gravity.",
+            "practicals": "Dim warm lamp or soft window in deep background for depth.",
+        },
+        "camera": {
+            "movement": "Never static, never shaky. Slow parallax or imperceptible drift zoom.",
+            "discovery_pan": "On profound points, slowly pan away to a detail (book, glass, window) then back.",
+            "framing": "Medium close-up to medium shots primarily. Occasional wider for walking scenes.",
+            "lens": "50mm or 85mm prime. Flatters face, compresses background for intimacy.",
+            "aperture": "f/1.8 or f/2.0 — melt background into soft bokeh.",
+        },
+        "environment": {
+            "style": "Premium, modern, aspirational. Upmarket, uncluttered, intentional.",
+            "textures": "Raw concrete, dark oak, heavy linen, brushed metal.",
+            "locations": [
+                "Clean modern desk in well-lit office",
+                "Tasteful sofa in contemporary living space",
+                "High-end corporate lobby (glass, steel, natural light)",
+                "Minimalist workspace or studio",
+            ],
+        },
+        "colour_grade": "Desaturated earth tones, deep blacks, film grain. Kodak Portra 400 aesthetic.",
+        "sound": "Room tone + low cello. No upbeat music. Textural ambient — low frequencies only.",
+        "technical_specs": {
+            "frame_rate": "23.976 fps",
+            "shutter": "1/48 (180 degree rule)",
+            "colour_palette": "Neutral, professional, slightly warm",
+        },
+        "ai_prompt_template": (
+            "[Subject], captured in a cinematic documentary style. "
+            "Cinematography: Low-angle medium shot, 35mm anamorphic lens, shallow depth of field. "
+            "Lighting: Moody side-lighting with high contrast, soft-lit shadows, natural light from high clerestory window. "
+            "Environment: Minimalist mid-century study with dark walnut textures and matte finishes. "
+            "Action: Subject in mid-thought, looking slightly off-camera, relaxed posture, leaning back. "
+            "Color Grade: Desaturated earth tones, deep blacks, film grain, Kodak Portra 400 aesthetic. "
+            "Atmosphere: Intellectual, quiet, stillness, sophisticated."
+        ),
     },
     "content_standards": {
         "minimum_word_count": {

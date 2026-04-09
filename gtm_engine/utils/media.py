@@ -173,41 +173,104 @@ def generate_image(
         return None
 
 
+# --- Brand-aware prompt building ---
+
+def _get_video_prompt(script_text: str, scene_type: str = "talking_head") -> str:
+    """Build a video generation prompt from brand standards.
+
+    Pulls presenter description, environment, lighting, and camera
+    direction from brand_standards.json so every clip is consistent.
+    """
+    try:
+        from gtm_engine.brand import load_brand_standards
+        standards = load_brand_standards()
+        presenter = standards.get("presenter", {})
+        production = standards.get("video_production", {})
+        ai_template = production.get("ai_prompt_template", "")
+    except Exception:
+        presenter = {}
+        production = {}
+        ai_template = ""
+
+    if ai_template:
+        # Use the master AI prompt template with script content injected
+        subject = presenter.get("description", "Male presenter, early 30s-40s, British")
+        prompt = ai_template.replace("[Subject]", f"{subject} delivering: '{script_text[:150]}'")
+    else:
+        # Fallback
+        prompt = (
+            f"{presenter.get('description', 'Professional male presenter')}, "
+            f"{presenter.get('demeanour', 'calm and authoritative')}. "
+            f"Delivering: '{script_text[:150]}'. "
+            f"Cinematography: Medium close-up, 50mm lens, shallow depth of field. "
+            f"Lighting: Moody side-lighting, Rembrandt style, soft shadows. "
+            f"Environment: Minimalist modern study, dark walnut textures. "
+            f"Color grade: Desaturated earth tones, deep blacks, film grain."
+        )
+
+    # Add wardrobe and performance notes
+    wardrobe = presenter.get("wardrobe", "")
+    if wardrobe:
+        prompt += f" Wardrobe: {wardrobe}."
+
+    eyeline = production.get("eyeline", "")
+    if eyeline and scene_type == "discursive":
+        prompt += f" {eyeline}"
+
+    return prompt
+
+
+def _get_image_prompt(title: str, subtitle: str = "", style: str = "social") -> str:
+    """Build an image generation prompt from brand standards."""
+    try:
+        from gtm_engine.brand import load_brand_standards
+        standards = load_brand_standards()
+        colours = standards.get("visual", {}).get("colours", {})
+        bg = colours.get("background", "#0a0a0f")
+        accent = colours.get("primary_accent", "#6c63ff")
+        gold = colours.get("gold_accent", "#ffd166")
+        typography = standards.get("visual", {}).get("typography", {})
+        heading_font = typography.get("headings", "Playfair Display")
+    except Exception:
+        bg, accent, gold, heading_font = "#0a0a0f", "#6c63ff", "#ffd166", "Playfair Display"
+
+    return (
+        f"Cinematic still frame, dark background ({bg}). "
+        f"Bold headline text: '{title}'. "
+        f"{'Subtitle: ' + subtitle + '. ' if subtitle else ''}"
+        f"Colour accents: purple ({accent}), gold ({gold}). "
+        f"Typography: {heading_font} style for headings. "
+        f"Desaturated earth tones, deep blacks, film grain, Kodak Portra 400 aesthetic. "
+        f"Minimalist, intellectual, sophisticated. No stock photography."
+    )
+
+
 # --- Batch media generation for derivatives ---
 
 def generate_reel_media(script_sections: list[dict], title: str = "") -> dict:
     """Generate video clips and assemble media for a reel script.
 
-    Takes the structured reel script sections and generates a video clip
-    for each section. Returns paths to all generated media.
+    Uses brand standards for consistent presenter, environment, and style.
+    Each section gets an 8-second clip for better narrative flow.
     """
     results = {"clips": [], "thumbnail": None}
 
     # Generate a thumbnail image
-    thumb_prompt = (
-        f"Professional dark background (#0a0a0f), modern data visualization style. "
-        f"Bold text overlay in purple (#6c63ff). Topic: {title}. "
-        f"Clean, minimal, high contrast. No people."
-    )
     thumb_path = generate_image(
-        thumb_prompt,
+        _get_image_prompt(title, style="thumbnail"),
         output_path=OUTPUT_MEDIA_DIR / f"thumb_{int(time.time())}.png",
-        aspect_ratio="9:16",
     )
     results["thumbnail"] = str(thumb_path) if thumb_path else None
 
     # Generate video clips for each section
     for i, section in enumerate(script_sections):
-        clip_prompt = (
-            f"Professional talking-head style presenter explaining: "
-            f"{section.get('script', section.get('text', ''))}. "
-            f"Dark modern office background. Confident, authoritative tone. "
-            f"Clean lighting, shallow depth of field."
-        )
+        script_text = section.get("script", section.get("text", ""))
+        clip_prompt = _get_video_prompt(script_text, scene_type="talking_head")
+
         clip_path = generate_video(
             clip_prompt,
             output_path=OUTPUT_MEDIA_DIR / f"reel_clip_{i}_{int(time.time())}.mp4",
-            duration=4,
+            duration=8,
             aspect_ratio="9:16",
             resolution="720p",
         )
@@ -220,25 +283,22 @@ def generate_reel_media(script_sections: list[dict], title: str = "") -> dict:
 def generate_carousel_images(slides: list[dict]) -> list[str]:
     """Generate images for each slide of a LinkedIn carousel.
 
-    Returns list of paths to generated images.
+    Uses brand standards for consistent visual identity.
     """
     paths = []
     for i, slide in enumerate(slides):
         headline = slide.get("headline", slide.get("text", f"Slide {i+1}"))
         body = slide.get("body", "")
 
-        prompt = (
-            f"Professional presentation slide, dark background (#0a0a0f). "
-            f"Large bold headline in white: '{headline}'. "
-            f"Subtitle text in light gray. Purple accent (#6c63ff) for emphasis. "
-            f"Clean modern design. Playfair Display heading style. "
-            f"Slide {i+1} of a business carousel."
+        prompt = _get_image_prompt(
+            headline,
+            subtitle=f"Slide {i+1}. {body[:60]}" if body else f"Slide {i+1}",
+            style="carousel",
         )
 
         path = generate_image(
             prompt,
             output_path=OUTPUT_MEDIA_DIR / f"carousel_slide_{i}_{int(time.time())}.png",
-            aspect_ratio="1:1",
         )
         if path:
             paths.append(str(path))
@@ -247,20 +307,11 @@ def generate_carousel_images(slides: list[dict]) -> list[str]:
 
 
 def generate_social_graphic(title: str, subtitle: str = "", style: str = "linkedin") -> str | None:
-    """Generate a single social media graphic.
+    """Generate a single social media graphic using brand standards.
 
     Returns path to the generated image, or None on failure.
     """
-    aspect = "1:1" if style == "instagram" else "1.91:1"
-
-    prompt = (
-        f"Professional social media graphic. Dark background (#0a0a0f). "
-        f"Bold headline: '{title}'. "
-        f"{'Subtitle: ' + subtitle + '. ' if subtitle else ''}"
-        f"Purple accent (#6c63ff), gold highlight (#ffd166). "
-        f"Clean typography, modern data-driven aesthetic. "
-        f"No stock photos. Minimal design."
-    )
+    prompt = _get_image_prompt(title, subtitle=subtitle, style=style)
 
     path = generate_image(prompt, aspect_ratio=aspect)
     return str(path) if path else None

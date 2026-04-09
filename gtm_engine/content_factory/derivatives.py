@@ -279,17 +279,18 @@ def _generate_media_for_derivative(format_name: str, content: dict, master_asset
                 logger.info("  Generated reel media: %d clips + thumbnail", len(media.get("clips", [])))
 
         elif format_name == "talking_head_script":
-            # Generate a video clip from the script opening
+            # Generate a video clip from the script opening using brand standards
             script_text = content.get("script", "")[:200]
             if script_text:
-                from gtm_engine.utils.media import generate_video, generate_social_graphic
+                from gtm_engine.utils.media import (
+                    generate_video, generate_social_graphic, _get_video_prompt,
+                )
                 thumb = generate_social_graphic(title, style="linkedin")
                 media["thumbnail"] = thumb
-                # Video for the cold open section
+                # Video for the cold open — uses Discursive Portrait style
+                clip_prompt = _get_video_prompt(script_text, scene_type="discursive")
                 clip = generate_video(
-                    f"Professional presenter in dark modern office explaining: {script_text}. "
-                    f"Confident, authoritative. Clean lighting.",
-                    duration=8, aspect_ratio="16:9",
+                    clip_prompt, duration=8, aspect_ratio="16:9",
                 )
                 media["intro_clip"] = str(clip) if clip else None
                 logger.info("  Generated talking head intro clip + thumbnail")
