@@ -127,12 +127,14 @@ def generate_video(
 def generate_image(
     prompt: str,
     output_path: Path | None = None,
-    aspect_ratio: str = "1:1",
+    quality: str = "standard",
 ) -> Path | None:
-    """Generate an image using Gemini's native image generation.
+    """Generate an image using Google's image generation models.
 
-    Uses gemini-2.0-flash with image output modality — no separate Imagen
-    model needed. Returns the path to the saved image file, or None on failure.
+    quality="standard" uses gemini-3-pro-image-preview (fast, cheap, good for slides/social)
+    quality="ultra" uses imagen-4.0-ultra-generate-001 (best photorealism, slower)
+
+    Returns the path to the saved image file, or None on failure.
     """
     if not GOOGLE_API_KEY:
         logger.warning("GOOGLE_API_KEY not set -- skipping image generation")
@@ -140,13 +142,18 @@ def generate_image(
 
     client = _get_client()
     from google.genai import types
-    import base64
 
-    logger.info("Generating image: %s", prompt[:80])
+    # Route to the right model based on quality tier
+    if quality == "ultra":
+        model = "imagen-4.0-ultra-generate-001"
+    else:
+        model = "gemini-3-pro-image-preview"
+
+    logger.info("Generating image (%s): %s", model.split("/")[-1], prompt[:80])
 
     try:
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model=model,
             contents=f"Generate an image: {prompt}",
             config=types.GenerateContentConfig(
                 response_modalities=["IMAGE", "TEXT"],
@@ -270,6 +277,7 @@ def generate_reel_media(script_sections: list[dict], title: str = "") -> dict:
         clip_path = generate_video(
             clip_prompt,
             output_path=OUTPUT_MEDIA_DIR / f"reel_clip_{i}_{int(time.time())}.mp4",
+            model="veo-3.1-fast-generate-preview",  # Fast model for reel clips (cheaper)
             duration=8,
             aspect_ratio="9:16",
             resolution="720p",
@@ -312,6 +320,5 @@ def generate_social_graphic(title: str, subtitle: str = "", style: str = "linked
     Returns path to the generated image, or None on failure.
     """
     prompt = _get_image_prompt(title, subtitle=subtitle, style=style)
-
-    path = generate_image(prompt, aspect_ratio=aspect)
+    path = generate_image(prompt)
     return str(path) if path else None
