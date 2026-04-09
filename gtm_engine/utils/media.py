@@ -290,7 +290,63 @@ def generate_reel_media(script_sections: list[dict], title: str = "") -> dict:
         if clip_path:
             results["clips"].append(str(clip_path))
 
+    # Stitch clips into one finished reel via ffmpeg
+    if len(results["clips"]) > 1:
+        stitched = stitch_clips(results["clips"], title=title)
+        if stitched:
+            results["finished_reel"] = stitched
+
     return results
+
+
+def stitch_clips(clip_paths: list[str], title: str = "", output_path: Path | None = None) -> str | None:
+    """Concatenate video clips into one finished video using ffmpeg.
+
+    Creates a concat list file, runs ffmpeg, and returns the output path.
+    """
+    import subprocess
+    import tempfile
+
+    if not clip_paths:
+        return None
+
+    if output_path is None:
+        output_path = OUTPUT_MEDIA_DIR / f"reel_finished_{int(time.time())}.mp4"
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Create ffmpeg concat list
+    concat_file = OUTPUT_MEDIA_DIR / f"concat_{int(time.time())}.txt"
+    with open(concat_file, "w") as f:
+        for clip in clip_paths:
+            # ffmpeg needs forward slashes and escaped paths
+            safe_path = str(Path(clip).resolve()).replace("\\", "/")
+            f.write(f"file '{safe_path}'\n")
+
+    try:
+        cmd = [
+            "ffmpeg", "-y", "-f", "concat", "-safe", "0",
+            "-i", str(concat_file),
+            "-c", "copy",
+            str(output_path),
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+
+        if result.returncode == 0:
+            logger.info("Stitched %d clips into %s", len(clip_paths), output_path)
+            return str(output_path)
+        else:
+            logger.error("ffmpeg stitch failed: %s", result.stderr[:200])
+            return None
+    except FileNotFoundError:
+        logger.warning("ffmpeg not installed -- clips not stitched")
+        return None
+    except Exception as e:
+        logger.error("Stitch failed: %s", e)
+        return None
+    finally:
+        # Clean up concat file
+        concat_file.unlink(missing_ok=True)
 
 
 def generate_carousel_images(slides: list[dict]) -> list[str]:
