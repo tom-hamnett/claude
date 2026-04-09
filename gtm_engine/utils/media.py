@@ -66,9 +66,14 @@ def generate_video(
             for ref_path in reference_images[:3]:  # Veo supports up to 3
                 p = Path(ref_path)
                 if p.exists():
+                    import base64
                     image_bytes = p.read_bytes()
+                    mime = "image/png" if p.suffix == ".png" else "image/jpeg"
                     ref_image_objects.append(
-                        types.Image(image_bytes=image_bytes)
+                        types.Image(
+                            image_bytes=base64.b64encode(image_bytes).decode("utf-8"),
+                            mime_type=mime,
+                        )
                     )
 
         kwargs = {
