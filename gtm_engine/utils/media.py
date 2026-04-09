@@ -94,7 +94,7 @@ def generate_video(
             video_uri = video.video.uri if hasattr(video.video, 'uri') else None
             if video_uri:
                 logger.info("  Downloading video from URI...")
-                resp = httpx.get(video_uri)
+                resp = httpx.get(video_uri, follow_redirects=True)
                 resp.raise_for_status()
                 output_path.write_bytes(resp.content)
             else:
@@ -115,51 +115,52 @@ def generate_video(
         return None
 
 
-# --- Image Generation (Imagen) ---
+# --- Image Generation (Gemini native) ---
 
 @retry(wait=wait_exponential(min=2, max=30), stop=stop_after_attempt(3))
 def generate_image(
     prompt: str,
     output_path: Path | None = None,
-    model: str = "imagen-3.0-generate-002",
     aspect_ratio: str = "1:1",
 ) -> Path | None:
-    """Generate an image from a text prompt using Google Imagen.
+    """Generate an image using Gemini's native image generation.
 
-    Returns the path to the saved image file, or None on failure.
-    Costs ~$0.02-0.06 per image.
+    Uses gemini-2.0-flash with image output modality — no separate Imagen
+    model needed. Returns the path to the saved image file, or None on failure.
     """
     if not GOOGLE_API_KEY:
-        logger.warning("GOOGLE_API_KEY not set — skipping image generation")
+        logger.warning("GOOGLE_API_KEY not set -- skipping image generation")
         return None
 
     client = _get_client()
     from google.genai import types
+    import base64
 
     logger.info("Generating image: %s", prompt[:80])
 
     try:
-        response = client.models.generate_images(
-            model=model,
-            prompt=prompt,
-            config=types.GenerateImagesConfig(
-                number_of_images=1,
-                aspect_ratio=aspect_ratio,
+        response = client.models.generate_content(
+            model="gemini-2.0-flash-preview-image-generation",
+            contents=f"Generate an image: {prompt}",
+            config=types.GenerateContentConfig(
+                response_modalities=["IMAGE", "TEXT"],
             ),
         )
 
-        if not response.generated_images:
-            logger.error("Image generation returned no results")
-            return None
-
-        image = response.generated_images[0]
+        # Extract image from response parts
         if output_path is None:
             output_path = OUTPUT_MEDIA_DIR / f"image_{int(time.time())}.png"
-
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        image.image.save(str(output_path))
-        logger.info("Image saved to %s", output_path)
-        return output_path
+
+        for part in response.candidates[0].content.parts:
+            if part.inline_data and part.inline_data.mime_type.startswith("image/"):
+                image_bytes = part.inline_data.data
+                output_path.write_bytes(image_bytes)
+                logger.info("Image saved to %s", output_path)
+                return output_path
+
+        logger.error("No image found in Gemini response")
+        return None
 
     except Exception as e:
         logger.error("Image generation failed: %s", e)
