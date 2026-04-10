@@ -407,28 +407,89 @@ def _get_reference_images() -> list[Path]:
     return refs[:3]
 
 
-def generate_reel_media(reel_content: dict, title: str = "") -> dict:
-    """Full reel production pipeline.
+def add_text_overlay(video_path: str, text_overlays: list[dict],
+                     output_path: Path | None = None) -> str | None:
+    """Burn text overlays onto a video using ffmpeg drawtext filter.
 
-    1. Generate TTS voiceover (consistent voice, sets timing)
-    2. Generate talking head clips with reference images (consistent face, one setting)
-    3. Generate B-roll clip (detail shot, no person)
-    4. Stitch video clips with crossfade
-    5. Strip Veo audio and overlay TTS voiceover
+    text_overlays: list of {"text": str, "start": float, "end": float}
+    Uses Playfair Display brand font if available, falls back to system font.
+    """
+    import subprocess
+
+    if output_path is None:
+        output_path = OUTPUT_MEDIA_DIR / f"overlaid_{int(time.time())}.mp4"
+
+    # Build drawtext filter chain
+    filters = []
+    for i, overlay in enumerate(text_overlays):
+        text = overlay["text"].replace("'", "").replace(":", "").replace(",", "")
+        start = overlay.get("start", 0)
+        end = overlay.get("end", start + 3)
+        # Center text, large white font, semi-transparent black box behind
+        filter_str = (
+            f"drawtext=text='{text}':"
+            f"fontsize=60:fontcolor=white:"
+            f"x=(w-text_w)/2:y=(h-text_h)/2:"
+            f"box=1:boxcolor=black@0.6:boxborderw=20:"
+            f"enable='between(t,{start},{end})'"
+        )
+        filters.append(filter_str)
+
+    if not filters:
+        return str(video_path)
+
+    filter_chain = ",".join(filters)
+
+    try:
+        cmd = [
+            "ffmpeg", "-y", "-i", str(video_path),
+            "-vf", filter_chain,
+            "-c:a", "copy",
+            str(output_path),
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+        if result.returncode == 0:
+            logger.info("Text overlay complete: %s", output_path)
+            return str(output_path)
+        logger.error("Text overlay failed: %s", result.stderr[:200])
+        return None
+    except Exception as e:
+        logger.error("Text overlay failed: %s", e)
+        return None
+
+
+def generate_reel_media(reel_content: dict, title: str = "") -> dict:
+    """Presenter-free reel production pipeline.
+
+    Default mode: text + B-roll + voiceover (no face on screen).
+
+    Steps:
+    1. Generate TTS voiceover (sets timing, carries authority)
+    2. Generate 3 atmospheric B-roll clips (no people) per scene
+    3. Stitch B-roll clips
+    4. Overlay TTS voiceover (strips Veo audio)
+    5. Burn text overlays from the script
     6. Generate thumbnail
 
-    Input: reel_content dict from the reel_script derivative (has spoken_script,
-           hook_text, insight_text, close_text, b_roll_description).
+    Input: reel_content dict from the reel_script derivative.
+    Expected keys: spoken_script, b_roll_scenes (with visual + text_overlay per scene).
     """
     results = {"clips": [], "thumbnail": None, "voiceover": None, "finished_reel": None}
-    ref_images = _get_reference_images()
     ts = int(time.time())
 
-    # Handle both old format (sections list) and new format (spoken_script)
     spoken_script = reel_content.get("spoken_script", "")
-    b_roll_desc = reel_content.get("b_roll_description", "City skyline through glass window, soft focus")
+    b_roll_scenes = reel_content.get("b_roll_scenes", [])
 
-    # If old format, extract text from sections
+    # Backwards compatibility: if using old format, build scenes from old fields
+    if not b_roll_scenes:
+        old_desc = reel_content.get("b_roll_description", "City skyline through glass, cinematic")
+        b_roll_scenes = [
+            {"scene": "hook", "visual": old_desc, "text_overlay": reel_content.get("hook_text", "")[:40]},
+            {"scene": "insight", "visual": old_desc, "text_overlay": reel_content.get("insight_text", "")[:40]},
+            {"scene": "close", "visual": old_desc, "text_overlay": reel_content.get("close_text", "")[:40]},
+        ]
+
+    # Extract spoken script from old sections format if needed
     if not spoken_script and reel_content.get("sections"):
         spoken_script = " ".join(
             s.get("script", s.get("text", ""))
@@ -439,7 +500,7 @@ def generate_reel_media(reel_content: dict, title: str = "") -> dict:
         logger.error("No spoken script found in reel content")
         return results
 
-    # --- Step 1: Generate TTS voiceover (sets the timing) ---
+    # --- Step 1: Generate TTS voiceover ---
     logger.info("Step 1/5: Generating voiceover...")
     voiceover_path = generate_voiceover(
         spoken_script,
@@ -447,68 +508,77 @@ def generate_reel_media(reel_content: dict, title: str = "") -> dict:
     )
     results["voiceover"] = str(voiceover_path) if voiceover_path else None
 
-    # --- Step 2: Generate talking head clips (one setting, reference images) ---
-    logger.info("Step 2/5: Generating talking head clips (same character, same setting)...")
-    setting_prompt = _get_video_prompt(spoken_script[:100], scene_type="discursive")
+    # --- Step 2: Generate 3 B-roll clips (no people) ---
+    logger.info("Step 2/5: Generating %d B-roll clips...", len(b_roll_scenes))
+    clip_durations = [7, 8, 5]  # Hook=7s, Insight=8s, Close=5s = 20s total
 
-    # Two talking head clips: hook (8s) and insight+close (8s)
-    for i, label in enumerate(["hook", "insight_close"]):
+    for i, scene in enumerate(b_roll_scenes[:3]):
+        visual = scene.get("visual", "")
+        broll_prompt = (
+            f"{visual}. ABSOLUTELY NO PEOPLE, no faces, no hands visible. "
+            f"Cinematic, shallow depth of field, slow subtle movement. "
+            f"Dark, moody, desaturated earth tones. Kodak Portra 400 color grade. "
+            f"Professional documentary aesthetic."
+        )
+        duration = clip_durations[i] if i < len(clip_durations) else 6
+
         clip_path = generate_video(
-            setting_prompt,
-            output_path=OUTPUT_MEDIA_DIR / f"reel_{label}_{ts}.mp4",
+            broll_prompt,
+            output_path=OUTPUT_MEDIA_DIR / f"reel_broll_{i}_{ts}.mp4",
             model="veo-3.1-fast-generate-preview",
-            duration=8,
+            duration=duration,
             aspect_ratio="9:16",
             resolution="720p",
-            reference_images=ref_images,
         )
         if clip_path:
             results["clips"].append(str(clip_path))
 
-    # --- Step 3: Generate B-roll clip (no person, detail shot) ---
-    logger.info("Step 3/5: Generating B-roll...")
-    broll_prompt = (
-        f"{b_roll_desc}. Cinematic, shallow depth of field, "
-        f"desaturated earth tones, slow subtle movement. No people. "
-        f"Kodak Portra 400 color grade."
-    )
-    broll_path = generate_video(
-        broll_prompt,
-        output_path=OUTPUT_MEDIA_DIR / f"reel_broll_{ts}.mp4",
-        model="veo-3.1-fast-generate-preview",
-        duration=4,
-        aspect_ratio="9:16",
-        resolution="720p",
-    )
-    if broll_path:
-        results["b_roll"] = str(broll_path)
+    # --- Step 3: Stitch B-roll clips ---
+    if len(results["clips"]) < 1:
+        logger.error("No B-roll clips generated -- cannot assemble reel")
+        return results
 
-    # --- Step 4: Stitch clips (hook + broll + insight) with crossfade ---
-    logger.info("Step 4/5: Stitching clips...")
-    stitch_order = []
-    if len(results["clips"]) >= 1:
-        stitch_order.append(results["clips"][0])  # Hook
-    if results.get("b_roll"):
-        stitch_order.append(results["b_roll"])  # B-roll intercut
-    if len(results["clips"]) >= 2:
-        stitch_order.append(results["clips"][1])  # Insight + close
+    logger.info("Step 3/5: Stitching B-roll clips...")
+    stitched = stitch_clips(
+        results["clips"],
+        title=title,
+        output_path=OUTPUT_MEDIA_DIR / f"reel_stitched_{ts}.mp4",
+    ) if len(results["clips"]) > 1 else results["clips"][0]
 
-    stitched = None
-    if len(stitch_order) > 1:
-        stitched = stitch_clips(stitch_order, title=title,
-                                output_path=OUTPUT_MEDIA_DIR / f"reel_stitched_{ts}.mp4")
-
-    # --- Step 5: Overlay TTS voiceover ---
+    # --- Step 4: Overlay TTS voiceover ---
+    with_audio = stitched
     if stitched and voiceover_path:
-        logger.info("Step 5/5: Overlaying voiceover...")
-        final = strip_audio_and_overlay(
+        logger.info("Step 4/5: Overlaying voiceover...")
+        with_audio = strip_audio_and_overlay(
             stitched, str(voiceover_path),
+            output_path=OUTPUT_MEDIA_DIR / f"reel_with_audio_{ts}.mp4",
+        ) or stitched
+
+    # --- Step 5: Burn text overlays ---
+    if with_audio and b_roll_scenes:
+        logger.info("Step 5/5: Adding text overlays...")
+        # Build timed text overlays based on section durations
+        overlays = []
+        cumulative = 0.0
+        for i, scene in enumerate(b_roll_scenes[:3]):
+            text = scene.get("text_overlay", "")
+            if text:
+                section_dur = clip_durations[i] if i < len(clip_durations) else 6
+                overlays.append({
+                    "text": text,
+                    "start": cumulative + 0.5,  # slight delay
+                    "end": cumulative + section_dur - 0.3,
+                })
+                cumulative += section_dur
+
+        final = add_text_overlay(
+            with_audio,
+            overlays,
             output_path=OUTPUT_MEDIA_DIR / f"reel_final_{ts}.mp4",
-        )
-        if final:
-            results["finished_reel"] = final
-    elif stitched:
-        results["finished_reel"] = stitched
+        ) or with_audio
+        results["finished_reel"] = final
+    else:
+        results["finished_reel"] = with_audio
 
     # --- Thumbnail ---
     thumb_path = generate_image(

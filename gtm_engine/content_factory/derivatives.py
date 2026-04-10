@@ -111,24 +111,33 @@ Return JSON: {"tweets": [{"number": 1, "text": "..."}]}""",
 
     "reel_script": """Generate a 20-second social media reel script from this master asset.
 
-CRITICAL: Write EXACTLY what will be spoken aloud. Not notes, not shorthand — the actual
-words the presenter says. 50-60 words maximum (people speak at 150 words per minute).
+This reel uses NO PRESENTER. It's text-over-B-roll with voiceover narration.
+The visuals are atmospheric B-roll (data viz, city shots, abstract textures).
+The voice carries the authority — there is no face on screen.
 
-Structure (3 parts, one continuous monologue):
-- HOOK (0-8s, ~20 words): The provocative opening line that stops the scroll
-- INSIGHT (8-16s, ~20 words): The key point or uncomfortable truth
-- CLOSE (16-20s, ~15 words): A thought that lingers, not a call to action
+CRITICAL: Write EXACTLY what will be spoken aloud. 50-60 words maximum
+(150 wpm speaking pace = ~20 seconds).
 
-Also provide a B-roll description — a 3-second visual cutaway (data on screen, city skyline,
-hands on a document) that plays between the hook and insight while the voice continues.
+Structure (one continuous monologue):
+- HOOK (0-6s, ~15 words): Provocative opening that stops the scroll
+- INSIGHT (6-15s, ~25 words): The uncomfortable truth with evidence
+- CLOSE (15-20s, ~15 words): A thought that lingers
+
+Also provide:
+- 3 B-roll visual concepts (one per section) — no people, cinematic, atmospheric
+- Text overlay phrases to appear on screen at key moments
 
 Return JSON:
 {
-    "spoken_script": "the complete spoken text as one paragraph, exactly as said aloud",
-    "hook_text": "the hook portion (first ~20 words)",
-    "insight_text": "the insight portion (~20 words)",
-    "close_text": "the closing portion (~15 words)",
-    "b_roll_description": "what the 3-second cutaway shows",
+    "spoken_script": "complete spoken text as one paragraph",
+    "hook_text": "hook portion (~15 words)",
+    "insight_text": "insight portion (~25 words)",
+    "close_text": "closing portion (~15 words)",
+    "b_roll_scenes": [
+        {"scene": "hook", "visual": "detailed description of cinematic B-roll for hook", "text_overlay": "short punchy text to display"},
+        {"scene": "insight", "visual": "B-roll for insight section", "text_overlay": "key phrase to display"},
+        {"scene": "close", "visual": "B-roll for close", "text_overlay": "final thought text"}
+    ],
     "word_count": 55,
     "estimated_duration": "20s"
 }""",
