@@ -187,11 +187,29 @@ def generate_voiceover(
             ),
         )
 
-        # Extract audio data
+        # Extract audio data — Google TTS returns raw PCM, wrap as proper WAV
         if response.candidates and response.candidates[0].content.parts:
-            audio_data = response.candidates[0].content.parts[0].inline_data.data
-            output_path.write_bytes(audio_data)
-            logger.info("Voiceover saved to %s", output_path)
+            part = response.candidates[0].content.parts[0]
+            audio_data = part.inline_data.data
+            mime_type = part.inline_data.mime_type or "audio/L16;rate=24000"
+
+            # Parse sample rate from mime type (e.g. "audio/L16;rate=24000")
+            sample_rate = 24000
+            if "rate=" in mime_type:
+                try:
+                    sample_rate = int(mime_type.split("rate=")[1].split(";")[0])
+                except (ValueError, IndexError):
+                    pass
+
+            # Wrap raw PCM data in a proper WAV file using the wave module
+            import wave
+            with wave.open(str(output_path), "wb") as wav_file:
+                wav_file.setnchannels(1)       # Mono
+                wav_file.setsampwidth(2)       # 16-bit
+                wav_file.setframerate(sample_rate)
+                wav_file.writeframes(audio_data)
+
+            logger.info("Voiceover saved to %s (%d Hz)", output_path, sample_rate)
             return output_path
 
         logger.error("TTS returned no audio")
