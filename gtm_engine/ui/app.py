@@ -27,14 +27,20 @@ from gtm_engine.approval import get_pipeline_counts
 from gtm_engine.segments import load_segments
 from gtm_engine.utils.file_io import load_json
 
-# --- Brand palette (matches MASTER_CONTEXT.md) ---
+# --- Brand palette (UI rendering — readable dark-blue theme) ---
+# Note: brand_standards.json still uses #0a0a0f as the content aesthetic;
+# this palette is purely for the operator dashboard readability.
 BRAND_COLOURS = {
-    "bg": "#0a0a0f",
-    "primary": "#6c63ff",
-    "hot": "#ff6b6b",
-    "gold": "#ffd166",
-    "text": "#e8e8f0",
-    "muted": "#8888a0",
+    "bg": "#0d1b2a",          # Deep navy blue (not pure black)
+    "bg_panel": "#152638",    # Slightly lighter for panels and expanders
+    "bg_card": "#1b2e44",     # Card/hover background
+    "primary": "#6c63ff",     # Purple accent
+    "primary_hover": "#8a80ff",
+    "hot": "#ff6b6b",         # Red coral for rejection/warning
+    "gold": "#ffd166",        # Gold for emphasis
+    "text": "#ffffff",        # Pure white for all body text
+    "text_muted": "#d0d6e0",  # Light blue-grey (readable on navy)
+    "border": "#2a4060",      # Subtle border colour
 }
 
 
@@ -57,6 +63,7 @@ def main():
         "Navigate",
         [
             "Dashboard",
+            "Strategy Context",
             "Ideas",
             "Content",
             "Deployment",
@@ -74,6 +81,7 @@ def main():
     # Route to the selected page
     routes = {
         "Dashboard": page_dashboard,
+        "Strategy Context": page_strategy_context,
         "Ideas": page_ideas,
         "Content": page_content,
         "Deployment": page_deployment,
@@ -89,28 +97,113 @@ def _apply_dark_theme():
     st.markdown(
         f"""
         <style>
+        /* Base background and text — dark navy with white text */
         .stApp {{
             background-color: {BRAND_COLOURS['bg']};
             color: {BRAND_COLOURS['text']};
         }}
-        .stSidebar {{
-            background-color: #0f0f18;
-        }}
-        h1, h2, h3 {{
+        .stApp, .stApp p, .stApp span, .stApp div, .stApp li {{
             color: {BRAND_COLOURS['text']};
-            font-family: 'Playfair Display', serif;
         }}
+
+        /* Sidebar — darker panel shade */
+        section[data-testid="stSidebar"] {{
+            background-color: {BRAND_COLOURS['bg_panel']};
+        }}
+        section[data-testid="stSidebar"] * {{
+            color: {BRAND_COLOURS['text']} !important;
+        }}
+
+        /* Headings */
+        h1, h2, h3, h4, h5, h6 {{
+            color: {BRAND_COLOURS['text']} !important;
+            font-family: 'Playfair Display', Georgia, serif;
+        }}
+
+        /* Muted captions — readable blue-grey, not dark grey */
+        .stCaption, small, [data-testid="stCaptionContainer"] {{
+            color: {BRAND_COLOURS['text_muted']} !important;
+        }}
+
+        /* Expander panels */
+        div[data-testid="stExpander"] {{
+            background-color: {BRAND_COLOURS['bg_panel']};
+            border: 1px solid {BRAND_COLOURS['border']};
+            border-radius: 6px;
+        }}
+        div[data-testid="stExpander"] summary {{
+            color: {BRAND_COLOURS['text']} !important;
+        }}
+
+        /* Buttons — purple primary, bright white text */
         .stButton > button {{
             background-color: {BRAND_COLOURS['primary']};
-            color: white;
+            color: #ffffff !important;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
+            font-weight: 600;
         }}
         .stButton > button:hover {{
-            background-color: {BRAND_COLOURS['hot']};
+            background-color: {BRAND_COLOURS['primary_hover']};
+            color: #ffffff !important;
+        }}
+
+        /* Metric cards — white label, purple value */
+        [data-testid="stMetricLabel"] {{
+            color: {BRAND_COLOURS['text_muted']} !important;
         }}
         [data-testid="stMetricValue"] {{
-            color: {BRAND_COLOURS['primary']};
+            color: {BRAND_COLOURS['gold']} !important;
+        }}
+
+        /* Input fields on dark background */
+        .stTextInput > div > div > input,
+        .stTextArea > div > div > textarea,
+        .stSelectbox > div > div {{
+            background-color: {BRAND_COLOURS['bg_panel']};
+            color: {BRAND_COLOURS['text']} !important;
+            border: 1px solid {BRAND_COLOURS['border']};
+        }}
+
+        /* Markdown code blocks — readable */
+        code, pre {{
+            background-color: {BRAND_COLOURS['bg_panel']} !important;
+            color: {BRAND_COLOURS['gold']} !important;
+        }}
+
+        /* Tables and dataframes */
+        .stDataFrame, .stTable {{
+            background-color: {BRAND_COLOURS['bg_panel']};
+            color: {BRAND_COLOURS['text']};
+        }}
+
+        /* Blockquotes (used for hooks) */
+        blockquote {{
+            border-left: 3px solid {BRAND_COLOURS['primary']};
+            color: {BRAND_COLOURS['gold']} !important;
+            background-color: {BRAND_COLOURS['bg_panel']};
+            padding: 12px 16px;
+            border-radius: 4px;
+        }}
+
+        /* Info/success/warning boxes */
+        div[data-baseweb="notification"] {{
+            background-color: {BRAND_COLOURS['bg_panel']};
+            color: {BRAND_COLOURS['text']};
+        }}
+
+        /* Tabs */
+        .stTabs [data-baseweb="tab-list"] button {{
+            color: {BRAND_COLOURS['text_muted']} !important;
+        }}
+        .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {{
+            color: {BRAND_COLOURS['primary']} !important;
+            border-bottom-color: {BRAND_COLOURS['primary']} !important;
+        }}
+
+        /* Checkboxes */
+        .stCheckbox label {{
+            color: {BRAND_COLOURS['text']} !important;
         }}
         </style>
         """,
@@ -183,6 +276,166 @@ def page_dashboard():
 
 
 # -----------------------------------------------------------------------------
+# STRATEGY CONTEXT — the ingestion visibility point
+# -----------------------------------------------------------------------------
+
+def page_strategy_context():
+    st.title("Strategy Context")
+    st.caption(
+        "Everything the idea generator loads as context. If something is "
+        "missing here, ideas will drift from the strategy."
+    )
+
+    brief_path = OUTPUT_DIR / "gtm_brief.json"
+    strategy_path = OUTPUT_DIR / "gtm_strategy.json"
+    brand_path = DATA_DIR / "brand_standards.json"
+    master_assets_dir = DATA_DIR / "master_assets"
+
+    # Loading status
+    st.subheader("Ingestion Status")
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("GTM Brief", "Loaded" if brief_path.exists() else "Missing")
+    with col2:
+        st.metric("GTM Strategy", "Loaded" if strategy_path.exists() else "Missing")
+    with col3:
+        st.metric("Brand Standards", "Loaded" if brand_path.exists() else "Missing")
+    with col4:
+        n_assets = len(list(master_assets_dir.glob("MA-*.json"))) if master_assets_dir.exists() else 0
+        st.metric("Master Assets", n_assets)
+
+    st.markdown("---")
+
+    # Tabs for each loaded file
+    tabs = st.tabs([
+        "GTM Brief",
+        "GTM Strategy",
+        "Master Asset Canon",
+        "Uncomfortable Truths",
+        "Target Segments",
+    ])
+
+    # GTM Brief tab
+    with tabs[0]:
+        if brief_path.exists():
+            brief = load_json(brief_path)
+            st.markdown(f"**Umbrella brand:** {brief.get('umbrella_brand', '')}")
+            st.markdown("---")
+            st.subheader("Product Portfolio")
+            for p in brief.get("products", []):
+                with st.expander(f"**{p.get('name', 'Unknown')}** ({p.get('current_stage', 'n/a')})"):
+                    st.markdown(f"**Description:** {p.get('description', '')}")
+                    st.markdown(f"**Core value prop:** {p.get('core_value_prop', '')}")
+                    st.markdown(f"**Positioning:** {p.get('positioning', '')}")
+                    if p.get("key_features"):
+                        st.markdown("**Key features:**")
+                        for f in p["key_features"]:
+                            st.markdown(f"- {f}")
+                    if p.get("target_users"):
+                        st.markdown("**Target users:**")
+                        for u in p["target_users"]:
+                            st.markdown(f"- {u}")
+        else:
+            st.warning("No GTM Brief found. Run `python main.py prefill` or `python main.py discover` to create one.")
+
+    # GTM Strategy tab
+    with tabs[1]:
+        if strategy_path.exists():
+            strategy = load_json(strategy_path)
+            st.markdown(f"**Summary:** {strategy.get('brief_summary', '')}")
+            st.markdown("---")
+            st.subheader("Channels (stack-ranked)")
+            for ch in strategy.get("channels", [])[:8]:
+                st.markdown(
+                    f"**#{ch.get('priority_rank', '?')} {ch.get('channel', '')}** — "
+                    f"Impact {ch.get('impact_score', 0)}/10, "
+                    f"Effort {ch.get('effort_score', 0)}/10, "
+                    f"Ratio {ch.get('impact_to_effort_ratio', 0)}"
+                )
+                if ch.get("quick_win"):
+                    st.caption(f"Quick win: {ch['quick_win']}")
+        else:
+            st.warning("No GTM Strategy found. Run `python main.py strategy` after the brief is in place.")
+
+    # Master Asset Canon tab
+    with tabs[2]:
+        if master_assets_dir.exists():
+            assets = sorted(master_assets_dir.glob("MA-*.json"))
+            if assets:
+                st.markdown(
+                    "These master assets are the narrative anchors. Every "
+                    "idea in the idea bank should feel like it could extend "
+                    "this body of work."
+                )
+                for path in assets:
+                    try:
+                        ma = load_json(path)
+                        with st.expander(f"**{ma.get('id')}**: {ma.get('title', '')}", expanded=True):
+                            st.markdown(f"**Hook:** *{ma.get('hook', '')}*")
+                            st.markdown(f"**Uncomfortable truth:** {ma.get('uncomfortable_truth', '')}")
+                            st.markdown(f"**Point of view:** {ma.get('point_of_view', '')}")
+                            if ma.get("body"):
+                                with st.expander("Full body"):
+                                    st.markdown(ma["body"])
+                    except Exception as e:
+                        st.error(f"Could not load {path.name}: {e}")
+            else:
+                st.info("No master assets imported yet. Run `python main.py import-ma001` to import the Consultancy Death Spiral.")
+        else:
+            st.info("No master_assets directory. Run `python main.py import-ma001` to get started.")
+
+    # Uncomfortable Truths tab
+    with tabs[3]:
+        if strategy_path.exists():
+            strategy = load_json(strategy_path)
+            edginess = strategy.get("edginess", {})
+            st.markdown(f"**Edginess level:** {edginess.get('overall_level', 'n/a')}/10")
+
+            st.markdown("---")
+            st.subheader("Uncomfortable truths")
+            for t in edginess.get("uncomfortable_truths", []):
+                st.markdown(f"- {t}")
+
+            st.markdown("---")
+            st.subheader("Point of view statements")
+            for p in edginess.get("point_of_view_statements", []):
+                st.markdown(f"- {p}")
+
+            st.markdown("---")
+            st.subheader("Category norms to break")
+            for n in edginess.get("category_norms_to_break", []):
+                st.markdown(f"- {n}")
+        else:
+            st.warning("Generate a strategy first to see edginess framework.")
+
+    # Target Segments tab
+    with tabs[4]:
+        if strategy_path.exists():
+            strategy = load_json(strategy_path)
+            segments = strategy.get("segments", [])
+            positioning = strategy.get("positioning", [])
+
+            for seg in segments:
+                with st.expander(f"**#{seg.get('priority_rank', '?')} {seg.get('name', '')}**", expanded=seg.get("priority_rank") == 1):
+                    st.markdown(f"**Description:** {seg.get('description', '')}")
+                    st.markdown(f"**Willingness to pay:** {seg.get('willingness_to_pay', '')}")
+                    if seg.get("pain_points"):
+                        st.markdown("**Pain points:**")
+                        for p in seg["pain_points"]:
+                            st.markdown(f"- {p}")
+                    st.markdown(f"**Reasoning:** {seg.get('reasoning', '')}")
+
+                    # Matching positioning
+                    matching = [p for p in positioning if p.get("segment_name") == seg.get("name")]
+                    if matching:
+                        st.markdown("---")
+                        st.markdown(f"**Headline:** *{matching[0].get('headline', '')}*")
+                        st.markdown(f"**Value prop:** {matching[0].get('value_proposition', '')}")
+        else:
+            st.warning("Generate a strategy first to see segments.")
+
+
+# -----------------------------------------------------------------------------
 # IDEAS
 # -----------------------------------------------------------------------------
 
@@ -194,14 +447,30 @@ def page_ideas():
 
     # --- Generation panel ---
     with st.expander("Generate new ideas", expanded=False):
+        # Show what context will be loaded
+        brief_ok = (OUTPUT_DIR / "gtm_brief.json").exists()
+        strat_ok = (OUTPUT_DIR / "gtm_strategy.json").exists()
+        n_ma = len(list((DATA_DIR / "master_assets").glob("MA-*.json"))) if (DATA_DIR / "master_assets").exists() else 0
+        st.markdown(
+            f"**Context loaded:** GTM Brief {'Y' if brief_ok else 'N'} · "
+            f"GTM Strategy {'Y' if strat_ok else 'N'} · "
+            f"Master Assets: {n_ma}"
+        )
+        if not brief_ok or not strat_ok:
+            st.warning(
+                "Missing context. Ideas will be weaker. Go to **Strategy Context** "
+                "to see what's loaded, and run `python main.py prefill` / "
+                "`python main.py strategy` from the terminal if files are missing."
+            )
+
         col_g1, col_g2, col_g3 = st.columns([2, 2, 1])
         with col_g1:
             n_ideas = st.number_input("Number of ideas", min_value=5, max_value=200, value=50, step=5)
         with col_g2:
-            st.markdown("Funnel distribution will auto-balance across umbrella / product / feature / proof")
+            st.markdown("Funnel auto-balance: umbrella / product / feature / proof")
         with col_g3:
             if st.button("Generate batch", type="primary"):
-                with st.spinner(f"Generating {n_ideas} ideas via Claude..."):
+                with st.spinner(f"Generating {n_ideas} ideas via Claude (loading full strategy context)..."):
                     try:
                         from gtm_engine.ideas.generator import generate_and_save
                         ids = generate_and_save(n=n_ideas)
@@ -209,6 +478,23 @@ def page_ideas():
                         st.rerun()
                     except Exception as e:
                         st.error(f"Generation failed: {e}")
+
+    # --- Danger zone: clear stale ideas ---
+    with st.expander("Clear stale drafts (danger zone)", expanded=False):
+        st.warning(
+            "This permanently deletes all ideas in `idea_draft` status. Use this "
+            "to clear an off-strategy batch before regenerating with better context."
+        )
+        if st.button("Delete all draft ideas"):
+            import sqlite3
+            from gtm_engine.config import SQLITE_PATH
+            with sqlite3.connect(str(SQLITE_PATH)) as conn:
+                cursor = conn.execute("DELETE FROM ideas WHERE status = 'idea_draft'")
+                n_deleted = cursor.rowcount
+                conn.commit()
+            st.success(f"Deleted {n_deleted} draft ideas.")
+            st.session_state.selected_ideas = set()
+            st.rerun()
 
     st.markdown("---")
 
