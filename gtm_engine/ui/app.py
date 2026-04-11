@@ -53,6 +53,7 @@ def main():
     )
 
     _apply_dark_theme()
+    _initialise_libraries()
 
     # Sidebar navigation
     st.sidebar.markdown("### Quantum Tools")
@@ -64,12 +65,16 @@ def main():
         [
             "Dashboard",
             "Strategy Context",
+            "Data Vault",
+            "Brief Requests",
             "Ideas",
+            "Producer Briefs",
             "Content",
             "Deployment",
+            "Scene Library",
+            "Character Library",
             "Segments (Core-Five)",
             "Brand Standards",
-            "Character Library",
             "Intelligence Feed",
         ],
         label_visibility="collapsed",
@@ -82,15 +87,53 @@ def main():
     routes = {
         "Dashboard": page_dashboard,
         "Strategy Context": page_strategy_context,
+        "Data Vault": page_data_vault,
+        "Brief Requests": page_briefs,
         "Ideas": page_ideas,
+        "Producer Briefs": page_producer_briefs,
         "Content": page_content,
         "Deployment": page_deployment,
+        "Scene Library": page_scenes,
+        "Character Library": page_characters,
         "Segments (Core-Five)": page_segments,
         "Brand Standards": page_brand,
-        "Character Library": page_characters,
         "Intelligence Feed": page_intelligence,
     }
     routes[page]()
+
+
+def _initialise_libraries():
+    """Ensure all databases and seed data exist on first load."""
+    try:
+        from gtm_engine.ideas import IdeaBank
+        IdeaBank()  # creates schema
+    except Exception:
+        pass
+
+    try:
+        from gtm_engine.scenes import SceneLibrary
+        lib = SceneLibrary()
+        lib.seed_if_empty()
+    except Exception:
+        pass
+
+    try:
+        from gtm_engine.data_vault import DataVault
+        DataVault()
+    except Exception:
+        pass
+
+    try:
+        from gtm_engine.briefs import BriefQueue
+        BriefQueue()
+    except Exception:
+        pass
+
+    try:
+        from gtm_engine.producer import ProducerBriefLibrary
+        ProducerBriefLibrary()
+    except Exception:
+        pass
 
 
 def _apply_dark_theme():
@@ -532,89 +575,178 @@ def page_ideas():
         st.info("No ideas match the current filters. Try generating a batch or adjusting the filters.")
         return
 
-    # --- Bulk selection ---
+    # --- Bulk selection state ---
     if "selected_ideas" not in st.session_state:
         st.session_state.selected_ideas = set()
 
-    col_bulk1, col_bulk2, col_bulk3, col_bulk4 = st.columns([1, 1, 1, 3])
-    with col_bulk1:
-        if st.button("Select all"):
+    # --- ALWAYS-VISIBLE action bar ---
+    st.markdown("### Actions")
+    st.caption(
+        "Tick ideas below then hit an action. Actions are disabled until at "
+        "least one idea is selected."
+    )
+
+    has_selection = bool(st.session_state.selected_ideas)
+    n_sel = len(st.session_state.selected_ideas)
+
+    col_sel1, col_sel2, col_sel3 = st.columns([1, 1, 3])
+    with col_sel1:
+        if st.button("Select all shown"):
             st.session_state.selected_ideas = {i.id for i in ideas}
             st.rerun()
-    with col_bulk2:
-        if st.button("Clear"):
+    with col_sel2:
+        if st.button("Clear selection"):
             st.session_state.selected_ideas = set()
             st.rerun()
-    with col_bulk3:
-        st.markdown(f"**{len(st.session_state.selected_ideas)} selected**")
+    with col_sel3:
+        if has_selection:
+            st.markdown(f"**{n_sel} ideas selected**")
+        else:
+            st.markdown("*Nothing selected*")
 
-    # Bulk action buttons
-    if st.session_state.selected_ideas:
-        col_act1, col_act2, col_act3, col_act4 = st.columns(4)
-        with col_act1:
-            if st.button("Approve selected", type="primary"):
-                from gtm_engine.batch import bulk_approve_ideas
-                report = bulk_approve_ideas(list(st.session_state.selected_ideas))
-                st.success(f"Approved {len(report['successful'])} ideas")
+    col_act1, col_act2, col_act3, col_act4, col_act5 = st.columns(5)
+    with col_act1:
+        if st.button("+ Approve", type="primary", disabled=not has_selection):
+            from gtm_engine.batch import bulk_approve_ideas
+            report = bulk_approve_ideas(list(st.session_state.selected_ideas))
+            st.success(f"Approved {len(report['successful'])} ideas")
+            st.session_state.selected_ideas = set()
+            st.rerun()
+    with col_act2:
+        if st.button("- Reject", disabled=not has_selection):
+            from gtm_engine.batch import bulk_reject_ideas
+            report = bulk_reject_ideas(list(st.session_state.selected_ideas))
+            st.success(f"Rejected {len(report['successful'])} ideas")
+            st.session_state.selected_ideas = set()
+            st.rerun()
+    with col_act3:
+        if st.button("> Producer Brief", disabled=not has_selection):
+            from gtm_engine.producer import generate_producer_brief
+            with st.spinner(f"Generating producer briefs for {n_sel} ideas..."):
+                for iid in list(st.session_state.selected_ideas):
+                    try:
+                        generate_producer_brief(iid)
+                    except Exception as e:
+                        st.error(f"Idea {iid}: {e}")
+                st.success(f"Generated producer briefs. See 'Producer Briefs' page.")
                 st.session_state.selected_ideas = set()
                 st.rerun()
-        with col_act2:
-            if st.button("Reject selected"):
-                from gtm_engine.batch import bulk_reject_ideas
-                report = bulk_reject_ideas(list(st.session_state.selected_ideas))
-                st.success(f"Rejected {len(report['successful'])} ideas")
+    with col_act4:
+        if st.button(">> Generate Content", disabled=not has_selection):
+            with st.spinner("Generating content pieces..."):
+                from gtm_engine.batch import bulk_generate_content
+                report = bulk_generate_content(list(st.session_state.selected_ideas))
+                st.success(
+                    f"Generated {len(report['successful'])}/{n_sel} content pieces"
+                )
+                if report["failed"]:
+                    with st.expander("Failures"):
+                        st.json(report["failed"])
                 st.session_state.selected_ideas = set()
                 st.rerun()
-        with col_act3:
-            if st.button("Generate content"):
-                with st.spinner("Generating content pieces..."):
-                    from gtm_engine.batch import bulk_generate_content
-                    report = bulk_generate_content(list(st.session_state.selected_ideas))
-                    st.success(
-                        f"Generated {len(report['successful'])}/{len(st.session_state.selected_ideas)} content pieces"
-                    )
-                    if report["failed"]:
-                        with st.expander("Failures"):
-                            st.json(report["failed"])
-                    st.session_state.selected_ideas = set()
-                    st.rerun()
-        with col_act4:
-            if st.button("Archive selected"):
-                from gtm_engine.approval import archive
-                for iid in st.session_state.selected_ideas:
-                    archive(iid, reason="Bulk archive from UI")
-                st.session_state.selected_ideas = set()
-                st.rerun()
+    with col_act5:
+        if st.button("Archive", disabled=not has_selection):
+            from gtm_engine.approval import archive
+            for iid in st.session_state.selected_ideas:
+                archive(iid, reason="Bulk archive from UI")
+            st.session_state.selected_ideas = set()
+            st.rerun()
 
     st.markdown("---")
 
-    # --- Idea list ---
+    # --- Idea list with inline edit + comments ---
+    import sqlite3
+    from gtm_engine.config import SQLITE_PATH
+
     for idea in ideas:
         selected = idea.id in st.session_state.selected_ideas
         with st.container():
             col_check, col_body = st.columns([1, 20])
             with col_check:
-                new_selected = st.checkbox("", value=selected, key=f"select_{idea.id}", label_visibility="collapsed")
+                new_selected = st.checkbox(
+                    "Select",
+                    value=selected,
+                    key=f"select_{idea.id}",
+                    label_visibility="collapsed",
+                )
                 if new_selected and not selected:
                     st.session_state.selected_ideas.add(idea.id)
+                    st.rerun()
                 elif not new_selected and selected:
                     st.session_state.selected_ideas.discard(idea.id)
+                    st.rerun()
 
             with col_body:
-                header = f"**{idea.title}**"
-                meta = f"`{idea.funnel_level}` `{idea.segment_type}` edginess {idea.edginess_score}/10"
+                header = f"**#{idea.id}** · **{idea.title}**"
+                meta_bits = [f"`{idea.funnel_level}`", f"`{idea.segment_type}`",
+                             f"edginess {idea.edginess_score}/10"]
                 if idea.product:
-                    meta = f"`{idea.product}` " + meta
-                st.markdown(f"{header}  —  {meta}")
+                    meta_bits.insert(0, f"`{idea.product}`")
+                meta_bits.append(f"status: `{idea.status}`")
+                st.markdown(f"{header}  —  {' '.join(meta_bits)}")
                 st.markdown(f"> *{idea.hook}*")
-                with st.expander("Details"):
-                    st.markdown(f"**Angle:** {idea.angle}")
-                    if idea.data_requirement:
-                        st.markdown(f"**Data required:** {idea.data_requirement}")
-                    st.markdown(f"**Target segment:** {idea.target_segment}")
-                    st.markdown(f"**Strategic objective:** {idea.strategic_objective}")
-                    st.markdown(f"**Tags:** {', '.join(idea.tags) if idea.tags else '—'}")
-                    st.markdown(f"**Status:** `{idea.status}`")
+
+                with st.expander("Details / Edit / Comment"):
+                    tab_view, tab_edit, tab_note = st.tabs(["View", "Edit", "Comments"])
+
+                    with tab_view:
+                        st.markdown(f"**Angle:** {idea.angle}")
+                        if idea.data_requirement:
+                            st.markdown(f"**Data required:** {idea.data_requirement}")
+                        st.markdown(f"**Target segment:** {idea.target_segment}")
+                        st.markdown(f"**Strategic objective:** {idea.strategic_objective}")
+                        st.markdown(f"**Tags:** {', '.join(idea.tags) if idea.tags else '—'}")
+                        if idea.notes:
+                            st.markdown(f"**Notes:** {idea.notes}")
+
+                    with tab_edit:
+                        new_title = st.text_input(
+                            "Title", value=idea.title, key=f"title_{idea.id}"
+                        )
+                        new_hook = st.text_input(
+                            "Hook", value=idea.hook, key=f"hook_{idea.id}"
+                        )
+                        new_angle = st.text_area(
+                            "Angle", value=idea.angle, key=f"angle_{idea.id}", height=80
+                        )
+                        new_data = st.text_input(
+                            "Data requirement",
+                            value=idea.data_requirement,
+                            key=f"data_{idea.id}",
+                        )
+                        if st.button("Save edits", key=f"save_{idea.id}"):
+                            with sqlite3.connect(str(SQLITE_PATH)) as conn:
+                                conn.execute(
+                                    """UPDATE ideas SET title=?, hook=?, angle=?,
+                                       data_requirement=?, updated_at=datetime('now')
+                                       WHERE id=?""",
+                                    (new_title, new_hook, new_angle, new_data, idea.id),
+                                )
+                                conn.commit()
+                            st.success("Updated.")
+                            st.rerun()
+
+                    with tab_note:
+                        st.markdown("**Existing notes:**")
+                        st.markdown(idea.notes or "_No notes yet_")
+                        new_note = st.text_area(
+                            "Append note",
+                            placeholder="Tweak, refine, or leave a comment for this idea...",
+                            key=f"note_{idea.id}",
+                            height=80,
+                        )
+                        if st.button("Add note", key=f"addnote_{idea.id}") and new_note.strip():
+                            from datetime import datetime as _dt
+                            stamp = _dt.now().strftime("%Y-%m-%d %H:%M")
+                            combined = (idea.notes + f"\n[{stamp}] {new_note.strip()}").strip()
+                            with sqlite3.connect(str(SQLITE_PATH)) as conn:
+                                conn.execute(
+                                    "UPDATE ideas SET notes=?, updated_at=datetime('now') WHERE id=?",
+                                    (combined, idea.id),
+                                )
+                                conn.commit()
+                            st.success("Note added.")
+                            st.rerun()
         st.markdown("")
 
 
@@ -836,31 +968,432 @@ def page_characters():
     st.title("Character Library")
     st.caption("Locked character manifests and reference images")
 
-    chars_dir = DATA_DIR.parent / "references" / "influencers"
-    if not chars_dir.exists():
-        st.warning("No character library found.")
-        return
+    st.markdown(
+        "Characters are the locked performers used across all content. "
+        "Theo is the primary character. Upload additional reference images "
+        "to strengthen identity consistency in Veo generation."
+    )
 
-    for char_dir in chars_dir.iterdir():
+    chars_dir = DATA_DIR.parent / "references" / "influencers"
+    chars_dir.mkdir(parents=True, exist_ok=True)
+
+    # Upload new reference images for existing characters
+    with st.expander("Upload a new reference image"):
+        available_chars = [p.name for p in chars_dir.iterdir() if p.is_dir()] or ["theo"]
+        target_char = st.selectbox("Character", available_chars)
+        uploaded = st.file_uploader("Image", type=["png", "jpg", "jpeg"])
+        image_name = st.text_input("Filename (without extension)", placeholder="e.g. hero_variant_1")
+        if st.button("Save image", disabled=not (uploaded and image_name)):
+            target_dir = chars_dir / target_char
+            target_dir.mkdir(parents=True, exist_ok=True)
+            ext = Path(uploaded.name).suffix or ".png"
+            out_path = target_dir / f"{image_name}{ext}"
+            out_path.write_bytes(uploaded.getbuffer())
+            st.success(f"Saved to {out_path}")
+            st.rerun()
+
+    st.markdown("---")
+
+    # List every character and its images
+    for char_dir in sorted(chars_dir.iterdir()):
         if not char_dir.is_dir():
             continue
         manifest_path = char_dir / "manifest.json"
-        if not manifest_path.exists():
-            continue
+        char_name = char_dir.name
+        canonical_desc = ""
+        if manifest_path.exists():
+            try:
+                manifest = load_json(manifest_path)
+                char = manifest.get("character", {})
+                char_name = char.get("name", char_dir.name)
+                canonical_desc = char.get("canonical_description", "")
+            except Exception:
+                pass
 
-        manifest = load_json(manifest_path)
-        char = manifest.get("character", {})
+        st.subheader(char_name)
+        if canonical_desc:
+            st.markdown(canonical_desc)
 
-        st.subheader(char.get("name", char_dir.name))
-        st.markdown(char.get("canonical_description", ""))
-
-        # Show hero and shot images
-        images = sorted(char_dir.glob("*.png"))
+        images = sorted(char_dir.glob("*.png")) + sorted(char_dir.glob("*.jpg"))
+        hero_path = char_dir / "hero.png"
         if images:
+            st.markdown(f"**Reference images ({len(images)}):**")
             cols = st.columns(min(4, len(images)))
             for i, img in enumerate(images):
                 with cols[i % 4]:
-                    st.image(str(img), caption=img.stem, use_container_width=True)
+                    is_hero = img.name == "hero.png"
+                    caption = f"{img.stem}{' [HERO]' if is_hero else ''}"
+                    st.image(str(img), caption=caption, use_container_width=True)
+
+            if hero_path.exists():
+                st.caption(
+                    f"The Hero image (`hero.png`) is passed to every Veo call "
+                    f"as the visual anchor — it locks the character identity."
+                )
+        else:
+            st.info(
+                f"No images yet. Place them in `{char_dir}` or upload above. "
+                f"At minimum you need `hero.png`."
+            )
+        st.markdown("---")
+
+
+# -----------------------------------------------------------------------------
+# SCENE LIBRARY
+# -----------------------------------------------------------------------------
+
+def page_scenes():
+    st.title("Scene Library")
+    st.caption(
+        "Reusable environments, separate from characters. Any character can "
+        "be placed in any scene. Scenes are the 'situations' used across "
+        "reels — the Executive Pool, the Hotel Lobby, the VIP Lounge."
+    )
+
+    from gtm_engine.scenes import SceneLibrary, Scene
+    lib = SceneLibrary()
+    lib.seed_if_empty()
+
+    # Add new scene
+    with st.expander("Add a new scene"):
+        new_id = st.text_input("Scene id (lowercase, no spaces)", placeholder="e.g. data_observatory")
+        new_name = st.text_input("Scene name", placeholder="The Data Observatory")
+        new_desc = st.text_area("Description", height=80)
+        new_env = st.text_area("Environment prompt (for Nano Banana)", height=100)
+        new_start = st.text_area("Start frame prompt", height=80)
+        new_end = st.text_area("End frame prompt", height=80)
+        new_anim = st.text_area("Animation directive (for Veo)", height=80)
+        best_for = st.multiselect(
+            "Best for segments",
+            ["hook", "tension", "pivot", "proof", "bookend"],
+        )
+        if st.button("Save scene", disabled=not (new_id and new_name)):
+            scene = Scene(
+                id=new_id,
+                name=new_name,
+                description=new_desc,
+                environment_prompt=new_env,
+                start_frame_prompt=new_start,
+                end_frame_prompt=new_end,
+                animation_directive=new_anim,
+                best_for_segments=best_for,
+                locked=False,
+            )
+            lib.create(scene)
+            st.success(f"Scene '{new_name}' saved.")
+            st.rerun()
+
+    # Upload reference image for an existing scene
+    with st.expander("Upload reference image for a scene"):
+        from gtm_engine.scenes import SCENES_DIR
+        scenes = lib.list_all()
+        if scenes:
+            target = st.selectbox("Scene", [s.id for s in scenes], format_func=lambda x: next((s.name for s in scenes if s.id == x), x))
+            uploaded = st.file_uploader("Image", type=["png", "jpg", "jpeg"], key="scene_upload")
+            if st.button("Save scene image", disabled=not uploaded):
+                scene_folder = SCENES_DIR / target
+                scene_folder.mkdir(parents=True, exist_ok=True)
+                out_path = scene_folder / uploaded.name
+                out_path.write_bytes(uploaded.getbuffer())
+                lib.attach_reference_image(target, str(out_path))
+                st.success(f"Saved to {out_path}")
+                st.rerun()
+
+    st.markdown("---")
+
+    scenes = lib.list_all()
+    st.markdown(f"**{len(scenes)} scenes** in the library")
+
+    for scene in scenes:
+        lock_tag = " [LOCKED]" if scene.locked else ""
+        with st.expander(f"**{scene.name}**{lock_tag} — {scene.narrative_purpose}", expanded=False):
+            st.markdown(f"**ID:** `{scene.id}`")
+            st.markdown(f"**Description:** {scene.description}")
+            if scene.best_for_segments:
+                st.markdown(f"**Best for:** {', '.join(scene.best_for_segments)}")
+
+            tab_env, tab_frames, tab_anim, tab_refs = st.tabs([
+                "Environment", "Start/End frames", "Animation", "Reference images"
+            ])
+            with tab_env:
+                st.code(scene.environment_prompt, language="text")
+            with tab_frames:
+                st.markdown("**Start frame prompt:**")
+                st.code(scene.start_frame_prompt, language="text")
+                st.markdown("**End frame prompt:**")
+                st.code(scene.end_frame_prompt, language="text")
+            with tab_anim:
+                st.code(scene.animation_directive, language="text")
+            with tab_refs:
+                if scene.reference_images:
+                    cols = st.columns(min(3, len(scene.reference_images)))
+                    for i, img in enumerate(scene.reference_images):
+                        p = Path(img)
+                        if p.exists():
+                            with cols[i % 3]:
+                                st.image(str(p), use_container_width=True)
+                else:
+                    st.info("No reference images yet.")
+
+            if not scene.locked:
+                if st.button("Delete scene", key=f"del_scene_{scene.id}"):
+                    lib.delete(scene.id)
+                    st.rerun()
+
+
+# -----------------------------------------------------------------------------
+# DATA VAULT
+# -----------------------------------------------------------------------------
+
+def page_data_vault():
+    st.title("Data Vault")
+    st.caption(
+        "Real data the content references. If an idea needs '52-week Atlas "
+        "performance' and you haven't added it here, the content can't truly "
+        "cite it. Add data, verify it, and the idea/producer-brief generators "
+        "will reference these sources explicitly."
+    )
+
+    from gtm_engine.data_vault import DataVault, DataSource, SOURCE_TYPES
+    vault = DataVault()
+
+    with st.expander("Add a new data source"):
+        col_n1, col_n2 = st.columns(2)
+        with col_n1:
+            new_name = st.text_input("Name", placeholder="e.g. Atlas 52-week live performance log")
+            new_type = st.selectbox("Type", SOURCE_TYPES)
+            new_products = st.multiselect(
+                "Related products",
+                ["Quantum Tools", "PRISM", "Analyst's Edge", "APEX", "ATLAS"],
+            )
+        with col_n2:
+            new_desc = st.text_input("Short description", placeholder="One-line summary")
+            new_freshness = st.text_input("Freshness", placeholder="e.g. 2026-04-10 or live")
+            new_url = st.text_input("Source URL (optional)")
+
+        new_content = st.text_area(
+            "Content (markdown, CSV, JSON, quote, or plain text)",
+            height=200,
+            placeholder="Paste the actual data here — this is what content will cite.",
+        )
+        if st.button("Save data source", disabled=not (new_name and new_content)):
+            source = DataSource(
+                name=new_name,
+                description=new_desc,
+                source_type=new_type,
+                content=new_content,
+                related_products=new_products,
+                freshness=new_freshness,
+                source_url=new_url,
+            )
+            sid = vault.create(source)
+            st.success(f"Saved as source #{sid}")
+            st.rerun()
+
+    st.markdown("---")
+
+    # Filters
+    col_f1, col_f2, col_f3 = st.columns(3)
+    with col_f1:
+        f_type = st.selectbox("Type filter", ["All"] + SOURCE_TYPES)
+    with col_f2:
+        f_product = st.selectbox(
+            "Product filter",
+            ["All", "PRISM", "Analyst's Edge", "APEX", "ATLAS"],
+        )
+    with col_f3:
+        f_verified = st.checkbox("Verified only")
+
+    sources = vault.list_all(
+        source_type=None if f_type == "All" else f_type,
+        verified_only=f_verified,
+        product=None if f_product == "All" else f_product,
+    )
+
+    st.markdown(f"**{len(sources)} data sources**")
+
+    for src in sources:
+        verified_tag = "[VERIFIED]" if src.verified else "[UNVERIFIED]"
+        with st.expander(f"#{src.id} · **{src.name}** · `{src.source_type}` · {verified_tag}"):
+            st.markdown(f"**Description:** {src.description}")
+            if src.related_products:
+                st.markdown(f"**Products:** {', '.join(src.related_products)}")
+            if src.freshness:
+                st.markdown(f"**Freshness:** {src.freshness}")
+            if src.source_url:
+                st.markdown(f"**URL:** {src.source_url}")
+            st.markdown("**Content:**")
+            st.code(src.content[:4000], language="markdown")
+            col_v1, col_v2 = st.columns(2)
+            with col_v1:
+                if not src.verified and st.button("Mark verified", key=f"verify_{src.id}"):
+                    vault.verify(src.id)
+                    st.rerun()
+            with col_v2:
+                if st.button("Delete", key=f"del_data_{src.id}"):
+                    vault.delete(src.id)
+                    st.rerun()
+
+
+# -----------------------------------------------------------------------------
+# BRIEF REQUESTS
+# -----------------------------------------------------------------------------
+
+def page_briefs():
+    st.title("Brief Requests")
+    st.caption(
+        "Submit a natural-language content request and generate a batch of "
+        "ideas specifically for it. Use this for series, product launches, "
+        "feature deep-dives, or anything that needs to feel like a coherent "
+        "set rather than a random funnel-balanced batch."
+    )
+
+    from gtm_engine.briefs import BriefQueue, Brief, BRIEF_TYPES
+    from gtm_engine.data_vault import DataVault
+
+    queue = BriefQueue()
+    vault = DataVault()
+
+    with st.expander("Submit a new brief", expanded=True):
+        new_title = st.text_input(
+            "Brief title",
+            placeholder="e.g. Founder introduction series",
+        )
+        new_type = st.selectbox("Brief type", BRIEF_TYPES)
+        new_count = st.number_input("Number of ideas", min_value=1, max_value=50, value=5)
+
+        col_b1, col_b2 = st.columns(2)
+        with col_b1:
+            new_products = st.multiselect(
+                "Target products (optional)",
+                ["Quantum Tools", "PRISM", "Analyst's Edge", "APEX", "ATLAS"],
+            )
+        with col_b2:
+            # Data source picker
+            all_data = vault.list_all()
+            data_choices = {f"#{s.id} · {s.name}": s.id for s in all_data}
+            data_pick = st.multiselect("Link data sources (optional)", list(data_choices.keys()))
+            picked_data_ids = [data_choices[k] for k in data_pick]
+
+        new_desc = st.text_area(
+            "The brief in your own words",
+            height=180,
+            placeholder=(
+                "Example: A five-piece series introducing me as the founder "
+                "of Quantum Tools. Cover who I am, why I'm building this, what "
+                "I believe is broken in professional intelligence, what each "
+                "product solves, and what I hope people get from it. Should "
+                "feel personal and written-up, not salesy. Mix of reels and "
+                "LinkedIn posts."
+            ),
+        )
+
+        col_sub1, col_sub2 = st.columns([1, 3])
+        with col_sub1:
+            save_clicked = st.button("Save as draft", disabled=not (new_title and new_desc))
+        with col_sub2:
+            generate_clicked = st.button(
+                "Save + Generate ideas", type="primary",
+                disabled=not (new_title and new_desc),
+            )
+
+        if save_clicked or generate_clicked:
+            brief = Brief(
+                title=new_title,
+                description=new_desc,
+                brief_type=new_type,
+                target_count=new_count,
+                target_products=new_products,
+                data_source_ids=picked_data_ids,
+            )
+            bid = queue.create(brief)
+            brief.id = bid
+            st.success(f"Brief #{bid} saved.")
+            if generate_clicked:
+                with st.spinner(f"Generating {new_count} ideas for this brief..."):
+                    try:
+                        from gtm_engine.briefs.generator import generate_ideas_from_brief
+                        ideas = generate_ideas_from_brief(brief)
+                        st.success(f"Generated {len(ideas)} ideas. See the Ideas page.")
+                    except Exception as e:
+                        st.error(f"Generation failed: {e}")
+            st.rerun()
+
+    st.markdown("---")
+
+    # List existing briefs
+    st.subheader("Previous briefs")
+    briefs = queue.list_all()
+    if not briefs:
+        st.info("No briefs yet.")
+        return
+
+    for b in briefs:
+        with st.expander(f"#{b.id} · **{b.title}** · `{b.brief_type}` · {b.status} · {len(b.generated_idea_ids)} ideas"):
+            st.markdown(f"**Description:** {b.description}")
+            if b.target_products:
+                st.markdown(f"**Products:** {', '.join(b.target_products)}")
+            if b.data_source_ids:
+                st.markdown(f"**Data sources:** {b.data_source_ids}")
+            st.caption(f"Created: {b.created_at}")
+
+            col_bact1, col_bact2 = st.columns(2)
+            with col_bact1:
+                if b.status != "complete" and st.button("Generate ideas", key=f"regen_brief_{b.id}"):
+                    with st.spinner("Generating..."):
+                        from gtm_engine.briefs.generator import generate_ideas_from_brief
+                        ideas = generate_ideas_from_brief(b)
+                        st.success(f"Generated {len(ideas)} ideas")
+                        st.rerun()
+            with col_bact2:
+                if st.button("Delete", key=f"del_brief_{b.id}"):
+                    queue.delete(b.id)
+                    st.rerun()
+
+
+# -----------------------------------------------------------------------------
+# PRODUCER BRIEFS
+# -----------------------------------------------------------------------------
+
+def page_producer_briefs():
+    st.title("Producer Briefs")
+    st.caption(
+        "The detailed production spec per approved idea. Like an ad "
+        "producer's shot list: which scene, which data, which spoken words, "
+        "which text overlays, which camera direction. This is what the "
+        "content and video pipelines read."
+    )
+
+    from gtm_engine.producer import ProducerBriefLibrary
+    from gtm_engine.ideas import IdeaBank
+
+    lib = ProducerBriefLibrary()
+    bank = IdeaBank()
+
+    briefs = lib.list_all()
+    st.markdown(f"**{len(briefs)} producer briefs**")
+
+    if not briefs:
+        st.info(
+            "No producer briefs yet. Approve some ideas on the Ideas page, "
+            "then hit the 'Producer Brief' button to generate one."
+        )
+        return
+
+    for pb in briefs:
+        idea = bank.get(pb.idea_id)
+        title = idea.title if idea else f"Idea #{pb.idea_id}"
+        with st.expander(f"#{pb.id} · **{title}** · `{pb.status}`"):
+            if pb.full_brief_md:
+                st.markdown(pb.full_brief_md)
+            else:
+                st.json({
+                    "hook_scene_id": pb.hook_scene_id,
+                    "bookend_scene_id": pb.bookend_scene_id,
+                    "spoken_script": pb.spoken_script,
+                    "voice_directive": pb.voice_directive,
+                    "segments": pb.segments_json,
+                })
 
 
 # -----------------------------------------------------------------------------
@@ -869,20 +1402,69 @@ def page_characters():
 
 def page_intelligence():
     st.title("Live Intelligence Feed")
-    st.caption("Submit raw signals — customer quotes, data findings, market events")
+    st.caption(
+        "Drop raw signals that should influence content generation but aren't "
+        "yet ideas or data sources."
+    )
+
+    st.markdown(
+        """
+        ### What this is for
+
+        The Intelligence Feed is where you dump things that **just happened**
+        and might change what we say next:
+
+        - **Customer quotes**: "A consultant told me yesterday that..."
+        - **Data findings**: "I just ran PRISM on Deloitte and the result was..."
+        - **Competitor moves**: "A major firm just announced..."
+        - **Market events**: "FTSE just posted its worst quarter in..."
+        - **Product insights**: "I realised APEX could also..."
+
+        ### What happens when you submit
+
+        1. Claude assesses the signal and assigns it a **priority 1-5**
+        2. **Priority 4-5** (high urgency): auto-generates a content brief
+           and recommends a master asset topic immediately
+        3. **Priority 2-3**: stored as context and referenced in the next
+           idea generation run
+        4. **Priority 1**: logged for the record, no immediate action
+
+        This is NOT the same as Brief Requests (which are intentional content
+        series you commission) or the Data Vault (which is verified reference
+        data). This is a stream of live input that feeds everything else.
+        """
+    )
+
+    st.markdown("---")
 
     signal_type = st.selectbox(
         "Signal type",
-        ["general", "customer_conversation", "data_finding", "competitor_move", "market_event", "product_insight"],
+        [
+            "general",
+            "customer_conversation",
+            "data_finding",
+            "competitor_move",
+            "market_event",
+            "product_insight",
+        ],
     )
-    raw_input = st.text_area("Paste your signal", height=200, placeholder="What happened?")
+    raw_input_val = st.text_area(
+        "Your signal",
+        height=200,
+        placeholder="What happened? Who said what? What did you learn?",
+    )
 
-    if st.button("Submit signal", type="primary") and raw_input.strip():
+    if st.button("Submit signal", type="primary") and raw_input_val.strip():
         with st.spinner("Assessing signal..."):
             from gtm_engine.intelligence import submit_signal
-            record = submit_signal(raw_input, signal_type)
+            record = submit_signal(raw_input_val, signal_type)
             assessment = record.get("assessment", {})
-            st.success(f"Priority {assessment.get('priority', '?')}/5 — {assessment.get('urgency', 'standard')}")
+            priority = assessment.get("priority", 0)
+
+            colour = {5: "red", 4: "orange", 3: "blue", 2: "gray", 1: "gray"}.get(priority, "gray")
+            st.success(
+                f"**Priority {priority}/5** — {assessment.get('urgency', 'standard')}"
+            )
             st.markdown(f"**Summary:** {assessment.get('significance_summary', '')}")
             st.markdown(f"**Recommended action:** {assessment.get('recommended_action', '')}")
             st.markdown(f"**Master asset topic:** {assessment.get('master_asset_topic', '')}")
