@@ -258,16 +258,94 @@ def strip_audio_and_overlay(
 
 # --- Image Generation (Gemini native) ---
 
+def _generate_with_imagen(prompt: str, output_path: Path, aspect_ratio: str = "16:9") -> Path | None:
+    """Generate an image using Imagen 4 Ultra via generate_images API.
+
+    Uses the dedicated Imagen endpoint for photorealistic output.
+    """
+    client = _get_client()
+    from google.genai import types
+
+    logger.info("Generating image (imagen-4.0-ultra, %s): %s", aspect_ratio, prompt[:80])
+
+    try:
+        response = client.models.generate_images(
+            model="imagen-4.0-ultra-generate-001",
+            prompt=prompt,
+            config=types.GenerateImagesConfig(
+                number_of_images=1,
+                aspect_ratio=aspect_ratio,
+            ),
+        )
+
+        if not response.generated_images:
+            logger.warning("Imagen returned no images — falling back to Nano Banana 2")
+            return None
+
+        image = response.generated_images[0]
+        # Try multiple extraction paths depending on SDK version
+        image_bytes = None
+        if hasattr(image, "image") and hasattr(image.image, "image_bytes"):
+            image_bytes = image.image.image_bytes
+        elif hasattr(image, "image_bytes"):
+            image_bytes = image.image_bytes
+
+        if not image_bytes:
+            logger.warning("Could not extract image bytes from Imagen response")
+            return None
+
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_bytes(image_bytes)
+        logger.info("Imagen image saved to %s", output_path)
+        return output_path
+
+    except Exception as e:
+        logger.warning("Imagen generation failed (%s) — falling back to Nano Banana 2", e)
+        return None
+
+
+def _generate_with_nano_banana(prompt: str, output_path: Path) -> Path | None:
+    """Generate an image using Nano Banana 2 (gemini-3-pro-image-preview).
+
+    Uses the Gemini content API with IMAGE response modality.
+    Proven working on the user's Paid Tier 1 account.
+    """
+    client = _get_client()
+    from google.genai import types
+
+    logger.info("Generating image (nano-banana-2): %s", prompt[:80])
+
+    response = client.models.generate_content(
+        model="gemini-3-pro-image-preview",
+        contents=f"Generate an image: {prompt}",
+        config=types.GenerateContentConfig(
+            response_modalities=["IMAGE", "TEXT"],
+        ),
+    )
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    for part in response.candidates[0].content.parts:
+        if part.inline_data and part.inline_data.mime_type.startswith("image/"):
+            output_path.write_bytes(part.inline_data.data)
+            logger.info("Nano Banana image saved to %s", output_path)
+            return output_path
+
+    logger.error("No image found in Nano Banana response")
+    return None
+
+
 @retry(wait=wait_exponential(min=2, max=30), stop=stop_after_attempt(3))
 def generate_image(
     prompt: str,
     output_path: Path | None = None,
     quality: str = "standard",
+    aspect_ratio: str = "16:9",
 ) -> Path | None:
     """Generate an image using Google's image generation models.
 
-    quality="standard" uses gemini-3-pro-image-preview (fast, cheap, good for slides/social)
-    quality="ultra" uses imagen-4.0-ultra-generate-001 (best photorealism, slower)
+    quality="standard" → Nano Banana 2 (gemini-3-pro-image-preview)
+    quality="ultra" → Imagen 4 Ultra (best photorealism, falls back to Nano Banana if unavailable)
 
     Returns the path to the saved image file, or None on failure.
     """
@@ -275,40 +353,19 @@ def generate_image(
         logger.warning("GOOGLE_API_KEY not set -- skipping image generation")
         return None
 
-    client = _get_client()
-    from google.genai import types
-
-    # Route to the right model based on quality tier
-    if quality == "ultra":
-        model = "imagen-4.0-ultra-generate-001"
-    else:
-        model = "gemini-3-pro-image-preview"
-
-    logger.info("Generating image (%s): %s", model.split("/")[-1], prompt[:80])
+    if output_path is None:
+        output_path = OUTPUT_MEDIA_DIR / f"image_{int(time.time())}.png"
 
     try:
-        response = client.models.generate_content(
-            model=model,
-            contents=f"Generate an image: {prompt}",
-            config=types.GenerateContentConfig(
-                response_modalities=["IMAGE", "TEXT"],
-            ),
-        )
+        # Try Imagen Ultra first if requested
+        if quality == "ultra":
+            result = _generate_with_imagen(prompt, output_path, aspect_ratio=aspect_ratio)
+            if result:
+                return result
+            # Fall through to Nano Banana
 
-        # Extract image from response parts
-        if output_path is None:
-            output_path = OUTPUT_MEDIA_DIR / f"image_{int(time.time())}.png"
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-
-        for part in response.candidates[0].content.parts:
-            if part.inline_data and part.inline_data.mime_type.startswith("image/"):
-                image_bytes = part.inline_data.data
-                output_path.write_bytes(image_bytes)
-                logger.info("Image saved to %s", output_path)
-                return output_path
-
-        logger.error("No image found in Gemini response")
-        return None
+        # Standard path: Nano Banana 2
+        return _generate_with_nano_banana(prompt, output_path)
 
     except Exception as e:
         logger.error("Image generation failed: %s", e)

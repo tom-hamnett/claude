@@ -21,7 +21,70 @@
 - **Tone**: Sharp, transparent, anti-guru, confident without arrogance
 - **Aspirational voices**: Stratechery, Bridgewater, patio11, Stripe dev docs
 - **Founder visibility**: NONE — no recorded footage, no identifiable features
-- **Presenter approach**: Fictional consistent narrator generated from Nano Banana 2
+- **Presenter approach**: Fictional locked character (Theo) generated from Nano Banana 2
+
+## Character Manifest — Theo (The Obsidian Seraph)
+
+**Status**: LOCKED (2026-04-11). Do not regenerate from text. Only animate from approved stills.
+
+### Identity
+- **Name**: Theo — The Obsidian Seraph
+- **Nature**: Male-presenting entity. Ageless/unknown. Not human.
+- **Positioning**: A being of pure corporate authority. Subversive, counter-intuitive, cinematic gravitas.
+
+### Visual Signature (inviolable — every prompt must include these exact tokens)
+- **Head**: Perfectly smooth, featureless obsidian glass helmet shaped like an inverted teardrop.
+  No human facial features. No eyes, nose, mouth. Pure reflective obsidian surface.
+- **Halos**: Three floating, disconnected cyan neon halos rotating around the head using
+  impossible physics. Never attached to the helmet — always a visible gap.
+- **Wardrobe**: Razor-sharp, hyper-tailored vantablack suit. Light-absorbing material.
+  Dark, sleek, high-fashion corporate silhouette.
+- **Vibe**: "Digital Hyper-Reality Corporate Authority"
+
+### Canonical Description (inject into every Nano Banana prompt)
+> "Theo (a male-presenting figure wearing a vantablack suit made of light-absorbing material,
+> with a perfectly smooth featureless obsidian glass helmet shaped like an inverted teardrop
+> replacing his head, and three disconnected floating cyan neon halos rotating around his head
+> using impossible physics)"
+
+### Voice
+- **Target profile**: Upper-class British gentleman. Tom Hiddleston in *The Night Manager* /
+  Bond levels of gravitas.
+- **TTS voice**: `Charon` (deep, authoritative) with prompt directive for "British RP delivery,
+  measured pace, quiet authority, Received Pronunciation"
+- **Never**: American accent, fast pace, sales energy
+
+## The Three Locked Environments
+
+### SHOT SETUP 01: The Executive Reflection Pool
+- **Narrative Purpose**: High-authority Hook or Pivot (0-4s)
+- **Environment**: Massive futuristic CEO corner office. Floor is a millimeter-deep pool of
+  perfectly still black water reflecting the skyline. Furniture hovers 1 inch above the
+  water surface. Floor-to-ceiling windows, hazy cyberpunk metropolis at twilight.
+- **Signature detail**: Water must remain perfectly still — no ripples, no movement.
+
+### SHOT SETUP 02: The Zenith Hotel Lobby
+- **Narrative Purpose**: Grounded Agitation or Transition (4-8s)
+- **Environment**: Sprawling hyper-luxurious corporate atrium. Brutalism fused with synthetic
+  biology. Vast seamless white marble walls. Massive symmetrical geometric trees made of
+  translucent bioluminescent frosted glass emitting warm amber glow. Synthetic fireflies
+  drift in grid patterns. Impossibly high ceilings.
+- **Signature detail**: Architectural digest scale. Theo must look small within the space.
+
+### SHOT SETUP 03: The Chronos VIP Lounge
+- **Narrative Purpose**: Outcome or Bookend CTA (16-20s)
+- **Environment**: Windowless ultra-elite private club. Deep ribbed velvet walls (acoustically
+  deadened). Massive kinetic chandelier of slowly dripping liquid gold suspended in mid-air
+  in reverse gravity. Deep emerald-green velvet curved sofa. Warm gold light.
+- **Signature detail**: The liquid gold drips UPWARD toward the ceiling.
+
+## Cinematography Rules (inviolable)
+1. **Wide-angle lens prompting** (16mm–24mm) — never let the environments shrink
+2. **Theo must fit within the sprawling scale** — architectural digest proportions
+3. **Impossible physics are mandatory** — halos rotate on impossible axes, water doesn't
+   ripple, gold drips upward. These are the signature. Remove them and Theo becomes
+   generic corporate stock.
+4. **8k, photorealistic textures, moody corporate lighting** — never cartoon, never 3D-render look
 
 ## Content Edginess Principles (hardcoded)
 1. Say the uncomfortable thing
