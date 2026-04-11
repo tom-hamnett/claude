@@ -69,6 +69,32 @@ const FAMILIES = {
   strategic: { label: "Strategic", color: "#5DC484", icon: "◆" },
   supplier: { label: "Supplier", color: "#2ABFBF", icon: "⬡" },
   risk: { label: "Portfolio Risk", color: "#A78BFA", icon: "▲" },
+  benefit: { label: "Benefits", color: "#5DC484", icon: "✚" },
+};
+const BENEFIT_TYPES = {
+  financial: { label: "Financial", color: "#F5C544" },
+  operational: { label: "Operational", color: "#4A9EFF" },
+  strategic: { label: "Strategic", color: "#5DC484" },
+  customer: { label: "Customer", color: "#2ABFBF" },
+  employee: { label: "Employee", color: "#A78BFA" },
+};
+const BENEFIT_STATUS = {
+  planned: { label: "Planned", color: "#6B8FA3", bg: "rgba(107,143,163,0.12)" },
+  "in-progress": { label: "In Progress", color: "#F5C544", bg: "rgba(245,197,68,0.12)" },
+  realised: { label: "Realised", color: "#5DC484", bg: "rgba(93,196,132,0.12)" },
+  "at-risk": { label: "At Risk", color: "#E8734A", bg: "rgba(232,115,74,0.12)" },
+};
+const ENGAGEMENT_LEVELS = {
+  champion: { label: "Champion", color: "#5DC484" },
+  supporter: { label: "Supporter", color: "#2ABFBF" },
+  neutral: { label: "Neutral", color: "#F5C544" },
+  blocker: { label: "Blocker", color: "#E8734A" },
+};
+const OUTPUT_TYPES = {
+  steerco: { label: "SteerCo / Programme Board Pack", icon: "📋", color: "#4A9EFF", desc: "Full governance pack with RAG, risks, decisions, financials" },
+  highlight: { label: "Highlight Report", icon: "📊", color: "#5DC484", desc: "Concise status update — this period / next period / watch items" },
+  benefits: { label: "Benefits Realisation Report", icon: "✚", color: "#F5C544", desc: "Benefits tracking vs business case — expected vs actual" },
+  exception: { label: "Exception Report", icon: "⚠", color: "#E8734A", desc: "Triggered when tolerance is breached" },
 };
 const LINK_META = {
   drives: { label: "Drives", color: "#E8734A", opacity: 1, desc: "Directly produces this metric value." },
@@ -94,50 +120,99 @@ const RAID_TYPES = {
 };
 const ROLES = ["Programme Manager", "CPO", "Programme Director", "Workstream Lead", "Stakeholder", "Finance Lead"];
 
-// ── Onboarding stages ─────────────────────────────────────────────────────────
+// ── Onboarding stages (MSP-aligned, output-first) ─────────────────────────────
 const STAGES = [
-  { id: "identity", num: 1, label: "Identity",
-    prompt: `You are APEX, an expert PMO assistant beginning Stage 1 of 5.
-Goal: discover programme name, strategic objective, sponsor, and type.
-Ask conversationally — senior PMO consultant tone, 1-2 questions at a time.
-When all four are confirmed:
+  { id: "outputs", num: 1, label: "Outputs",
+    prompt: `You are APEX, an expert PMO assistant beginning Stage 1 of 7 — Outputs & Reporting Needs.
+This stage is CRITICAL because it drives everything downstream. We start with the end in mind: what reports and packs does this programme need to produce?
+Ask conversationally (senior PMO consultant tone) about:
+1. Which of these output types are required: SteerCo / Programme Board Pack, Highlight Report, Benefits Realisation Report, Exception Report?
+2. For each selected output — frequency (weekly/biweekly/monthly/quarterly), primary audience (board, sponsor, stakeholders), and next due date.
+3. Any other bespoke formats they need.
+When you have enough to proceed:
 \`\`\`json
-{"stage":"identity","complete":true,"data":{"name":"...","objective":"...","sponsor":"...","type":"transformation|delivery|commercial|operational|regulatory|organisational"}}
+{"stage":"outputs","complete":true,"data":{"enabledOutputs":[{"type":"steerco|highlight|benefits|exception","frequency":"weekly|biweekly|monthly|quarterly|ad-hoc","audience":"...","nextDue":"YYYY-MM-DD"}],"bespoke":["..."]}}
 \`\`\`
-Do NOT output JSON until all four are established.` },
-  { id: "structure", num: 2, label: "Structure",
-    prompt: `You are APEX, Stage 2: Scale & Structure.
+If the user is unsure, default to all three (steerco monthly, highlight weekly, benefits quarterly) and move on.` },
+  { id: "vision", num: 2, label: "Vision & Mandate",
+    prompt: `You are APEX, Stage 2 of 7 — Vision & Mandate (MSP: Vision theme).
 Context: PROGRAMME_CONTEXT
-Discover: scale (single/programme/portfolio), workstream names, start date, end date, current phase, governance model.
+Goal: discover the programme's reason for existing — who is sponsoring it, what strategic objective it serves, and what the target end-state looks like.
+Ask about:
+1. Programme name and type (transformation/delivery/commercial/operational/regulatory/organisational)
+2. Sponsor (exec owning the outcome)
+3. Strategic objective (why it exists in one sentence)
+4. Vision statement — "when this programme is done, the organisation will look like…" (2-3 sentences of target state)
+When all confirmed:
+\`\`\`json
+{"stage":"vision","complete":true,"data":{"name":"...","type":"transformation|delivery|commercial|operational|regulatory|organisational","sponsor":"...","objective":"...","vision":"..."}}
+\`\`\`` },
+  { id: "blueprint", num: 3, label: "Blueprint & Tranches",
+    prompt: `You are APEX, Stage 3 of 7 — Blueprint & Tranches (MSP: Blueprint theme).
+Context: PROGRAMME_CONTEXT
+The Blueprint describes the current-state vs target-state capability. Tranches are the delivery waves that get us there.
+Ask about:
+1. Scale (single project / programme / portfolio)
+2. Current state — what the organisation looks like today (1-2 sentences)
+3. Target state — what it looks like at programme end (1-2 sentences)
+4. Tranche / workstream names (the major delivery streams)
+5. Start date and end date
+6. Current phase (Discovery / Design / Build / Deploy / Close / Realise)
+7. Governance model (RACI, steering frequency, decision rights)
 When complete:
 \`\`\`json
-{"stage":"structure","complete":true,"data":{"scale":"single|programme|portfolio","workstreams":["ws1","ws2"],"startDate":"YYYY-MM-DD","endDate":"YYYY-MM-DD","currentPhase":"...","governance":"..."}}
+{"stage":"blueprint","complete":true,"data":{"scale":"single|programme|portfolio","currentState":"...","targetState":"...","workstreams":["..."],"startDate":"YYYY-MM-DD","endDate":"YYYY-MM-DD","currentPhase":"...","governance":"..."}}
 \`\`\`` },
-  { id: "people", num: 3, label: "People",
-    prompt: `You are APEX, Stage 3: People & Ownership.
+  { id: "organisation", num: 4, label: "Organisation",
+    prompt: `You are APEX, Stage 4 of 7 — Organisation & Stakeholders (MSP: Organisation + Leadership & Stakeholder Engagement themes).
 Context: PROGRAMME_CONTEXT
-Discover: delivery leads (name + role + what they own), key stakeholders, external parties.
+Ask about:
+1. SRO (Senior Responsible Owner) — the single person accountable for the programme's success
+2. Delivery leads — names, roles, what they own
+3. Key stakeholders — for each, capture name, role, organisation, engagement level (champion/supporter/neutral/blocker), interest (high/med/low), influence (high/med/low)
+4. External parties (vendors, regulators, partners)
 When complete:
 \`\`\`json
-{"stage":"people","complete":true,"data":{"leads":[{"name":"...","role":"...","owns":"..."}],"stakeholders":["..."],"external":["..."]}}
+{"stage":"organisation","complete":true,"data":{"sro":"...","leads":[{"name":"...","role":"...","owns":"..."}],"stakeholders":[{"id":"s1","name":"...","role":"...","organisation":"...","engagement":"champion|supporter|neutral|blocker","interest":"high|medium|low","influence":"high|medium|low"}],"external":["..."]}}
 \`\`\`` },
-  { id: "documents", num: 4, label: "Documents",
-    prompt: `You are APEX, Stage 4: Document Ingestion.
+  { id: "benefits", num: 5, label: "Benefits",
+    prompt: `You are APEX, Stage 5 of 7 — Benefits Management (MSP: Benefits Management theme — the heart of MSP).
 Context: PROGRAMME_CONTEXT
-You will receive document content. Extract every task, risk, metric, decision, assumption, issue, and calendar event.
+Every programme exists to deliver benefits. This stage captures the expected benefits that justify the investment.
+Ask about 2-6 concrete benefits. For each:
+1. Title and short description
+2. Type: financial / operational / strategic / customer / employee
+3. Owner (who is accountable for realising this benefit)
+4. Measurement KPI (how will you know it's been realised?)
+5. Baseline value (current state) and target value (post-programme)
+6. Unit (£m, %, count, score, etc.)
+7. Expected realisation date or tranche
+8. Status: planned / in-progress / realised / at-risk
+
+When complete:
+\`\`\`json
+{"stage":"benefits","complete":true,"data":{"benefits":[{"id":"b1","title":"...","description":"...","type":"financial|operational|strategic|customer|employee","owner":"...","measurementKPI":"...","baseline":0,"target":0,"unit":"£m|%|count|score","expectedRealisation":"YYYY-MM-DD","tranche":"...","status":"planned","confidence":"high|medium|low"}]}}
+\`\`\`
+If the user is stuck, suggest 2-3 typical benefits for their programme type and ask them to confirm or adjust.` },
+  { id: "documents", num: 6, label: "Evidence Base",
+    prompt: `You are APEX, Stage 6 of 7 — Evidence Base (Document Ingestion).
+Context: PROGRAMME_CONTEXT
+You will receive document content. Extract every task, risk, metric, decision, assumption, issue, calendar event, AND benefit mentioned.
 For each item you are uncertain about, include it in a "questions" array asking for clarification about dependencies, ownership, dates, or categorisation.
 \`\`\`json
-{"stage":"documents","complete":true,"data":{"tasks":[{"id":"t1","phase":"...","name":"...","start":"YYYY-MM-DD","end":"YYYY-MM-DD","status":"not-started|in-progress|complete|at-risk","owner":"...","progress":0,"deps":[],"confidence":"high|medium|low"}],"risks":[{"id":"r1","title":"...","impact":"High|Medium|Low","likelihood":"High|Medium|Low","status":"Open","owner":"...","mitigation":"...","confidence":"high|medium|low"}],"raidItems":[{"id":"rd1","type":"risk|assumption|issue|decision","title":"...","description":"...","owner":"...","status":"Open|Closed|Active|Agreed","impact":"High|Medium|Low","dateRaised":"YYYY-MM-DD","dueDate":"YYYY-MM-DD","confidence":"high|medium|low"}],"metrics":[{"id":"m1","family":"financial|delivery|strategic|supplier|risk","name":"...","value":0,"target":0,"unit":"...","direction":"higher|lower|neutral","rag":"green|amber|red","note":"...","confidence":"high|medium|low"}],"calendarEvents":[{"id":"ce1","title":"...","date":"YYYY-MM-DD","type":"steerco|review|deadline|external|milestone","attendees":[],"prepNeeded":"..."}],"questions":[{"about":"item id or description","question":"What is the dependency?"}],"summary":"2-3 sentence summary"}}
+{"stage":"documents","complete":true,"data":{"tasks":[{"id":"t1","phase":"...","name":"...","start":"YYYY-MM-DD","end":"YYYY-MM-DD","status":"not-started|in-progress|complete|at-risk","owner":"...","progress":0,"deps":[],"confidence":"high|medium|low"}],"risks":[{"id":"r1","title":"...","impact":"High|Medium|Low","likelihood":"High|Medium|Low","status":"Open","owner":"...","mitigation":"...","confidence":"high|medium|low"}],"raidItems":[{"id":"rd1","type":"risk|assumption|issue|decision","title":"...","description":"...","owner":"...","status":"Open|Closed|Active|Agreed","impact":"High|Medium|Low","dateRaised":"YYYY-MM-DD","dueDate":"YYYY-MM-DD","confidence":"high|medium|low"}],"metrics":[{"id":"m1","family":"financial|delivery|strategic|supplier|risk","name":"...","value":0,"target":0,"unit":"...","direction":"higher|lower|neutral","rag":"green|amber|red","note":"...","confidence":"high|medium|low"}],"benefits":[{"id":"b1","title":"...","type":"financial|operational|strategic|customer|employee","owner":"...","baseline":0,"target":0,"unit":"...","expectedRealisation":"YYYY-MM-DD","status":"planned"}],"calendarEvents":[{"id":"ce1","title":"...","date":"YYYY-MM-DD","type":"steerco|review|deadline|external|milestone","attendees":[],"prepNeeded":"..."}],"questions":[{"about":"item id or description","question":"What is the dependency?"}],"summary":"2-3 sentence summary"}}
 \`\`\`
-Confidence: high=explicit, medium=implied, low=inferred. Generate sensible dates from context.` },
-  { id: "metrics", num: 5, label: "Metrics",
-    prompt: `You are APEX, Stage 5: Metrics Configuration.
+Confidence: high=explicit, medium=implied, low=inferred.` },
+  { id: "metrics", num: 7, label: "Metrics & KPIs",
+    prompt: `You are APEX, Stage 7 of 7 — Metrics & KPIs (MSP: Planning & Control theme).
 Context: PROGRAMME_CONTEXT
-Recommend and configure the right metrics families for this programme type. After confirming:
+Recommend metrics that (a) directly measure the benefits defined in Stage 5, and (b) populate the data fields needed for the selected output types from Stage 1.
+Propose 4-8 metrics spanning: financial, delivery, strategic, supplier, and risk families. Where a metric maps directly to a benefit, include the benefit ID in the note.
+When confirmed:
 \`\`\`json
-{"stage":"metrics","complete":true,"data":{"metrics":[{"id":"m1","family":"financial|delivery|strategic|supplier|risk","name":"...","value":0,"target":0,"unit":"...","direction":"higher|lower|neutral|lower-abs","rag":"green","trend":[0,0,0,0],"trendL":["Wk1","Wk2","Wk3","Wk4"],"note":"Baseline — update as programme progresses.","lastUpdated":"TODAY","links":[]}]}}
+{"stage":"metrics","complete":true,"data":{"metrics":[{"id":"m1","family":"financial|delivery|strategic|supplier|risk","name":"...","value":0,"target":0,"unit":"...","direction":"higher|lower|neutral|lower-abs","rag":"green","trend":[0,0,0,0],"trendL":["Wk1","Wk2","Wk3","Wk4"],"note":"Baseline — linked to benefit b1.","lastUpdated":"TODAY","benefitId":"b1","links":[]}]}}
 \`\`\`
-Replace TODAY with ${d(0)}. Make targets realistic for the programme type.` },
+Replace TODAY with ${d(0)}. Make targets realistic. Default to all 5 metric families covered.` },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -181,6 +256,7 @@ const INSIGHT_CATEGORIES = {
   task: { icon: "✦", color: "#5DC484", label: "Action Required" },
   stakeholder: { icon: "👤", color: "#4A9EFF", label: "Stakeholder" },
   report: { icon: "📊", color: "#A78BFA", label: "Report Due" },
+  benefit: { icon: "✚", color: "#5DC484", label: "Benefit" },
   custom: { icon: "◆", color: "#2ABFBF", label: "Custom" },
 };
 
@@ -231,7 +307,7 @@ const InsightCardsRow = ({ insights, onDismiss, onAction, onRefresh, loading }) 
 // ══════════════════════════════════════════════════════════════════════════════
 // CONTEXT VIEW — AI-generated focused views for specific questions
 // ══════════════════════════════════════════════════════════════════════════════
-const ContextView = ({ view, tasks, risks, metrics, raidItems, onClose, onNavigateTask, onOpenMetric }) => {
+const ContextView = ({ view, tasks, risks, metrics, raidItems, benefits = [], onClose, onNavigateTask, onOpenMetric, onOpenBenefit }) => {
   if (!view) return null;
   return (
     <div className="sd" style={{ background: "var(--bg2)", border: "1px solid var(--accent)30", borderRadius: 10, padding: "16px 18px", marginBottom: 14 }}>
@@ -260,6 +336,12 @@ const ContextView = ({ view, tasks, risks, metrics, raidItems, onClose, onNaviga
           {sec.type === "metrics" && sec.metricIds?.map(mid => { const mt = metrics.find(x => x.id === mid); if (!mt) return null; return (
             <div key={mid} onClick={() => onOpenMetric(mt)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 8px", marginBottom: 3, background: "var(--bg3)", borderRadius: 5, border: "1px solid var(--border)", cursor: "pointer" }}>
               <RagPip rag={mt.rag} /><span style={{ fontSize: 9, fontFamily: "var(--font-b)", color: "var(--text)", flex: 1 }}>{mt.name}</span><span style={{ fontSize: 11, fontFamily: "var(--font-d)", fontWeight: 700, color: RAG[mt.rag].color }}>{fmtVal(mt)}</span>
+            </div>);
+          })}
+          {sec.type === "benefits" && sec.benefitIds?.map(bid => { const bn = benefits.find(x => x.id === bid); if (!bn) return null; const st = BENEFIT_STATUS[bn.status] || BENEFIT_STATUS.planned; const tm = BENEFIT_TYPES[bn.type] || BENEFIT_TYPES.operational; return (
+            <div key={bid} onClick={() => onOpenBenefit && onOpenBenefit(bn)} style={{ padding: "6px 8px", marginBottom: 3, background: "var(--bg3)", borderRadius: 5, border: "1px solid var(--border)", borderLeft: `3px solid ${tm.color}`, cursor: "pointer" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}><span style={{ fontSize: 7, fontFamily: "var(--font-m)", color: st.color, background: st.bg, border: `1px solid ${st.color}30`, padding: "1px 5px", borderRadius: 2, textTransform: "uppercase" }}>{st.label}</span><span style={{ fontSize: 9, fontFamily: "var(--font-b)", color: "var(--text)", flex: 1 }}>{bn.title}</span></div>
+              <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)" }}>{bn.owner} · {bn.baseline}{bn.unit} → {bn.target}{bn.unit} · Due {fmt(bn.expectedRealisation)}</div>
             </div>);
           })}
           {sec.commentary && <p style={{ fontSize: 9, fontFamily: "var(--font-b)", color: "var(--text3)", lineHeight: 1.55, marginTop: 5, fontStyle: "italic" }}>{sec.commentary}</p>}
@@ -350,16 +432,49 @@ const OnboardingWizard = ({ onComplete, onCancel, isModal = false }) => {
   function confirmExtract() { setPreview(null); setQuestions([]); if (stageIdx < STAGES.length - 1) setStageIdx(s => s + 1); else finalise(collected); }
 
   function finalise(all) {
-    const id = all.identity || {}, str = all.structure || {}, ppl = all.people || {}, doc = all.documents || {}, met = all.metrics || {};
+    const out = all.outputs || {}, vis = all.vision || {}, bp = all.blueprint || {}, org = all.organisation || {}, ben = all.benefits || {}, doc = all.documents || {}, met = all.metrics || {};
+    // Default to all 3 primary outputs if user skipped the Outputs stage
+    const enabledOutputs = out.enabledOutputs && out.enabledOutputs.length ? out.enabledOutputs : [
+      { type: "steerco", frequency: "monthly", audience: "Programme Board", nextDue: d(14) },
+      { type: "highlight", frequency: "weekly", audience: "Sponsor", nextDue: d(7) },
+      { type: "benefits", frequency: "quarterly", audience: "Executive Committee", nextDue: d(60) },
+    ];
     let tasks = doc.tasks || [];
-    if (!tasks.length) { const wss = str.workstreams || ["Discovery", "Delivery", "Close-out"]; tasks = wss.flatMap((ws, pi) => [{ id: `t${pi * 2 + 1}`, phase: ws, name: `${ws} — Initiation`, start: d(pi * 14), end: d(pi * 14 + 10), status: "not-started", owner: ppl.leads?.[0]?.name || "TBC", progress: 0, deps: [] }, { id: `t${pi * 2 + 2}`, phase: ws, name: `${ws} — Delivery`, start: d(pi * 14 + 10), end: d(pi * 14 + 24), status: "not-started", owner: ppl.leads?.[1]?.name || ppl.leads?.[0]?.name || "TBC", progress: 0, deps: [`t${pi * 2 + 1}`] }]); }
-    let risks = doc.risks || [{ id: "r1", title: "Scope not fully defined", impact: "High", likelihood: "Medium", status: "Open", owner: ppl.leads?.[0]?.name || "TBC", mitigation: "Complete scope workshop." }, { id: "r2", title: "Resource availability", impact: "Medium", likelihood: "Medium", status: "Open", owner: id.sponsor || "TBC", mitigation: "Confirm allocation." }];
+    if (!tasks.length) { const wss = bp.workstreams || ["Discovery", "Delivery", "Close-out"]; tasks = wss.flatMap((ws, pi) => [{ id: `t${pi * 2 + 1}`, phase: ws, name: `${ws} — Initiation`, start: d(pi * 14), end: d(pi * 14 + 10), status: "not-started", owner: org.leads?.[0]?.name || "TBC", progress: 0, deps: [] }, { id: `t${pi * 2 + 2}`, phase: ws, name: `${ws} — Delivery`, start: d(pi * 14 + 10), end: d(pi * 14 + 24), status: "not-started", owner: org.leads?.[1]?.name || org.leads?.[0]?.name || "TBC", progress: 0, deps: [`t${pi * 2 + 1}`] }]); }
+    let risks = doc.risks || [{ id: "r1", title: "Scope not fully defined", impact: "High", likelihood: "Medium", status: "Open", owner: org.leads?.[0]?.name || "TBC", mitigation: "Complete scope workshop." }, { id: "r2", title: "Resource availability", impact: "Medium", likelihood: "Medium", status: "Open", owner: vis.sponsor || "TBC", mitigation: "Confirm allocation." }];
     let raidItems = doc.raidItems || [];
     let calendarEvents = doc.calendarEvents || [];
+    let benefits = ben.benefits || doc.benefits || [];
+    if (!benefits.length) benefits = [
+      { id: "b1", title: "Cost reduction", description: "Reduce total operating cost vs baseline.", type: "financial", owner: vis.sponsor || "TBC", measurementKPI: "Annualised run-rate savings", baseline: 0, target: 0, unit: "£m", expectedRealisation: bp.endDate || d(180), tranche: "Programme close", status: "planned", confidence: "low" },
+      { id: "b2", title: "Process efficiency", description: "Reduce average cycle time for target processes.", type: "operational", owner: org.leads?.[0]?.name || "TBC", measurementKPI: "Cycle time (days)", baseline: 0, target: 0, unit: "%", expectedRealisation: bp.endDate || d(180), tranche: "Delivery", status: "planned", confidence: "low" },
+    ];
+    benefits = benefits.map((b, i) => ({ ...b, id: b.id || `b${i + 1}`, actualRealisation: b.actualRealisation || null, status: b.status || "planned" }));
+    let stakeholders = org.stakeholders || [];
     let metrics = met.metrics || doc.metrics || [];
-    if (!metrics.length) metrics = [{ id: "m1", family: "delivery", name: "Milestone Adherence", value: 0, target: 85, unit: "%", direction: "higher", rag: "green", trend: [0, 0, 0, 0], trendL: ["Wk1", "Wk2", "Wk3", "Wk4"], note: "Baseline.", lastUpdated: d(0), links: [] }, { id: "m2", family: "financial", name: "Budget Utilisation", value: 0, target: 100, unit: "%", direction: "neutral", rag: "green", trend: [0, 0, 0, 0], trendL: ["Wk1", "Wk2", "Wk3", "Wk4"], note: "Baseline.", lastUpdated: d(0), links: [] }, { id: "m3", family: "risk", name: "Open High-Impact Risks", value: risks.filter(r => r.impact === "High" && r.status === "Open").length, target: 0, unit: "risks", direction: "lower", rag: "amber", trend: [0, 0, 0, risks.filter(r => r.impact === "High" && r.status === "Open").length], trendL: ["Wk1", "Wk2", "Wk3", "Wk4"], note: "Baseline.", lastUpdated: d(0), links: [] }];
+    if (!metrics.length) metrics = [
+      { id: "m1", family: "delivery", name: "Milestone Adherence", value: 0, target: 85, unit: "%", direction: "higher", rag: "green", trend: [0, 0, 0, 0], trendL: ["Wk1", "Wk2", "Wk3", "Wk4"], note: "Baseline.", lastUpdated: d(0), links: [] },
+      { id: "m2", family: "financial", name: "Budget Utilisation", value: 0, target: 100, unit: "%", direction: "neutral", rag: "green", trend: [0, 0, 0, 0], trendL: ["Wk1", "Wk2", "Wk3", "Wk4"], note: "Baseline.", lastUpdated: d(0), links: [] },
+      { id: "m3", family: "risk", name: "Open High-Impact Risks", value: risks.filter(r => r.impact === "High" && r.status === "Open").length, target: 0, unit: "risks", direction: "lower", rag: "amber", trend: [0, 0, 0, risks.filter(r => r.impact === "High" && r.status === "Open").length], trendL: ["Wk1", "Wk2", "Wk3", "Wk4"], note: "Baseline.", lastUpdated: d(0), links: [] },
+    ];
     metrics = metrics.map((m, i) => ({ trend: [0, 0, 0, m.value || 0], trendL: ["Wk1", "Wk2", "Wk3", "Wk4"], lastUpdated: d(0), links: [], ...m, id: m.id || `m${i + 1}` }));
-    onComplete({ programme: { name: id.name || "Unnamed Programme", type: id.type || "transformation", sponsor: id.sponsor || "TBC", objective: id.objective || "", phase: str.currentPhase || "Discovery", startDate: str.startDate || d(0), endDate: str.endDate || d(180) }, tasks, risks, raidItems, calendarEvents, metrics });
+    onComplete({
+      programme: {
+        name: vis.name || "Unnamed Programme",
+        type: vis.type || "transformation",
+        sponsor: vis.sponsor || "TBC",
+        objective: vis.objective || "",
+        vision: vis.vision || "",
+        phase: bp.currentPhase || "Discovery",
+        startDate: bp.startDate || d(0),
+        endDate: bp.endDate || d(180),
+        blueprint: { currentState: bp.currentState || "", targetState: bp.targetState || "" },
+        sro: org.sro || vis.sponsor || "TBC",
+        governance: bp.governance || "",
+        enabledOutputs,
+      },
+      tasks, risks, raidItems, calendarEvents, metrics, benefits, stakeholders,
+    });
   }
 
   const stageMsgs = messages.filter(m => m.stageId === stage.id);
@@ -407,8 +522,8 @@ const OnboardingWizard = ({ onComplete, onCancel, isModal = false }) => {
                   <div><div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "#5DC484", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 2 }}>✓ Extraction Complete</div><div style={{ fontSize: 13, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)" }}>Programme Baseline Ready</div></div>
                   <div style={{ display: "flex", gap: 6 }}><button onClick={confirmExtract} style={{ background: "var(--green)", color: "#000", borderRadius: 5, padding: "6px 13px", fontFamily: "var(--font-d)", fontWeight: 700, fontSize: 10 }}>Confirm & Continue →</button><button onClick={() => setPreview(null)} style={{ border: "1px solid var(--border2)", borderRadius: 5, padding: "6px 10px", color: "var(--text3)", fontSize: 9 }}>Edit</button></div>
                 </div>
-                <div style={{ padding: "11px 14px", display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8 }}>
-                  {[{ l: "Tasks", v: preview.tasks?.length || 0, c: "var(--blue)" }, { l: "Risks", v: preview.risks?.length || 0, c: "var(--orange)" }, { l: "RAID", v: preview.raidItems?.length || 0, c: "var(--violet)" }, { l: "Metrics", v: preview.metrics?.length || 0, c: "var(--accent)" }, { l: "Events", v: preview.calendarEvents?.length || 0, c: "var(--yellow)" }].map((s, i) => (
+                <div style={{ padding: "11px 14px", display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 8 }}>
+                  {[{ l: "Tasks", v: preview.tasks?.length || 0, c: "var(--blue)" }, { l: "Risks", v: preview.risks?.length || 0, c: "var(--orange)" }, { l: "RAID", v: preview.raidItems?.length || 0, c: "var(--violet)" }, { l: "Benefits", v: preview.benefits?.length || 0, c: "var(--green)" }, { l: "Metrics", v: preview.metrics?.length || 0, c: "var(--accent)" }, { l: "Events", v: preview.calendarEvents?.length || 0, c: "var(--yellow)" }].map((s, i) => (
                     <div key={i} style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: 5, padding: "8px", textAlign: "center" }}>
                       <div style={{ fontSize: 18, fontFamily: "var(--font-d)", fontWeight: 800, color: s.c }}>{s.v}</div>
                       <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 2 }}>{s.l}</div>
@@ -446,9 +561,11 @@ const OnboardingWizard = ({ onComplete, onCancel, isModal = false }) => {
           {Object.entries(collected).map(([key, val]) => { const s = STAGES.find(s => s.id === key); if (!s || !val || !Object.keys(val).length) return null; return (
             <div key={key} style={{ marginBottom: 12 }}>
               <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "#5DC484", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>✓ {s.label}</div>
-              {key === "identity" && <><div style={{ fontSize: 10, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)", marginBottom: 2 }}>{val.name}</div><div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--accent)", textTransform: "uppercase", marginBottom: 2 }}>{val.type}</div></>}
-              {key === "structure" && <div style={{ fontSize: 8, fontFamily: "var(--font-b)", color: "var(--text2)" }}>{val.scale} · {val.currentPhase}</div>}
-              {key === "people" && val.leads?.map((l, i) => <div key={i} style={{ fontSize: 8, fontFamily: "var(--font-b)", color: "var(--text2)", marginBottom: 1 }}>{l.name} · {l.role}</div>)}
+              {key === "outputs" && <div style={{ fontSize: 8, fontFamily: "var(--font-b)", color: "var(--text2)" }}>{val.enabledOutputs?.length || 0} output{val.enabledOutputs?.length !== 1 ? "s" : ""} enabled</div>}
+              {key === "vision" && <><div style={{ fontSize: 10, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)", marginBottom: 2 }}>{val.name}</div><div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--accent)", textTransform: "uppercase", marginBottom: 2 }}>{val.type}</div></>}
+              {key === "blueprint" && <div style={{ fontSize: 8, fontFamily: "var(--font-b)", color: "var(--text2)" }}>{val.scale} · {val.currentPhase}</div>}
+              {key === "organisation" && val.leads?.map((l, i) => <div key={i} style={{ fontSize: 8, fontFamily: "var(--font-b)", color: "var(--text2)", marginBottom: 1 }}>{l.name} · {l.role}</div>)}
+              {key === "benefits" && <div style={{ fontSize: 8, fontFamily: "var(--font-b)", color: "var(--text2)" }}>{val.benefits?.length || 0} benefit{val.benefits?.length !== 1 ? "s" : ""}</div>}
             </div>
           ); })}
           {!Object.keys(collected).length && <div style={{ fontSize: 8, fontFamily: "var(--font-m)", color: "var(--text3)", lineHeight: 1.6 }}>Data appears here as confirmed.</div>}
@@ -642,26 +759,304 @@ const RAIDLog = ({ raidItems, setRaidItems }) => {
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
+// BENEFITS STRIP + DRAWER
+// ══════════════════════════════════════════════════════════════════════════════
+const benefitProgress = (b) => {
+  if (!b.target || b.target === b.baseline) return b.status === "realised" ? 100 : 0;
+  const curr = b.actualRealisation ? b.target : b.baseline;
+  return Math.max(0, Math.min(100, ((curr - b.baseline) / (b.target - b.baseline)) * 100));
+};
+
+const BenefitsStrip = ({ benefits, onOpen }) => {
+  if (!benefits || !benefits.length) return null;
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 8 }}>
+        <span style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "#5DC484", textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 600 }}>✚ Benefits</span>
+        <span style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)" }}>{benefits.length} tracked · {benefits.filter(b => b.status === "realised").length} realised</span>
+      </div>
+      <div style={{ display: "flex", gap: 9, overflowX: "auto", paddingBottom: 6 }}>
+        {benefits.map((b, i) => {
+          const st = BENEFIT_STATUS[b.status] || BENEFIT_STATUS.planned;
+          const tm = BENEFIT_TYPES[b.type] || BENEFIT_TYPES.operational;
+          const pct = benefitProgress(b);
+          return (
+            <div key={b.id} className="fu" onClick={() => onOpen(b)} style={{ animationDelay: `${i * 0.02}s`, minWidth: 240, maxWidth: 280, background: "var(--bg2)", border: `1px solid ${st.color}30`, borderLeft: `3px solid ${tm.color}`, borderRadius: 6, padding: "10px 12px", cursor: "pointer", flexShrink: 0, transition: "background 0.15s" }} onMouseEnter={e => e.currentTarget.style.background = "var(--bg3)"} onMouseLeave={e => e.currentTarget.style.background = "var(--bg2)"}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
+                <span style={{ fontSize: 7, fontFamily: "var(--font-m)", color: tm.color, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>{tm.label}</span>
+                <span style={{ fontSize: 7, fontFamily: "var(--font-m)", color: st.color, background: st.bg, border: `1px solid ${st.color}30`, padding: "1px 5px", borderRadius: 2, textTransform: "uppercase" }}>{st.label}</span>
+              </div>
+              <div style={{ fontSize: 10, fontFamily: "var(--font-b)", color: "var(--text)", fontWeight: 500, lineHeight: 1.3, marginBottom: 6 }}>{b.title}</div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 8, fontFamily: "var(--font-m)", color: "var(--text3)", marginBottom: 4 }}>
+                <span>{b.baseline}{b.unit} → {b.target}{b.unit}</span>
+                <span>{b.owner}</span>
+              </div>
+              <div style={{ background: "var(--bg0)", borderRadius: 3, height: 3, overflow: "hidden" }}><div style={{ width: `${pct}%`, height: "100%", background: `linear-gradient(90deg,${tm.color}66,${tm.color})`, borderRadius: 3 }} /></div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+const BenefitDrawer = ({ benefit, onClose, onSave, metrics }) => {
+  if (!benefit) return null;
+  const [b, setB] = useState({ ...benefit });
+  const tm = BENEFIT_TYPES[b.type] || BENEFIT_TYPES.operational;
+  const linkedMetric = metrics?.find(m => m.id === b.metricId);
+  function save() { onSave(b); onClose(); }
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "flex-end" }} onClick={onClose}>
+      <div className="sr" style={{ width: 400, height: "100%", background: "var(--bg2)", borderLeft: "1px solid var(--border2)", display: "flex", flexDirection: "column", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
+        <div style={{ padding: "15px 17px", borderBottom: "1px solid var(--border)", background: "var(--bg3)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+            <div>
+              <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: tm.color, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 3 }}>✚ {tm.label} Benefit</div>
+              <div style={{ fontSize: 14, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)", lineHeight: 1.25 }}>{b.title}</div>
+            </div>
+            <button onClick={onClose} style={{ color: "var(--text3)", fontSize: 17, padding: "2px 4px" }}>✕</button>
+          </div>
+          <p style={{ fontSize: 10, fontFamily: "var(--font-b)", color: "var(--text2)", lineHeight: 1.55 }}>{b.description}</p>
+        </div>
+        <div style={{ padding: "15px 17px", flex: 1 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
+            <div style={{ background: "var(--bg3)", padding: "8px 10px", borderRadius: 4, border: "1px solid var(--border)" }}>
+              <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 2 }}>Baseline</div>
+              <div style={{ fontSize: 16, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text2)" }}>{b.baseline}{b.unit}</div>
+            </div>
+            <div style={{ background: "var(--bg3)", padding: "8px 10px", borderRadius: 4, border: "1px solid var(--border)" }}>
+              <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 2 }}>Target</div>
+              <div style={{ fontSize: 16, fontFamily: "var(--font-d)", fontWeight: 700, color: tm.color }}>{b.target}{b.unit}</div>
+            </div>
+          </div>
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 3 }}>Owner</div>
+            <div style={{ fontSize: 10, fontFamily: "var(--font-b)", color: "var(--blue)" }}>{b.owner}</div>
+          </div>
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 3 }}>Measurement KPI</div>
+            <div style={{ fontSize: 9, fontFamily: "var(--font-b)", color: "var(--text)" }}>{b.measurementKPI}</div>
+          </div>
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 3 }}>Expected Realisation</div>
+            <div style={{ fontSize: 10, fontFamily: "var(--font-b)", color: "var(--text)" }}>{fmt(b.expectedRealisation)} {b.tranche && `· ${b.tranche}`}</div>
+          </div>
+          {linkedMetric && <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 3 }}>Linked Metric</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 8px", background: "var(--bg3)", borderRadius: 4, border: "1px solid var(--border)" }}><RagPip rag={linkedMetric.rag} /><span style={{ fontSize: 9, fontFamily: "var(--font-b)", color: "var(--text)", flex: 1 }}>{linkedMetric.name}</span><span style={{ fontSize: 10, fontFamily: "var(--font-m)", fontWeight: 700, color: RAG[linkedMetric.rag].color }}>{fmtVal(linkedMetric)}</span></div>
+          </div>}
+          <div style={{ borderTop: "1px solid var(--border)", paddingTop: 14, marginTop: 14 }}>
+            <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 10 }}>Update Status</div>
+            <div style={{ display: "flex", gap: 5, marginBottom: 12, flexWrap: "wrap" }}>
+              {Object.entries(BENEFIT_STATUS).map(([k, s]) => <button key={k} onClick={() => setB(p => ({ ...p, status: k }))} style={{ fontSize: 7, fontFamily: "var(--font-m)", padding: "4px 9px", border: `1px solid ${b.status === k ? s.color : "var(--border2)"}`, borderRadius: 4, color: b.status === k ? s.color : "var(--text3)", background: b.status === k ? s.bg : "transparent", textTransform: "uppercase" }}>{s.label}</button>)}
+            </div>
+            <button onClick={save} style={{ width: "100%", background: "var(--accent)", color: "#000", borderRadius: 5, padding: "8px", fontFamily: "var(--font-d)", fontWeight: 700, fontSize: 11 }}>Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// REPORT VIEWER + BUILDERS
+// ══════════════════════════════════════════════════════════════════════════════
+const ReportViewer = ({ outputType, state, onClose }) => {
+  const { programme, tasks, risks, metrics, raidItems = [], benefits = [], calendarEvents = [] } = state;
+  const [report, setReport] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const meta = OUTPUT_TYPES[outputType];
+
+  const g = ragCount(metrics, "green"), a = ragCount(metrics, "amber"), rC = ragCount(metrics, "red");
+  const phi = metrics.length ? Math.round((g * 100 + a * 50) / metrics.length) : 0;
+  const phiC = phi >= 70 ? "#5DC484" : phi >= 50 ? "#F5C544" : "#E8734A";
+
+  useEffect(() => { generate(); }, []);
+
+  async function generate() {
+    setLoading(true);
+    let SYS = "", extraSummary = "";
+    if (outputType === "steerco") {
+      SYS = `You are an expert PMO writer creating a SteerCo / Programme Board Pack. Be concise and authoritative. Use this exact structure:\n\n## EXECUTIVE SUMMARY\nOne paragraph. RAG status, one-line headline.\n\n## PROGRAMME HEALTH\nTable-style bullets: Schedule / Budget / Scope / Benefits / Risks each with RAG + one-line rationale.\n\n## KEY HIGHLIGHTS — THIS PERIOD\n3-5 bullets of concrete progress.\n\n## PROGRESS VS PLAN\nMilestones hit/missed, % complete, variance to baseline.\n\n## FINANCIAL STATUS\nBudget utilisation, variance, forecast to completion.\n\n## BENEFITS TRACKING\nPer-benefit status: on track / at risk / off track. Reference the benefits list.\n\n## RISKS & ISSUES\nTop 3 open risks with mitigation and owner.\n\n## DECISIONS REQUIRED\nWhat the Board needs to approve/decide.\n\n## UPCOMING MILESTONES\nNext 4-6 weeks.\n\n## ASKS OF THE BOARD\nSpecific requests from the sponsor / board.`;
+    } else if (outputType === "highlight") {
+      SYS = `You are an expert PMO writer creating a Highlight Report (concise, 1-page equivalent). Use this exact structure:\n\n## HEADLINE\nOne-line status with RAG.\n\n## THIS PERIOD — PROGRESS\n3-4 bullets. Only what was completed or materially advanced.\n\n## NEXT PERIOD — PRIORITIES\n3-4 bullets. What must happen next.\n\n## WATCH ITEMS\nEmerging risks or blockers — keep it short.\n\n## DECISIONS NEEDED\nAny decisions awaiting — or "None pending".\n\n## BENEFITS UPDATE\nOne paragraph on benefits trajectory.`;
+    } else if (outputType === "benefits") {
+      SYS = `You are an expert PMO writer creating a Benefits Realisation Report. Focus entirely on benefits vs business case. Use this exact structure:\n\n## BENEFITS OVERVIEW\nTotals: planned / in-progress / realised / at-risk counts. Overall trajectory one-liner.\n\n## PER-BENEFIT STATUS\nFor each benefit: title, owner, baseline → target → current, RAG, realisation date, commentary.\n\n## BENEFITS AT RISK\nWhich benefits are slipping, why, and what mitigation is in place.\n\n## REALISATION TIMELINE\nWhen benefits are expected to land by tranche/phase.\n\n## RECOMMENDATIONS\n2-3 specific recommendations to protect benefits realisation.`;
+      extraSummary = `\nBENEFITS DETAIL:\n${benefits.map(b => `- ${b.title} (${b.type}) [${b.status}] — Owner: ${b.owner} — ${b.baseline}${b.unit} → ${b.target}${b.unit} — Expected: ${b.expectedRealisation} — KPI: ${b.measurementKPI}`).join("\n")}`;
+    }
+
+    const prompt = `Programme: ${programme.name} (${programme.type})
+Vision: ${programme.vision || programme.objective}
+Sponsor: ${programme.sponsor} · SRO: ${programme.sro}
+Phase: ${programme.phase}
+Report date: ${fmtL(d(0))}
+Audience: ${meta.label}
+
+PROGRAMME HEALTH:
+- Portfolio Health Index: ${phi}/100 (${phi >= 70 ? "Green" : phi >= 50 ? "Amber" : "Red"})
+- Tasks complete: ${tasks.filter(t => t.status === "complete").length}/${tasks.length}
+- Tasks in progress: ${tasks.filter(t => t.status === "in-progress").length}
+- Open risks: ${risks.filter(r => r.status === "Open").length}
+- RAID items open: ${raidItems.filter(i => i.status === "Open" || i.status === "Active").length}
+- Benefits: ${benefits.length} tracked (${benefits.filter(b => b.status === "realised").length} realised, ${benefits.filter(b => b.status === "at-risk").length} at risk)
+
+METRICS:
+${metrics.map(m => `- ${m.name}: ${fmtVal(m)} vs target ${m.target}${m.unit} [${m.rag.toUpperCase()}] — ${m.note}`).join("\n")}
+
+OPEN RISKS:
+${risks.filter(r => r.status === "Open").map(r => `- [${r.impact}] ${r.title} — ${r.mitigation} (${r.owner})`).join("\n") || "None"}
+
+RAID ITEMS:
+${raidItems.filter(i => i.status !== "Closed" && i.status !== "Agreed").slice(0, 8).map(i => `- [${i.type.toUpperCase()}] ${i.title}: ${i.description || ""}`).join("\n") || "None"}
+
+UPCOMING CALENDAR EVENTS:
+${calendarEvents.slice(0, 6).map(e => `- ${e.title} on ${e.date} [${e.type}]`).join("\n") || "None scheduled"}${extraSummary}`;
+
+    try {
+      const r = await aiCall(SYS, [{ role: "user", content: prompt }]);
+      setReport(r);
+    } catch (e) { setReport("⚠ AI engine error — could not generate report."); }
+    setLoading(false);
+  }
+
+  function copy() { navigator.clipboard?.writeText(report || ""); setCopied(true); setTimeout(() => setCopied(false), 2000); }
+
+  function renderReport(text) {
+    const sections = text.split(/^##\s/m).filter(Boolean);
+    return sections.map((sec, i) => {
+      const lines = sec.split("\n");
+      const title = lines[0].trim();
+      const body = lines.slice(1).join("\n").trim();
+      return (
+        <div key={i} style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: i === 0 ? phiC : meta.color, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 7, display: "flex", alignItems: "center", gap: 6 }}>
+            {i === 0 && <div style={{ width: 7, height: 7, borderRadius: "50%", background: phiC, animation: "blink 2s infinite" }} />}
+            {title}
+          </div>
+          <div style={{ fontSize: 11, fontFamily: "var(--font-b)", color: "var(--text)", lineHeight: 1.75, whiteSpace: "pre-wrap" }}>
+            {body.split("\n").map((line, j) => {
+              if (line.startsWith("- ")) {
+                return <div key={j} style={{ display: "flex", gap: 8, marginBottom: 3 }}>
+                  <span style={{ color: meta.color, flexShrink: 0, marginTop: 2 }}>·</span>
+                  <span>{line.slice(2)}</span>
+                </div>;
+              }
+              return <p key={j} style={{ marginBottom: 4 }}>{line}</p>;
+            })}
+          </div>
+        </div>
+      );
+    });
+  }
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 400, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div style={{ width: "min(760px,100%)", height: "min(85vh,760px)", background: "var(--bg1)", border: "1px solid var(--border2)", borderRadius: 10, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,0.8)", display: "flex", flexDirection: "column" }}>
+        <div style={{ padding: "12px 18px", borderBottom: "1px solid var(--border)", background: "var(--bg2)", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+          <div>
+            <div style={{ fontSize: 8, fontFamily: "var(--font-m)", color: meta.color, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 2 }}>{meta.icon} {meta.label}</div>
+            <div style={{ fontSize: 13, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)" }}>{programme.name} · {fmtL(d(0))}</div>
+          </div>
+          <div style={{ display: "flex", gap: 7, alignItems: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", background: `${phiC}15`, border: `1px solid ${phiC}40`, borderRadius: 20 }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: phiC }} />
+              <span style={{ fontSize: 8, fontFamily: "var(--font-m)", color: phiC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em" }}>PHI {phi}</span>
+            </div>
+            {report && <button onClick={copy} style={{ fontSize: 8, fontFamily: "var(--font-m)", padding: "5px 11px", background: "rgba(42,191,191,0.15)", border: "1px solid rgba(42,191,191,0.3)", borderRadius: 5, color: "var(--accent)" }}>{copied ? "Copied ✓" : "Copy"}</button>}
+            {report && <button onClick={generate} disabled={loading} style={{ fontSize: 8, fontFamily: "var(--font-m)", padding: "5px 11px", background: `${meta.color}15`, border: `1px solid ${meta.color}30`, borderRadius: 5, color: meta.color }}>↻ Refresh</button>}
+            <button onClick={onClose} style={{ color: "var(--text3)", fontSize: 16, padding: "2px 5px" }}>✕</button>
+          </div>
+        </div>
+        <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px" }}>
+          {loading && (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 12 }}>
+              <Spinner s={20} />
+              <div style={{ fontSize: 10, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em", animation: "shimmer 1.5s infinite" }}>Generating {meta.label.toLowerCase()}…</div>
+            </div>
+          )}
+          {report && !loading && renderReport(report)}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ReportsTab = ({ state, onOpenReport }) => {
+  const enabled = state.programme.enabledOutputs || [];
+  if (!enabled.length) return (
+    <div style={{ padding: "32px", textAlign: "center", fontSize: 10, fontFamily: "var(--font-m)", color: "var(--text3)" }}>No output types configured. Start a new programme and select outputs in Stage 1.</div>
+  );
+  return (
+    <div style={{ padding: "16px 20px" }}>
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 13, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)", marginBottom: 3 }}>Reports & Outputs</div>
+        <div style={{ fontSize: 8, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Generate formal outputs from live programme data</div>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(320px,1fr))", gap: 12 }}>
+        {enabled.map((out, i) => {
+          const meta = OUTPUT_TYPES[out.type] || OUTPUT_TYPES.highlight;
+          const due = out.nextDue;
+          const daysToDue = due ? daysUntil(due) : null;
+          const dueColour = daysToDue !== null && daysToDue <= 3 ? "#E8734A" : daysToDue !== null && daysToDue <= 7 ? "#F5C544" : "var(--text3)";
+          return (
+            <div key={i} className="fu" style={{ animationDelay: `${i * 0.05}s`, background: "var(--bg2)", border: `1px solid ${meta.color}30`, borderTop: `3px solid ${meta.color}`, borderRadius: 8, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 9 }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 5 }}>
+                    <span style={{ fontSize: 18 }}>{meta.icon}</span>
+                    <div>
+                      <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: meta.color, textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 600 }}>{out.frequency}</div>
+                      <div style={{ fontSize: 12, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)", lineHeight: 1.3 }}>{meta.label}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p style={{ fontSize: 9, fontFamily: "var(--font-b)", color: "var(--text2)", lineHeight: 1.55 }}>{meta.desc}</p>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border)", paddingTop: 9 }}>
+                <div>
+                  <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Audience</div>
+                  <div style={{ fontSize: 9, fontFamily: "var(--font-b)", color: "var(--text2)" }}>{out.audience || "—"}</div>
+                </div>
+                {due && <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Next Due</div>
+                  <div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: dueColour }}>{fmt(due)}{daysToDue !== null && ` · ${daysToDue > 0 ? "in " + daysToDue + "d" : daysToDue === 0 ? "today" : Math.abs(daysToDue) + "d overdue"}`}</div>
+                </div>}
+              </div>
+              <button onClick={() => onOpenReport(out.type)} style={{ width: "100%", background: meta.color, color: "#000", border: "none", borderRadius: 5, padding: "8px", fontFamily: "var(--font-d)", fontWeight: 700, fontSize: 11, marginTop: 4 }}>Generate Report</button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
 // MAIN DASHBOARD
 // ══════════════════════════════════════════════════════════════════════════════
 const Dashboard = ({ state, setState, onNewProgramme }) => {
-  const { programme, tasks, risks, metrics, raidItems = [], calendarEvents = [] } = state;
+  const { programme, tasks, risks, metrics, raidItems = [], calendarEvents = [], benefits = [], stakeholders = [] } = state;
 
   const setTasks = fn => setState(p => ({ ...p, tasks: typeof fn === "function" ? fn(p.tasks) : fn }));
   const setRisks = fn => setState(p => ({ ...p, risks: typeof fn === "function" ? fn(p.risks) : fn }));
   const setMetrics = fn => setState(p => ({ ...p, metrics: typeof fn === "function" ? fn(p.metrics) : fn }));
   const setRAID = fn => setState(p => ({ ...p, raidItems: typeof fn === "function" ? fn(p.raidItems || []) : fn }));
+  const setBenefits = fn => setState(p => ({ ...p, benefits: typeof fn === "function" ? fn(p.benefits || []) : fn }));
 
   const [tab, setTab] = useState("metrics");
   const [selTask, setSelTask] = useState(null);
   const [hlTask, setHlTask] = useState(null);
   const [openMetric, setOpenM] = useState(null);
+  const [openBenefit, setOpenBenefit] = useState(null);
+  const [openReport, setOpenReport] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [role, setRole] = useState("Programme Manager");
   const [insights, setInsights] = useState([]);
   const [insightLoad, setInsightLoad] = useState(false);
   const [contextView, setContextView] = useState(null);
-  const [messages, setMessages] = useState([{ role: "assistant", content: `Programme "${programme.name}" is live.\n\n${tasks.length} tasks · ${risks.filter(r => r.status === "Open").length} open risks · ${metrics.length} metrics · ${raidItems.length} RAID items.\n\nAsk me anything — "What should I brief the CFO on?", "Show upcoming steerco prep", or describe updates to apply.` }]);
+  const [messages, setMessages] = useState([{ role: "assistant", content: `Programme "${programme.name}" is live.\n\n${tasks.length} tasks · ${risks.filter(r => r.status === "Open").length} open risks · ${metrics.length} metrics · ${benefits.length} benefits · ${raidItems.length} RAID items.\n\nAsk me anything — "Brief me for steerco", "Which benefits are at risk?", "What do I tell the CFO?", or describe updates to apply.` }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef(null);
@@ -675,16 +1070,27 @@ const Dashboard = ({ state, setState, onNewProgramme }) => {
   // Generate insights
   const generateInsights = useCallback(async () => {
     setInsightLoad(true);
-    const SYS = `You are APEX Insight Intelligence. Role: ${role}. Generate 3-5 proactive insight cards for this PMO user.
-Return ONLY a JSON array:
-[{"id":"ins1","category":"milestone|meeting|risk|task|stakeholder|report|custom","title":"short title","body":"2-3 sentence actionable insight","priority":"high|medium|low","actions":["View Details","Take Action"]}]
-Focus on: upcoming deadlines, meeting prep needs, risk escalations, blocked tasks, report deadlines, stakeholder comms needed. Be specific to the data.`;
+    const SYS = `You are APEX Insight Intelligence. Role: ${role}. Generate 3-6 proactive insight cards for this PMO user.
+Return ONLY a JSON array (no markdown):
+[{"id":"ins1","category":"milestone|meeting|risk|task|stakeholder|report|benefit|custom","title":"short title","body":"2-3 sentence actionable insight","priority":"high|medium|low","actions":["View Details","Take Action"]}]
+Focus on:
+- Upcoming report deadlines (check enabledOutputs.nextDue vs today)
+- Benefits at risk or approaching realisation date
+- Meeting prep needs (steerco, board)
+- Risk escalations
+- Blocked tasks or tasks due soon
+- Stakeholder comms needed
+Tailor insights to the user's role.`;
     const prompt = `Programme: ${programme.name} (${programme.type}, ${programme.phase})
+Vision: ${programme.vision || programme.objective}
+SRO: ${programme.sro || programme.sponsor}
 Today: ${d(0)}
 Role: ${role}
+Enabled outputs: ${JSON.stringify(programme.enabledOutputs || [])}
 Tasks: ${JSON.stringify(tasks.map(t => ({ id: t.id, name: t.name, status: t.status, owner: t.owner, end: t.end, phase: t.phase })))}
 Risks: ${JSON.stringify(risks.filter(r => r.status === "Open").map(r => ({ id: r.id, title: r.title, impact: r.impact, owner: r.owner })))}
 Metrics: ${JSON.stringify(metrics.map(m => ({ id: m.id, name: m.name, value: m.value, target: m.target, rag: m.rag })))}
+Benefits: ${JSON.stringify(benefits.map(b => ({ id: b.id, title: b.title, owner: b.owner, status: b.status, expectedRealisation: b.expectedRealisation, type: b.type })))}
 Calendar: ${JSON.stringify(calendarEvents.slice(0, 10))}
 RAID: ${JSON.stringify(raidItems.filter(i => i.status === "Open" || i.status === "Active" || i.status === "Pending").slice(0, 10))}`;
     try {
@@ -693,27 +1099,29 @@ RAID: ${JSON.stringify(raidItems.filter(i => i.status === "Open" || i.status ===
       setInsights(parsed.map((ins, i) => ({ ...ins, id: ins.id || `ins-${uid()}` })));
     } catch (e) { /* silent */ }
     setInsightLoad(false);
-  }, [role, tasks, risks, metrics, calendarEvents, raidItems, programme]);
+  }, [role, tasks, risks, metrics, calendarEvents, raidItems, benefits, programme]);
 
   useEffect(() => { generateInsights(); }, []);
 
   const SYSTEM = `You are APEX Command Intelligence for "${programme.name}" (${programme.type}, ${programme.phase}).
-User role: ${role}. Objective: ${programme.objective}. Sponsor: ${programme.sponsor}.
+User role: ${role}. Vision: ${programme.vision || programme.objective}. Sponsor: ${programme.sponsor}. SRO: ${programme.sro || programme.sponsor}.
+Enabled outputs: ${JSON.stringify(programme.enabledOutputs || [])}
 TASKS: ${JSON.stringify(tasks.map(t => ({ id: t.id, name: t.name, status: t.status, progress: t.progress, owner: t.owner, phase: t.phase, end: t.end })))}
 RISKS: ${JSON.stringify(risks)}
 METRICS: ${JSON.stringify(metrics.map(m => ({ id: m.id, name: m.name, family: m.family, value: m.value, target: m.target, unit: m.unit, rag: m.rag })))}
+BENEFITS: ${JSON.stringify(benefits.map(b => ({ id: b.id, title: b.title, type: b.type, owner: b.owner, status: b.status, baseline: b.baseline, target: b.target, unit: b.unit, expectedRealisation: b.expectedRealisation })))}
 CALENDAR: ${JSON.stringify(calendarEvents)}
 RAID: ${JSON.stringify(raidItems.slice(0, 15))}
 
 You can respond in two ways:
 1. Conversational answer (max 150 words, senior PMO tone)
-2. If the user asks a contextual question (e.g. "what should I tell legal?", "what's coming up?", "brief me for the steerco"), include a contextView JSON block that references real IDs from the data above:
+2. If the user asks a contextual question (e.g. "what should I tell legal?", "brief me for steerco", "which benefits are at risk?"), include a contextView JSON block that references real IDs from the data above:
 \`\`\`json
-{"contextView":{"title":"View Title","sections":[{"title":"Section","type":"tasks|risks|metrics|text","taskIds":["t1"],"riskIds":["r1"],"metricIds":["m1"],"content":"text content","commentary":"analyst note"}]}}
+{"contextView":{"title":"View Title","sections":[{"title":"Section","type":"tasks|risks|metrics|benefits|text","taskIds":["t1"],"riskIds":["r1"],"metricIds":["m1"],"benefitIds":["b1"],"content":"text content","commentary":"analyst note"}]}}
 \`\`\`
 3. If the user describes updates, include an updates JSON block:
 \`\`\`json
-{"taskUpdates":[{"id":"t1","status":"in-progress","progress":30}],"newRisks":[],"riskUpdates":[],"metricUpdates":[],"newRAID":[]}
+{"taskUpdates":[{"id":"t1","status":"in-progress","progress":30}],"newRisks":[],"riskUpdates":[],"metricUpdates":[],"newRAID":[],"benefitUpdates":[{"id":"b1","status":"at-risk"}]}
 \`\`\`
 Omit JSON blocks if not needed.`;
 
@@ -729,7 +1137,7 @@ Omit JSON blocks if not needed.`;
         try { const cv = JSON.parse(cvMatch[1]); setContextView(cv.contextView); } catch (e) { }
       }
       // Parse updates
-      const jm = reply.match(/```json\s*(\{"(?:taskUpdates|newRisks|riskUpdates|metricUpdates|newRAID)[\s\S]*?\})\s*```/);
+      const jm = reply.match(/```json\s*(\{"(?:taskUpdates|newRisks|riskUpdates|metricUpdates|newRAID|benefitUpdates)[\s\S]*?\})\s*```/);
       if (jm) {
         try {
           const u = JSON.parse(jm[1]);
@@ -738,6 +1146,7 @@ Omit JSON blocks if not needed.`;
           if (u.riskUpdates?.length) setRisks(prev => prev.map(r => { const up = u.riskUpdates.find(x => x.id === r.id); return up ? { ...r, ...up } : r; }));
           if (u.metricUpdates?.length) setMetrics(prev => prev.map(m => { const up = u.metricUpdates.find(x => x.id === m.id); if (!up) return m; return { ...m, ...up, trend: [...(m.trend || []).slice(1), up.value ?? m.value], lastUpdated: d(0) }; }));
           if (u.newRAID?.length) setRAID(prev => [...prev, ...u.newRAID]);
+          if (u.benefitUpdates?.length) setBenefits(prev => prev.map(b => { const up = u.benefitUpdates.find(x => x.id === b.id); return up ? { ...b, ...up } : b; }));
         } catch (e) { }
       }
       setMessages(prev => [...prev, { role: "assistant", content: reply.replace(/```json[\s\S]*?```/g, "").trim() }]);
@@ -753,7 +1162,7 @@ Omit JSON blocks if not needed.`;
   const phases = [...new Set(tasks.map(t => t.phase))];
   const wkL = []; for (let i = 0; i <= GW; i += 7) { const dt = new Date(gS); dt.setDate(dt.getDate() + i); wkL.push({ pct: (i / GW) * 100, label: fmt(dt.toISOString().split("T")[0]) }); }
 
-  const TABS = [{ id: "metrics", label: "Dashboard" }, { id: "gantt", label: `Gantt (${tasks.length})` }, { id: "risks", label: `Risks (${openRisks})` }, { id: "raid", label: `RAID (${raidItems.length})` }, { id: "ai", label: "◆ Command" }];
+  const TABS = [{ id: "metrics", label: "Dashboard" }, { id: "gantt", label: `Gantt (${tasks.length})` }, { id: "risks", label: `Risks (${openRisks})` }, { id: "raid", label: `RAID (${raidItems.length})` }, { id: "reports", label: `📊 Reports (${(programme.enabledOutputs || []).length})` }, { id: "ai", label: "◆ Command" }];
   const [activeFam, setActiveFam] = useState("all");
   const filteredMetrics = activeFam === "all" ? metrics : metrics.filter(m => m.family === activeFam);
 
@@ -798,6 +1207,7 @@ Omit JSON blocks if not needed.`;
           {/* METRICS */}
           {tab === "metrics" && <div style={{ padding: "15px 18px" }}>
             <InsightCardsRow insights={insights} loading={insightLoad} onDismiss={id => setInsights(prev => prev.filter(i => i.id !== id))} onAction={(ins, action) => { setTab("ai"); setInput(action === "View Details" ? `Tell me more about: ${ins.title}` : ins.title); }} onRefresh={generateInsights} />
+            <BenefitsStrip benefits={benefits} onOpen={setOpenBenefit} />
             <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr) 170px", gap: 8, marginBottom: 16 }}>
               {[{ l: "On Track", v: g, c: "#5DC484" }, { l: "At Risk", v: a, c: "#F5C544" }, { l: "Off Track", v: r, c: "#E8734A" }, { l: "Total", v: metrics.length, c: "var(--text2)" }, { l: "Families", v: [...new Set(metrics.map(m => m.family))].length, c: "var(--violet)" }].map((s, i) => (<div key={i} style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 6, padding: "9px 12px" }}><div style={{ fontSize: 21, fontFamily: "var(--font-d)", fontWeight: 800, color: s.c }}>{s.v}</div><div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 2 }}>{s.l}</div></div>))}
               <div style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 6, padding: "9px 12px" }}><div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--violet)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>Portfolio Health</div><div style={{ display: "flex", alignItems: "center", gap: 8 }}><div style={{ fontSize: 25, fontFamily: "var(--font-d)", fontWeight: 800, color: phiC }}>{phi}</div><div style={{ flex: 1 }}><div style={{ background: "var(--bg0)", borderRadius: 3, height: 4, overflow: "hidden" }}><div style={{ width: `${phi}%`, height: "100%", background: `linear-gradient(90deg,${phiC}88,${phiC})`, borderRadius: 3 }} /></div><div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", marginTop: 2 }}>Target 80+</div></div></div></div>
@@ -850,6 +1260,9 @@ Omit JSON blocks if not needed.`;
           {/* RAID */}
           {tab === "raid" && <RAIDLog raidItems={raidItems} setRaidItems={setRAID} />}
 
+          {/* REPORTS */}
+          {tab === "reports" && <ReportsTab state={state} onOpenReport={setOpenReport} />}
+
           {/* AI COMMAND */}
           {tab === "ai" && <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
             <div style={{ padding: "7px 14px", borderBottom: "1px solid var(--border)", background: "var(--bg3)", display: "flex", alignItems: "center", gap: 7, flexShrink: 0 }}>
@@ -858,7 +1271,7 @@ Omit JSON blocks if not needed.`;
               <span style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", marginLeft: "auto" }}>Role: {role} · Ask contextual questions for focused views</span>
             </div>
             <div style={{ flex: 1, overflowY: "auto", padding: "11px 14px", display: "flex", flexDirection: "column", gap: 9 }}>
-              {contextView && <ContextView view={contextView} tasks={tasks} risks={risks} metrics={metrics} raidItems={raidItems} onClose={() => setContextView(null)} onNavigateTask={navigateToTask} onOpenMetric={m => { setTab("metrics"); setTimeout(() => setOpenM(m), 100); }} />}
+              {contextView && <ContextView view={contextView} tasks={tasks} risks={risks} metrics={metrics} raidItems={raidItems} benefits={benefits} onClose={() => setContextView(null)} onNavigateTask={navigateToTask} onOpenMetric={m => { setTab("metrics"); setTimeout(() => setOpenM(m), 100); }} onOpenBenefit={b => { setTab("metrics"); setTimeout(() => setOpenBenefit(b), 100); }} />}
               {messages.map((m, i) => (<div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
                 {m.role === "assistant" && <div style={{ width: 20, height: 20, borderRadius: 3, background: "var(--accent)", marginRight: 6, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 800, color: "#000", fontFamily: "var(--font-d)", marginTop: 2 }}>◆</div>}
                 <div style={{ maxWidth: "78%", padding: "7px 11px", borderRadius: m.role === "user" ? "8px 8px 2px 8px" : "8px 8px 8px 2px", background: m.role === "user" ? "rgba(42,191,191,0.12)" : "var(--bg3)", border: `1px solid ${m.role === "user" ? "rgba(42,191,191,0.25)" : "var(--border)"}`, fontSize: 10, fontFamily: "var(--font-b)", color: "var(--text)", lineHeight: 1.65, whiteSpace: "pre-wrap" }}>{m.content}</div>
@@ -875,9 +1288,11 @@ Omit JSON blocks if not needed.`;
 
         {selTask && <TaskDrawer task={tasks.find(t => t.id === selTask.id)} tasks={tasks} metrics={metrics} onClose={() => { setSelTask(null); setHlTask(null); }} onUpdate={(id, upd) => setTasks(prev => prev.map(t => t.id === id ? { ...t, ...upd } : t))} onOpenMetric={m => { setSelTask(null); setHlTask(null); setTab("metrics"); setTimeout(() => setOpenM(m), 100); }} />}
         {openMetric && <MetricPanel metric={metrics.find(m => m.id === openMetric.id) || openMetric} tasks={tasks} onClose={() => setOpenM(null)} onSave={updated => setMetrics(prev => prev.map(m => m.id === updated.id ? updated : m))} onNavigate={navigateToTask} />}
+        {openBenefit && <BenefitDrawer benefit={benefits.find(b => b.id === openBenefit.id) || openBenefit} metrics={metrics} onClose={() => setOpenBenefit(null)} onSave={updated => setBenefits(prev => prev.map(b => b.id === updated.id ? updated : b))} />}
       </div>
 
       {showModal && <OnboardingWizard isModal={true} onComplete={newState => { setState(newState); setShowModal(false); }} onCancel={() => setShowModal(false)} />}
+      {openReport && <ReportViewer outputType={openReport} state={state} onClose={() => setOpenReport(null)} />}
     </div>
   );
 };
