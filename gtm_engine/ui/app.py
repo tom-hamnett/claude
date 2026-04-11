@@ -1,14 +1,14 @@
-"""Streamlit operator dashboard — ties all layers together.
+"""Streamlit Operator Dashboard — Quantum Tools GTM Intelligence Engine.
 
-This is the primary UI for operators. Provides:
-- Discovery interview (web version)
-- Strategy viewer
-- Content queue management
-- Deployment controls
-- Performance dashboards
-- Stage gate interface
+Multi-page dashboard wiring all the layers together:
+  - Dashboard (overview + pipeline counts)
+  - Ideas (bulk generate, select, approve, reject)
+  - Content (review generated pieces, approve/reject)
+  - Deployment (schedule, deploy)
+  - Segments (view Core-Five spec)
+  - Brand Standards (view/edit)
 
-Run with: streamlit run gtm_engine/ui/app.py
+Launch: python main.py ui
 """
 
 import json
@@ -18,454 +18,588 @@ from pathlib import Path
 
 import streamlit as st
 
-# Add project root to path for imports
+# Make gtm_engine importable when launched via streamlit run
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, LOGS_DIR
-from gtm_engine.discovery.models import GTMBrief
-from gtm_engine.utils.file_io import load_json, save_json
+from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR
+from gtm_engine.ideas import IdeaBank, FUNNEL_LEVELS, STATES
+from gtm_engine.approval import get_pipeline_counts
+from gtm_engine.segments import load_segments
+from gtm_engine.utils.file_io import load_json
+
+# --- Brand palette (matches MASTER_CONTEXT.md) ---
+BRAND_COLOURS = {
+    "bg": "#0a0a0f",
+    "primary": "#6c63ff",
+    "hot": "#ff6b6b",
+    "gold": "#ffd166",
+    "text": "#e8e8f0",
+    "muted": "#8888a0",
+}
 
 
 def main():
     st.set_page_config(
-        page_title="GTM Intelligence Engine",
+        page_title="Quantum Tools GTM Engine",
         page_icon="",
         layout="wide",
+        initial_sidebar_state="expanded",
     )
 
-    st.title("GTM Intelligence Engine")
-    st.caption("Autonomous go-to-market system")
+    _apply_dark_theme()
 
     # Sidebar navigation
+    st.sidebar.markdown("### Quantum Tools")
+    st.sidebar.markdown("*GTM Intelligence Engine*")
+    st.sidebar.markdown("---")
+
     page = st.sidebar.radio(
-        "Navigation",
-        ["Dashboard", "Discovery", "Strategy", "Content Queue", "Deployment", "Stage Gate"],
+        "Navigate",
+        [
+            "Dashboard",
+            "Ideas",
+            "Content",
+            "Deployment",
+            "Segments (Core-Five)",
+            "Brand Standards",
+            "Character Library",
+            "Intelligence Feed",
+        ],
+        label_visibility="collapsed",
     )
 
-    if page == "Dashboard":
-        _render_dashboard()
-    elif page == "Discovery":
-        _render_discovery()
-    elif page == "Strategy":
-        _render_strategy()
-    elif page == "Content Queue":
-        _render_content_queue()
-    elif page == "Deployment":
-        _render_deployment()
-    elif page == "Stage Gate":
-        _render_stage_gate()
+    st.sidebar.markdown("---")
+    _sidebar_pipeline_snapshot()
+
+    # Route to the selected page
+    routes = {
+        "Dashboard": page_dashboard,
+        "Ideas": page_ideas,
+        "Content": page_content,
+        "Deployment": page_deployment,
+        "Segments (Core-Five)": page_segments,
+        "Brand Standards": page_brand,
+        "Character Library": page_characters,
+        "Intelligence Feed": page_intelligence,
+    }
+    routes[page]()
 
 
-def _render_dashboard():
-    """Main dashboard with high-level metrics and status."""
-    st.header("Engine Status")
+def _apply_dark_theme():
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background-color: {BRAND_COLOURS['bg']};
+            color: {BRAND_COLOURS['text']};
+        }}
+        .stSidebar {{
+            background-color: #0f0f18;
+        }}
+        h1, h2, h3 {{
+            color: {BRAND_COLOURS['text']};
+            font-family: 'Playfair Display', serif;
+        }}
+        .stButton > button {{
+            background-color: {BRAND_COLOURS['primary']};
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }}
+        .stButton > button:hover {{
+            background-color: {BRAND_COLOURS['hot']};
+        }}
+        [data-testid="stMetricValue"] {{
+            color: {BRAND_COLOURS['primary']};
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _sidebar_pipeline_snapshot():
+    """Show a compact pipeline snapshot in the sidebar."""
+    try:
+        counts = get_pipeline_counts()
+    except Exception:
+        counts = {}
+
+    st.sidebar.markdown("**Pipeline**")
+    st.sidebar.markdown(f"- Draft: `{counts.get('idea_draft', 0)}`")
+    st.sidebar.markdown(f"- Approved: `{counts.get('idea_approved', 0)}`")
+    st.sidebar.markdown(f"- Content: `{counts.get('content_generated', 0)}`")
+    st.sidebar.markdown(f"- Scheduled: `{counts.get('deployment_scheduled', 0)}`")
+    st.sidebar.markdown(f"- Deployed: `{counts.get('deployed', 0)}`")
+
+
+# -----------------------------------------------------------------------------
+# DASHBOARD
+# -----------------------------------------------------------------------------
+
+def page_dashboard():
+    st.title("Dashboard")
+    st.caption("Quantum Tools GTM Intelligence Engine — Overview")
 
     col1, col2, col3, col4 = st.columns(4)
-
-    # Check what exists
-    brief_exists = (OUTPUT_DIR / "gtm_brief.json").exists()
-    strategy_exists = (OUTPUT_DIR / "gtm_strategy.json").exists()
-    content_count = len(list(CONTENT_QUEUE_DIR.glob("*.json"))) - (
-        1 if (CONTENT_QUEUE_DIR / "batch_manifest.json").exists() else 0
-    )
-    deployment_exists = (OUTPUT_DIR / "deployment_log.json").exists()
+    counts = get_pipeline_counts()
 
     with col1:
-        st.metric("GTM Brief", "Ready" if brief_exists else "Not Started")
+        st.metric("Draft ideas", counts.get("idea_draft", 0))
     with col2:
-        st.metric("Strategy", "Generated" if strategy_exists else "Pending")
+        st.metric("Approved ideas", counts.get("idea_approved", 0))
     with col3:
-        st.metric("Content Queue", f"{max(0, content_count)} pieces")
+        st.metric("Content pieces", counts.get("content_generated", 0) + counts.get("content_approved", 0))
     with col4:
-        st.metric("Deployments", "Active" if deployment_exists else "Pending")
+        st.metric("Deployed", counts.get("deployed", 0))
 
-    # Recent decisions
-    decisions_path = LOGS_DIR / "decisions.jsonl"
-    if decisions_path.exists():
-        st.subheader("Recent Decisions")
-        lines = decisions_path.read_text().strip().split("\n")
-        recent = [json.loads(line) for line in lines[-10:]]
-        for d in reversed(recent):
-            with st.expander(f"{d['category']}: {d['decision']}", expanded=False):
-                st.write(f"**Reasoning:** {d['reasoning']}")
-                st.caption(d['timestamp'])
+    st.markdown("---")
 
-    # Quick actions
-    st.subheader("Quick Actions")
-    col_a, col_b, col_c = st.columns(3)
+    # Engine state
+    col_a, col_b = st.columns(2)
+
     with col_a:
-        if st.button("Run Discovery Interview", use_container_width=True):
-            st.switch_page_or_rerun("Discovery")
+        st.subheader("Engine State")
+        brief_exists = (OUTPUT_DIR / "gtm_brief.json").exists()
+        strategy_exists = (OUTPUT_DIR / "gtm_strategy.json").exists()
+        brand_exists = (DATA_DIR / "brand_standards.json").exists()
+        theo_exists = (DATA_DIR.parent / "references" / "influencers" / "theo" / "hero.png").exists() if (DATA_DIR.parent / "references").exists() else False
+
+        st.markdown(f"- GTM Brief: {'Ready' if brief_exists else '**Missing**'}")
+        st.markdown(f"- GTM Strategy: {'Ready' if strategy_exists else '**Missing**'}")
+        st.markdown(f"- Brand Standards: {'Ready' if brand_exists else '**Missing**'}")
+        st.markdown(f"- Theo Hero: {'Ready' if theo_exists else '**Missing**'}")
+
     with col_b:
-        if st.button("Generate Strategy", disabled=not brief_exists, use_container_width=True):
-            st.switch_page_or_rerun("Strategy")
-    with col_c:
-        if st.button("Generate Content", disabled=not strategy_exists, use_container_width=True):
-            st.switch_page_or_rerun("Content Queue")
+        st.subheader("Recent Decisions")
+        decisions_path = LOGS_DIR / "decisions.jsonl"
+        if decisions_path.exists():
+            lines = decisions_path.read_text().strip().split("\n")
+            recent = [json.loads(line) for line in lines[-5:] if line]
+            for d in reversed(recent):
+                st.markdown(f"- `{d['category']}`: {d['decision']}")
+        else:
+            st.markdown("_No decisions logged yet_")
 
 
-def _render_discovery():
-    """Web-based discovery interview."""
-    st.header("Discovery Interview")
+# -----------------------------------------------------------------------------
+# IDEAS
+# -----------------------------------------------------------------------------
 
-    brief_path = OUTPUT_DIR / "gtm_brief.json"
+def page_ideas():
+    st.title("Ideas")
+    st.caption("Idea bank — generate, filter, bulk approve or reject")
 
-    if brief_path.exists():
-        brief_data = load_json(brief_path)
-        st.success("GTM Brief already exists. You can review or restart.")
+    bank = IdeaBank()
 
-        tab1, tab2 = st.tabs(["View Brief", "Restart Interview"])
+    # --- Generation panel ---
+    with st.expander("Generate new ideas", expanded=False):
+        col_g1, col_g2, col_g3 = st.columns([2, 2, 1])
+        with col_g1:
+            n_ideas = st.number_input("Number of ideas", min_value=5, max_value=200, value=50, step=5)
+        with col_g2:
+            st.markdown("Funnel distribution will auto-balance across umbrella / product / feature / proof")
+        with col_g3:
+            if st.button("Generate batch", type="primary"):
+                with st.spinner(f"Generating {n_ideas} ideas via Claude..."):
+                    try:
+                        from gtm_engine.ideas.generator import generate_and_save
+                        ids = generate_and_save(n=n_ideas)
+                        st.success(f"Generated {len(ids)} ideas. Scroll down to review.")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Generation failed: {e}")
 
-        with tab1:
-            st.json(brief_data)
+    st.markdown("---")
 
-        with tab2:
-            if st.button("Clear Brief and Restart", type="secondary"):
-                brief_path.unlink()
-                st.rerun()
+    # --- Filters ---
+    col_f1, col_f2, col_f3, col_f4 = st.columns(4)
+    with col_f1:
+        filter_status = st.selectbox(
+            "Status",
+            ["All"] + STATES,
+            index=1,  # Default to idea_draft
+        )
+    with col_f2:
+        filter_funnel = st.selectbox("Funnel level", ["All"] + FUNNEL_LEVELS)
+    with col_f3:
+        filter_product = st.selectbox(
+            "Product",
+            ["All", "Quantum Tools", "PRISM", "Analyst's Edge", "APEX", "ATLAS"],
+        )
+    with col_f4:
+        filter_segment = st.selectbox(
+            "Segment type",
+            ["All", "hook", "tension", "pivot", "proof", "bookend", "standalone"],
+        )
+
+    ideas = bank.list_all(
+        status=None if filter_status == "All" else filter_status,
+        funnel_level=None if filter_funnel == "All" else filter_funnel,
+        product=None if filter_product in ("All", "Quantum Tools") else filter_product,
+        segment_type=None if filter_segment == "All" else filter_segment,
+    )
+
+    st.markdown(f"**{len(ideas)} ideas** matching filters")
+
+    if not ideas:
+        st.info("No ideas match the current filters. Try generating a batch or adjusting the filters.")
         return
 
-    # Interactive interview
-    if "interview_brief" not in st.session_state:
-        st.session_state.interview_brief = GTMBrief()
-        st.session_state.interview_history = []
-        st.session_state.current_question = None
-        st.session_state.observation = None
+    # --- Bulk selection ---
+    if "selected_ideas" not in st.session_state:
+        st.session_state.selected_ideas = set()
 
-    brief = st.session_state.interview_brief
-
-    # Get next question if needed
-    if st.session_state.current_question is None:
-        with st.spinner("Preparing first question..."):
-            try:
-                from gtm_engine.discovery.interview import run_interview_step
-                response = run_interview_step(brief, None)
-                st.session_state.current_question = response.get("question", "")
-                st.session_state.observation = response.get("observation", "")
-            except Exception as e:
-                st.error(f"Error connecting to AI: {e}")
-                st.info("Set ANTHROPIC_API_KEY in your .env file to use the interview.")
-                return
-
-    # Show observation
-    if st.session_state.observation:
-        st.info(st.session_state.observation)
-
-    # Show question and collect answer
-    st.markdown(f"**{st.session_state.current_question}**")
-    answer = st.text_area("Your answer:", key=f"answer_{len(st.session_state.interview_history)}")
-
-    col1, col2 = st.columns([1, 5])
-    with col1:
-        submit = st.button("Submit", type="primary")
-    with col2:
-        finish = st.button("Finish Interview")
-
-    if submit and answer.strip():
-        st.session_state.interview_history.append({
-            "question": st.session_state.current_question,
-            "answer": answer.strip(),
-        })
-
-        with st.spinner("Processing..."):
-            try:
-                from gtm_engine.discovery.interview import run_interview_step, apply_brief_updates
-                response = run_interview_step(brief, answer.strip())
-
-                if response.get("brief_updates"):
-                    st.session_state.interview_brief = apply_brief_updates(brief, response["brief_updates"])
-
-                if response.get("interview_complete"):
-                    save_json(st.session_state.interview_brief.model_dump(), brief_path)
-                    st.success("Interview complete! Brief saved.")
-                    st.balloons()
-                else:
-                    st.session_state.current_question = response.get("question", "")
-                    st.session_state.observation = response.get("observation", "")
-
-                st.rerun()
-            except Exception as e:
-                st.error(f"Error: {e}")
-
-    if finish:
-        save_json(st.session_state.interview_brief.model_dump(), brief_path)
-        st.success("Brief saved with current progress.")
-        st.rerun()
-
-    # Show history
-    if st.session_state.interview_history:
-        with st.expander("Interview History", expanded=False):
-            for entry in st.session_state.interview_history:
-                st.markdown(f"**Q:** {entry['question']}")
-                st.markdown(f"**A:** {entry['answer']}")
-                st.divider()
-
-
-def _render_strategy():
-    """Strategy viewer and generator."""
-    st.header("GTM Strategy")
-
-    brief_path = OUTPUT_DIR / "gtm_brief.json"
-    strategy_path = OUTPUT_DIR / "gtm_strategy.json"
-    report_path = OUTPUT_DIR / "gtm_strategy_report.md"
-
-    if not brief_path.exists():
-        st.warning("Complete the Discovery Interview first.")
-        return
-
-    if strategy_path.exists():
-        strategy_data = load_json(strategy_path)
-
-        tab1, tab2, tab3 = st.tabs(["Report", "Segments", "Channels"])
-
-        with tab1:
-            if report_path.exists():
-                st.markdown(report_path.read_text())
-            else:
-                st.json(strategy_data)
-
-        with tab2:
-            for seg in strategy_data.get("segments", []):
-                with st.expander(f"#{seg['priority_rank']} — {seg['name']}", expanded=seg['priority_rank'] == 1):
-                    st.write(seg.get("description", ""))
-                    st.write(f"**Reasoning:** {seg.get('reasoning', '')}")
-                    if seg.get("pain_points"):
-                        st.write("**Pain Points:**", ", ".join(seg["pain_points"]))
-
-        with tab3:
-            for ch in strategy_data.get("channels", []):
-                ratio = ch.get("impact_to_effort_ratio", 0)
-                with st.expander(f"#{ch['priority_rank']} — {ch['channel']} (ratio: {ratio})", expanded=ch['priority_rank'] == 1):
-                    st.write(f"**Impact:** {ch.get('impact_score', 0)}/10 | **Effort:** {ch.get('effort_score', 0)}/10")
-                    st.write(f"**Quick Win:** {ch.get('quick_win', '')}")
-                    st.write(f"**Reasoning:** {ch.get('reasoning', '')}")
-
-        if st.button("Regenerate Strategy"):
-            strategy_path.unlink()
-            if report_path.exists():
-                report_path.unlink()
+    col_bulk1, col_bulk2, col_bulk3, col_bulk4 = st.columns([1, 1, 1, 3])
+    with col_bulk1:
+        if st.button("Select all"):
+            st.session_state.selected_ideas = {i.id for i in ideas}
             st.rerun()
+    with col_bulk2:
+        if st.button("Clear"):
+            st.session_state.selected_ideas = set()
+            st.rerun()
+    with col_bulk3:
+        st.markdown(f"**{len(st.session_state.selected_ideas)} selected**")
 
-    else:
-        st.info("No strategy generated yet.")
-        if st.button("Generate Strategy", type="primary"):
-            with st.spinner("Generating strategy (this takes 1-2 minutes)..."):
-                try:
-                    from gtm_engine.strategy.engine import generate_strategy
-                    brief_data = load_json(brief_path)
-                    brief = GTMBrief(**brief_data)
-                    generate_strategy(brief)
-                    st.success("Strategy generated!")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Error: {e}")
-
-
-def _render_content_queue():
-    """Content queue viewer and batch generator."""
-    st.header("Content Queue")
-
-    strategy_path = OUTPUT_DIR / "gtm_strategy.json"
-    brief_path = OUTPUT_DIR / "gtm_brief.json"
-
-    if not strategy_path.exists():
-        st.warning("Generate a strategy first.")
-        return
-
-    # Show existing content
-    content_files = sorted(CONTENT_QUEUE_DIR.glob("*.json"))
-    content_files = [f for f in content_files if f.name != "batch_manifest.json"]
-
-    if content_files:
-        st.subheader(f"{len(content_files)} pieces in queue")
-
-        for cf in content_files:
-            try:
-                data = load_json(cf)
-                status_emoji = {"draft": "o", "approved": "+", "published": "v"}.get(data.get("status", ""), "?")
-                with st.expander(f"[{status_emoji}] {data.get('title', cf.stem)[:80]}"):
-                    col1, col2, col3 = st.columns(3)
-                    with col1:
-                        st.write(f"**Type:** {data.get('format', 'N/A')}")
-                    with col2:
-                        tags = data.get("tags", {})
-                        st.write(f"**Channel:** {tags.get('channel', 'N/A')}")
-                    with col3:
-                        st.write(f"**Segment:** {tags.get('segment', 'N/A')}")
-
-                    st.markdown(data.get("body", "")[:1000])
-                    if len(data.get("body", "")) > 1000:
-                        st.caption("... (truncated)")
-
-                    # Approval controls
-                    col_a, col_b = st.columns(2)
-                    with col_a:
-                        if data.get("status") == "draft" and st.button("Approve", key=f"approve_{cf.stem}"):
-                            data["status"] = "approved"
-                            save_json(data, cf)
-                            st.rerun()
-                    with col_b:
-                        if st.button("Delete", key=f"delete_{cf.stem}"):
-                            cf.unlink()
-                            st.rerun()
-            except Exception:
-                pass
-
-    # Generation controls
-    st.divider()
-    max_pieces = st.slider("Max pieces to generate", 5, 50, 20)
-    if st.button("Generate Content Batch", type="primary"):
-        with st.spinner(f"Generating up to {max_pieces} content pieces..."):
-            try:
-                from gtm_engine.content_factory.router import run_content_batch
-                from gtm_engine.strategy.models import GTMStrategy
-
-                brief = GTMBrief(**load_json(brief_path))
-                strategy = GTMStrategy(**load_json(strategy_path))
-                pieces = run_content_batch(brief, strategy, max_pieces=max_pieces)
-                st.success(f"Generated {len(pieces)} content pieces!")
+    # Bulk action buttons
+    if st.session_state.selected_ideas:
+        col_act1, col_act2, col_act3, col_act4 = st.columns(4)
+        with col_act1:
+            if st.button("Approve selected", type="primary"):
+                from gtm_engine.batch import bulk_approve_ideas
+                report = bulk_approve_ideas(list(st.session_state.selected_ideas))
+                st.success(f"Approved {len(report['successful'])} ideas")
+                st.session_state.selected_ideas = set()
                 st.rerun()
-            except Exception as e:
-                st.error(f"Error: {e}")
+        with col_act2:
+            if st.button("Reject selected"):
+                from gtm_engine.batch import bulk_reject_ideas
+                report = bulk_reject_ideas(list(st.session_state.selected_ideas))
+                st.success(f"Rejected {len(report['successful'])} ideas")
+                st.session_state.selected_ideas = set()
+                st.rerun()
+        with col_act3:
+            if st.button("Generate content"):
+                with st.spinner("Generating content pieces..."):
+                    from gtm_engine.batch import bulk_generate_content
+                    report = bulk_generate_content(list(st.session_state.selected_ideas))
+                    st.success(
+                        f"Generated {len(report['successful'])}/{len(st.session_state.selected_ideas)} content pieces"
+                    )
+                    if report["failed"]:
+                        with st.expander("Failures"):
+                            st.json(report["failed"])
+                    st.session_state.selected_ideas = set()
+                    st.rerun()
+        with col_act4:
+            if st.button("Archive selected"):
+                from gtm_engine.approval import archive
+                for iid in st.session_state.selected_ideas:
+                    archive(iid, reason="Bulk archive from UI")
+                st.session_state.selected_ideas = set()
+                st.rerun()
+
+    st.markdown("---")
+
+    # --- Idea list ---
+    for idea in ideas:
+        selected = idea.id in st.session_state.selected_ideas
+        with st.container():
+            col_check, col_body = st.columns([1, 20])
+            with col_check:
+                new_selected = st.checkbox("", value=selected, key=f"select_{idea.id}", label_visibility="collapsed")
+                if new_selected and not selected:
+                    st.session_state.selected_ideas.add(idea.id)
+                elif not new_selected and selected:
+                    st.session_state.selected_ideas.discard(idea.id)
+
+            with col_body:
+                header = f"**{idea.title}**"
+                meta = f"`{idea.funnel_level}` `{idea.segment_type}` edginess {idea.edginess_score}/10"
+                if idea.product:
+                    meta = f"`{idea.product}` " + meta
+                st.markdown(f"{header}  —  {meta}")
+                st.markdown(f"> *{idea.hook}*")
+                with st.expander("Details"):
+                    st.markdown(f"**Angle:** {idea.angle}")
+                    if idea.data_requirement:
+                        st.markdown(f"**Data required:** {idea.data_requirement}")
+                    st.markdown(f"**Target segment:** {idea.target_segment}")
+                    st.markdown(f"**Strategic objective:** {idea.strategic_objective}")
+                    st.markdown(f"**Tags:** {', '.join(idea.tags) if idea.tags else '—'}")
+                    st.markdown(f"**Status:** `{idea.status}`")
+        st.markdown("")
 
 
-def _render_deployment():
-    """Deployment controls and logs."""
-    st.header("Deployment")
+# -----------------------------------------------------------------------------
+# CONTENT
+# -----------------------------------------------------------------------------
 
-    deployment_log_path = OUTPUT_DIR / "deployment_log.json"
-    performance_log_path = OUTPUT_DIR / "performance_log.json"
+def page_content():
+    st.title("Content Queue")
+    st.caption("Review generated content, approve for deployment, or reject for regeneration")
+
+    bank = IdeaBank()
+
+    # Show ideas that have content attached
+    filter_status = st.selectbox(
+        "Filter",
+        ["content_generated", "content_approved", "content_rejected", "All"],
+        index=0,
+    )
+
+    ideas = bank.list_all(status=None if filter_status == "All" else filter_status)
+    ideas_with_content = [i for i in ideas if i.content_piece_ids]
+
+    st.markdown(f"**{len(ideas_with_content)}** content pieces in queue")
+
+    if "selected_content" not in st.session_state:
+        st.session_state.selected_content = set()
+
+    col_b1, col_b2, col_b3 = st.columns([1, 1, 3])
+    with col_b1:
+        if st.button("Select all content"):
+            st.session_state.selected_content = {i.id for i in ideas_with_content}
+            st.rerun()
+    with col_b2:
+        if st.button("Clear content selection"):
+            st.session_state.selected_content = set()
+            st.rerun()
+    with col_b3:
+        st.markdown(f"**{len(st.session_state.selected_content)} selected**")
+
+    if st.session_state.selected_content:
+        col_ca, col_cb, col_cc = st.columns(3)
+        with col_ca:
+            if st.button("Approve content", type="primary"):
+                from gtm_engine.batch import bulk_approve_content
+                bulk_approve_content(list(st.session_state.selected_content))
+                st.session_state.selected_content = set()
+                st.rerun()
+        with col_cb:
+            if st.button("Reject content"):
+                from gtm_engine.approval import reject_content
+                for iid in st.session_state.selected_content:
+                    try:
+                        reject_content(iid, reason="Rejected from UI")
+                    except Exception:
+                        pass
+                st.session_state.selected_content = set()
+                st.rerun()
+        with col_cc:
+            if st.button("Schedule deployment"):
+                from gtm_engine.batch import bulk_schedule_deployment
+                bulk_schedule_deployment(list(st.session_state.selected_content))
+                st.session_state.selected_content = set()
+                st.rerun()
+
+    st.markdown("---")
+
+    for idea in ideas_with_content:
+        selected = idea.id in st.session_state.selected_content
+        col_check, col_body = st.columns([1, 20])
+        with col_check:
+            new_selected = st.checkbox("", value=selected, key=f"content_{idea.id}", label_visibility="collapsed")
+            if new_selected and not selected:
+                st.session_state.selected_content.add(idea.id)
+            elif not new_selected and selected:
+                st.session_state.selected_content.discard(idea.id)
+
+        with col_body:
+            st.markdown(f"**{idea.title}**  —  `{idea.status}`")
+            st.markdown(f"> *{idea.hook}*")
+
+            # Try to load and display the actual content piece
+            for piece_id in idea.content_piece_ids:
+                # Look in content_queue for a file starting with piece_id
+                matches = list(CONTENT_QUEUE_DIR.glob(f"{piece_id}*.json"))
+                if matches:
+                    try:
+                        piece = load_json(matches[0])
+                        with st.expander(f"Content piece: {piece_id}"):
+                            content = piece.get("content", {})
+                            st.markdown(f"**Format:** {piece.get('format', 'n/a')}")
+                            st.markdown(f"**Body:**")
+                            body_text = content.get("body") or content.get("script") or json.dumps(content, indent=2)
+                            st.code(body_text[:4000], language="markdown")
+                    except Exception as e:
+                        st.warning(f"Could not load piece {piece_id}: {e}")
+        st.markdown("")
+
+
+# -----------------------------------------------------------------------------
+# DEPLOYMENT
+# -----------------------------------------------------------------------------
+
+def page_deployment():
+    st.title("Deployment")
+    st.caption("Scheduled and deployed content")
+
+    bank = IdeaBank()
+    scheduled = bank.list_all(status="deployment_scheduled")
+    deployed = bank.list_all(status="deployed")
 
     col1, col2 = st.columns(2)
-
     with col1:
-        st.subheader("Deploy")
-        auto_publish = st.checkbox("Auto-publish approved content", value=False)
-
-        if st.button("Run Deployment Cycle", type="primary"):
-            with st.spinner("Running deployment..."):
-                try:
-                    from gtm_engine.deployment.scheduler import DeploymentScheduler
-                    scheduler = DeploymentScheduler()
-                    results = scheduler.run_deployment_cycle(auto_publish=auto_publish)
-                    st.success(f"Deployment cycle complete: {len(results)} items processed")
-                    for r in results:
-                        st.write(f"- {r.get('piece_id', 'N/A')}: {r.get('status', 'N/A')}")
-                except Exception as e:
-                    st.error(f"Error: {e}")
+        st.subheader(f"Scheduled ({len(scheduled)})")
+        for idea in scheduled:
+            with st.container():
+                st.markdown(f"- **{idea.title}** ({idea.product or 'umbrella'})")
+                st.caption(idea.hook)
+        if scheduled:
+            if st.button("Deploy all scheduled (dry run)"):
+                st.info("Dry run — would deploy these pieces to their respective channels")
 
     with col2:
-        st.subheader("Collect Metrics")
-        if st.button("Collect Performance Metrics"):
-            with st.spinner("Collecting metrics..."):
-                try:
-                    from gtm_engine.deployment.scheduler import DeploymentScheduler
-                    scheduler = DeploymentScheduler()
-                    metrics = scheduler.collect_metrics()
-                    st.success(f"Collected metrics for {len(metrics)} posts")
-                except Exception as e:
-                    st.error(f"Error: {e}")
-
-    # Show logs
-    st.divider()
-    if deployment_log_path.exists():
-        st.subheader("Deployment Log")
-        st.json(load_json(deployment_log_path))
-
-    if performance_log_path.exists():
-        st.subheader("Performance Log")
-        st.json(load_json(performance_log_path))
-
-    # Reprioritisation
-    st.divider()
-    st.subheader("Reprioritisation")
-    repri_path = OUTPUT_DIR / "reprioritisation_report.md"
-    if repri_path.exists():
-        st.markdown(repri_path.read_text())
-
-    if st.button("Run Reprioritisation Analysis"):
-        with st.spinner("Analysing performance..."):
-            try:
-                from gtm_engine.feedback.engine import reprioritise
-                from gtm_engine.strategy.models import GTMStrategy
-
-                strategy_path = OUTPUT_DIR / "gtm_strategy.json"
-                if not strategy_path.exists() or not performance_log_path.exists():
-                    st.warning("Need both a strategy and performance data to reprioritise.")
-                else:
-                    strategy = GTMStrategy(**load_json(strategy_path))
-                    perf_log = load_json(performance_log_path)
-                    recs = reprioritise(perf_log, strategy)
-                    st.success(f"Analysis complete. Confidence: {recs.get('confidence_level', 'N/A')}")
-                    st.rerun()
-            except Exception as e:
-                st.error(f"Error: {e}")
+        st.subheader(f"Deployed ({len(deployed)})")
+        for idea in deployed:
+            st.markdown(f"- **{idea.title}**")
+            st.caption(idea.hook)
 
 
-def _render_stage_gate():
-    """Stage gate review interface."""
-    st.header("Stage Gate Review")
+# -----------------------------------------------------------------------------
+# SEGMENTS (Core-Five)
+# -----------------------------------------------------------------------------
 
-    from gtm_engine.stage_gate.gate import (
-        check_gate_trigger, STAGE_GATE_QUESTIONS, generate_report,
+def page_segments():
+    st.title("Core-Five Segments")
+    st.caption("The locked 20-second reel architecture")
+
+    segments = load_segments()
+
+    st.markdown(f"**Version:** {segments.get('version')}  |  **Updated:** {segments.get('updated_at')}")
+    st.markdown(f"**Total duration:** {segments.get('total_duration_seconds')} seconds")
+
+    st.markdown("---")
+
+    for seg in segments["segments"]:
+        with st.expander(f"{seg['order']}. {seg['name']} ({seg['duration_seconds']}s) — {seg['purpose']}", expanded=(seg['order'] == 1)):
+            col_a, col_b = st.columns(2)
+            with col_a:
+                st.markdown(f"**ID:** `{seg['id']}`")
+                st.markdown(f"**Narrative role:** {seg['narrative_role']}")
+                st.markdown(f"**Visual type:** {seg['visual_type']}")
+                st.markdown(f"**Generation method:** {seg['generation_method']}")
+                st.markdown(f"**Reusable asset:** {seg.get('reusable_asset', False)}")
+            with col_b:
+                st.markdown("**Aesthetic constraints:**")
+                for c in seg["aesthetic_constraints"]:
+                    st.markdown(f"- {c}")
+                st.markdown(f"**Typical text overlay:** *{seg['typical_text_overlay']}*")
+
+    st.markdown("---")
+    st.subheader("Inviolable Rules")
+    for rule in segments.get("inviolable_rules", []):
+        st.markdown(f"- {rule}")
+
+
+# -----------------------------------------------------------------------------
+# BRAND STANDARDS
+# -----------------------------------------------------------------------------
+
+def page_brand():
+    st.title("Brand Standards")
+    st.caption("Voice, edginess, visual, presenter, and video production")
+
+    brand_path = DATA_DIR / "brand_standards.json"
+    if not brand_path.exists():
+        st.warning("Brand standards not initialised. Run `python main.py brand` first.")
+        return
+
+    standards = load_json(brand_path)
+
+    tabs = st.tabs(["Voice", "Edginess", "Visual", "Presenter", "Video Production"])
+
+    with tabs[0]:
+        voice = standards.get("voice", {})
+        st.markdown(f"**Tone descriptors:** {', '.join(voice.get('tone_descriptors', []))}")
+        st.markdown(f"**Vocabulary level:** {voice.get('vocabulary_level', '')}")
+        st.markdown(f"**Philosophy:** *{voice.get('philosophy', '')}*")
+        st.markdown("**Forbidden phrases:**")
+        for phrase in voice.get("forbidden_phrases", []):
+            st.markdown(f"- `{phrase}`")
+
+    with tabs[1]:
+        edginess = standards.get("edginess", {})
+        st.metric("Edginess level", f"{edginess.get('level', 0)}/10")
+        st.markdown("**Principles:**")
+        for name, detail in edginess.get("principles", {}).items():
+            st.markdown(f"- **{name}** ({detail.get('weight', '')}): {detail.get('description', '')}")
+
+    with tabs[2]:
+        visual = standards.get("visual", {})
+        st.markdown("**Colours:**")
+        cols = st.columns(5)
+        for i, (name, hex_val) in enumerate(visual.get("colours", {}).items()):
+            with cols[i % 5]:
+                st.markdown(f"<div style='background:{hex_val}; padding:20px; border-radius:4px;'>{name}<br>`{hex_val}`</div>", unsafe_allow_html=True)
+
+    with tabs[3]:
+        st.json(standards.get("presenter", {}))
+
+    with tabs[4]:
+        st.json(standards.get("video_production", {}))
+
+
+# -----------------------------------------------------------------------------
+# CHARACTER LIBRARY
+# -----------------------------------------------------------------------------
+
+def page_characters():
+    st.title("Character Library")
+    st.caption("Locked character manifests and reference images")
+
+    chars_dir = DATA_DIR.parent / "references" / "influencers"
+    if not chars_dir.exists():
+        st.warning("No character library found.")
+        return
+
+    for char_dir in chars_dir.iterdir():
+        if not char_dir.is_dir():
+            continue
+        manifest_path = char_dir / "manifest.json"
+        if not manifest_path.exists():
+            continue
+
+        manifest = load_json(manifest_path)
+        char = manifest.get("character", {})
+
+        st.subheader(char.get("name", char_dir.name))
+        st.markdown(char.get("canonical_description", ""))
+
+        # Show hero and shot images
+        images = sorted(char_dir.glob("*.png"))
+        if images:
+            cols = st.columns(min(4, len(images)))
+            for i, img in enumerate(images):
+                with cols[i % 4]:
+                    st.image(str(img), caption=img.stem, use_container_width=True)
+
+
+# -----------------------------------------------------------------------------
+# INTELLIGENCE FEED
+# -----------------------------------------------------------------------------
+
+def page_intelligence():
+    st.title("Live Intelligence Feed")
+    st.caption("Submit raw signals — customer quotes, data findings, market events")
+
+    signal_type = st.selectbox(
+        "Signal type",
+        ["general", "customer_conversation", "data_finding", "competitor_move", "market_event", "product_insight"],
     )
+    raw_input = st.text_area("Paste your signal", height=200, placeholder="What happened?")
 
-    # Check if gate should trigger
-    trigger_info = check_gate_trigger(last_gate_time=None)
-    if trigger_info["should_trigger"]:
-        st.warning("Stage gate triggered!")
-        for t in trigger_info["triggers"]:
-            st.write(f"- **{t['type']}**: {t['reason']}")
-
-    # Interactive gate
-    st.subheader("Founder Check-in")
-    st.caption("Your answers feed directly back into the engine. Be honest — the more uncomfortable the truth, the more useful it is.")
-
-    responses = {}
-    for i, question in enumerate(STAGE_GATE_QUESTIONS):
-        responses[question] = st.text_area(question, key=f"gate_q_{i}")
-
-    if st.button("Submit Stage Gate", type="primary"):
-        filled = {q: a for q, a in responses.items() if a.strip()}
-        if not filled:
-            st.warning("Answer at least one question.")
-        else:
-            with st.spinner("Synthesising your responses..."):
-                try:
-                    from gtm_engine.stage_gate.gate import _synthesise_gate_responses
-                    synthesis = _synthesise_gate_responses(filled, None)
-                    gate_record = {
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
-                        "responses": filled,
-                        "synthesis": synthesis,
-                    }
-                    save_json(gate_record, OUTPUT_DIR / f"stage_gate_{datetime.now(timezone.utc).strftime('%Y%m%d')}.json")
-                    st.success("Stage gate complete!")
-                    st.json(synthesis)
-                except Exception as e:
-                    st.error(f"Error: {e}")
-
-    # Weekly report
-    st.divider()
-    st.subheader("Weekly Report")
-
-    # Find most recent report
-    reports = sorted(OUTPUT_DIR.glob("weekly_report_*.md"), reverse=True)
-    if reports:
-        st.markdown(reports[0].read_text())
-    else:
-        if st.button("Generate Weekly Report"):
-            with st.spinner("Generating report..."):
-                try:
-                    report = generate_report()
-                    st.markdown(report)
-                except Exception as e:
-                    st.error(f"Error: {e}")
-
-
-# Streamlit doesn't have switch_page_or_rerun — polyfill
-if not hasattr(st, "switch_page_or_rerun"):
-    st.switch_page_or_rerun = lambda page: st.rerun()
+    if st.button("Submit signal", type="primary") and raw_input.strip():
+        with st.spinner("Assessing signal..."):
+            from gtm_engine.intelligence import submit_signal
+            record = submit_signal(raw_input, signal_type)
+            assessment = record.get("assessment", {})
+            st.success(f"Priority {assessment.get('priority', '?')}/5 — {assessment.get('urgency', 'standard')}")
+            st.markdown(f"**Summary:** {assessment.get('significance_summary', '')}")
+            st.markdown(f"**Recommended action:** {assessment.get('recommended_action', '')}")
+            st.markdown(f"**Master asset topic:** {assessment.get('master_asset_topic', '')}")
 
 
 if __name__ == "__main__":

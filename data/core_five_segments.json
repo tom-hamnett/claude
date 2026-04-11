@@ -1,0 +1,134 @@
+{
+  "version": "2.0",
+  "updated_at": "2026-04-11",
+  "total_duration_seconds": 20,
+  "segments": [
+    {
+      "id": "hook",
+      "order": 1,
+      "name": "Hook",
+      "duration_seconds": 4,
+      "purpose": "Pattern interrupt \u2014 stop the scroll in under 1 second",
+      "narrative_role": "Pose a provocative question or state an uncomfortable truth",
+      "visual_type": "hyper_stylised_character",
+      "generation_method": "nano_banana_still_then_veo_startframe",
+      "locked_character": "theo",
+      "environment_id": "executive_reflection_pool",
+      "aesthetic_constraints": [
+        "Photorealistic cinematic (NOT 3D render, NOT illustration)",
+        "Moody corporate lighting, Rembrandt style",
+        "Architectural digest scale",
+        "Character must look imposing and ageless",
+        "Impossible physics signature (rotating halos, still water)"
+      ],
+      "audio_type": "high_energy_hook_statement",
+      "typical_text_overlay": "One provocative line (max 6 words)",
+      "reusable_asset": true,
+      "reusable_asset_note": "Generate Hook environment once, reuse across all reels"
+    },
+    {
+      "id": "tension",
+      "order": 2,
+      "name": "Tension",
+      "duration_seconds": 4,
+      "purpose": "Define the uncomfortable truth the viewer is living with",
+      "narrative_role": "Name the pain, name the cost, name the hidden trade-off",
+      "visual_type": "data_led_text_or_character_closeup",
+      "generation_method": "gemini_image_or_character_closeup",
+      "environment_id": "variable",
+      "aesthetic_constraints": [
+        "Text-forward or data-forward \u2014 viewer must READ something",
+        "Dark background with bold typography",
+        "Minimal, austere, intellectual",
+        "NOT UGC iPhone aesthetic (Quantum Tools is not consumer-casual)",
+        "Brand palette: #0a0a0f bg, #6c63ff accent, #ffd166 emphasis"
+      ],
+      "audio_type": "continued_narration",
+      "typical_text_overlay": "The data point or cost (e.g. '\u00a3150K/yr on research that doesn\\'t differentiate')",
+      "reusable_asset": false,
+      "reusable_asset_note": "Generated fresh per idea \u2014 content varies"
+    },
+    {
+      "id": "pivot",
+      "order": 3,
+      "name": "Pivot",
+      "duration_seconds": 4,
+      "purpose": "Introduce the solution via unarguable logic",
+      "narrative_role": "Show the new way \u2014 here is what works, here is why",
+      "visual_type": "clean_data_visualisation",
+      "generation_method": "gemini_image_or_programmatic_chart",
+      "environment_id": "brand_data_viz",
+      "aesthetic_constraints": [
+        "Dark background (#0a0a0f)",
+        "Purple (#6c63ff) and gold (#ffd166) accents only",
+        "Playfair Display for headlines, DM Sans for labels",
+        "Non-3D charts \u2014 no flashy BI dashboard look",
+        "Data must be specific and legible",
+        "Rapid metric reveals, animated counters"
+      ],
+      "audio_type": "continued_narration",
+      "typical_text_overlay": "The new metric or framework (e.g. '5 sources. 1 figure. 100% auditable.')",
+      "reusable_asset": true,
+      "reusable_asset_note": "Template-based \u2014 reuse chart style, vary data"
+    },
+    {
+      "id": "proof",
+      "order": 4,
+      "name": "Proof",
+      "duration_seconds": 4,
+      "purpose": "Show the actual product doing the thing (not a claim, an artefact)",
+      "narrative_role": "Here is the output. Here is what happens when you use this.",
+      "visual_type": "product_output_or_screen_recording",
+      "generation_method": "screen_recording_or_veo_broll",
+      "environment_id": "variable",
+      "aesthetic_constraints": [
+        "Real product output (Excel diagnostic, PRISM benchmark, Atlas report)",
+        "Fast cuts if multiple views (max 1 second per cut)",
+        "Subtle zoom-in to key numbers or phrases",
+        "Dark theme consistent with brand",
+        "NO generic office stock footage"
+      ],
+      "audio_type": "continued_narration",
+      "typical_text_overlay": "Caption pointing to the key data (e.g. '2,847 employees. 12 functions. 5 minutes.')",
+      "reusable_asset": false,
+      "reusable_asset_note": "Product-specific \u2014 varies per idea"
+    },
+    {
+      "id": "bookend",
+      "order": 5,
+      "name": "Bookend",
+      "duration_seconds": 4,
+      "purpose": "Return to Hook state, deliver the CTA",
+      "narrative_role": "Close the loop \u2014 come back to the character, land the action",
+      "visual_type": "hyper_stylised_character_matching_hook",
+      "generation_method": "nano_banana_still_then_veo_startframe",
+      "locked_character": "theo",
+      "environment_id": "match_hook",
+      "aesthetic_constraints": [
+        "EXACT same environment as Hook (no deviation)",
+        "Same character pose family (can be variant \u2014 seated \u2192 leaning, walking \u2192 standing)",
+        "Same colour grade, same lens, same lighting",
+        "End on a held frame for 0.5s before cut",
+        "Character 'addresses' the viewer (helmet turns toward camera)"
+      ],
+      "audio_type": "quiet_authority_cta",
+      "typical_text_overlay": "The single action (e.g. 'See it run. quantumtools.ai')",
+      "reusable_asset": true,
+      "reusable_asset_note": "Matches Hook asset \u2014 reused"
+    }
+  ],
+  "transitions": {
+    "hook_to_tension": "Hard cut with 0.1s flash frame",
+    "tension_to_pivot": "Smooth crossfade 0.3s",
+    "pivot_to_proof": "Hard cut \u2014 the logic lands",
+    "proof_to_bookend": "Crossfade 0.3s back to character"
+  },
+  "inviolable_rules": [
+    "No single shot exceeds 4 seconds",
+    "Hook and Bookend must match exactly",
+    "Character is always Theo, generated via startFrame from hero.png",
+    "Hyper-stylised aesthetic (Hook/Bookend) never blends with data-led (Tension/Pivot/Proof)",
+    "Voice is continuous \u2014 Google TTS Charon with British RP directive",
+    "No founder face, no human presenter, no recorded footage"
+  ]
+}

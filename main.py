@@ -10,6 +10,8 @@ Usage:
     python main.py derivatives <MA-ID>  Generate ALL text derivatives from a master asset
     python main.py derivatives <MA-ID> --media  Same + generate video/images via Google
     python main.py content [N]          Generate content batch (old-style, N pieces)
+    python main.py ideas [N]            Generate N content ideas into the Idea Bank
+    python main.py segments             Print the Core-Five segment spec
     python main.py signal               Live intelligence feed (submit signals)
     python main.py deploy               Run deployment cycle (dry run)
     python main.py deploy --live        Run deployment cycle (auto-publish)
@@ -320,6 +322,30 @@ def cmd_signal():
     run_cli_signal_input()
 
 
+def cmd_ideas():
+    """Generate a batch of content ideas."""
+    from gtm_engine.ideas.generator import generate_and_save
+
+    n = int(sys.argv[2]) if len(sys.argv) > 2 else 50
+    print(f"Generating {n} content ideas across the funnel hierarchy...")
+    ids = generate_and_save(n=n)
+    print(f"\nCreated {len(ids)} ideas in the database.")
+    print("Launch the UI to review and approve: python main.py ui")
+
+
+def cmd_segments():
+    """Print the Core-Five segment spec."""
+    from gtm_engine.segments import load_segments
+    segments = load_segments()
+    print(f"\nCore-Five Architecture (v{segments['version']})\n")
+    print(f"Total duration: {segments['total_duration_seconds']} seconds\n")
+    for seg in segments["segments"]:
+        print(f"  {seg['order']}. {seg['name']:<10} ({seg['duration_seconds']}s)  {seg['purpose']}")
+    print("\nInviolable rules:")
+    for rule in segments.get("inviolable_rules", []):
+        print(f"  - {rule}")
+
+
 COMMANDS = {
     "discover": cmd_discover,
     "prefill": cmd_prefill,
@@ -329,6 +355,8 @@ COMMANDS = {
     "master-asset": cmd_master_asset,
     "derivatives": cmd_derivatives,
     "content": cmd_content,
+    "ideas": cmd_ideas,
+    "segments": cmd_segments,
     "signal": cmd_signal,
     "list-models": cmd_list_models,
     "deploy": cmd_deploy,
