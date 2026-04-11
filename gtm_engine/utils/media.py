@@ -304,20 +304,37 @@ def _generate_with_imagen(prompt: str, output_path: Path, aspect_ratio: str = "1
         return None
 
 
-def _generate_with_nano_banana(prompt: str, output_path: Path) -> Path | None:
+def _generate_with_nano_banana(
+    prompt: str,
+    output_path: Path,
+    reference_image: Path | None = None,
+) -> Path | None:
     """Generate an image using Nano Banana 2 (gemini-3-pro-image-preview).
 
-    Uses the Gemini content API with IMAGE response modality.
-    Proven working on the user's Paid Tier 1 account.
+    If reference_image is provided, Gemini uses it as a visual anchor to
+    maintain character/style consistency. This is how we lock Theo across
+    multiple shots — generate a Hero image once, then pass it as reference
+    to every subsequent shot.
     """
     client = _get_client()
     from google.genai import types
 
     logger.info("Generating image (nano-banana-2): %s", prompt[:80])
+    if reference_image:
+        logger.info("  Using reference image: %s", reference_image)
+
+    # Build contents: optional reference image first, then text prompt
+    contents = []
+    if reference_image and Path(reference_image).exists():
+        import PIL.Image
+        pil_image = PIL.Image.open(str(reference_image))
+        contents.append(pil_image)
+
+    contents.append(prompt)
 
     response = client.models.generate_content(
         model="gemini-3-pro-image-preview",
-        contents=f"Generate an image: {prompt}",
+        contents=contents,
         config=types.GenerateContentConfig(
             response_modalities=["IMAGE", "TEXT"],
         ),
@@ -341,11 +358,16 @@ def generate_image(
     output_path: Path | None = None,
     quality: str = "standard",
     aspect_ratio: str = "16:9",
+    reference_image: Path | None = None,
 ) -> Path | None:
     """Generate an image using Google's image generation models.
 
-    quality="standard" → Nano Banana 2 (gemini-3-pro-image-preview)
-    quality="ultra" → Imagen 4 Ultra (best photorealism, falls back to Nano Banana if unavailable)
+    quality="standard" → Nano Banana 2 (gemini-3-pro-image-preview) — cheapest, supports reference images
+    quality="ultra" → Imagen 4 Ultra (best photorealism, no reference image support)
+
+    reference_image: Optional path to a PNG/JPG to use as a visual anchor.
+    Only works with standard quality (Nano Banana 2). Ensures character and
+    style consistency across multiple generations.
 
     Returns the path to the saved image file, or None on failure.
     """
@@ -364,8 +386,8 @@ def generate_image(
                 return result
             # Fall through to Nano Banana
 
-        # Standard path: Nano Banana 2
-        return _generate_with_nano_banana(prompt, output_path)
+        # Standard path: Nano Banana 2 (supports reference image)
+        return _generate_with_nano_banana(prompt, output_path, reference_image=reference_image)
 
     except Exception as e:
         logger.error("Image generation failed: %s", e)
