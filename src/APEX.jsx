@@ -333,508 +333,152 @@ const ContextView = ({ view, tasks, risks, metrics, raidItems, benefits = [], on
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
-// ONBOARDING WIZARD (enhanced with clarifying questions)
+// GUIDED SETUP — Single conversational flow with doc upload
 // ══════════════════════════════════════════════════════════════════════════════
-const OnboardingWizard = ({ onComplete, onCancel, isModal = false }) => {
-  const [stageIdx, setStageIdx] = useState(0);
+const SETUP_SYS = `You are APEX, an expert PMO setup assistant. Guide the user through programme setup in a single natural conversation. Be warm, professional, and conversational — like a senior PMO consultant in a first meeting.
+
+Your goal is to understand:
+1. What programme/project is this? (name, type, sponsor, objective)
+2. What outputs do they need? (weekly updates, monthly round-ups, quarterly steerco packs, metrics reports, etc.) Ask about frequency, audience, and what format they're used to.
+3. Do they have documents to upload? (plans, risk registers, status reports, org charts, budgets). If yes, tell them to drop files and you'll extract everything.
+4. What does success look like? (key benefits, target outcomes)
+
+Be iterative — don't rush. Let them upload docs at any point. When they upload, extract EVERYTHING and present a summary of what you found.
+
+When the user says they're ready, or you have enough to proceed, output a JSON block:
+\`\`\`json
+{"setup":"complete","data":{
+  "programme":{"name":"...","type":"transformation|delivery|commercial|operational|regulatory","sponsor":"...","objective":"...","vision":"...","phase":"...","startDate":"YYYY-MM-DD","endDate":"YYYY-MM-DD","sro":"...","governance":"..."},
+  "enabledOutputs":[{"type":"weekly","label":"Weekly Project Update","frequency":"weekly","audience":"..."},{"type":"monthly","label":"Monthly Programme Report","frequency":"monthly","audience":"..."},{"type":"quarterly","label":"Quarterly SteerCo Pack","frequency":"quarterly","audience":"..."}],
+  "workstreams":["..."],
+  "tasks":[{"id":"t1","phase":"...","name":"...","start":"YYYY-MM-DD","end":"YYYY-MM-DD","status":"not-started|in-progress|complete|at-risk","owner":"...","progress":0,"deps":[]}],
+  "risks":[{"id":"r1","title":"...","impact":"High|Medium|Low","likelihood":"High|Medium|Low","status":"Open","owner":"...","mitigation":"..."}],
+  "raidItems":[],
+  "metrics":[{"id":"m1","family":"financial|delivery|strategic|supplier|risk","name":"...","value":0,"target":0,"unit":"...","direction":"higher|lower|neutral","rag":"green","trend":[0,0,0,0],"trendL":["Wk1","Wk2","Wk3","Wk4"],"note":"...","links":[]}],
+  "benefits":[{"id":"b1","title":"...","type":"financial|operational|strategic|customer|employee","owner":"...","baseline":0,"target":0,"unit":"...","expectedRealisation":"YYYY-MM-DD","status":"planned"}],
+  "calendarEvents":[],
+  "stakeholders":[],
+  "leads":[]
+}}
+\`\`\`
+Only output JSON when you truly have enough to populate a useful dashboard. Until then, keep the conversation going.`;
+
+const GuidedSetup = ({ onComplete }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [collected, setCollected] = useState({});
   const [files, setFiles] = useState([]);
   const [dragOver, setDragOver] = useState(false);
-  const [preview, setPreview] = useState(null);
-  const [questions, setQuestions] = useState([]);
   const bottomRef = useRef(null);
   const fileRef = useRef(null);
-  const stage = STAGES[stageIdx];
 
-  useEffect(() => {
-    if (stage.id === "documents") {
-      setMessages(prev => [...prev, { role: "assistant", content: "Welcome to APEX. Let's start by ingesting your programme documents.\n\nDrop files below or paste content — I'll extract everything I can find: tasks, risks, benefits, metrics, people, dates, and more. This pre-populates all the other tabs.\n\nSupported: .txt .csv .md .docx .xlsx .pdf .ics\n\nYou can also type or paste text directly. Click 'Skip →' to set up manually instead.", stageId: stage.id }]);
-    } else { openStage(); }
-  }, [stageIdx]);
+  useEffect(() => { start(); }, []);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, preview, questions]);
-
-  function ctx() { return Object.entries(collected).map(([k, v]) => `${k}: ${JSON.stringify(v)}`).join("\n") || "Not yet established."; }
-
-  async function openStage() {
+  async function start() {
     setLoading(true);
-    try {
-      const sys = stage.prompt.replace("PROGRAMME_CONTEXT", ctx()).replace(/TODAY/g, d(0));
-      const reply = await aiCall(sys, [{ role: "user", content: `Begin Stage ${stage.num}.` }]);
-      setMessages(prev => [...prev, { role: "assistant", content: reply.replace(/```json[\s\S]*?```/g, "").trim(), stageId: stage.id }]);
-    } catch (e) { setMessages(prev => [...prev, { role: "assistant", content: "⚠ AI engine connection error.", stageId: stage.id }]); }
+    const reply = await aiCall(SETUP_SYS, [{ role: "user", content: "Hello, I'd like to set up a new programme." }]);
+    setMessages([{ role: "assistant", content: reply.replace(/```json[\s\S]*?```/g, "").trim() }]);
     setLoading(false);
   }
 
   async function send(override) {
     const content = override || input.trim(); if (!content || loading) return;
-    const hist = [...messages, { role: "user", content, stageId: stage.id }];
+    const hist = [...messages, { role: "user", content }];
     setMessages(hist); if (!override) setInput(""); setLoading(true);
     try {
-      const sys = stage.prompt.replace("PROGRAMME_CONTEXT", ctx()).replace(/TODAY/g, d(0));
-      const apiMsgs = hist.filter(m => m.stageId === stage.id).map(m => ({ role: m.role, content: m.content }));
-      const reply = await aiCall(sys, apiMsgs);
+      const reply = await aiCall(SETUP_SYS, hist.map(m => ({ role: m.role, content: m.content })));
       const jm = reply.match(/```json\s*([\s\S]*?)```/);
       if (jm) {
-        const parsed = JSON.parse(jm[1]);
-        if (parsed.complete && parsed.stage === stage.id) {
-          const nc = { ...collected, [stage.id]: parsed.data };
-          setCollected(nc);
-          const clean = reply.replace(/```json[\s\S]*?```/g, "").trim();
-          if (stage.id === "documents" && parsed.data) {
-            if (parsed.data.questions?.length) setQuestions(parsed.data.questions);
-            setPreview(parsed.data);
-            setMessages(prev => [...prev, { role: "assistant", content: clean || "Extraction complete. Review and confirm.", stageId: stage.id }]);
-            setLoading(false); return;
+        try {
+          const parsed = JSON.parse(jm[1]);
+          if (parsed.setup === "complete" && parsed.data) {
+            setMessages(prev => [...prev, { role: "assistant", content: reply.replace(/```json[\s\S]*?```/g, "").trim() || "Setup complete! Launching your dashboard…" }]);
+            setLoading(false);
+            setTimeout(() => buildState(parsed.data), 1000);
+            return;
           }
-          setMessages(prev => [...prev, { role: "assistant", content: clean || `Stage ${stage.num} complete.`, stageId: stage.id }]);
-          setLoading(false);
-          setTimeout(() => { if (stageIdx < STAGES.length - 1) setStageIdx(s => s + 1); else finalise(nc); }, 900);
-          return;
-        }
+        } catch (e) { /* not valid JSON, continue conversation */ }
       }
-      setMessages(prev => [...prev, { role: "assistant", content: reply.replace(/```json[\s\S]*?```/g, "").trim(), stageId: stage.id }]);
-    } catch (e) { setMessages(prev => [...prev, { role: "assistant", content: "⚠ AI engine error.", stageId: stage.id }]); }
+      setMessages(prev => [...prev, { role: "assistant", content: reply.replace(/```json[\s\S]*?```/g, "").trim() }]);
+    } catch (e) { setMessages(prev => [...prev, { role: "assistant", content: "⚠ AI engine error." }]); }
     setLoading(false);
   }
 
   async function ingestFiles() {
     if (!files.length) return; setLoading(true);
     let combined = "";
-    for (const f of files) { const t = await readFile(f); combined += `\n\n=== FILE: ${f.name} ===\n${t.slice(0, 12000)}`; }
+    for (const f of files) { const t = await readFile(f); combined += `\n\n=== FILE: ${f.name} ===\n${t.slice(0, 15000)}`; }
+    const names = files.map(f => f.name).join(", ");
     setFiles([]);
-    await send(`Please analyse these documents and extract all programme data:\n${combined}`);
+    await send(`I've uploaded these documents: ${names}. Please extract everything you can find:\n${combined}`);
   }
 
-  function skip() { const nc = { ...collected, [stage.id]: {} }; setCollected(nc); if (stageIdx < STAGES.length - 1) setStageIdx(s => s + 1); else finalise(collected); }
-  function confirmExtract() { setPreview(null); setQuestions([]); if (stageIdx < STAGES.length - 1) setStageIdx(s => s + 1); else finalise(collected); }
-
-  function finalise(all) {
-    const out = all.outputs || {}, vis = all.vision || {}, bp = all.blueprint || {}, org = all.organisation || {}, ben = all.benefits || {}, doc = all.documents || {}, met = all.metrics || {};
-    // Default to all 3 primary outputs if user skipped the Outputs stage
-    const enabledOutputs = out.enabledOutputs && out.enabledOutputs.length ? out.enabledOutputs : [
-      { type: "steerco", frequency: "monthly", audience: "Programme Board", nextDue: d(14) },
-      { type: "highlight", frequency: "weekly", audience: "Sponsor", nextDue: d(7) },
-      { type: "benefits", frequency: "quarterly", audience: "Executive Committee", nextDue: d(60) },
-    ];
-    let tasks = doc.tasks || [];
-    if (!tasks.length) { const wss = bp.workstreams || ["Discovery", "Delivery", "Close-out"]; tasks = wss.flatMap((ws, pi) => [{ id: `t${pi * 2 + 1}`, phase: ws, name: `${ws} — Initiation`, start: d(pi * 14), end: d(pi * 14 + 10), status: "not-started", owner: org.leads?.[0]?.name || "TBC", progress: 0, deps: [] }, { id: `t${pi * 2 + 2}`, phase: ws, name: `${ws} — Delivery`, start: d(pi * 14 + 10), end: d(pi * 14 + 24), status: "not-started", owner: org.leads?.[1]?.name || org.leads?.[0]?.name || "TBC", progress: 0, deps: [`t${pi * 2 + 1}`] }]); }
-    let risks = doc.risks || [{ id: "r1", title: "Scope not fully defined", impact: "High", likelihood: "Medium", status: "Open", owner: org.leads?.[0]?.name || "TBC", mitigation: "Complete scope workshop." }, { id: "r2", title: "Resource availability", impact: "Medium", likelihood: "Medium", status: "Open", owner: vis.sponsor || "TBC", mitigation: "Confirm allocation." }];
-    let raidItems = doc.raidItems || [];
-    let calendarEvents = doc.calendarEvents || [];
-    let benefits = ben.benefits || doc.benefits || [];
-    if (!benefits.length) benefits = [
-      { id: "b1", title: "Cost reduction", description: "Reduce total operating cost vs baseline.", type: "financial", owner: vis.sponsor || "TBC", measurementKPI: "Annualised run-rate savings", baseline: 0, target: 0, unit: "£m", expectedRealisation: bp.endDate || d(180), tranche: "Programme close", status: "planned", confidence: "low" },
-      { id: "b2", title: "Process efficiency", description: "Reduce average cycle time for target processes.", type: "operational", owner: org.leads?.[0]?.name || "TBC", measurementKPI: "Cycle time (days)", baseline: 0, target: 0, unit: "%", expectedRealisation: bp.endDate || d(180), tranche: "Delivery", status: "planned", confidence: "low" },
-    ];
-    benefits = benefits.map((b, i) => ({ ...b, id: b.id || `b${i + 1}`, actualRealisation: b.actualRealisation || null, status: b.status || "planned" }));
-    let stakeholders = org.stakeholders || [];
-    let metrics = met.metrics || doc.metrics || [];
+  function buildState(data) {
+    const p = data.programme || {};
+    const tasks = (data.tasks || []).map((t, i) => ({ ...t, id: t.id || `t${i + 1}`, progress: t.progress || 0, deps: t.deps || [] }));
+    const risks = data.risks || [];
+    const raidItems = data.raidItems || [];
+    const benefits = (data.benefits || []).map((b, i) => ({ ...b, id: b.id || `b${i + 1}`, actualRealisation: null, status: b.status || "planned" }));
+    let metrics = data.metrics || [];
     if (!metrics.length) metrics = [
-      { id: "m1", family: "delivery", name: "Milestone Adherence", value: 0, target: 85, unit: "%", direction: "higher", rag: "green", trend: [0, 0, 0, 0], trendL: ["Wk1", "Wk2", "Wk3", "Wk4"], note: "Baseline.", lastUpdated: d(0), links: [] },
-      { id: "m2", family: "financial", name: "Budget Utilisation", value: 0, target: 100, unit: "%", direction: "neutral", rag: "green", trend: [0, 0, 0, 0], trendL: ["Wk1", "Wk2", "Wk3", "Wk4"], note: "Baseline.", lastUpdated: d(0), links: [] },
-      { id: "m3", family: "risk", name: "Open High-Impact Risks", value: risks.filter(r => r.impact === "High" && r.status === "Open").length, target: 0, unit: "risks", direction: "lower", rag: "amber", trend: [0, 0, 0, risks.filter(r => r.impact === "High" && r.status === "Open").length], trendL: ["Wk1", "Wk2", "Wk3", "Wk4"], note: "Baseline.", lastUpdated: d(0), links: [] },
+      { id: "m1", family: "delivery", name: "Milestone Adherence", value: 0, target: 85, unit: "%", direction: "higher", rag: "green", trend: [0,0,0,0], trendL: ["Wk1","Wk2","Wk3","Wk4"], note: "Baseline.", links: [] },
+      { id: "m2", family: "financial", name: "Budget Utilisation", value: 0, target: 100, unit: "%", direction: "neutral", rag: "green", trend: [0,0,0,0], trendL: ["Wk1","Wk2","Wk3","Wk4"], note: "Baseline.", links: [] },
     ];
-    metrics = metrics.map((m, i) => ({ trend: [0, 0, 0, m.value || 0], trendL: ["Wk1", "Wk2", "Wk3", "Wk4"], lastUpdated: d(0), links: [], ...m, id: m.id || `m${i + 1}` }));
+    metrics = metrics.map((m, i) => ({ trend: [0,0,0,m.value||0], trendL: ["Wk1","Wk2","Wk3","Wk4"], lastUpdated: d(0), links: [], ...m, id: m.id || `m${i+1}` }));
+    const enabledOutputs = data.enabledOutputs?.length ? data.enabledOutputs : [
+      { type: "weekly", label: "Weekly Update", frequency: "weekly", audience: "Project Team" },
+      { type: "monthly", label: "Monthly Report", frequency: "monthly", audience: "Programme Board" },
+      { type: "quarterly", label: "Quarterly SteerCo Pack", frequency: "quarterly", audience: "Executive" },
+    ];
     onComplete({
-      programme: {
-        name: vis.name || "Unnamed Programme",
-        type: vis.type || "transformation",
-        sponsor: vis.sponsor || "TBC",
-        objective: vis.objective || "",
-        vision: vis.vision || "",
-        phase: bp.currentPhase || "Discovery",
-        startDate: bp.startDate || d(0),
-        endDate: bp.endDate || d(180),
-        blueprint: { currentState: bp.currentState || "", targetState: bp.targetState || "" },
-        sro: org.sro || vis.sponsor || "TBC",
-        governance: bp.governance || "",
-        enabledOutputs,
-      },
-      tasks, risks, raidItems, calendarEvents, metrics, benefits, stakeholders,
+      programme: { name: p.name || "Unnamed Programme", type: p.type || "transformation", sponsor: p.sponsor || "TBC", objective: p.objective || "", vision: p.vision || "", phase: p.phase || "Discovery", startDate: p.startDate || d(0), endDate: p.endDate || d(180), sro: p.sro || p.sponsor || "TBC", governance: p.governance || "", enabledOutputs, blueprint: { currentState: "", targetState: "" } },
+      tasks, risks, raidItems, calendarEvents: data.calendarEvents || [], metrics, benefits, stakeholders: data.stakeholders || [],
     });
   }
 
-  const stageMsgs = messages.filter(m => m.stageId === stage.id);
-
-  const inner = (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "var(--bg0)" }}>
-      <div style={{ background: "var(--bg2)", borderBottom: "1px solid var(--border)", padding: "0 18px", display: "flex", alignItems: "stretch", flexShrink: 0, overflowX: "auto" }}>
-        {STAGES.map((s, i) => { const done = collected[s.id] && Object.keys(collected[s.id]).length > 0, active = i === stageIdx, clickable = done || active || i <= stageIdx;
-          const col = active ? "var(--accent)" : done ? "#5DC484" : "var(--text2)";
-          return (
-            <button key={s.id} onClick={() => { if (clickable) setStageIdx(i); }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 14px", borderBottom: active ? "2px solid var(--accent)" : done ? "2px solid #5DC484" : "2px solid transparent", background: "none", cursor: clickable ? "pointer" : "default", opacity: clickable ? 1 : 0.5, transition: "all 0.2s", whiteSpace: "nowrap" }}>
-              <div style={{ width: 18, height: 18, borderRadius: "50%", background: done ? "#5DC484" : active ? "var(--accent)" : "var(--bg4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800, color: done || active ? "#000" : "var(--text3)", flexShrink: 0 }}>{done ? "✓" : s.num}</div>
-              <span style={{ fontSize: 12, fontFamily: "var(--font-d)", color: col, fontWeight: active ? 700 : 500 }}>{s.label}</span>
-            </button>
-          );
-        })}
-        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 7, padding: "0 8px", flexShrink: 0 }}>
-          {isModal && onCancel && <button onClick={onCancel} style={{ fontSize: 12, fontFamily: "var(--font-m)", color: "var(--text3)", padding: "3px 7px", border: "1px solid var(--border2)", borderRadius: 4 }}>✕</button>}
-        </div>
-      </div>
-
-      <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-          <div style={{ flex: 1, overflowY: "auto", padding: "13px 18px", display: "flex", flexDirection: "column", gap: 9 }}>
-            {stageMsgs.map((m, i) => (
-              <div key={i} className="fu" style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", animationDelay: `${i * 0.02}s` }}>
-                {m.role === "assistant" && <div style={{ width: 20, height: 20, borderRadius: 3, background: "var(--accent)", marginRight: 6, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: "#000", fontFamily: "var(--font-d)", marginTop: 2 }}>◆</div>}
-                <div style={{ maxWidth: "72%", padding: "8px 12px", borderRadius: m.role === "user" ? "8px 8px 2px 8px" : "8px 8px 8px 2px", background: m.role === "user" ? "rgba(42,191,191,0.12)" : "var(--bg3)", border: `1px solid ${m.role === "user" ? "rgba(42,191,191,0.25)" : "var(--border)"}`, fontSize: 11, fontFamily: "var(--font-b)", color: "var(--text)", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{m.content}</div>
-              </div>
-            ))}
-            {questions.length > 0 && (
-              <div className="fu" style={{ background: "var(--bg2)", border: "1px solid rgba(245,197,68,0.3)", borderRadius: 8, padding: "12px" }}>
-                <div style={{ fontSize: 12, fontFamily: "var(--font-m)", color: "#F5C544", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>◆ Clarifying Questions</div>
-                {questions.map((q, i) => (
-                  <div key={i} style={{ padding: "6px 8px", marginBottom: 4, background: "var(--bg3)", borderRadius: 4, border: "1px solid var(--border)", fontSize: 11, fontFamily: "var(--font-b)", color: "var(--text)", lineHeight: 1.5 }}>
-                    <span style={{ color: "#F5C544", fontWeight: 600 }}>Q{i + 1}:</span> {q.question}
-                    {q.about && <span style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", marginLeft: 6 }}>re: {q.about}</span>}
-                  </div>
-                ))}
-                <p style={{ fontSize: 12, fontFamily: "var(--font-m)", color: "var(--text3)", marginTop: 6 }}>Answer in the chat below, or click Confirm to proceed with defaults.</p>
-              </div>
-            )}
-            {preview && (
-              <div className="fu" style={{ background: "var(--bg2)", border: "1px solid var(--border2)", borderRadius: 9, overflow: "hidden" }}>
-                <div style={{ padding: "10px 14px", background: "var(--bg3)", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div><div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "#5DC484", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 2 }}>✓ Extraction Complete</div><div style={{ fontSize: 13, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)" }}>Programme Baseline Ready</div></div>
-                  <div style={{ display: "flex", gap: 6 }}><button onClick={confirmExtract} style={{ background: "var(--green)", color: "#000", borderRadius: 5, padding: "6px 13px", fontFamily: "var(--font-d)", fontWeight: 700, fontSize: 10 }}>Confirm & Continue →</button><button onClick={() => setPreview(null)} style={{ border: "1px solid var(--border2)", borderRadius: 5, padding: "6px 10px", color: "var(--text3)", fontSize: 9 }}>Edit</button></div>
-                </div>
-                <div style={{ padding: "11px 14px", display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 8 }}>
-                  {[{ l: "Tasks", v: preview.tasks?.length || 0, c: "var(--blue)" }, { l: "Risks", v: preview.risks?.length || 0, c: "var(--orange)" }, { l: "RAID", v: preview.raidItems?.length || 0, c: "var(--violet)" }, { l: "Benefits", v: preview.benefits?.length || 0, c: "var(--green)" }, { l: "Metrics", v: preview.metrics?.length || 0, c: "var(--accent)" }, { l: "Events", v: preview.calendarEvents?.length || 0, c: "var(--yellow)" }].map((s, i) => (
-                    <div key={i} style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: 5, padding: "8px", textAlign: "center" }}>
-                      <div style={{ fontSize: 18, fontFamily: "var(--font-d)", fontWeight: 800, color: s.c }}>{s.v}</div>
-                      <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 2 }}>{s.l}</div>
-                    </div>
-                  ))}
-                </div>
-                {preview.summary && <p style={{ margin: "0 14px 11px", fontSize: 12, fontFamily: "var(--font-b)", color: "var(--text2)", lineHeight: 1.6, background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: 5, padding: "8px 10px" }}>{preview.summary}</p>}
-              </div>
-            )}
-            {loading && <div style={{ display: "flex", alignItems: "center", gap: 7 }}><div style={{ width: 20, height: 20, borderRadius: 3, background: "var(--accent)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: "#000", fontFamily: "var(--font-d)" }}>◆</div><Spinner /></div>}
-            <div ref={bottomRef} />
-          </div>
-
-          {stage.id === "documents" && (
-            <div style={{ padding: "0 18px 9px" }}>
-              <div onDragOver={e => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={e => { e.preventDefault(); setDragOver(false); setFiles(prev => [...prev, ...Array.from(e.dataTransfer.files)]); }} style={{ border: `2px dashed ${dragOver ? "var(--accent)" : "var(--border2)"}`, borderRadius: 6, padding: "10px", textAlign: "center", background: dragOver ? "rgba(42,191,191,0.05)" : "var(--bg2)", cursor: "pointer", transition: "all 0.2s" }} onClick={() => fileRef.current?.click()}>
-                <input ref={fileRef} type="file" multiple style={{ display: "none" }} onChange={e => setFiles(prev => [...prev, ...Array.from(e.target.files)])} />
-                <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>{files.length ? `${files.length} file(s) queued` : "Drop files or click to browse"}</div>
-              </div>
-              {files.length > 0 && <button onClick={ingestFiles} disabled={loading} style={{ marginTop: 6, width: "100%", background: "var(--accent)", color: "#000", borderRadius: 5, padding: "7px", fontFamily: "var(--font-d)", fontWeight: 700, fontSize: 11, opacity: loading ? 0.5 : 1 }}>{loading ? <Spinner s={11} /> : `Ingest ${files.length} File(s)`}</button>}
-            </div>
-          )}
-
-          <div style={{ padding: "7px 18px 12px", background: "var(--bg1)", borderTop: "1px solid var(--border)", display: "flex", gap: 6, flexShrink: 0 }}>
-            <textarea value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} placeholder={stage.id === "documents" ? "Or paste document content here…" : "Type your response…"} rows={2} style={{ flex: 1, background: "var(--bg3)", border: "1px solid var(--border2)", borderRadius: 5, color: "var(--text)", fontFamily: "var(--font-b)", fontSize: 11, padding: "7px 9px", resize: "none", lineHeight: 1.5 }} />
-            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              <button onClick={() => send()} disabled={loading || !input.trim()} style={{ background: loading || !input.trim() ? "var(--bg3)" : "var(--accent)", color: loading || !input.trim() ? "var(--text3)" : "#000", border: "none", borderRadius: 5, padding: "0 13px", fontFamily: "var(--font-d)", fontWeight: 700, fontSize: 11, flex: 1, minWidth: 44, transition: "all 0.2s" }}>{loading ? <Spinner /> : "↑"}</button>
-              <button onClick={skip} style={{ background: "transparent", border: "1px solid var(--border2)", borderRadius: 4, padding: "3px 7px", fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", whiteSpace: "nowrap" }}>Skip →</button>
-            </div>
-          </div>
-        </div>
-
-        <div style={{ width: 190, background: "var(--bg1)", borderLeft: "1px solid var(--border)", padding: "13px", overflowY: "auto", flexShrink: 0 }}>
-          <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>Collected so far</div>
-          {Object.entries(collected).map(([key, val]) => { const s = STAGES.find(s => s.id === key); if (!s || !val || !Object.keys(val).length) return null; return (
-            <div key={key} style={{ marginBottom: 12 }}>
-              <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "#5DC484", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>✓ {s.label}</div>
-              {key === "outputs" && <div style={{ fontSize: 12, fontFamily: "var(--font-b)", color: "var(--text2)" }}>{val.enabledOutputs?.length || 0} output{val.enabledOutputs?.length !== 1 ? "s" : ""} enabled</div>}
-              {key === "vision" && <><div style={{ fontSize: 12, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)", marginBottom: 2 }}>{val.name}</div><div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--accent)", textTransform: "uppercase", marginBottom: 2 }}>{val.type}</div></>}
-              {key === "blueprint" && <div style={{ fontSize: 12, fontFamily: "var(--font-b)", color: "var(--text2)" }}>{val.scale} · {val.currentPhase}</div>}
-              {key === "organisation" && val.leads?.map((l, i) => <div key={i} style={{ fontSize: 12, fontFamily: "var(--font-b)", color: "var(--text2)", marginBottom: 1 }}>{l.name} · {l.role}</div>)}
-              {key === "benefits" && <div style={{ fontSize: 12, fontFamily: "var(--font-b)", color: "var(--text2)" }}>{val.benefits?.length || 0} benefit{val.benefits?.length !== 1 ? "s" : ""}</div>}
-            </div>
-          ); })}
-          {!Object.keys(collected).length && <div style={{ fontSize: 12, fontFamily: "var(--font-m)", color: "var(--text3)", lineHeight: 1.6 }}>Data appears here as confirmed.</div>}
-        </div>
-      </div>
-    </div>
-  );
-
-  if (isModal) return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-      <div style={{ width: "min(860px,100%)", height: "min(660px,90vh)", borderRadius: 10, overflow: "hidden", border: "1px solid var(--border2)", boxShadow: "0 24px 80px rgba(0,0,0,0.8)", display: "flex", flexDirection: "column" }}>
-        <div style={{ background: "var(--bg1)", borderBottom: "1px solid var(--border)", padding: "0 18px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 44, flexShrink: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 9 }}><div style={{ width: 20, height: 20, background: "var(--accent)", borderRadius: 3, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: "#000", fontFamily: "var(--font-d)" }}>◆</div><div style={{ fontSize: 11, fontFamily: "var(--font-d)", fontWeight: 800, color: "var(--text)" }}>APEX — New Programme</div></div>
-          <button onClick={onCancel} style={{ color: "var(--text3)", fontSize: 16, padding: "2px 6px" }}>✕</button>
-        </div>
-        <div style={{ flex: 1, overflow: "hidden" }}>{inner}</div>
-      </div>
-    </div>
-  );
+  function skipSetup() {
+    buildState({ programme: { name: "My Programme" }, enabledOutputs: [] });
+  }
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg0)", display: "flex", flexDirection: "column" }}>
-      <div style={{ background: "var(--bg1)", borderBottom: "1px solid var(--border)", padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 46, flexShrink: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}><div style={{ width: 24, height: 24, background: "var(--accent)", borderRadius: 3, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: "#000", fontFamily: "var(--font-d)" }}>◆</div><div><div style={{ fontSize: 13, fontFamily: "var(--font-d)", fontWeight: 800, color: "var(--text)", letterSpacing: "-0.02em" }}>APEX</div><div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", letterSpacing: "0.15em", textTransform: "uppercase" }}>Programme Execution & Control</div></div></div>
+      <div style={{ background: "var(--bg1)", borderBottom: "1px solid var(--border)", padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 52, flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ width: 28, height: 28, background: "var(--accent)", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#000", fontFamily: "var(--font-d)" }}>◆</div>
+          <div>
+            <div style={{ fontSize: 16, fontFamily: "var(--font-d)", fontWeight: 800, color: "var(--text)" }}>APEX</div>
+            <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", letterSpacing: "0.1em" }}>Programme Setup</div>
+          </div>
+        </div>
+        <button onClick={skipSetup} style={{ fontSize: 12, fontFamily: "var(--font-d)", color: "var(--text3)", padding: "6px 14px", border: "1px solid var(--border2)", borderRadius: 5 }}>Skip to Dashboard →</button>
       </div>
-      <div style={{ flex: 1, overflow: "hidden" }}>{inner}</div>
-    </div>
-  );
-};
 
-// ══════════════════════════════════════════════════════════════════════════════
-// METRIC PANEL + TASK DRAWER + RAID LOG (updated theme)
-// ══════════════════════════════════════════════════════════════════════════════
-const MetricPanel = ({ metric, tasks, onClose, onSave, onNavigate }) => {
-  const [val, setVal] = useState(String(metric.value));
-  const [note, setNote] = useState(metric.note || "");
-  const [rag, setRag] = useState(metric.rag);
-  const fam = FAMILIES[metric.family] || FAMILIES.delivery;
-  const linked = (metric.links || []).map(l => ({ ...l, task: tasks.find(t => t.id === l.taskId) })).filter(l => l.task);
-  function save() { const nv = parseFloat(val); if (isNaN(nv)) return; onSave({ ...metric, value: nv, note, rag, trend: [...(metric.trend || []).slice(1), nv], lastUpdated: d(0) }); onClose(); }
-  return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "flex-end" }} onClick={onClose}>
-      <div className="sr" style={{ width: 400, height: "100%", background: "var(--bg2)", borderLeft: "1px solid var(--border2)", display: "flex", flexDirection: "column", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
-        <div style={{ padding: "15px 17px", borderBottom: "1px solid var(--border)", background: "var(--bg3)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-            <div><div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: fam.color, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 3 }}>{fam.icon} {fam.label}</div><div style={{ fontSize: 14, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)", lineHeight: 1.25 }}>{metric.name}</div></div>
-            <button onClick={onClose} style={{ color: "var(--text3)", fontSize: 17, padding: "2px 4px" }}>✕</button>
-          </div>
-          <div style={{ display: "flex", alignItems: "flex-end", gap: 11, marginBottom: 9 }}>
-            <div style={{ fontSize: 38, fontFamily: "var(--font-d)", fontWeight: 800, color: RAG[metric.rag].color, lineHeight: 1 }}>{fmtVal(metric)}</div>
-            <div style={{ paddingBottom: 2 }}><div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)" }}>Target</div><div style={{ fontSize: 14, fontFamily: "var(--font-m)", color: "var(--text2)", fontWeight: 500 }}>{metric.target}{metric.unit}</div></div>
-            <Spark data={metric.trend} color={RAG[metric.rag].color} positive={metric.direction === "higher"} />
-          </div>
-          {metric.trend && <div style={{ height: 38 }}><ResponsiveContainer width="100%" height="100%"><AreaChart data={metric.trend.map((v, i) => ({ v, l: metric.trendL?.[i] || `Wk${i + 1}` }))} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}><defs><linearGradient id="dp-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={RAG[metric.rag].color} stopOpacity={0.4} /><stop offset="100%" stopColor={RAG[metric.rag].color} stopOpacity={0} /></linearGradient></defs><XAxis dataKey="l" tick={{ fontSize: 11, fontFamily: "var(--font-m)", fill: "var(--text3)" }} axisLine={false} tickLine={false} /><Area type="monotone" dataKey="v" stroke={RAG[metric.rag].color} strokeWidth={2} fill="url(#dp-g)" dot={{ fill: RAG[metric.rag].color, r: 2 }} /></AreaChart></ResponsiveContainer></div>}
-        </div>
-        <div style={{ padding: "15px 17px", flex: 1 }}>
-          {linked.length > 0 && <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 7 }}>Task Linkages ({linked.length})</div>
-            {linked.map(l => { const lm = LINK_META[l.type] || LINK_META.influences; return (
-              <div key={l.taskId} onClick={() => { onNavigate && onNavigate(l.task); onClose(); }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 8px", marginBottom: 2, background: "var(--bg3)", borderRadius: 4, border: `1px solid ${lm.color}20`, cursor: "pointer" }}><Badge status={l.task.status} /><div style={{ flex: 1 }}><div style={{ fontSize: 11, fontFamily: "var(--font-b)", color: "var(--text)" }}>{l.task.name}</div></div></div>
-            ); })}
-          </div>}
-          <div style={{ borderTop: "1px solid var(--border)", paddingTop: 14 }}>
-            <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>Manual Update</div>
-            <div style={{ marginBottom: 9 }}><label style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", display: "block", marginBottom: 3 }}>Value ({metric.unit})</label><input value={val} onChange={e => setVal(e.target.value)} style={{ width: "100%", background: "var(--bg3)", border: "1px solid var(--border2)", borderRadius: 5, color: "var(--text)", fontFamily: "var(--font-m)", fontSize: 21, fontWeight: 700, padding: "8px 10px" }} /></div>
-            <div style={{ marginBottom: 9 }}><label style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", display: "block", marginBottom: 3 }}>RAG</label><div style={{ display: "flex", gap: 5 }}>{Object.entries(RAG).map(([k, r]) => <button key={k} onClick={() => setRag(k)} style={{ flex: 1, padding: "5px", border: `1px solid ${rag === k ? r.color : "var(--border2)"}`, borderRadius: 5, background: rag === k ? r.bg : "transparent", color: rag === k ? r.color : "var(--text3)", fontSize: 11, fontFamily: "var(--font-m)", textTransform: "uppercase" }}>{r.label}</button>)}</div></div>
-            <div style={{ marginBottom: 12 }}><label style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", display: "block", marginBottom: 3 }}>Commentary</label><textarea value={note} onChange={e => setNote(e.target.value)} rows={3} style={{ width: "100%", background: "var(--bg3)", border: "1px solid var(--border2)", borderRadius: 5, color: "var(--text)", fontFamily: "var(--font-b)", fontSize: 12, padding: "6px 8px", resize: "none", lineHeight: 1.5 }} /></div>
-            <div style={{ display: "flex", gap: 6 }}><button onClick={save} style={{ flex: 1, background: "var(--accent)", color: "#000", borderRadius: 5, padding: "8px", fontFamily: "var(--font-d)", fontWeight: 700, fontSize: 11 }}>Save</button><button onClick={onClose} style={{ padding: "8px 12px", border: "1px solid var(--border2)", borderRadius: 5, color: "var(--text3)", fontSize: 10 }}>Cancel</button></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const TaskDrawer = ({ task, tasks, metrics, onClose, onUpdate, onOpenMetric }) => {
-  if (!task) return null;
-  const meta = STATUS_META[task.status] || STATUS_META["not-started"];
-  const linkedMetrics = (metrics || []).filter(m => (m.links || []).some(l => l.taskId === task.id));
-  return (
-    <div style={{ position: "fixed", right: 0, top: 0, bottom: 0, width: 300, background: "var(--bg2)", borderLeft: "1px solid var(--border2)", zIndex: 100, display: "flex", flexDirection: "column", boxShadow: "-8px 0 32px rgba(0,0,0,0.5)", animation: "fadeUp 0.2s ease" }}>
-      <div style={{ padding: "13px 14px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div><div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 3 }}>{task.phase}</div><div style={{ fontSize: 12, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)", lineHeight: 1.3 }}>{task.name}</div></div>
-        <button onClick={onClose} style={{ color: "var(--text3)", fontSize: 16, padding: "2px 4px" }}>✕</button>
-      </div>
-      <div style={{ padding: 12, flex: 1, overflowY: "auto" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7, marginBottom: 10 }}>
-          {[{ l: "Owner", v: task.owner, c: "var(--blue)" }, { l: "Status", v: <Badge status={task.status} /> }, { l: "Start", v: fmt(task.start) }, { l: "End", v: fmt(task.end) }, { l: "Progress", v: `${task.progress}%`, c: meta.color }, { l: "Deps", v: task.deps?.join(", ") || "None", c: "var(--text3)" }].map((f, i) => (
-            <div key={i} style={{ background: "var(--bg3)", padding: "7px 9px", borderRadius: 4, border: "1px solid var(--border)" }}><div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 2 }}>{f.l}</div><div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: f.c || "var(--text)" }}>{f.v}</div></div>
-          ))}
-        </div>
-        <div style={{ background: "var(--bg3)", borderRadius: 3, height: 3, overflow: "hidden", border: "1px solid var(--border)", marginBottom: 11 }}><div style={{ width: `${task.progress}%`, height: "100%", background: `linear-gradient(90deg,${meta.color}88,${meta.color})`, borderRadius: 3 }} /></div>
-        {linkedMetrics.length > 0 && <div style={{ marginBottom: 11 }}>
-          <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 6 }}>◆ Driving Metrics ({linkedMetrics.length})</div>
-          {linkedMetrics.map(m => (
-            <div key={m.id} onClick={() => onOpenMetric && onOpenMetric(m)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 7px", marginBottom: 2, background: "var(--bg3)", borderRadius: 4, border: "1px solid var(--border)", cursor: "pointer" }}>
-              <RagPip rag={m.rag} /><div style={{ flex: 1 }}><div style={{ fontSize: 11, fontFamily: "var(--font-b)", color: "var(--text)" }}>{m.name}</div></div><div style={{ fontSize: 12, fontFamily: "var(--font-m)", fontWeight: 700, color: RAG[m.rag].color }}>{fmtVal(m)}</div>
+      <div style={{ flex: 1, maxWidth: 800, width: "100%", margin: "0 auto", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px", display: "flex", flexDirection: "column", gap: 12 }}>
+          {messages.map((m, i) => (
+            <div key={i} className="fu" style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", animationDelay: `${i * 0.02}s` }}>
+              {m.role === "assistant" && <div style={{ width: 24, height: 24, borderRadius: 4, background: "var(--accent)", marginRight: 8, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: "#000", fontFamily: "var(--font-d)", marginTop: 2 }}>◆</div>}
+              <div style={{ maxWidth: "80%", padding: "12px 16px", borderRadius: m.role === "user" ? "12px 12px 4px 12px" : "12px 12px 12px 4px", background: m.role === "user" ? "rgba(42,191,191,0.15)" : "var(--bg3)", border: `1px solid ${m.role === "user" ? "rgba(42,191,191,0.3)" : "var(--border)"}`, fontSize: 14, fontFamily: "var(--font-b)", color: "var(--text)", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{m.content}</div>
             </div>
           ))}
-        </div>}
-        <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 5 }}>Quick Status</div>
-        <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>{Object.entries(STATUS_META).map(([key, m]) => <button key={key} onClick={() => onUpdate(task.id, { status: key })} style={{ fontSize: 11, fontFamily: "var(--font-m)", padding: "3px 7px", border: `1px solid ${task.status === key ? m.color : "var(--border2)"}`, borderRadius: 3, color: task.status === key ? m.color : "var(--text3)", background: task.status === key ? m.bg : "transparent", textTransform: "uppercase" }}>{m.label}</button>)}</div>
-      </div>
-    </div>
-  );
-};
-
-const RAIDLog = ({ raidItems, setRaidItems }) => {
-  const [filter, setFilter] = useState("all");
-  const [showAdd, setShowAdd] = useState(false);
-  const [addType, setAddType] = useState("risk");
-  const [form, setForm] = useState({ title: "", description: "", owner: "", impact: "Medium", dueDate: "", status: "Open" });
-  const [aiInput, setAiInput] = useState("");
-  const [aiLoading, setAiLoading] = useState(false);
-  const filtered = filter === "all" ? raidItems : raidItems.filter(i => i.type === filter);
-
-  async function addViaAI() {
-    if (!aiInput.trim() || aiLoading) return;
-    setAiLoading(true);
-    const SYS = `You are APEX. Extract a RAID item from the user's text. Return ONLY valid JSON:\n{"type":"risk|assumption|issue|decision","title":"short title","description":"full description","owner":"name or TBC","impact":"High|Medium|Low","status":"Open","dateRaised":"${d(0)}","dueDate":"YYYY-MM-DD or null"}`;
-    try {
-      const r = await aiCall(SYS, [{ role: "user", content: aiInput }]);
-      const jm = r.match(/```json\s*([\s\S]*?)```/) || [null, r.trim()];
-      const parsed = JSON.parse((jm[1] || r).replace(/```json|```/g, "").trim());
-      setRaidItems(prev => [...prev, { ...parsed, id: `rd-${uid()}`, dueDate: parsed.dueDate || d(14) }]);
-      setAiInput("");
-    } catch (e) { /* silent */ }
-    setAiLoading(false);
-  }
-
-  function addManual() {
-    if (!form.title.trim()) return;
-    setRaidItems(prev => [...prev, { ...form, id: `rd-${uid()}`, type: addType, dateRaised: d(0), dueDate: form.dueDate || d(14) }]);
-    setForm({ title: "", description: "", owner: "", impact: "Medium", dueDate: "", status: "Open" });
-    setShowAdd(false);
-  }
-
-  const counts = Object.fromEntries(Object.keys(RAID_TYPES).map(t => [t, raidItems.filter(i => i.type === t).length]));
-
-  return (
-    <div style={{ padding: "16px 20px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, gap: 12 }}>
-        <div>
-          <div style={{ fontSize: 13, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)", marginBottom: 4 }}>RAID Log</div>
-          <div style={{ display: "flex", gap: 10 }}>{Object.entries(RAID_TYPES).map(([t, tm]) => (<div key={t} style={{ display: "flex", alignItems: "center", gap: 4 }}><span style={{ fontSize: 11, fontFamily: "var(--font-m)", color: tm.color, fontWeight: 600 }}>{counts[t] || 0}</span><span style={{ fontSize: 12, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase" }}>{tm.label}s</span></div>))}</div>
+          {loading && <div style={{ display: "flex", alignItems: "center", gap: 8 }}><div style={{ width: 24, height: 24, borderRadius: 4, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: "#000", fontFamily: "var(--font-d)" }}>◆</div><Spinner /></div>}
+          <div ref={bottomRef} />
         </div>
-        <button onClick={() => setShowAdd(!showAdd)} style={{ fontSize: 12, fontFamily: "var(--font-m)", padding: "6px 13px", background: "rgba(42,191,191,0.12)", border: "1px solid rgba(42,191,191,0.35)", borderRadius: 5, color: "var(--accent)", textTransform: "uppercase" }}>+ Add</button>
-      </div>
-      <div style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 7, padding: "11px 13px", marginBottom: 14 }}>
-        <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>◆ Natural Language Entry</div>
-        <div style={{ display: "flex", gap: 7 }}>
-          <input value={aiInput} onChange={e => setAiInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter") addViaAI(); }} placeholder="Describe a risk, assumption, issue, or decision…" style={{ flex: 1, background: "var(--bg3)", border: "1px solid var(--border2)", borderRadius: 5, color: "var(--text)", fontFamily: "var(--font-b)", fontSize: 12, padding: "7px 9px" }} />
-          <button onClick={addViaAI} disabled={aiLoading || !aiInput.trim()} style={{ background: aiLoading || !aiInput.trim() ? "var(--bg3)" : "var(--accent)", color: aiLoading || !aiInput.trim() ? "var(--text3)" : "#000", border: "none", borderRadius: 5, padding: "0 14px", fontFamily: "var(--font-d)", fontWeight: 700, fontSize: 11, minWidth: 50 }}>{aiLoading ? <Spinner /> : "↑"}</button>
-        </div>
-      </div>
-      {showAdd && (
-        <div className="fu" style={{ background: "var(--bg2)", border: "1px solid var(--border2)", borderRadius: 7, padding: "13px", marginBottom: 14 }}>
-          <div style={{ display: "flex", gap: 6, marginBottom: 9 }}>{Object.entries(RAID_TYPES).map(([t, tm]) => (<button key={t} onClick={() => setAddType(t)} style={{ fontSize: 12, fontFamily: "var(--font-m)", padding: "4px 11px", border: `1px solid ${addType === t ? tm.color : "var(--border2)"}`, borderRadius: 4, color: addType === t ? tm.color : "var(--text3)", background: addType === t ? `${tm.color}15` : "transparent", textTransform: "uppercase" }}>{tm.icon} {tm.label}</button>))}</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
-            <input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="Title *" style={{ background: "var(--bg3)", border: "1px solid var(--border2)", borderRadius: 4, color: "var(--text)", fontSize: 12, padding: "6px 8px" }} />
-            <input value={form.owner} onChange={e => setForm(p => ({ ...p, owner: e.target.value }))} placeholder="Owner" style={{ background: "var(--bg3)", border: "1px solid var(--border2)", borderRadius: 4, color: "var(--text)", fontSize: 12, padding: "6px 8px" }} />
-          </div>
-          <div style={{ display: "flex", gap: 7 }}>
-            <select value={form.impact} onChange={e => setForm(p => ({ ...p, impact: e.target.value }))} style={{ background: "var(--bg3)", border: "1px solid var(--border2)", borderRadius: 4, color: "var(--text)", fontSize: 11, padding: "5px 7px" }}><option>High</option><option>Medium</option><option>Low</option></select>
-            <button onClick={addManual} style={{ background: "var(--accent)", color: "#000", borderRadius: 4, padding: "6px 14px", fontFamily: "var(--font-d)", fontWeight: 700, fontSize: 12, marginLeft: "auto" }}>Add</button>
-          </div>
-        </div>
-      )}
-      <div style={{ display: "flex", gap: 5, marginBottom: 12 }}>
-        {[["all", "All"], ...Object.entries(RAID_TYPES).map(([t, tm]) => [t, tm.label + "s"])].map(([key, label]) => (<button key={key} onClick={() => setFilter(key)} style={{ fontSize: 11, fontFamily: "var(--font-m)", padding: "3px 10px", border: `1px solid ${filter === key ? (RAID_TYPES[key]?.color || "var(--accent)") : "var(--border2)"}`, borderRadius: 20, color: filter === key ? (RAID_TYPES[key]?.color || "var(--accent)") : "var(--text3)", background: filter === key ? `${RAID_TYPES[key]?.color || "var(--accent)"}15` : "transparent", textTransform: "uppercase" }}>{label}</button>))}
-      </div>
-      {filtered.length === 0 && <div style={{ textAlign: "center", padding: "32px", fontSize: 12, fontFamily: "var(--font-m)", color: "var(--text3)" }}>No items yet.</div>}
-      <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-        {filtered.map((item, i) => { const tm = RAID_TYPES[item.type] || RAID_TYPES.risk; const sc = item.status === "Agreed" || item.status === "Closed" ? "#5DC484" : item.status === "Open" ? "#F5C544" : "var(--text3)"; return (
-          <div key={item.id} className="fu" style={{ animationDelay: `${i * 0.02}s`, background: "var(--bg2)", border: `1px solid ${tm.color}25`, borderLeft: `3px solid ${tm.color}`, borderRadius: 6, padding: "11px 13px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 4, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 12, fontFamily: "var(--font-m)", color: tm.color, background: `${tm.color}15`, border: `1px solid ${tm.color}30`, padding: "1px 7px", borderRadius: 3, textTransform: "uppercase", fontWeight: 600 }}>{tm.icon} {tm.label}</span>
-              {item.impact && <span style={{ fontSize: 11, fontFamily: "var(--font-m)", color: { High: "#E8734A", Medium: "#F5C544", Low: "#5DC484" }[item.impact], textTransform: "uppercase" }}>▲ {item.impact}</span>}
-              <span style={{ fontSize: 12, fontFamily: "var(--font-b)", fontWeight: 500, color: "var(--text)" }}>{item.title}</span>
-            </div>
-            {item.description && <p style={{ fontSize: 11, fontFamily: "var(--font-b)", color: "var(--text2)", lineHeight: 1.6, marginBottom: 5 }}>{item.description}</p>}
-            <div style={{ display: "flex", gap: 10 }}>
-              {item.owner && <span style={{ fontSize: 12, fontFamily: "var(--font-m)", color: "var(--blue)" }}>{item.owner}</span>}
-              {item.dueDate && <span style={{ fontSize: 12, fontFamily: "var(--font-m)", color: "var(--text3)" }}>Due: {fmt(item.dueDate)}</span>}
-            </div>
-          </div>
-        ); })}
-      </div>
-    </div>
-  );
-};
 
-// ══════════════════════════════════════════════════════════════════════════════
-// BENEFITS STRIP + DRAWER
-// ══════════════════════════════════════════════════════════════════════════════
-const benefitProgress = (b) => {
-  if (!b.target || b.target === b.baseline) return b.status === "realised" ? 100 : 0;
-  const curr = b.actualRealisation ? b.target : b.baseline;
-  return Math.max(0, Math.min(100, ((curr - b.baseline) / (b.target - b.baseline)) * 100));
-};
-
-const BenefitsStrip = ({ benefits, onOpen }) => {
-  if (!benefits || !benefits.length) return null;
-  return (
-    <div style={{ marginBottom: 14 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 8 }}>
-        <span style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "#5DC484", textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 600 }}>✚ Benefits</span>
-        <span style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)" }}>{benefits.length} tracked · {benefits.filter(b => b.status === "realised").length} realised</span>
-      </div>
-      <div style={{ display: "flex", gap: 9, overflowX: "auto", paddingBottom: 6 }}>
-        {benefits.map((b, i) => {
-          const st = BENEFIT_STATUS[b.status] || BENEFIT_STATUS.planned;
-          const tm = BENEFIT_TYPES[b.type] || BENEFIT_TYPES.operational;
-          const pct = benefitProgress(b);
-          return (
-            <div key={b.id} className="fu" onClick={() => onOpen(b)} style={{ animationDelay: `${i * 0.02}s`, minWidth: 240, maxWidth: 280, background: "var(--bg2)", border: `1px solid ${st.color}30`, borderLeft: `3px solid ${tm.color}`, borderRadius: 6, padding: "10px 12px", cursor: "pointer", flexShrink: 0, transition: "background 0.15s" }} onMouseEnter={e => e.currentTarget.style.background = "var(--bg3)"} onMouseLeave={e => e.currentTarget.style.background = "var(--bg2)"}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
-                <span style={{ fontSize: 11, fontFamily: "var(--font-m)", color: tm.color, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>{tm.label}</span>
-                <span style={{ fontSize: 11, fontFamily: "var(--font-m)", color: st.color, background: st.bg, border: `1px solid ${st.color}30`, padding: "1px 5px", borderRadius: 2, textTransform: "uppercase" }}>{st.label}</span>
-              </div>
-              <div style={{ fontSize: 12, fontFamily: "var(--font-b)", color: "var(--text)", fontWeight: 500, lineHeight: 1.3, marginBottom: 6 }}>{b.title}</div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontFamily: "var(--font-m)", color: "var(--text3)", marginBottom: 4 }}>
-                <span>{b.baseline}{b.unit} → {b.target}{b.unit}</span>
-                <span>{b.owner}</span>
-              </div>
-              <div style={{ background: "var(--bg0)", borderRadius: 3, height: 3, overflow: "hidden" }}><div style={{ width: `${pct}%`, height: "100%", background: `linear-gradient(90deg,${tm.color}66,${tm.color})`, borderRadius: 3 }} /></div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
-const BenefitDrawer = ({ benefit, onClose, onSave, metrics }) => {
-  if (!benefit) return null;
-  const [b, setB] = useState({ ...benefit });
-  const tm = BENEFIT_TYPES[b.type] || BENEFIT_TYPES.operational;
-  const linkedMetric = metrics?.find(m => m.id === b.metricId);
-  function save() { onSave(b); onClose(); }
-  return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "flex-end" }} onClick={onClose}>
-      <div className="sr" style={{ width: 400, height: "100%", background: "var(--bg2)", borderLeft: "1px solid var(--border2)", display: "flex", flexDirection: "column", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
-        <div style={{ padding: "15px 17px", borderBottom: "1px solid var(--border)", background: "var(--bg3)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-            <div>
-              <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: tm.color, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 3 }}>✚ {tm.label} Benefit</div>
-              <div style={{ fontSize: 14, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)", lineHeight: 1.25 }}>{b.title}</div>
-            </div>
-            <button onClick={onClose} style={{ color: "var(--text3)", fontSize: 17, padding: "2px 4px" }}>✕</button>
+        {/* File drop zone */}
+        <div style={{ padding: "0 24px 8px" }}>
+          <div onDragOver={e => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={e => { e.preventDefault(); setDragOver(false); setFiles(prev => [...prev, ...Array.from(e.dataTransfer.files)]); }} onClick={() => fileRef.current?.click()} style={{ border: `2px dashed ${dragOver ? "var(--accent)" : files.length ? "var(--green)" : "var(--border2)"}`, borderRadius: 8, padding: "12px", textAlign: "center", background: dragOver ? "rgba(42,191,191,0.05)" : "var(--bg2)", cursor: "pointer", transition: "all 0.2s" }}>
+            <input ref={fileRef} type="file" multiple style={{ display: "none" }} onChange={e => setFiles(prev => [...prev, ...Array.from(e.target.files)])} />
+            <div style={{ fontSize: 13, fontFamily: "var(--font-b)", color: files.length ? "var(--green)" : "var(--text2)" }}>{files.length ? `${files.length} file(s) ready — click Ingest` : "📄 Drop documents here or click to browse"}</div>
           </div>
-          <p style={{ fontSize: 12, fontFamily: "var(--font-b)", color: "var(--text2)", lineHeight: 1.55 }}>{b.description}</p>
+          {files.length > 0 && <button onClick={ingestFiles} disabled={loading} style={{ marginTop: 8, width: "100%", background: "var(--accent)", color: "#000", borderRadius: 6, padding: "10px", fontFamily: "var(--font-d)", fontWeight: 700, fontSize: 14, opacity: loading ? 0.5 : 1 }}>{loading ? <Spinner s={12} /> : `Ingest ${files.length} File(s)`}</button>}
         </div>
-        <div style={{ padding: "15px 17px", flex: 1 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
-            <div style={{ background: "var(--bg3)", padding: "8px 10px", borderRadius: 4, border: "1px solid var(--border)" }}>
-              <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 2 }}>Baseline</div>
-              <div style={{ fontSize: 16, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text2)" }}>{b.baseline}{b.unit}</div>
-            </div>
-            <div style={{ background: "var(--bg3)", padding: "8px 10px", borderRadius: 4, border: "1px solid var(--border)" }}>
-              <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 2 }}>Target</div>
-              <div style={{ fontSize: 16, fontFamily: "var(--font-d)", fontWeight: 700, color: tm.color }}>{b.target}{b.unit}</div>
-            </div>
-          </div>
-          <div style={{ marginBottom: 10 }}>
-            <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 3 }}>Owner</div>
-            <div style={{ fontSize: 12, fontFamily: "var(--font-b)", color: "var(--blue)" }}>{b.owner}</div>
-          </div>
-          <div style={{ marginBottom: 10 }}>
-            <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 3 }}>Measurement KPI</div>
-            <div style={{ fontSize: 11, fontFamily: "var(--font-b)", color: "var(--text)" }}>{b.measurementKPI}</div>
-          </div>
-          <div style={{ marginBottom: 10 }}>
-            <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 3 }}>Expected Realisation</div>
-            <div style={{ fontSize: 12, fontFamily: "var(--font-b)", color: "var(--text)" }}>{fmt(b.expectedRealisation)} {b.tranche && `· ${b.tranche}`}</div>
-          </div>
-          {linkedMetric && <div style={{ marginBottom: 10 }}>
-            <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 3 }}>Linked Metric</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 8px", background: "var(--bg3)", borderRadius: 4, border: "1px solid var(--border)" }}><RagPip rag={linkedMetric.rag} /><span style={{ fontSize: 11, fontFamily: "var(--font-b)", color: "var(--text)", flex: 1 }}>{linkedMetric.name}</span><span style={{ fontSize: 12, fontFamily: "var(--font-m)", fontWeight: 700, color: RAG[linkedMetric.rag].color }}>{fmtVal(linkedMetric)}</span></div>
-          </div>}
-          <div style={{ borderTop: "1px solid var(--border)", paddingTop: 14, marginTop: 14 }}>
-            <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 10 }}>Update Status</div>
-            <div style={{ display: "flex", gap: 5, marginBottom: 12, flexWrap: "wrap" }}>
-              {Object.entries(BENEFIT_STATUS).map(([k, s]) => <button key={k} onClick={() => setB(p => ({ ...p, status: k }))} style={{ fontSize: 11, fontFamily: "var(--font-m)", padding: "4px 9px", border: `1px solid ${b.status === k ? s.color : "var(--border2)"}`, borderRadius: 4, color: b.status === k ? s.color : "var(--text3)", background: b.status === k ? s.bg : "transparent", textTransform: "uppercase" }}>{s.label}</button>)}
-            </div>
-            <button onClick={save} style={{ width: "100%", background: "var(--accent)", color: "#000", borderRadius: 5, padding: "8px", fontFamily: "var(--font-d)", fontWeight: 700, fontSize: 11 }}>Save</button>
-          </div>
+
+        {/* Input */}
+        <div style={{ padding: "8px 24px 16px", display: "flex", gap: 8 }}>
+          <textarea value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} placeholder="Type here — tell APEX about your programme, what you need, paste content…" rows={2} style={{ flex: 1, background: "var(--bg3)", border: "1px solid var(--border2)", borderRadius: 8, color: "var(--text)", fontFamily: "var(--font-b)", fontSize: 14, padding: "10px 14px", resize: "none", lineHeight: 1.5 }} />
+          <button onClick={() => send()} disabled={loading || !input.trim()} style={{ background: loading || !input.trim() ? "var(--bg3)" : "var(--accent)", color: loading || !input.trim() ? "var(--text3)" : "#000", borderRadius: 8, padding: "0 18px", fontFamily: "var(--font-d)", fontWeight: 700, fontSize: 14, transition: "all 0.2s", minWidth: 52 }}>{loading ? <Spinner /> : "↑"}</button>
         </div>
       </div>
     </div>
@@ -842,16 +486,14 @@ const BenefitDrawer = ({ benefit, onClose, onSave, metrics }) => {
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
-// REPORT VIEWER + BUILDERS
+// REPORT GENERATOR (shared by all report types)
 // ══════════════════════════════════════════════════════════════════════════════
-const ReportViewer = ({ outputType, state, onClose }) => {
-  const { programme, tasks, risks, metrics, raidItems = [], benefits = [], calendarEvents = [] } = state;
+const ReportGenerator = ({ reportType, label, state, onClose }) => {
+  const { programme, tasks, risks, metrics, benefits = [], raidItems = [], calendarEvents = [] } = state;
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
-  const meta = OUTPUT_TYPES[outputType];
-
-  const g = ragCount(metrics, "green"), a = ragCount(metrics, "amber"), rC = ragCount(metrics, "red");
+  const g = ragCount(metrics, "green"), a = ragCount(metrics, "amber");
   const phi = metrics.length ? Math.round((g * 100 + a * 50) / metrics.length) : 0;
   const phiC = phi >= 70 ? "#5DC484" : phi >= 50 ? "#F5C544" : "#E8734A";
 
@@ -859,188 +501,75 @@ const ReportViewer = ({ outputType, state, onClose }) => {
 
   async function generate() {
     setLoading(true);
-    let SYS = "", extraSummary = "";
-    if (outputType === "steerco") {
-      SYS = `You are an expert PMO writer creating a SteerCo / Programme Board Pack. Be concise and authoritative. Use this exact structure:\n\n## EXECUTIVE SUMMARY\nOne paragraph. RAG status, one-line headline.\n\n## PROGRAMME HEALTH\nTable-style bullets: Schedule / Budget / Scope / Benefits / Risks each with RAG + one-line rationale.\n\n## KEY HIGHLIGHTS — THIS PERIOD\n3-5 bullets of concrete progress.\n\n## PROGRESS VS PLAN\nMilestones hit/missed, % complete, variance to baseline.\n\n## FINANCIAL STATUS\nBudget utilisation, variance, forecast to completion.\n\n## BENEFITS TRACKING\nPer-benefit status: on track / at risk / off track. Reference the benefits list.\n\n## RISKS & ISSUES\nTop 3 open risks with mitigation and owner.\n\n## DECISIONS REQUIRED\nWhat the Board needs to approve/decide.\n\n## UPCOMING MILESTONES\nNext 4-6 weeks.\n\n## ASKS OF THE BOARD\nSpecific requests from the sponsor / board.`;
-    } else if (outputType === "highlight") {
-      SYS = `You are an expert PMO writer creating a Highlight Report (concise, 1-page equivalent). Use this exact structure:\n\n## HEADLINE\nOne-line status with RAG.\n\n## THIS PERIOD — PROGRESS\n3-4 bullets. Only what was completed or materially advanced.\n\n## NEXT PERIOD — PRIORITIES\n3-4 bullets. What must happen next.\n\n## WATCH ITEMS\nEmerging risks or blockers — keep it short.\n\n## DECISIONS NEEDED\nAny decisions awaiting — or "None pending".\n\n## BENEFITS UPDATE\nOne paragraph on benefits trajectory.`;
-    } else if (outputType === "benefits") {
-      SYS = `You are an expert PMO writer creating a Benefits Realisation Report. Focus entirely on benefits vs business case. Use this exact structure:\n\n## BENEFITS OVERVIEW\nTotals: planned / in-progress / realised / at-risk counts. Overall trajectory one-liner.\n\n## PER-BENEFIT STATUS\nFor each benefit: title, owner, baseline → target → current, RAG, realisation date, commentary.\n\n## BENEFITS AT RISK\nWhich benefits are slipping, why, and what mitigation is in place.\n\n## REALISATION TIMELINE\nWhen benefits are expected to land by tranche/phase.\n\n## RECOMMENDATIONS\n2-3 specific recommendations to protect benefits realisation.`;
-      extraSummary = `\nBENEFITS DETAIL:\n${benefits.map(b => `- ${b.title} (${b.type}) [${b.status}] — Owner: ${b.owner} — ${b.baseline}${b.unit} → ${b.target}${b.unit} — Expected: ${b.expectedRealisation} — KPI: ${b.measurementKPI}`).join("\n")}`;
-    }
+    const SYS = reportType === "weekly" ?
+      `Write a concise Weekly Project Update. Structure: ## HEADLINE (one-line RAG + status), ## THIS WEEK — PROGRESS (3-5 bullets of completed work, labelled by project/area), ## NEXT WEEK — PRIORITIES (3-4 bullets, labelled by project/area), ## WATCH ITEMS (emerging risks), ## DECISIONS NEEDED. Reference projects/areas by name.` :
+      reportType === "monthly" ?
+      `Write a detailed Monthly Programme Report. Structure: ## EXECUTIVE SUMMARY (paragraph with RAG), ## PROGRESS BY WORKSTREAM (for each workstream: status, achievements, next steps — labelled clearly), ## FINANCIAL STATUS (budget utilisation, variances), ## METRICS & KPI DASHBOARD (list each metric with value vs target and trend), ## BENEFITS TRACKING (per benefit: status, baseline vs target, trajectory), ## RISKS & ISSUES (top risks with mitigation and owner), ## DEPENDENCIES & BLOCKERS, ## UPCOMING MILESTONES (next 30 days), ## DECISIONS REQUIRED. Cross-reference workstreams throughout.` :
+      `Write a Quarterly SteerCo / Programme Board Pack. Structure: ## EXECUTIVE SUMMARY (one paragraph, authoritative), ## PROGRAMME HEALTH (table: Schedule/Budget/Scope/Benefits/Risks each with RAG + rationale), ## QUARTER IN REVIEW (key achievements by workstream), ## PROGRESS VS BASELINE (milestones hit/missed, % complete, variance), ## FINANCIAL SUMMARY (spend to date, forecast, variance), ## BENEFITS REALISATION (per benefit: owner, baseline → target → current, RAG), ## RISK PROFILE (top 5 risks with impact/likelihood/mitigation/owner), ## DECISIONS REQUIRED (specific asks of the Board), ## FORWARD LOOK (next quarter priorities), ## ASKS OF THE BOARD.`;
 
-    const prompt = `Programme: ${programme.name} (${programme.type})
-Vision: ${programme.vision || programme.objective}
-Sponsor: ${programme.sponsor} · SRO: ${programme.sro}
-Phase: ${programme.phase}
-Report date: ${fmtL(d(0))}
-Audience: ${meta.label}
+    const prompt = `Programme: ${programme.name} (${programme.type})\nSponsor: ${programme.sponsor}\nSRO: ${programme.sro}\nPhase: ${programme.phase}\nDate: ${fmtL(d(0))}\nPHI: ${phi}/100\n\nTasks: ${tasks.filter(t=>t.status==="complete").length}/${tasks.length} complete, ${tasks.filter(t=>t.status==="in-progress").length} in progress\nOpen risks: ${risks.filter(r=>r.status==="Open").length}\n\nMETRICS:\n${metrics.map(m=>`- ${m.name}: ${fmtVal(m)} vs ${m.target}${m.unit} [${m.rag}] — ${m.note}`).join("\n")}\n\nTASKS:\n${tasks.slice(0,15).map(t=>`- [${t.status}] ${t.phase}: ${t.name} (${t.owner}) ${t.progress}%`).join("\n")}\n\nRISKS:\n${risks.filter(r=>r.status==="Open").map(r=>`- [${r.impact}] ${r.title} — ${r.mitigation} (${r.owner})`).join("\n")||"None"}\n\nBENEFITS:\n${benefits.map(b=>`- ${b.title} (${b.type}) [${b.status}] Owner: ${b.owner} — ${b.baseline}${b.unit} → ${b.target}${b.unit}`).join("\n")||"None defined"}\n\nRAID:\n${raidItems.filter(i=>i.status!=="Closed").slice(0,8).map(i=>`- [${i.type}] ${i.title}`).join("\n")||"None"}`;
 
-PROGRAMME HEALTH:
-- Portfolio Health Index: ${phi}/100 (${phi >= 70 ? "Green" : phi >= 50 ? "Amber" : "Red"})
-- Tasks complete: ${tasks.filter(t => t.status === "complete").length}/${tasks.length}
-- Tasks in progress: ${tasks.filter(t => t.status === "in-progress").length}
-- Open risks: ${risks.filter(r => r.status === "Open").length}
-- RAID items open: ${raidItems.filter(i => i.status === "Open" || i.status === "Active").length}
-- Benefits: ${benefits.length} tracked (${benefits.filter(b => b.status === "realised").length} realised, ${benefits.filter(b => b.status === "at-risk").length} at risk)
-
-METRICS:
-${metrics.map(m => `- ${m.name}: ${fmtVal(m)} vs target ${m.target}${m.unit} [${m.rag.toUpperCase()}] — ${m.note}`).join("\n")}
-
-OPEN RISKS:
-${risks.filter(r => r.status === "Open").map(r => `- [${r.impact}] ${r.title} — ${r.mitigation} (${r.owner})`).join("\n") || "None"}
-
-RAID ITEMS:
-${raidItems.filter(i => i.status !== "Closed" && i.status !== "Agreed").slice(0, 8).map(i => `- [${i.type.toUpperCase()}] ${i.title}: ${i.description || ""}`).join("\n") || "None"}
-
-UPCOMING CALENDAR EVENTS:
-${calendarEvents.slice(0, 6).map(e => `- ${e.title} on ${e.date} [${e.type}]`).join("\n") || "None scheduled"}${extraSummary}`;
-
-    try {
-      const r = await aiCall(SYS, [{ role: "user", content: prompt }]);
-      setReport(r);
-    } catch (e) { setReport("⚠ AI engine error — could not generate report."); }
+    try { const r = await aiCall(SYS, [{ role: "user", content: prompt }]); setReport(r); }
+    catch (e) { setReport("⚠ Error generating report."); }
     setLoading(false);
   }
 
   function copy() { navigator.clipboard?.writeText(report || ""); setCopied(true); setTimeout(() => setCopied(false), 2000); }
 
-  function renderReport(text) {
-    const sections = text.split(/^##\s/m).filter(Boolean);
-    return sections.map((sec, i) => {
-      const lines = sec.split("\n");
-      const title = lines[0].trim();
-      const body = lines.slice(1).join("\n").trim();
-      return (
-        <div key={i} style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: i === 0 ? phiC : meta.color, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 7, display: "flex", alignItems: "center", gap: 6 }}>
-            {i === 0 && <div style={{ width: 7, height: 7, borderRadius: "50%", background: phiC, animation: "blink 2s infinite" }} />}
-            {title}
-          </div>
-          <div style={{ fontSize: 11, fontFamily: "var(--font-b)", color: "var(--text)", lineHeight: 1.75, whiteSpace: "pre-wrap" }}>
-            {body.split("\n").map((line, j) => {
-              if (line.startsWith("- ")) {
-                return <div key={j} style={{ display: "flex", gap: 8, marginBottom: 3 }}>
-                  <span style={{ color: meta.color, flexShrink: 0, marginTop: 2 }}>·</span>
-                  <span>{line.slice(2)}</span>
-                </div>;
-              }
-              return <p key={j} style={{ marginBottom: 4 }}>{line}</p>;
-            })}
-          </div>
-        </div>
-      );
-    });
-  }
-
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 400, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-      <div style={{ width: "min(760px,100%)", height: "min(85vh,760px)", background: "var(--bg1)", border: "1px solid var(--border2)", borderRadius: 10, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,0.8)", display: "flex", flexDirection: "column" }}>
-        <div style={{ padding: "12px 18px", borderBottom: "1px solid var(--border)", background: "var(--bg2)", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+      <div style={{ width: "min(800px,100%)", height: "min(85vh,780px)", background: "var(--bg1)", border: "1px solid var(--border2)", borderRadius: 12, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,0.8)", display: "flex", flexDirection: "column" }}>
+        <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border)", background: "var(--bg2)", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
           <div>
-            <div style={{ fontSize: 12, fontFamily: "var(--font-m)", color: meta.color, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 2 }}>{meta.icon} {meta.label}</div>
-            <div style={{ fontSize: 13, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)" }}>{programme.name} · {fmtL(d(0))}</div>
+            <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 2 }}>📊 {label}</div>
+            <div style={{ fontSize: 15, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)" }}>{programme.name} · {fmtL(d(0))}</div>
           </div>
-          <div style={{ display: "flex", gap: 7, alignItems: "center" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", background: `${phiC}15`, border: `1px solid ${phiC}40`, borderRadius: 20 }}>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: phiC }} />
-              <span style={{ fontSize: 12, fontFamily: "var(--font-m)", color: phiC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em" }}>PHI {phi}</span>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", background: `${phiC}15`, border: `1px solid ${phiC}40`, borderRadius: 20 }}>
+              <div style={{ width: 7, height: 7, borderRadius: "50%", background: phiC }} />
+              <span style={{ fontSize: 11, fontFamily: "var(--font-m)", color: phiC, fontWeight: 600 }}>PHI {phi}</span>
             </div>
-            {report && <button onClick={copy} style={{ fontSize: 12, fontFamily: "var(--font-m)", padding: "5px 11px", background: "rgba(42,191,191,0.15)", border: "1px solid rgba(42,191,191,0.3)", borderRadius: 5, color: "var(--accent)" }}>{copied ? "Copied ✓" : "Copy"}</button>}
-            {report && <button onClick={generate} disabled={loading} style={{ fontSize: 12, fontFamily: "var(--font-m)", padding: "5px 11px", background: `${meta.color}15`, border: `1px solid ${meta.color}30`, borderRadius: 5, color: meta.color }}>↻ Refresh</button>}
-            <button onClick={onClose} style={{ color: "var(--text3)", fontSize: 16, padding: "2px 5px" }}>✕</button>
+            {report && <button onClick={copy} style={{ fontSize: 12, padding: "6px 14px", background: "rgba(42,191,191,0.15)", border: "1px solid rgba(42,191,191,0.3)", borderRadius: 6, color: "var(--accent)" }}>{copied ? "Copied ✓" : "Copy"}</button>}
+            {report && <button onClick={generate} disabled={loading} style={{ fontSize: 12, padding: "6px 14px", background: "rgba(245,197,68,0.15)", border: "1px solid rgba(245,197,68,0.3)", borderRadius: 6, color: "var(--yellow)" }}>↻ Refresh</button>}
+            <button onClick={onClose} style={{ color: "var(--text3)", fontSize: 18, padding: "2px 6px" }}>✕</button>
           </div>
         </div>
-        <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px" }}>
-          {loading && (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 12 }}>
-              <Spinner s={20} />
-              <div style={{ fontSize: 12, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em", animation: "shimmer 1.5s infinite" }}>Generating {meta.label.toLowerCase()}…</div>
-            </div>
-          )}
-          {report && !loading && renderReport(report)}
+        <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px" }}>
+          {loading && <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 14 }}><Spinner s={22} /><div style={{ fontSize: 13, fontFamily: "var(--font-d)", color: "var(--text3)", animation: "shimmer 1.5s infinite" }}>Generating {label.toLowerCase()}…</div></div>}
+          {report && !loading && report.split(/^##\s/m).filter(Boolean).map((sec, i) => {
+            const lines = sec.split("\n"); const title = lines[0].trim(); const body = lines.slice(1).join("\n").trim();
+            return (<div key={i} style={{ marginBottom: 22 }}>
+              <div style={{ fontSize: 12, fontFamily: "var(--font-d)", fontWeight: 700, color: i === 0 ? phiC : "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>{title}</div>
+              <div style={{ fontSize: 14, fontFamily: "var(--font-b)", color: "var(--text)", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>
+                {body.split("\n").map((line, j) => line.startsWith("- ") ? <div key={j} style={{ display: "flex", gap: 8, marginBottom: 4 }}><span style={{ color: "var(--accent)", flexShrink: 0 }}>·</span><span>{line.slice(2)}</span></div> : <p key={j} style={{ marginBottom: 4 }}>{line}</p>)}
+              </div>
+            </div>);
+          })}
         </div>
       </div>
     </div>
   );
 };
 
-const ReportsTab = ({ state, onOpenReport }) => {
-  const enabled = state.programme.enabledOutputs || [];
-  if (!enabled.length) return (
-    <div style={{ padding: "32px", textAlign: "center", fontSize: 12, fontFamily: "var(--font-m)", color: "var(--text3)" }}>No output types configured. Start a new programme and select outputs in Stage 1.</div>
-  );
-  return (
-    <div style={{ padding: "16px 20px" }}>
-      <div style={{ marginBottom: 14 }}>
-        <div style={{ fontSize: 13, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)", marginBottom: 3 }}>Reports & Outputs</div>
-        <div style={{ fontSize: 12, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Generate formal outputs from live programme data</div>
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(320px,1fr))", gap: 12 }}>
-        {enabled.map((out, i) => {
-          const meta = OUTPUT_TYPES[out.type] || OUTPUT_TYPES.highlight;
-          const due = out.nextDue;
-          const daysToDue = due ? daysUntil(due) : null;
-          const dueColour = daysToDue !== null && daysToDue <= 3 ? "#E8734A" : daysToDue !== null && daysToDue <= 7 ? "#F5C544" : "var(--text3)";
-          return (
-            <div key={i} className="fu" style={{ animationDelay: `${i * 0.05}s`, background: "var(--bg2)", border: `1px solid ${meta.color}30`, borderTop: `3px solid ${meta.color}`, borderRadius: 8, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 9 }}>
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 5 }}>
-                    <span style={{ fontSize: 18 }}>{meta.icon}</span>
-                    <div>
-                      <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: meta.color, textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 600 }}>{out.frequency}</div>
-                      <div style={{ fontSize: 12, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)", lineHeight: 1.3 }}>{meta.label}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <p style={{ fontSize: 11, fontFamily: "var(--font-b)", color: "var(--text2)", lineHeight: 1.55 }}>{meta.desc}</p>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border)", paddingTop: 9 }}>
-                <div>
-                  <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Audience</div>
-                  <div style={{ fontSize: 11, fontFamily: "var(--font-b)", color: "var(--text2)" }}>{out.audience || "—"}</div>
-                </div>
-                {due && <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Next Due</div>
-                  <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: dueColour }}>{fmt(due)}{daysToDue !== null && ` · ${daysToDue > 0 ? "in " + daysToDue + "d" : daysToDue === 0 ? "today" : Math.abs(daysToDue) + "d overdue"}`}</div>
-                </div>}
-              </div>
-              <button onClick={() => onOpenReport(out.type)} style={{ width: "100%", background: meta.color, color: "#000", border: "none", borderRadius: 5, padding: "8px", fontFamily: "var(--font-d)", fontWeight: 700, fontSize: 11, marginTop: 4 }}>Generate Report</button>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
 // ══════════════════════════════════════════════════════════════════════════════
-// MAIN DASHBOARD
+// MAIN DASHBOARD — 5 tabs
 // ══════════════════════════════════════════════════════════════════════════════
-const Dashboard = ({ state, setState, onNewProgramme }) => {
+const Dashboard = ({ state, setState }) => {
   const { programme, tasks, risks, metrics, raidItems = [], calendarEvents = [], benefits = [], stakeholders = [] } = state;
-
   const setTasks = fn => setState(p => ({ ...p, tasks: typeof fn === "function" ? fn(p.tasks) : fn }));
   const setRisks = fn => setState(p => ({ ...p, risks: typeof fn === "function" ? fn(p.risks) : fn }));
   const setMetrics = fn => setState(p => ({ ...p, metrics: typeof fn === "function" ? fn(p.metrics) : fn }));
   const setRAID = fn => setState(p => ({ ...p, raidItems: typeof fn === "function" ? fn(p.raidItems || []) : fn }));
   const setBenefits = fn => setState(p => ({ ...p, benefits: typeof fn === "function" ? fn(p.benefits || []) : fn }));
 
-  const [tab, setTab] = useState("metrics");
+  const [tab, setTab] = useState("updates");
   const [selTask, setSelTask] = useState(null);
-  const [hlTask, setHlTask] = useState(null);
-  const [openMetric, setOpenM] = useState(null);
-  const [openBenefit, setOpenBenefit] = useState(null);
   const [openReport, setOpenReport] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [role, setRole] = useState("Programme Manager");
-  const [insights, setInsights] = useState([]);
-  const [insightLoad, setInsightLoad] = useState(false);
-  const [contextView, setContextView] = useState(null);
-  const [messages, setMessages] = useState([{ role: "assistant", content: `Programme "${programme.name}" is live.\n\n${tasks.length} tasks · ${risks.filter(r => r.status === "Open").length} open risks · ${metrics.length} metrics · ${benefits.length} benefits · ${raidItems.length} RAID items.\n\nAsk me anything — "Brief me for steerco", "Which benefits are at risk?", "What do I tell the CFO?", or describe updates to apply.` }]);
-  const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [messages, setMessages] = useState([{ role: "assistant", content: `Programme "${programme.name}" is loaded.\n\n${tasks.length} tasks · ${risks.filter(r => r.status === "Open").length} open risks · ${metrics.length} metrics · ${benefits.length} benefits tracked.\n\nAsk me anything — "Brief me for steerco", "Which benefits are at risk?", "What should I tell Legal?", or describe updates to apply.` }]);
+  const [input, setInput] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [contextView, setContextView] = useState(null);
   const bottomRef = useRef(null);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
@@ -1049,232 +578,248 @@ const Dashboard = ({ state, setState, onNewProgramme }) => {
   const phiC = phi >= 70 ? "#5DC484" : phi >= 50 ? "#F5C544" : "#E8734A";
   const openRisks = risks.filter(r => r.status === "Open").length;
 
-  // Generate insights
-  const generateInsights = useCallback(async () => {
-    setInsightLoad(true);
-    const SYS = `You are APEX Insight Intelligence. Role: ${role}. Generate 3-6 proactive insight cards for this PMO user.
-Return ONLY a JSON array (no markdown):
-[{"id":"ins1","category":"milestone|meeting|risk|task|stakeholder|report|benefit|custom","title":"short title","body":"2-3 sentence actionable insight","priority":"high|medium|low","actions":["View Details","Take Action"]}]
-Focus on:
-- Upcoming report deadlines (check enabledOutputs.nextDue vs today)
-- Benefits at risk or approaching realisation date
-- Meeting prep needs (steerco, board)
-- Risk escalations
-- Blocked tasks or tasks due soon
-- Stakeholder comms needed
-Tailor insights to the user's role.`;
-    const prompt = `Programme: ${programme.name} (${programme.type}, ${programme.phase})
-Vision: ${programme.vision || programme.objective}
-SRO: ${programme.sro || programme.sponsor}
-Today: ${d(0)}
-Role: ${role}
-Enabled outputs: ${JSON.stringify(programme.enabledOutputs || [])}
-Tasks: ${JSON.stringify(tasks.map(t => ({ id: t.id, name: t.name, status: t.status, owner: t.owner, end: t.end, phase: t.phase })))}
-Risks: ${JSON.stringify(risks.filter(r => r.status === "Open").map(r => ({ id: r.id, title: r.title, impact: r.impact, owner: r.owner })))}
-Metrics: ${JSON.stringify(metrics.map(m => ({ id: m.id, name: m.name, value: m.value, target: m.target, rag: m.rag })))}
-Benefits: ${JSON.stringify(benefits.map(b => ({ id: b.id, title: b.title, owner: b.owner, status: b.status, expectedRealisation: b.expectedRealisation, type: b.type })))}
-Calendar: ${JSON.stringify(calendarEvents.slice(0, 10))}
-RAID: ${JSON.stringify(raidItems.filter(i => i.status === "Open" || i.status === "Active" || i.status === "Pending").slice(0, 10))}`;
-    try {
-      const raw = await aiCall(SYS, [{ role: "user", content: prompt }]);
-      const parsed = JSON.parse(raw.replace(/```json|```/g, "").trim());
-      setInsights(parsed.map((ins, i) => ({ ...ins, id: ins.id || `ins-${uid()}` })));
-    } catch (e) { /* silent */ }
-    setInsightLoad(false);
-  }, [role, tasks, risks, metrics, calendarEvents, raidItems, benefits, programme]);
+  const TABS = [
+    { id: "updates", label: "Programme Updates", icon: "📋" },
+    { id: "metrics", label: "Metrics & KPIs", icon: "📊" },
+    { id: "plan", label: "Plan View", icon: "📐" },
+    { id: "risks", label: "Risks & Mitigations", icon: "⚠" },
+    { id: "command", label: "◆ Command", icon: "◆" },
+  ];
 
-  useEffect(() => { generateInsights(); }, []);
+  // Updates sub-view
+  const [updateView, setUpdateView] = useState("weekly");
 
+  // AI Command
   const SYSTEM = `You are APEX Command Intelligence for "${programme.name}" (${programme.type}, ${programme.phase}).
-User role: ${role}. Vision: ${programme.vision || programme.objective}. Sponsor: ${programme.sponsor}. SRO: ${programme.sro || programme.sponsor}.
-Enabled outputs: ${JSON.stringify(programme.enabledOutputs || [])}
+Sponsor: ${programme.sponsor}. SRO: ${programme.sro}.
 TASKS: ${JSON.stringify(tasks.map(t => ({ id: t.id, name: t.name, status: t.status, progress: t.progress, owner: t.owner, phase: t.phase, end: t.end })))}
 RISKS: ${JSON.stringify(risks)}
 METRICS: ${JSON.stringify(metrics.map(m => ({ id: m.id, name: m.name, family: m.family, value: m.value, target: m.target, unit: m.unit, rag: m.rag })))}
-BENEFITS: ${JSON.stringify(benefits.map(b => ({ id: b.id, title: b.title, type: b.type, owner: b.owner, status: b.status, baseline: b.baseline, target: b.target, unit: b.unit, expectedRealisation: b.expectedRealisation })))}
+BENEFITS: ${JSON.stringify(benefits.map(b => ({ id: b.id, title: b.title, type: b.type, owner: b.owner, status: b.status })))}
 CALENDAR: ${JSON.stringify(calendarEvents)}
 RAID: ${JSON.stringify(raidItems.slice(0, 15))}
 
-You can respond in two ways:
-1. Conversational answer (max 150 words, senior PMO tone)
-2. If the user asks a contextual question (e.g. "what should I tell legal?", "brief me for steerco", "which benefits are at risk?"), include a contextView JSON block that references real IDs from the data above:
+Respond conversationally (max 200 words, senior PMO tone). If the user asks for a focused view, include:
 \`\`\`json
-{"contextView":{"title":"View Title","sections":[{"title":"Section","type":"tasks|risks|metrics|benefits|text","taskIds":["t1"],"riskIds":["r1"],"metricIds":["m1"],"benefitIds":["b1"],"content":"text content","commentary":"analyst note"}]}}
+{"contextView":{"title":"...","sections":[{"title":"...","type":"tasks|risks|metrics|benefits|text","taskIds":[],"riskIds":[],"metricIds":[],"benefitIds":[],"content":"...","commentary":"..."}]}}
 \`\`\`
-3. If the user describes updates, include an updates JSON block:
+If updates are described:
 \`\`\`json
-{"taskUpdates":[{"id":"t1","status":"in-progress","progress":30}],"newRisks":[],"riskUpdates":[],"metricUpdates":[],"newRAID":[],"benefitUpdates":[{"id":"b1","status":"at-risk"}]}
-\`\`\`
-Omit JSON blocks if not needed.`;
+{"taskUpdates":[],"newRisks":[],"riskUpdates":[],"metricUpdates":[],"benefitUpdates":[]}
+\`\`\``;
 
-  async function send() {
-    if (!input.trim() || loading) return;
+  async function sendCommand() {
+    if (!input.trim() || aiLoading) return;
     const nMsgs = [...messages, { role: "user", content: input.trim() }];
-    setMessages(nMsgs); setInput(""); setLoading(true);
+    setMessages(nMsgs); setInput(""); setAiLoading(true);
     try {
       const reply = await aiCall(SYSTEM, nMsgs.map(m => ({ role: m.role, content: m.content })));
-      // Parse contextView
       const cvMatch = reply.match(/```json\s*(\{"contextView"[\s\S]*?\})\s*```/);
-      if (cvMatch) {
-        try { const cv = JSON.parse(cvMatch[1]); setContextView(cv.contextView); } catch (e) { }
-      }
-      // Parse updates
-      const jm = reply.match(/```json\s*(\{"(?:taskUpdates|newRisks|riskUpdates|metricUpdates|newRAID|benefitUpdates)[\s\S]*?\})\s*```/);
-      if (jm) {
-        try {
-          const u = JSON.parse(jm[1]);
-          if (u.taskUpdates?.length) setTasks(prev => prev.map(t => { const up = u.taskUpdates.find(x => x.id === t.id); return up ? { ...t, ...up } : t; }));
-          if (u.newRisks?.length) setRisks(prev => [...prev, ...u.newRisks]);
-          if (u.riskUpdates?.length) setRisks(prev => prev.map(r => { const up = u.riskUpdates.find(x => x.id === r.id); return up ? { ...r, ...up } : r; }));
-          if (u.metricUpdates?.length) setMetrics(prev => prev.map(m => { const up = u.metricUpdates.find(x => x.id === m.id); if (!up) return m; return { ...m, ...up, trend: [...(m.trend || []).slice(1), up.value ?? m.value], lastUpdated: d(0) }; }));
-          if (u.newRAID?.length) setRAID(prev => [...prev, ...u.newRAID]);
-          if (u.benefitUpdates?.length) setBenefits(prev => prev.map(b => { const up = u.benefitUpdates.find(x => x.id === b.id); return up ? { ...b, ...up } : b; }));
-        } catch (e) { }
-      }
+      if (cvMatch) { try { setContextView(JSON.parse(cvMatch[1]).contextView); } catch (e) {} }
+      const jm = reply.match(/```json\s*(\{"(?:taskUpdates|newRisks|riskUpdates|metricUpdates|benefitUpdates)[\s\S]*?\})\s*```/);
+      if (jm) { try {
+        const u = JSON.parse(jm[1]);
+        if (u.taskUpdates?.length) setTasks(prev => prev.map(t => { const up = u.taskUpdates.find(x => x.id === t.id); return up ? { ...t, ...up } : t; }));
+        if (u.newRisks?.length) setRisks(prev => [...prev, ...u.newRisks]);
+        if (u.metricUpdates?.length) setMetrics(prev => prev.map(m => { const up = u.metricUpdates.find(x => x.id === m.id); if (!up) return m; return { ...m, ...up, trend: [...(m.trend||[]).slice(1), up.value ?? m.value], lastUpdated: d(0) }; }));
+        if (u.benefitUpdates?.length) setBenefits(prev => prev.map(b => { const up = u.benefitUpdates.find(x => x.id === b.id); return up ? { ...b, ...up } : b; }));
+      } catch (e) {} }
       setMessages(prev => [...prev, { role: "assistant", content: reply.replace(/```json[\s\S]*?```/g, "").trim() }]);
     } catch (e) { setMessages(prev => [...prev, { role: "assistant", content: "⚠ AI engine error." }]); }
-    setLoading(false);
+    setAiLoading(false);
   }
 
-  function navigateToTask(task) { setTab("gantt"); setHlTask(task.id); setSelTask(task); }
-
-  // Gantt
+  // Gantt setup
   const GW = 70, gS = new Date(today); gS.setDate(gS.getDate() - 14);
   const todayPct = (daysBetween(gS, today) / GW) * 100;
   const phases = [...new Set(tasks.map(t => t.phase))];
   const wkL = []; for (let i = 0; i <= GW; i += 7) { const dt = new Date(gS); dt.setDate(dt.getDate() + i); wkL.push({ pct: (i / GW) * 100, label: fmt(dt.toISOString().split("T")[0]) }); }
 
-  const TABS = [{ id: "metrics", label: "Dashboard" }, { id: "gantt", label: `Gantt (${tasks.length})` }, { id: "risks", label: `Risks (${openRisks})` }, { id: "raid", label: `RAID (${raidItems.length})` }, { id: "reports", label: `📊 Reports (${(programme.enabledOutputs || []).length})` }, { id: "ai", label: "◆ Command" }];
-  const [activeFam, setActiveFam] = useState("all");
-  const filteredMetrics = activeFam === "all" ? metrics : metrics.filter(m => m.family === activeFam);
+  const SUGGESTED = ["Brief me for steerco", "Which benefits are at risk?", "What's blocking progress?", "Summarise this week's achievements", "What should I tell the CFO?"];
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg0)", display: "flex", flexDirection: "column" }}>
       {/* Header */}
-      <div style={{ background: "var(--bg1)", borderBottom: "1px solid var(--border)", padding: "0 18px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 48, flexShrink: 0, position: "sticky", top: 0, zIndex: 50 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 24, height: 24, background: "var(--accent)", borderRadius: 3, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: "#000", fontFamily: "var(--font-d)" }}>◆</div>
-          <div><div style={{ fontSize: 12, fontFamily: "var(--font-d)", fontWeight: 800, color: "var(--text)", letterSpacing: "-0.02em" }}>APEX</div><div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", letterSpacing: "0.15em", textTransform: "uppercase" }}>Programme Execution & Control</div></div>
-          <div style={{ width: 1, height: 16, background: "var(--border)", margin: "0 5px" }} />
-          <div><div style={{ fontSize: 12, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)" }}>{programme.name}</div><div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{programme.type} · {programme.phase}</div></div>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <select value={role} onChange={e => setRole(e.target.value)} style={{ background: "var(--bg3)", border: "1px solid var(--border2)", borderRadius: 4, color: "var(--accent)", fontFamily: "var(--font-m)", fontSize: 12, padding: "4px 8px", textTransform: "uppercase" }}>
-            {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-          </select>
-          <button onClick={() => setShowModal(true)} style={{ fontSize: 11, fontFamily: "var(--font-m)", padding: "5px 11px", background: "rgba(42,191,191,0.1)", border: "1px solid rgba(42,191,191,0.3)", borderRadius: 4, color: "var(--accent)", textTransform: "uppercase" }}>+ New Programme</button>
-          <div style={{ display: "flex", alignItems: "center", gap: 4 }}><span style={{ width: 5, height: 5, borderRadius: "50%", background: "#5DC484", display: "inline-block", animation: "blink 2s infinite" }} /><span style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "#5DC484", textTransform: "uppercase" }}>Live</span></div>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div style={{ display: "flex", borderBottom: "1px solid var(--border)", background: "var(--bg2)", flexShrink: 0 }}>
-        {[{ l: "Complete", v: tasks.filter(t => t.status === "complete").length, c: "#5DC484" }, { l: "In Progress", v: tasks.filter(t => t.status === "in-progress").length, c: "#F5C544" }, { l: "Open Risks", v: openRisks, c: "#E8734A" }, { l: "RAID Open", v: raidItems.filter(i => i.status === "Open" || i.status === "Active" || i.status === "Pending").length, c: "#A78BFA" }, { l: "On Track", v: g, c: "#5DC484" }, { l: "PHI", v: phi, c: phiC }].map((s, i, arr) => (
-          <div key={i} style={{ flex: 1, padding: "8px 10px", borderRight: i < arr.length - 1 ? "1px solid var(--border)" : "none", textAlign: "center" }}>
-            <div style={{ fontSize: 17, fontFamily: "var(--font-d)", fontWeight: 700, color: s.c }}>{s.v}</div>
-            <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 2 }}>{s.l}</div>
+      <div style={{ background: "var(--bg1)", borderBottom: "1px solid var(--border)", padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 52, flexShrink: 0, position: "sticky", top: 0, zIndex: 50 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ width: 28, height: 28, background: "var(--accent)", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#000", fontFamily: "var(--font-d)" }}>◆</div>
+          <div>
+            <div style={{ fontSize: 15, fontFamily: "var(--font-d)", fontWeight: 800, color: "var(--text)" }}>{programme.name}</div>
+            <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--accent)" }}>{programme.type} · {programme.phase}</div>
           </div>
-        ))}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#5DC484", animation: "blink 2s infinite" }} />
+          <span style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "#5DC484" }}>LIVE</span>
+        </div>
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", background: "var(--bg1)", borderBottom: "1px solid var(--border)", padding: "0 18px", flexShrink: 0 }}>
-        {TABS.map(t => <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: "10px 16px", fontSize: 11, fontFamily: "var(--font-d)", fontWeight: tab === t.id ? 700 : 500, color: tab === t.id ? "var(--accent)" : "var(--text2)", borderBottom: tab === t.id ? "2px solid var(--accent)" : "2px solid transparent", background: "none", textTransform: "none", letterSpacing: "0", transition: "all 0.15s", cursor: "pointer" }}>{t.label}</button>)}
+      <div style={{ display: "flex", background: "var(--bg1)", borderBottom: "1px solid var(--border)", padding: "0 12px", flexShrink: 0, overflowX: "auto" }}>
+        {TABS.map(t => <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: "12px 18px", fontSize: 13, fontFamily: "var(--font-d)", fontWeight: tab === t.id ? 700 : 500, color: tab === t.id ? "var(--text)" : "var(--text2)", borderBottom: tab === t.id ? "3px solid var(--accent)" : "3px solid transparent", background: tab === t.id ? "rgba(42,191,191,0.05)" : "none", transition: "all 0.15s", whiteSpace: "nowrap", cursor: "pointer" }}>{t.icon} {t.label}</button>)}
       </div>
 
-      {/* Content */}
-      <div style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
-        <div style={{ flex: 1, overflowY: tab === "ai" ? "hidden" : "auto", display: tab === "ai" ? "flex" : "block", flexDirection: "column" }}>
+      {/* Tab content */}
+      <div style={{ flex: 1, display: tab === "command" ? "flex" : "block", flexDirection: "column", overflow: tab === "command" ? "hidden" : "auto" }}>
 
-          {/* METRICS */}
-          {tab === "metrics" && <div style={{ padding: "15px 18px" }}>
-            <InsightCardsRow insights={insights} loading={insightLoad} onDismiss={id => setInsights(prev => prev.filter(i => i.id !== id))} onAction={(ins, action) => { setTab("ai"); setInput(action === "View Details" ? `Tell me more about: ${ins.title}` : ins.title); }} onRefresh={generateInsights} />
-            <BenefitsStrip benefits={benefits} onOpen={setOpenBenefit} />
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr) 170px", gap: 8, marginBottom: 16 }}>
-              {[{ l: "On Track", v: g, c: "#5DC484" }, { l: "At Risk", v: a, c: "#F5C544" }, { l: "Off Track", v: r, c: "#E8734A" }, { l: "Total", v: metrics.length, c: "var(--text2)" }, { l: "Families", v: [...new Set(metrics.map(m => m.family))].length, c: "var(--violet)" }].map((s, i) => (<div key={i} style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 6, padding: "9px 12px" }}><div style={{ fontSize: 21, fontFamily: "var(--font-d)", fontWeight: 800, color: s.c }}>{s.v}</div><div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 2 }}>{s.l}</div></div>))}
-              <div style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 6, padding: "9px 12px" }}><div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--violet)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>Portfolio Health</div><div style={{ display: "flex", alignItems: "center", gap: 8 }}><div style={{ fontSize: 25, fontFamily: "var(--font-d)", fontWeight: 800, color: phiC }}>{phi}</div><div style={{ flex: 1 }}><div style={{ background: "var(--bg0)", borderRadius: 3, height: 4, overflow: "hidden" }}><div style={{ width: `${phi}%`, height: "100%", background: `linear-gradient(90deg,${phiC}88,${phiC})`, borderRadius: 3 }} /></div><div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", marginTop: 2 }}>Target 80+</div></div></div></div>
+        {/* ── TAB 1: PROGRAMME UPDATES ── */}
+        {tab === "updates" && <div style={{ padding: "20px 24px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <div style={{ fontSize: 18, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)" }}>Programme Updates</div>
+            <div style={{ display: "flex", gap: 6 }}>
+              {[["weekly","Weekly"],["monthly","Monthly"],["quarterly","Quarterly"]].map(([k,l]) => (
+                <button key={k} onClick={() => setUpdateView(k)} style={{ fontSize: 12, fontFamily: "var(--font-d)", padding: "6px 16px", borderRadius: 6, fontWeight: updateView === k ? 700 : 500, color: updateView === k ? "#000" : "var(--text2)", background: updateView === k ? "var(--accent)" : "var(--bg3)", border: `1px solid ${updateView === k ? "var(--accent)" : "var(--border2)"}`, transition: "all 0.15s" }}>{l}</button>
+              ))}
             </div>
-            <div style={{ display: "flex", gap: 5, marginBottom: 12, flexWrap: "wrap" }}>
-              {[["all", "All", "var(--text2)"], ...Object.entries(FAMILIES).map(([k, v]) => [k, v.label, v.color])].map(([key, label, color]) => <button key={key} onClick={() => setActiveFam(key)} style={{ fontSize: 11, fontFamily: "var(--font-m)", padding: "3px 9px", border: `1px solid ${activeFam === key ? color : "var(--border2)"}`, borderRadius: 20, color: activeFam === key ? color : "var(--text3)", background: activeFam === key ? `${color}15` : "transparent", textTransform: "uppercase", transition: "all 0.15s" }}>{label}</button>)}
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(265px,1fr))", gap: 9 }}>
-              {filteredMetrics.map((m, i) => { const fam = FAMILIES[m.family] || FAMILIES.delivery, rag = RAG[m.rag] || RAG.amber, pct = progPct(m), linked = (m.links || []).map(l => ({ ...l, task: tasks.find(t => t.id === l.taskId) })).filter(l => l.task);
-                return (<div key={m.id} className="fu" onClick={() => setOpenM(m)} style={{ animationDelay: `${i * 0.025}s`, background: "var(--bg2)", border: "1px solid var(--border)", borderTop: `2px solid ${rag.color}`, borderRadius: 6, padding: "11px 13px", cursor: "pointer", transition: "background 0.15s, border-color 0.15s", display: "flex", flexDirection: "column", gap: 7 }} onMouseEnter={e => { e.currentTarget.style.background = "var(--bg3)"; }} onMouseLeave={e => { e.currentTarget.style.background = "var(--bg2)"; }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 7 }}><div style={{ flex: 1 }}><div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: fam.color, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 2 }}>{fam.icon} {fam.label}</div><div style={{ fontSize: 12, fontFamily: "var(--font-b)", color: "var(--text)", fontWeight: 500, lineHeight: 1.3 }}>{m.name}</div></div><div style={{ textAlign: "right", flexShrink: 0 }}><div style={{ fontSize: 18, fontFamily: "var(--font-d)", fontWeight: 800, color: rag.color, lineHeight: 1 }}>{fmtVal(m)}</div><div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", marginTop: 2 }}>of {m.target}{m.unit}</div></div></div>
-                  <div style={{ background: "var(--bg0)", borderRadius: 3, height: 3, overflow: "hidden" }}><div style={{ width: `${pct}%`, height: "100%", background: `linear-gradient(90deg,${rag.color}66,${rag.color})`, borderRadius: 3, transition: "width 0.5s ease" }} /></div>
-                  <p style={{ fontSize: 12, fontFamily: "var(--font-m)", color: "var(--text2)", lineHeight: 1.5 }}>{m.note}</p>
-                  {linked.length > 0 && <div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>{linked.slice(0, 3).map(l => <LinkChip key={l.taskId} task={l.task} linkType={l.type} onClick={navigateToTask} />)}</div>}
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}><span style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)" }}>{fmt(m.lastUpdated)}</span><Spark data={m.trend} color={rag.color} positive={m.direction === "higher"} /></div>
-                </div>);
+          </div>
+          <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
+            {[{ l: "Complete", v: tasks.filter(t => t.status === "complete").length, c: "#5DC484" }, { l: "In Progress", v: tasks.filter(t => t.status === "in-progress").length, c: "#F5C544" }, { l: "Open Risks", v: openRisks, c: "#E8734A" }, { l: "Benefits", v: benefits.length, c: "#5DC484" }, { l: "PHI", v: phi, c: phiC }].map((s, i) => (
+              <div key={i} style={{ flex: 1, background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 8, padding: "12px", textAlign: "center" }}>
+                <div style={{ fontSize: 22, fontFamily: "var(--font-d)", fontWeight: 700, color: s.c }}>{s.v}</div>
+                <div style={{ fontSize: 11, fontFamily: "var(--font-b)", color: "var(--text2)", marginTop: 3 }}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+          <button onClick={() => setOpenReport(updateView)} style={{ width: "100%", background: "var(--accent)", color: "#000", borderRadius: 8, padding: "14px", fontFamily: "var(--font-d)", fontWeight: 700, fontSize: 15, marginBottom: 16 }}>Generate {updateView === "weekly" ? "Weekly Update" : updateView === "monthly" ? "Monthly Report" : "Quarterly SteerCo Pack"}</button>
+          {/* Quick view of tasks by phase */}
+          {phases.map(phase => (
+            <div key={phase} style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 13, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--accent)", marginBottom: 6 }}>◆ {phase}</div>
+              {tasks.filter(t => t.phase === phase).map(task => {
+                const meta = STATUS_META[task.status] || STATUS_META["not-started"];
+                return (
+                  <div key={task.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", marginBottom: 4, background: "var(--bg2)", borderRadius: 6, border: "1px solid var(--border)", borderLeft: `3px solid ${meta.color}` }}>
+                    <Badge status={task.status} />
+                    <span style={{ fontSize: 13, fontFamily: "var(--font-b)", color: "var(--text)", flex: 1 }}>{task.name}</span>
+                    <span style={{ fontSize: 12, fontFamily: "var(--font-m)", color: "var(--text2)" }}>{task.owner}</span>
+                    <span style={{ fontSize: 12, fontFamily: "var(--font-m)", color: "var(--text3)" }}>{fmt(task.end)}</span>
+                    <span style={{ fontSize: 12, fontFamily: "var(--font-m)", color: meta.color }}>{task.progress}%</span>
+                  </div>
+                );
               })}
             </div>
-          </div>}
+          ))}
+        </div>}
 
-          {/* GANTT */}
-          {tab === "gantt" && <div style={{ overflowX: "auto" }}>
-            <div style={{ display: "flex", borderBottom: "1px solid var(--border)" }}><div style={{ width: 205, minWidth: 205, padding: "5px 10px", fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase" }}>Task</div><div style={{ flex: 1, position: "relative", height: 24 }}>{wkL.map((w, i) => <span key={i} style={{ position: "absolute", left: `${w.pct}%`, fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", transform: "translateX(-50%)", top: 5, whiteSpace: "nowrap" }}>{w.label}</span>)}</div></div>
+        {/* ── TAB 2: METRICS & KPIs ── */}
+        {tab === "metrics" && <div style={{ padding: "20px 24px" }}>
+          <div style={{ fontSize: 18, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)", marginBottom: 6 }}>Metrics & KPIs</div>
+          <div style={{ fontSize: 13, fontFamily: "var(--font-b)", color: "var(--text2)", marginBottom: 16 }}>Benefits tracking and progress metrics</div>
+          {/* Benefits strip */}
+          {benefits.length > 0 && <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 14, fontFamily: "var(--font-d)", fontWeight: 700, color: "#5DC484", marginBottom: 8 }}>✚ Benefits ({benefits.filter(b => b.status === "realised").length}/{benefits.length} realised)</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))", gap: 10 }}>
+              {benefits.map(b => { const st = BENEFIT_STATUS[b.status] || BENEFIT_STATUS.planned; const tm = BENEFIT_TYPES[b.type] || BENEFIT_TYPES.operational; return (
+                <div key={b.id} className="fu" style={{ background: "var(--bg2)", border: `1px solid ${tm.color}30`, borderLeft: `3px solid ${tm.color}`, borderRadius: 6, padding: "12px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                    <span style={{ fontSize: 11, fontFamily: "var(--font-m)", color: tm.color, textTransform: "uppercase" }}>{tm.label}</span>
+                    <span style={{ fontSize: 11, fontFamily: "var(--font-m)", color: st.color, background: st.bg, padding: "2px 6px", borderRadius: 3 }}>{st.label}</span>
+                  </div>
+                  <div style={{ fontSize: 13, fontFamily: "var(--font-b)", color: "var(--text)", fontWeight: 600, marginBottom: 4 }}>{b.title}</div>
+                  <div style={{ fontSize: 12, fontFamily: "var(--font-m)", color: "var(--text2)" }}>{b.baseline}{b.unit} → {b.target}{b.unit} · {b.owner}</div>
+                </div>
+              ); })}
+            </div>
+          </div>}
+          {/* Metric cards */}
+          <div style={{ fontSize: 14, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)", marginBottom: 8 }}>KPI Tracker</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 10 }}>
+            {metrics.map((m, i) => { const fam = FAMILIES[m.family] || FAMILIES.delivery; const rag = RAG[m.rag] || RAG.amber; const pct = progPct(m); return (
+              <div key={m.id} className="fu" style={{ animationDelay: `${i*0.02}s`, background: "var(--bg2)", border: "1px solid var(--border)", borderTop: `3px solid ${rag.color}`, borderRadius: 8, padding: "14px", display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <div><div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: fam.color, textTransform: "uppercase" }}>{fam.icon} {fam.label}</div><div style={{ fontSize: 13, fontFamily: "var(--font-b)", color: "var(--text)", fontWeight: 600, marginTop: 2 }}>{m.name}</div></div>
+                  <div style={{ textAlign: "right" }}><div style={{ fontSize: 20, fontFamily: "var(--font-d)", fontWeight: 800, color: rag.color }}>{fmtVal(m)}</div><div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)" }}>of {m.target}{m.unit}</div></div>
+                </div>
+                <div style={{ background: "var(--bg0)", borderRadius: 4, height: 4, overflow: "hidden" }}><div style={{ width: `${pct}%`, height: "100%", background: rag.color, borderRadius: 4, transition: "width 0.5s" }} /></div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}><span style={{ fontSize: 12, fontFamily: "var(--font-b)", color: "var(--text2)" }}>{m.note}</span><Spark data={m.trend} color={rag.color} positive={m.direction === "higher"} /></div>
+              </div>
+            ); })}
+          </div>
+        </div>}
+
+        {/* ── TAB 3: PLAN VIEW (Gantt) ── */}
+        {tab === "plan" && <div style={{ padding: "20px 24px" }}>
+          <div style={{ fontSize: 18, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)", marginBottom: 16 }}>Plan View</div>
+          <div style={{ overflowX: "auto" }}>
+            <div style={{ display: "flex", borderBottom: "1px solid var(--border)" }}><div style={{ width: 220, minWidth: 220, padding: "6px 12px", fontSize: 12, fontFamily: "var(--font-d)", fontWeight: 600, color: "var(--text2)" }}>Task</div><div style={{ flex: 1, position: "relative", height: 28 }}>{wkL.map((w, i) => <span key={i} style={{ position: "absolute", left: `${w.pct}%`, fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", transform: "translateX(-50%)", top: 6, whiteSpace: "nowrap" }}>{w.label}</span>)}</div></div>
             {phases.map(phase => (<div key={phase}>
-              <div style={{ padding: "4px 10px", background: "var(--bg3)", borderBottom: "1px solid var(--border)" }}><span style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--accent)", textTransform: "uppercase", fontWeight: 600 }}>◆ {phase}</span></div>
+              <div style={{ padding: "6px 12px", background: "var(--bg3)", borderBottom: "1px solid var(--border)" }}><span style={{ fontSize: 12, fontFamily: "var(--font-d)", color: "var(--accent)", fontWeight: 700 }}>◆ {phase}</span></div>
               {tasks.filter(t => t.phase === phase).map(task => {
                 const left = Math.max(0, daysBetween(gS, new Date(task.start))), width = Math.max(1, daysBetween(new Date(task.start), new Date(task.end)));
-                const lp = (left / GW) * 100, wp = (width / GW) * 100, meta = STATUS_META[task.status] || STATUS_META["not-started"], hl = task.id === hlTask;
-                return (<div key={task.id} id={`tr-${task.id}`} style={{ display: "flex", alignItems: "center", borderBottom: "1px solid var(--border)", minHeight: 33, background: hl ? "var(--bg4)" : "var(--bg1)", transition: "background 0.3s" }} onMouseEnter={e => e.currentTarget.style.background = "var(--bg2)"} onMouseLeave={e => e.currentTarget.style.background = hl ? "var(--bg4)" : "var(--bg1)"}>
-                  <div style={{ width: 205, minWidth: 205, padding: "0 10px", display: "flex", alignItems: "center", gap: 4 }}><Badge status={task.status} /><span style={{ fontSize: 12, fontFamily: "var(--font-m)", color: "var(--text2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{task.name}</span></div>
-                  <div style={{ flex: 1, position: "relative", height: 33 }}>
+                const lp = (left / GW) * 100, wp = (width / GW) * 100, meta = STATUS_META[task.status] || STATUS_META["not-started"];
+                return (<div key={task.id} style={{ display: "flex", alignItems: "center", borderBottom: "1px solid var(--border)", minHeight: 36, background: "var(--bg1)" }} onMouseEnter={e => e.currentTarget.style.background = "var(--bg2)"} onMouseLeave={e => e.currentTarget.style.background = "var(--bg1)"}>
+                  <div style={{ width: 220, minWidth: 220, padding: "0 12px", display: "flex", alignItems: "center", gap: 6 }}><Badge status={task.status} /><span style={{ fontSize: 12, fontFamily: "var(--font-b)", color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{task.name}</span></div>
+                  <div style={{ flex: 1, position: "relative", height: 36 }}>
                     {wkL.map((w, i) => <div key={i} style={{ position: "absolute", left: `${w.pct}%`, top: 0, bottom: 0, borderLeft: "1px solid var(--border)" }} />)}
-                    {todayPct >= 0 && todayPct <= 100 && <div style={{ position: "absolute", left: `${todayPct}%`, top: 0, bottom: 0, borderLeft: "1px dashed var(--accent)", zIndex: 2, opacity: 0.7 }} />}
-                    {left < GW && left + width > 0 && <div onClick={() => { setSelTask(task); setHlTask(task.id); }} style={{ position: "absolute", left: `${Math.max(0, lp)}%`, width: `${Math.min(wp, 100 - Math.max(0, lp))}%`, top: "50%", transform: "translateY(-50%)", height: 18, background: meta.bg, border: `1px solid ${meta.color}55`, borderLeft: `3px solid ${meta.color}`, borderRadius: 3, overflow: "hidden", cursor: "pointer", transition: "box-shadow 0.3s" }} onMouseEnter={e => e.currentTarget.style.filter = "brightness(1.3)"} onMouseLeave={e => e.currentTarget.style.filter = "brightness(1)"}><div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${task.progress}%`, background: `${meta.color}20` }} /><span style={{ position: "relative", zIndex: 1, fontSize: 11, fontFamily: "var(--font-m)", color: meta.color, paddingLeft: 4, lineHeight: "18px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>{task.name}</span></div>}
+                    {todayPct >= 0 && todayPct <= 100 && <div style={{ position: "absolute", left: `${todayPct}%`, top: 0, bottom: 0, borderLeft: "2px dashed var(--accent)", zIndex: 2, opacity: 0.7 }} />}
+                    {left < GW && left + width > 0 && <div onClick={() => setSelTask(task)} style={{ position: "absolute", left: `${Math.max(0, lp)}%`, width: `${Math.min(wp, 100 - Math.max(0, lp))}%`, top: "50%", transform: "translateY(-50%)", height: 20, background: meta.bg, border: `1px solid ${meta.color}55`, borderLeft: `3px solid ${meta.color}`, borderRadius: 4, overflow: "hidden", cursor: "pointer" }} onMouseEnter={e => e.currentTarget.style.filter = "brightness(1.3)"} onMouseLeave={e => e.currentTarget.style.filter = "brightness(1)"}><div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${task.progress}%`, background: `${meta.color}25` }} /><span style={{ position: "relative", zIndex: 1, fontSize: 10, fontFamily: "var(--font-m)", color: meta.color, paddingLeft: 5, lineHeight: "20px", whiteSpace: "nowrap" }}>{task.name}</span></div>}
                   </div>
                 </div>);
               })}
             </div>))}
-          </div>}
+          </div>
+        </div>}
 
-          {/* RISKS */}
-          {tab === "risks" && <div>
-            <div style={{ padding: "7px 14px", background: "var(--bg2)", borderBottom: "1px solid var(--border)", fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase" }}>{risks.length} total · {openRisks} open</div>
-            {risks.map((r, i) => (<div key={r.id} style={{ padding: "10px 14px", borderBottom: "1px solid var(--border)", background: i % 2 === 0 ? "var(--bg1)" : "var(--bg0)", display: "grid", gridTemplateColumns: "1fr auto", gap: 7 }}>
-              <div><div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}><span style={{ fontSize: 11, fontFamily: "var(--font-m)", fontWeight: 600, color: { High: "#E8734A", Medium: "#F5C544", Low: "#5DC484" }[r.impact], textTransform: "uppercase" }}>▲ {r.impact}</span><span style={{ fontSize: 12, fontFamily: "var(--font-b)", fontWeight: 500, color: "var(--text)" }}>{r.title}</span><span style={{ fontSize: 11, fontFamily: "var(--font-m)", color: r.status === "Mitigated" ? "var(--green)" : "var(--yellow)", background: r.status === "Mitigated" ? "rgba(93,196,132,0.1)" : "rgba(245,197,68,0.1)", padding: "1px 5px", borderRadius: 2 }}>{r.status}</span></div><p style={{ fontSize: 12, color: "var(--text2)", fontFamily: "var(--font-m)", lineHeight: 1.6 }}><span style={{ color: "var(--text3)" }}>MITIGATION: </span>{r.mitigation}</p></div>
-              <div style={{ textAlign: "right" }}><div style={{ fontSize: 12, fontFamily: "var(--font-m)", color: "var(--blue)" }}>{r.owner}</div></div>
+        {/* ── TAB 4: RISKS & MITIGATIONS ── */}
+        {tab === "risks" && <div style={{ padding: "20px 24px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <div>
+              <div style={{ fontSize: 18, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)" }}>Risks & Mitigations</div>
+              <div style={{ fontSize: 13, fontFamily: "var(--font-b)", color: "var(--text2)" }}>{risks.length} total · {openRisks} open</div>
+            </div>
+          </div>
+          {risks.length === 0 && <div style={{ textAlign: "center", padding: 40, fontSize: 14, color: "var(--text3)" }}>No risks recorded yet. Use the Command tab to add risks via natural language.</div>}
+          {risks.map((rk, i) => {
+            const impColor = { High: "#E8734A", Medium: "#F5C544", Low: "#5DC484" }[rk.impact] || "var(--text3)";
+            const needsAction = rk.impact === "High" && rk.status === "Open";
+            return (
+              <div key={rk.id} className="fu" style={{ animationDelay: `${i * 0.02}s`, background: needsAction ? "rgba(232,115,74,0.08)" : "var(--bg2)", border: `1px solid ${needsAction ? "rgba(232,115,74,0.3)" : "var(--border)"}`, borderLeft: `4px solid ${impColor}`, borderRadius: 8, padding: "14px 16px", marginBottom: 8 }}>
+                {needsAction && <div style={{ fontSize: 11, fontFamily: "var(--font-d)", color: "#E8734A", fontWeight: 700, marginBottom: 6 }}>⚠ ACTION REQUIRED</div>}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                      <span style={{ fontSize: 11, fontFamily: "var(--font-m)", color: impColor, fontWeight: 700, textTransform: "uppercase" }}>▲ {rk.impact}</span>
+                      <span style={{ fontSize: 14, fontFamily: "var(--font-b)", fontWeight: 600, color: "var(--text)" }}>{rk.title}</span>
+                      <span style={{ fontSize: 11, fontFamily: "var(--font-m)", color: rk.status === "Mitigated" ? "#5DC484" : "#F5C544", background: rk.status === "Mitigated" ? "rgba(93,196,132,0.12)" : "rgba(245,197,68,0.12)", padding: "2px 8px", borderRadius: 4 }}>{rk.status}</span>
+                    </div>
+                    <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.6 }}><span style={{ color: "var(--text3)", fontWeight: 600 }}>Mitigation: </span>{rk.mitigation}</p>
+                  </div>
+                  <div style={{ textAlign: "right", flexShrink: 0 }}>
+                    <div style={{ fontSize: 13, fontFamily: "var(--font-m)", color: "var(--blue)" }}>{rk.owner}</div>
+                    <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", marginTop: 2 }}>L'hood: {rk.likelihood}</div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>}
+
+        {/* ── TAB 5: COMMAND ── */}
+        {tab === "command" && <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+          <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
+            {contextView && <ContextView view={contextView} tasks={tasks} risks={risks} metrics={metrics} raidItems={raidItems} benefits={benefits} onClose={() => setContextView(null)} onNavigateTask={t => { setTab("plan"); setSelTask(t); }} onOpenMetric={() => setTab("metrics")} onOpenBenefit={() => setTab("metrics")} />}
+            {messages.map((m, i) => (<div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
+              {m.role === "assistant" && <div style={{ width: 24, height: 24, borderRadius: 4, background: "var(--accent)", marginRight: 8, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: "#000", fontFamily: "var(--font-d)", marginTop: 2 }}>◆</div>}
+              <div style={{ maxWidth: "80%", padding: "10px 14px", borderRadius: m.role === "user" ? "12px 12px 4px 12px" : "12px 12px 12px 4px", background: m.role === "user" ? "rgba(42,191,191,0.15)" : "var(--bg3)", border: `1px solid ${m.role === "user" ? "rgba(42,191,191,0.3)" : "var(--border)"}`, fontSize: 14, fontFamily: "var(--font-b)", color: "var(--text)", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{m.content}</div>
             </div>))}
-          </div>}
-
-          {/* RAID */}
-          {tab === "raid" && <RAIDLog raidItems={raidItems} setRaidItems={setRAID} />}
-
-          {/* REPORTS */}
-          {tab === "reports" && <ReportsTab state={state} onOpenReport={setOpenReport} />}
-
-          {/* AI COMMAND */}
-          {tab === "ai" && <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-            <div style={{ padding: "7px 14px", borderBottom: "1px solid var(--border)", background: "var(--bg3)", display: "flex", alignItems: "center", gap: 7, flexShrink: 0 }}>
-              <span style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--accent)", display: "inline-block", animation: "blink 2s infinite" }} />
-              <span style={{ fontSize: 12, fontFamily: "var(--font-b)", color: "var(--text2)" }}>Anthropic Claude</span>
-              <span style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", marginLeft: "auto" }}>Role: {role} · Ask contextual questions for focused views</span>
-            </div>
-            <div style={{ flex: 1, overflowY: "auto", padding: "11px 14px", display: "flex", flexDirection: "column", gap: 9 }}>
-              {contextView && <ContextView view={contextView} tasks={tasks} risks={risks} metrics={metrics} raidItems={raidItems} benefits={benefits} onClose={() => setContextView(null)} onNavigateTask={navigateToTask} onOpenMetric={m => { setTab("metrics"); setTimeout(() => setOpenM(m), 100); }} onOpenBenefit={b => { setTab("metrics"); setTimeout(() => setOpenBenefit(b), 100); }} />}
-              {messages.map((m, i) => (<div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
-                {m.role === "assistant" && <div style={{ width: 20, height: 20, borderRadius: 3, background: "var(--accent)", marginRight: 6, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: "#000", fontFamily: "var(--font-d)", marginTop: 2 }}>◆</div>}
-                <div style={{ maxWidth: "78%", padding: "7px 11px", borderRadius: m.role === "user" ? "8px 8px 2px 8px" : "8px 8px 8px 2px", background: m.role === "user" ? "rgba(42,191,191,0.12)" : "var(--bg3)", border: `1px solid ${m.role === "user" ? "rgba(42,191,191,0.25)" : "var(--border)"}`, fontSize: 12, fontFamily: "var(--font-b)", color: "var(--text)", lineHeight: 1.65, whiteSpace: "pre-wrap" }}>{m.content}</div>
-              </div>))}
-              {loading && <div style={{ display: "flex", alignItems: "center", gap: 7 }}><div style={{ width: 20, height: 20, borderRadius: 3, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: "#000", fontFamily: "var(--font-d)" }}>◆</div><Spinner /></div>}
-              <div ref={bottomRef} />
-            </div>
-            <div style={{ padding: "8px 12px", borderTop: "1px solid var(--border)", background: "var(--bg2)", display: "flex", gap: 6, flexShrink: 0 }}>
-              <textarea value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} placeholder="Ask anything — 'Brief me for steerco', 'What should I tell the CFO?', or describe updates…" rows={2} style={{ flex: 1, background: "var(--bg3)", border: "1px solid var(--border2)", borderRadius: 5, color: "var(--text)", fontFamily: "var(--font-b)", fontSize: 12, padding: "7px 9px", resize: "none", lineHeight: 1.5 }} />
-              <button onClick={send} disabled={loading || !input.trim()} style={{ background: loading || !input.trim() ? "var(--bg3)" : "var(--accent)", color: loading || !input.trim() ? "var(--text3)" : "#000", border: "none", borderRadius: 5, padding: "0 14px", fontFamily: "var(--font-d)", fontWeight: 700, fontSize: 11, transition: "all 0.2s", minWidth: 48 }}>{loading ? <Spinner /> : "↑"}</button>
-            </div>
-          </div>}
-        </div>
-
-        {selTask && <TaskDrawer task={tasks.find(t => t.id === selTask.id)} tasks={tasks} metrics={metrics} onClose={() => { setSelTask(null); setHlTask(null); }} onUpdate={(id, upd) => setTasks(prev => prev.map(t => t.id === id ? { ...t, ...upd } : t))} onOpenMetric={m => { setSelTask(null); setHlTask(null); setTab("metrics"); setTimeout(() => setOpenM(m), 100); }} />}
-        {openMetric && <MetricPanel metric={metrics.find(m => m.id === openMetric.id) || openMetric} tasks={tasks} onClose={() => setOpenM(null)} onSave={updated => setMetrics(prev => prev.map(m => m.id === updated.id ? updated : m))} onNavigate={navigateToTask} />}
-        {openBenefit && <BenefitDrawer benefit={benefits.find(b => b.id === openBenefit.id) || openBenefit} metrics={metrics} onClose={() => setOpenBenefit(null)} onSave={updated => setBenefits(prev => prev.map(b => b.id === updated.id ? updated : b))} />}
+            {aiLoading && <div style={{ display: "flex", alignItems: "center", gap: 8 }}><div style={{ width: 24, height: 24, borderRadius: 4, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: "#000", fontFamily: "var(--font-d)" }}>◆</div><Spinner /></div>}
+            <div ref={bottomRef} />
+          </div>
+          {/* Suggested questions */}
+          <div style={{ padding: "0 20px 8px", display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {SUGGESTED.map((q, i) => (
+              <button key={i} onClick={() => { setInput(q); }} style={{ fontSize: 12, fontFamily: "var(--font-b)", padding: "6px 12px", background: "var(--bg3)", border: "1px solid var(--border2)", borderRadius: 20, color: "var(--text2)", transition: "all 0.15s", cursor: "pointer" }} onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.color = "var(--accent)"; }} onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border2)"; e.currentTarget.style.color = "var(--text2)"; }}>{q}</button>
+            ))}
+          </div>
+          <div style={{ padding: "8px 20px 16px", borderTop: "1px solid var(--border)", background: "var(--bg2)", display: "flex", gap: 8, flexShrink: 0 }}>
+            <textarea value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendCommand(); } }} placeholder="Ask anything — 'Brief me for steerco', 'What's blocking?', or describe updates…" rows={2} style={{ flex: 1, background: "var(--bg3)", border: "1px solid var(--border2)", borderRadius: 8, color: "var(--text)", fontFamily: "var(--font-b)", fontSize: 14, padding: "10px 14px", resize: "none", lineHeight: 1.5 }} />
+            <button onClick={sendCommand} disabled={aiLoading || !input.trim()} style={{ background: aiLoading || !input.trim() ? "var(--bg3)" : "var(--accent)", color: aiLoading || !input.trim() ? "var(--text3)" : "#000", borderRadius: 8, padding: "0 18px", fontFamily: "var(--font-d)", fontWeight: 700, fontSize: 14, transition: "all 0.2s", minWidth: 52 }}>{aiLoading ? <Spinner /> : "↑"}</button>
+          </div>
+        </div>}
       </div>
 
-      {showModal && <OnboardingWizard isModal={true} onComplete={newState => { setState(newState); setShowModal(false); }} onCancel={() => setShowModal(false)} />}
-      {openReport && <ReportViewer outputType={openReport} state={state} onClose={() => setOpenReport(null)} />}
+      {/* Report overlay */}
+      {openReport && <ReportGenerator reportType={openReport} label={openReport === "weekly" ? "Weekly Project Update" : openReport === "monthly" ? "Monthly Programme Report" : "Quarterly SteerCo Pack"} state={state} onClose={() => setOpenReport(null)} />}
     </div>
   );
 };
@@ -1283,10 +828,10 @@ Omit JSON blocks if not needed.`;
 // ROOT
 // ══════════════════════════════════════════════════════════════════════════════
 export default function APEX() {
-  const [screen, setScreen] = useState("onboarding");
+  const [screen, setScreen] = useState("setup");
   const [state, setState] = useState(null);
 
-  return screen === "onboarding"
-    ? <OnboardingWizard onComplete={s => { setState(s); setScreen("dashboard"); }} isModal={false} />
-    : <Dashboard state={state} setState={setState} onNewProgramme={() => setScreen("onboarding")} />;
+  return screen === "setup"
+    ? <GuidedSetup onComplete={s => { setState(s); setScreen("dashboard"); }} />
+    : <Dashboard state={state} setState={setState} />;
 }
