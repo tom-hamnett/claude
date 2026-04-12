@@ -81,59 +81,125 @@ actual asset. It must be unambiguous. If a human director picked this
 up, they should be able to shoot it without asking questions.
 
 THE CORE-FIVE STRUCTURE (20s = 5 x 4s segments):
-  1. HOOK (0-4s)     — hyper-stylised character, scroll-stopping line
-  2. TENSION (4-8s)  — uncomfortable truth, data/text-led
-  3. PIVOT (8-12s)   — clean data visualisation, the new way
-  4. PROOF (12-16s)  — actual product output, concrete artefact
-  5. BOOKEND (16-20s) — return to Hook state, CTA
+
+=== INVIOLABLE SEGMENT RULES ===
+
+  1. HOOK (0-4s) — THE CHARACTER (Theo) APPEARS HERE
+     - Hyper-stylised Theo in one of the locked scenes
+     - Animated from hero.png via Veo startFrame
+     - This is the ONLY segment where the character appears (besides Bookend)
+     - Scroll-stopping opening line
+
+  2. TENSION (4-8s) — NO CHARACTER. DATA/TEXT ONLY.
+     - Bold text overlays on dark background (#0a0a0f)
+     - OR a data point / statistic filling the screen
+     - The uncomfortable truth visualised as typography or numbers
+     - NO Theo. NO character. NO person. Pure text/data.
+
+  3. PIVOT (8-12s) — NO CHARACTER. DATA VISUALISATION ONLY.
+     - Clean chart, metric dashboard, or product UI screenshot
+     - Brand colours: #6c63ff purple, #ffd166 gold on #0a0a0f dark
+     - Can be a screen recording of the actual product running
+     - NO Theo. NO character. Purely visual evidence.
+
+  4. PROOF (12-16s) — NO CHARACTER. PRODUCT OUTPUT ONLY.
+     - Actual product screenshot or screen recording
+     - Real data from the Data Vault (PRISM benchmark, Analyst's Edge diagnostic, Atlas trade log)
+     - Concrete artefact — real numbers, real output, not a claim
+     - NO Theo. NO character. The product speaks for itself.
+
+  5. BOOKEND (16-20s) — THE CHARACTER (Theo) RETURNS
+     - EXACT same scene as Hook — same environment, same lighting
+     - Theo addresses the viewer directly (helmet turns to camera)
+     - Subtle open-palm gesture
+     - CTA as text overlay (e.g. "See it run. quantumtools.ai")
+
+=== END SEGMENT RULES ===
+
+If you put the character in Tension, Pivot, or Proof, the brief is WRONG.
+Those three segments are: text, data viz, and product output ONLY.
 
 THE CHARACTER:
 Theo — The Obsidian Seraph. Male-presenting entity, vantablack suit,
 smooth obsidian teardrop helmet, three floating cyan neon halos. No
 human facial features. Always animated from a locked hero reference
-image via Veo startFrame.
+image via Veo startFrame. ONLY appears in Hook and Bookend.
 
-THE SCENES (you will choose from these):
-Each scene has an id, name, description, environment prompt, and
-start/end frame prompts. The operator has provided a list — pick the
-ones that fit the idea. Hook and Bookend typically use the same scene.
+THE SCENES (you will choose ONE for Hook+Bookend):
+Each scene has an id, name, description, and environment prompt. The
+operator has provided a list. Pick the one that best fits the idea's
+tone. Hook and Bookend MUST use the same scene.
+
+DATA SOURCES:
+For Pivot and Proof segments, reference specific data from the Data Vault
+whenever possible. If the required data hasn't been added yet, state
+explicitly in data_references: {"source_id": null, "needed": "description
+of what data is required"}.
 
 YOUR OUTPUT: A JSON object with these fields:
 
 {
-  "hook_scene_id": "id of the scene for the Hook segment",
-  "tension_scene_id": "id or empty if using data overlay instead",
-  "pivot_scene_id": "id or empty if using data visualisation",
-  "proof_scene_id": "id or empty if using screen recording",
-  "bookend_scene_id": "usually same as hook_scene_id",
+  "hook_scene_id": "id of the scene for Hook AND Bookend (same scene)",
+  "bookend_scene_id": "MUST match hook_scene_id",
   "spoken_script": "EXACT spoken text, one continuous paragraph, 50-60 words",
   "segments": {
     "hook": {
       "duration_seconds": 4,
-      "visual_direction": "what the camera sees, 1-2 sentences",
+      "visual_type": "character_in_scene",
+      "visual_direction": "Theo in [scene]. Camera direction. 1-2 sentences.",
       "spoken_text": "exact words spoken during this segment",
       "text_overlay": "on-screen text, max 6 words",
-      "transition_out": "how this segment ends"
+      "transition_out": "how this segment ends (e.g. hard cut to black)"
     },
-    "tension": { ... same structure ... },
-    "pivot": { ... },
-    "proof": { ... },
-    "bookend": { ... }
+    "tension": {
+      "duration_seconds": 4,
+      "visual_type": "text_data_overlay",
+      "visual_direction": "Bold white text on #0a0a0f: '[the uncomfortable truth]'. No character. No person.",
+      "spoken_text": "exact words",
+      "text_overlay": "the main data point or statement",
+      "transition_out": "crossfade 0.3s"
+    },
+    "pivot": {
+      "duration_seconds": 4,
+      "visual_type": "data_visualisation",
+      "visual_direction": "Clean chart/metric on brand dark background. Describe exactly what data is shown.",
+      "spoken_text": "exact words",
+      "text_overlay": "key metric label",
+      "transition_out": "hard cut"
+    },
+    "proof": {
+      "duration_seconds": 4,
+      "visual_type": "product_screenshot",
+      "visual_direction": "Actual product output — describe what the viewer sees. Name the specific product.",
+      "spoken_text": "exact words",
+      "text_overlay": "caption pointing to key figure",
+      "transition_out": "crossfade 0.3s"
+    },
+    "bookend": {
+      "duration_seconds": 4,
+      "visual_type": "character_in_scene",
+      "visual_direction": "SAME scene as Hook. Theo turns to camera, open-palm gesture. Exact match.",
+      "spoken_text": "exact words — the closing line",
+      "text_overlay": "CTA: e.g. 'See it run. quantumtools.ai'",
+      "transition_out": "hold 0.5s on final frame"
+    }
   },
-  "voice_directive": "specific tone direction for TTS",
+  "voice_directive": "specific TTS tone direction for this piece",
   "data_references": [
-    {"source_id": 1, "used_in_segment": "proof", "how": "display as text overlay"}
+    {"source_id": 1, "used_in_segment": "proof", "how": "display as screenshot"},
+    {"source_id": null, "needed": "52-week Atlas performance log", "used_in_segment": "pivot"}
   ],
   "production_notes": "anything else a director needs to know"
 }
 
 CONSTRAINTS:
 - No shot exceeds 4 seconds
-- Hook and Bookend environments must match exactly
-- Spoken script is 50-60 words total (150 wpm = 20 seconds)
-- Voice is consistent throughout
-- No founder face, no human presenter
-- Edginess must match the brand voice — quiet authority, not loud hype
+- Hook and Bookend environments MUST match exactly
+- Character ONLY in Hook and Bookend — never in Tension, Pivot, Proof
+- Tension = text/data overlay on dark background — no scene, no character
+- Pivot = data visualisation — no scene, no character
+- Proof = product output — no scene, no character
+- Spoken script is 50-60 words total
 - Forbidden phrases: game-changer, revolutionary, disruptive, innovative,
   cutting-edge, unlock, synergy
 
@@ -366,6 +432,15 @@ def _render_brief_markdown(idea: Idea, raw: dict, scenes: list[Scene]) -> str:
     """Turn the JSON producer brief into a readable markdown document."""
     scene_map = {s.id: s for s in scenes}
 
+    # Visual type labels for clarity
+    visual_type_labels = {
+        "hook": "CHARACTER IN SCENE (Theo)",
+        "tension": "TEXT / DATA OVERLAY (no character)",
+        "pivot": "DATA VISUALISATION (no character)",
+        "proof": "PRODUCT SCREENSHOT (no character)",
+        "bookend": "CHARACTER IN SCENE (Theo — same as Hook)",
+    }
+
     lines = [
         f"# Producer Brief",
         f"**Idea #{idea.id}**: {idea.title}",
@@ -391,17 +466,18 @@ def _render_brief_markdown(idea: Idea, raw: dict, scenes: list[Scene]) -> str:
         if not seg_data:
             continue
 
-        scene_id_map = {
-            "hook": raw.get("hook_scene_id", ""),
-            "tension": raw.get("tension_scene_id", ""),
-            "pivot": raw.get("pivot_scene_id", ""),
-            "proof": raw.get("proof_scene_id", ""),
-            "bookend": raw.get("bookend_scene_id", ""),
-        }
-        scene_id = scene_id_map.get(seg_id, "")
+        # Determine scene (only Hook and Bookend have scenes)
+        scene_id = ""
+        if seg_id == "hook":
+            scene_id = raw.get("hook_scene_id", "")
+        elif seg_id == "bookend":
+            scene_id = raw.get("bookend_scene_id", "")
         scene = scene_map.get(scene_id) if scene_id else None
 
-        lines.append(f"### {seg_id.upper()} ({seg_data.get('duration_seconds', 4)}s)")
+        visual_type = seg_data.get("visual_type", visual_type_labels.get(seg_id, ""))
+        visual_label = visual_type_labels.get(seg_id, visual_type)
+
+        lines.append(f"### {seg_id.upper()} ({seg_data.get('duration_seconds', 4)}s) — {visual_label}")
         if scene:
             lines.append(f"**Scene:** {scene.name} (`{scene.id}`)")
         lines.append(f"**Visual:** {seg_data.get('visual_direction', '')}")
@@ -414,7 +490,10 @@ def _render_brief_markdown(idea: Idea, raw: dict, scenes: list[Scene]) -> str:
     if raw.get("data_references"):
         lines.append("## Data References")
         for ref in raw["data_references"]:
-            lines.append(f"- Source #{ref.get('source_id')} used in {ref.get('used_in_segment')}: {ref.get('how', '')}")
+            if ref.get("source_id"):
+                lines.append(f"- Source #{ref['source_id']} used in **{ref.get('used_in_segment')}**: {ref.get('how', '')}")
+            elif ref.get("needed"):
+                lines.append(f"- **NEEDS DATA**: {ref['needed']} (for **{ref.get('used_in_segment')}** segment)")
         lines.append("")
 
     if raw.get("production_notes"):
