@@ -14,7 +14,7 @@ _css.textContent = `
   --border:#1A5572;--border2:#1E6080;
   --accent:#2ABFBF;--orange:#E8734A;--yellow:#F5C544;--green:#5DC484;--red:#E85252;
   --blue:#4A9EFF;--violet:#A78BFA;--teal:#2ABFBF;
-  --text:#FFFFFF;--text2:#B8D4E3;--text3:#6B8FA3;
+  --text:#FFFFFF;--text2:#D0E1ED;--text3:#8AABBE;
   --font-d:'Outfit',sans-serif;--font-m:'JetBrains Mono',monospace;--font-b:'Inter',sans-serif;
 }
 body{background:var(--bg0);color:var(--text);font-family:var(--font-b);min-height:100vh}
@@ -222,13 +222,13 @@ const progPct = (m) => { if (m.direction === "lower" || m.direction === "lower-a
 
 // ── Micro Components ──────────────────────────────────────────────────────────
 const Spinner = ({ s = 14, c = "var(--accent)" }) => <div style={{ width: s, height: s, border: `2px solid var(--border2)`, borderTopColor: c, borderRadius: "50%", display: "inline-block", animation: "spin 0.8s linear infinite" }} />;
-const Badge = ({ status }) => { const m = STATUS_META[status] || STATUS_META["not-started"]; return <span style={{ fontSize: 8, fontFamily: "var(--font-m)", color: m.color, background: m.bg, border: `1px solid ${m.color}30`, padding: "2px 6px", borderRadius: 3, whiteSpace: "nowrap", textTransform: "uppercase" }}>{m.label}</span>; };
+const Badge = ({ status }) => { const m = STATUS_META[status] || STATUS_META["not-started"]; return <span style={{ fontSize: 10, fontFamily: "var(--font-m)", color: m.color, background: m.bg, border: `1px solid ${m.color}30`, padding: "2px 6px", borderRadius: 3, whiteSpace: "nowrap", textTransform: "uppercase" }}>{m.label}</span>; };
 const RagPip = ({ rag }) => { const r = RAG[rag] || RAG.amber; return <span style={{ width: 6, height: 6, borderRadius: "50%", background: r.color, display: "inline-block", flexShrink: 0 }} />; };
-const Conf = ({ c }) => { const col = c === "high" ? "#5DC484" : c === "medium" ? "#F5C544" : "#6B8FA3"; return <span style={{ fontSize: 7, fontFamily: "var(--font-m)", color: col, background: `${col}18`, border: `1px solid ${col}30`, padding: "1px 5px", borderRadius: 2, textTransform: "uppercase", letterSpacing: "0.08em" }}>{c || "?"}</span>; };
+const Conf = ({ c }) => { const col = c === "high" ? "#5DC484" : c === "medium" ? "#F5C544" : "#6B8FA3"; return <span style={{ fontSize: 9, fontFamily: "var(--font-m)", color: col, background: `${col}18`, border: `1px solid ${col}30`, padding: "1px 5px", borderRadius: 2, textTransform: "uppercase", letterSpacing: "0.08em" }}>{c || "?"}</span>; };
 
 const LinkChip = ({ task, linkType, onClick }) => {
   const lm = LINK_META[linkType] || LINK_META.influences;
-  return <span onClick={e => { e.stopPropagation(); onClick && onClick(task); }} title={lm.desc} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 8, fontFamily: "var(--font-m)", padding: "2px 7px", background: `${lm.color}18`, border: `1px solid ${lm.color}55`, borderLeft: `2px solid ${lm.color}`, borderRadius: 3, cursor: onClick ? "pointer" : "default", whiteSpace: "nowrap", opacity: lm.opacity, transition: "opacity 0.15s" }} onMouseEnter={e => { if (onClick) e.currentTarget.style.opacity = "1"; }} onMouseLeave={e => e.currentTarget.style.opacity = String(lm.opacity)}><span style={{ color: lm.color, fontWeight: 600, letterSpacing: "0.05em" }}>{lm.label}</span><span style={{ color: "var(--text3)" }}>·</span><span style={{ color: "var(--text2)" }}>{task.name.length > 20 ? task.name.slice(0, 19) + "…" : task.name}</span></span>;
+  return <span onClick={e => { e.stopPropagation(); onClick && onClick(task); }} title={lm.desc} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, fontFamily: "var(--font-m)", padding: "2px 7px", background: `${lm.color}18`, border: `1px solid ${lm.color}55`, borderLeft: `2px solid ${lm.color}`, borderRadius: 3, cursor: onClick ? "pointer" : "default", whiteSpace: "nowrap", opacity: lm.opacity, transition: "opacity 0.15s" }} onMouseEnter={e => { if (onClick) e.currentTarget.style.opacity = "1"; }} onMouseLeave={e => e.currentTarget.style.opacity = String(lm.opacity)}><span style={{ color: lm.color, fontWeight: 600, letterSpacing: "0.05em" }}>{lm.label}</span><span style={{ color: "var(--text3)" }}>·</span><span style={{ color: "var(--text2)" }}>{task.name.length > 20 ? task.name.slice(0, 19) + "…" : task.name}</span></span>;
 };
 
 // ── Sparkline ─────────────────────────────────────────────────────────────────
@@ -267,8 +267,8 @@ const InsightCard = ({ insight, onDismiss, onAction }) => {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <span style={{ fontSize: 14 }}>{cat.icon}</span>
-          <span style={{ fontSize: 7, fontFamily: "var(--font-m)", color: cat.color, textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600 }}>{cat.label}</span>
-          {insight.priority === "high" && <span style={{ fontSize: 6, fontFamily: "var(--font-m)", color: "#E8734A", background: "rgba(232,115,74,0.15)", border: "1px solid rgba(232,115,74,0.3)", padding: "1px 5px", borderRadius: 2, textTransform: "uppercase" }}>Urgent</span>}
+          <span style={{ fontSize: 9, fontFamily: "var(--font-m)", color: cat.color, textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600 }}>{cat.label}</span>
+          {insight.priority === "high" && <span style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "#E8734A", background: "rgba(232,115,74,0.15)", border: "1px solid rgba(232,115,74,0.3)", padding: "1px 5px", borderRadius: 2, textTransform: "uppercase" }}>Urgent</span>}
         </div>
         <button onClick={() => onDismiss(insight.id)} style={{ fontSize: 10, color: "var(--text3)", padding: "2px 4px", opacity: 0.5 }} onMouseEnter={e => e.currentTarget.style.opacity = "1"} onMouseLeave={e => e.currentTarget.style.opacity = "0.5"}>✕</button>
       </div>
@@ -277,7 +277,7 @@ const InsightCard = ({ insight, onDismiss, onAction }) => {
       {insight.actions?.length > 0 && (
         <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 2 }}>
           {insight.actions.map((action, i) => (
-            <button key={i} onClick={() => onAction(insight, action)} style={{ fontSize: 7, fontFamily: "var(--font-m)", padding: "3px 9px", background: i === 0 ? `${cat.color}20` : "transparent", border: `1px solid ${i === 0 ? cat.color + "50" : "var(--border2)"}`, borderRadius: 4, color: i === 0 ? cat.color : "var(--text3)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{action}</button>
+            <button key={i} onClick={() => onAction(insight, action)} style={{ fontSize: 9, fontFamily: "var(--font-m)", padding: "3px 9px", background: i === 0 ? `${cat.color}20` : "transparent", border: `1px solid ${i === 0 ? cat.color + "50" : "var(--border2)"}`, borderRadius: 4, color: i === 0 ? cat.color : "var(--text3)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{action}</button>
           ))}
         </div>
       )}
@@ -291,10 +291,10 @@ const InsightCardsRow = ({ insights, onDismiss, onAction, onRefresh, loading }) 
     <div style={{ marginBottom: 14 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-          <span style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 600 }}>◆ Proactive Insights</span>
-          <span style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)" }}>{insights.length} active</span>
+          <span style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 600 }}>◆ Proactive Insights</span>
+          <span style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)" }}>{insights.length} active</span>
         </div>
-        <button onClick={onRefresh} disabled={loading} style={{ fontSize: 7, fontFamily: "var(--font-m)", padding: "3px 9px", background: "rgba(42,191,191,0.1)", border: "1px solid rgba(42,191,191,0.3)", borderRadius: 4, color: "var(--accent)", opacity: loading ? 0.5 : 1 }}>{loading ? <Spinner s={8} /> : "↻ Refresh"}</button>
+        <button onClick={onRefresh} disabled={loading} style={{ fontSize: 9, fontFamily: "var(--font-m)", padding: "3px 9px", background: "rgba(42,191,191,0.1)", border: "1px solid rgba(42,191,191,0.3)", borderRadius: 4, color: "var(--accent)", opacity: loading ? 0.5 : 1 }}>{loading ? <Spinner s={8} /> : "↻ Refresh"}</button>
       </div>
       <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 6 }}>
         {loading && !insights.length && <div style={{ display: "flex", alignItems: "center", gap: 8, padding: 20 }}><Spinner /><span style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", animation: "shimmer 1.5s infinite" }}>Generating insights…</span></div>}
@@ -313,24 +313,24 @@ const ContextView = ({ view, tasks, risks, metrics, raidItems, benefits = [], on
     <div className="sd" style={{ background: "var(--bg2)", border: "1px solid var(--accent)30", borderRadius: 10, padding: "16px 18px", marginBottom: 14 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
         <div>
-          <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 3 }}>◆ Contextual View</div>
+          <div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 3 }}>◆ Contextual View</div>
           <div style={{ fontSize: 14, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)" }}>{view.title}</div>
         </div>
         <button onClick={onClose} style={{ color: "var(--text3)", fontSize: 14, padding: "2px 5px" }}>✕</button>
       </div>
       {view.sections?.map((sec, i) => (
         <div key={i} style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: 8, fontFamily: "var(--font-m)", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6, paddingBottom: 4, borderBottom: "1px solid var(--border)" }}>{sec.title}</div>
+          <div style={{ fontSize: 10, fontFamily: "var(--font-m)", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6, paddingBottom: 4, borderBottom: "1px solid var(--border)" }}>{sec.title}</div>
           {sec.type === "text" && <p style={{ fontSize: 10, fontFamily: "var(--font-b)", color: "var(--text2)", lineHeight: 1.65, whiteSpace: "pre-wrap" }}>{sec.content}</p>}
           {sec.type === "tasks" && sec.taskIds?.map(tid => { const t = tasks.find(x => x.id === tid); if (!t) return null; return (
             <div key={tid} onClick={() => onNavigateTask(t)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 8px", marginBottom: 3, background: "var(--bg3)", borderRadius: 5, border: "1px solid var(--border)", cursor: "pointer" }} onMouseEnter={e => e.currentTarget.style.borderColor = "var(--accent)"} onMouseLeave={e => e.currentTarget.style.borderColor = "var(--border)"}>
-              <Badge status={t.status} /><span style={{ fontSize: 9, fontFamily: "var(--font-b)", color: "var(--text)", flex: 1 }}>{t.name}</span><span style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)" }}>{t.owner} · {fmt(t.end)}</span>
+              <Badge status={t.status} /><span style={{ fontSize: 9, fontFamily: "var(--font-b)", color: "var(--text)", flex: 1 }}>{t.name}</span><span style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)" }}>{t.owner} · {fmt(t.end)}</span>
             </div>);
           })}
           {sec.type === "risks" && sec.riskIds?.map(rid => { const rk = risks.find(x => x.id === rid); if (!rk) return null; return (
             <div key={rid} style={{ padding: "6px 8px", marginBottom: 3, background: "var(--bg3)", borderRadius: 5, border: "1px solid var(--border)", borderLeft: `3px solid ${rk.impact === "High" ? "#E8734A" : rk.impact === "Medium" ? "#F5C544" : "#5DC484"}` }}>
               <div style={{ fontSize: 9, fontFamily: "var(--font-b)", color: "var(--text)" }}>{rk.title}</div>
-              <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", marginTop: 2 }}>{rk.owner} · {rk.mitigation}</div>
+              <div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", marginTop: 2 }}>{rk.owner} · {rk.mitigation}</div>
             </div>);
           })}
           {sec.type === "metrics" && sec.metricIds?.map(mid => { const mt = metrics.find(x => x.id === mid); if (!mt) return null; return (
@@ -340,8 +340,8 @@ const ContextView = ({ view, tasks, risks, metrics, raidItems, benefits = [], on
           })}
           {sec.type === "benefits" && sec.benefitIds?.map(bid => { const bn = benefits.find(x => x.id === bid); if (!bn) return null; const st = BENEFIT_STATUS[bn.status] || BENEFIT_STATUS.planned; const tm = BENEFIT_TYPES[bn.type] || BENEFIT_TYPES.operational; return (
             <div key={bid} onClick={() => onOpenBenefit && onOpenBenefit(bn)} style={{ padding: "6px 8px", marginBottom: 3, background: "var(--bg3)", borderRadius: 5, border: "1px solid var(--border)", borderLeft: `3px solid ${tm.color}`, cursor: "pointer" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}><span style={{ fontSize: 7, fontFamily: "var(--font-m)", color: st.color, background: st.bg, border: `1px solid ${st.color}30`, padding: "1px 5px", borderRadius: 2, textTransform: "uppercase" }}>{st.label}</span><span style={{ fontSize: 9, fontFamily: "var(--font-b)", color: "var(--text)", flex: 1 }}>{bn.title}</span></div>
-              <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)" }}>{bn.owner} · {bn.baseline}{bn.unit} → {bn.target}{bn.unit} · Due {fmt(bn.expectedRealisation)}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}><span style={{ fontSize: 9, fontFamily: "var(--font-m)", color: st.color, background: st.bg, border: `1px solid ${st.color}30`, padding: "1px 5px", borderRadius: 2, textTransform: "uppercase" }}>{st.label}</span><span style={{ fontSize: 9, fontFamily: "var(--font-b)", color: "var(--text)", flex: 1 }}>{bn.title}</span></div>
+              <div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)" }}>{bn.owner} · {bn.baseline}{bn.unit} → {bn.target}{bn.unit} · Due {fmt(bn.expectedRealisation)}</div>
             </div>);
           })}
           {sec.commentary && <p style={{ fontSize: 9, fontFamily: "var(--font-b)", color: "var(--text3)", lineHeight: 1.55, marginTop: 5, fontStyle: "italic" }}>{sec.commentary}</p>}
@@ -484,14 +484,14 @@ const OnboardingWizard = ({ onComplete, onCancel, isModal = false }) => {
       <div style={{ background: "var(--bg2)", borderBottom: "1px solid var(--border)", padding: "9px 18px", display: "flex", gap: 4, alignItems: "center", flexShrink: 0, flexWrap: "wrap" }}>
         {STAGES.map((s, i) => { const done = i < stageIdx, active = i === stageIdx, col = done ? "#5DC484" : active ? "var(--accent)" : "var(--text3)"; return (<div key={s.id} style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "3px 8px", borderRadius: 4, background: active ? "rgba(42,191,191,0.1)" : done ? "rgba(93,196,132,0.07)" : "transparent", border: `1px solid ${active ? "rgba(42,191,191,0.3)" : done ? "rgba(93,196,132,0.2)" : "var(--border)"}`, transition: "all 0.3s" }}>
-            <div style={{ width: 14, height: 14, borderRadius: "50%", background: done ? "#5DC484" : active ? "var(--accent)" : "var(--bg4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 7, fontWeight: 800, color: done || active ? "#000" : "var(--text3)", flexShrink: 0 }}>{done ? "✓" : s.num}</div>
-            <span style={{ fontSize: 7, fontFamily: "var(--font-m)", color: col, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: active ? 600 : 400 }}>{s.label}</span>
+            <div style={{ width: 14, height: 14, borderRadius: "50%", background: done ? "#5DC484" : active ? "var(--accent)" : "var(--bg4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 800, color: done || active ? "#000" : "var(--text3)", flexShrink: 0 }}>{done ? "✓" : s.num}</div>
+            <span style={{ fontSize: 9, fontFamily: "var(--font-m)", color: col, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: active ? 600 : 400 }}>{s.label}</span>
           </div>
           {i < STAGES.length - 1 && <div style={{ width: 10, height: 1, background: done ? "rgba(93,196,132,0.3)" : "var(--border)", flexShrink: 0 }} />}
         </div>); })}
         <div style={{ marginLeft: "auto", display: "flex", gap: 7, alignItems: "center" }}>
-          <span style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)" }}>{stage.num}/{STAGES.length}</span>
-          {isModal && onCancel && <button onClick={onCancel} style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", padding: "3px 7px", border: "1px solid var(--border2)", borderRadius: 4 }}>✕</button>}
+          <span style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)" }}>{stage.num}/{STAGES.length}</span>
+          {isModal && onCancel && <button onClick={onCancel} style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", padding: "3px 7px", border: "1px solid var(--border2)", borderRadius: 4 }}>✕</button>}
         </div>
       </div>
 
@@ -506,27 +506,27 @@ const OnboardingWizard = ({ onComplete, onCancel, isModal = false }) => {
             ))}
             {questions.length > 0 && (
               <div className="fu" style={{ background: "var(--bg2)", border: "1px solid rgba(245,197,68,0.3)", borderRadius: 8, padding: "12px" }}>
-                <div style={{ fontSize: 8, fontFamily: "var(--font-m)", color: "#F5C544", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>◆ Clarifying Questions</div>
+                <div style={{ fontSize: 10, fontFamily: "var(--font-m)", color: "#F5C544", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>◆ Clarifying Questions</div>
                 {questions.map((q, i) => (
                   <div key={i} style={{ padding: "6px 8px", marginBottom: 4, background: "var(--bg3)", borderRadius: 4, border: "1px solid var(--border)", fontSize: 9, fontFamily: "var(--font-b)", color: "var(--text)", lineHeight: 1.5 }}>
                     <span style={{ color: "#F5C544", fontWeight: 600 }}>Q{i + 1}:</span> {q.question}
-                    {q.about && <span style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", marginLeft: 6 }}>re: {q.about}</span>}
+                    {q.about && <span style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", marginLeft: 6 }}>re: {q.about}</span>}
                   </div>
                 ))}
-                <p style={{ fontSize: 8, fontFamily: "var(--font-m)", color: "var(--text3)", marginTop: 6 }}>Answer in the chat below, or click Confirm to proceed with defaults.</p>
+                <p style={{ fontSize: 10, fontFamily: "var(--font-m)", color: "var(--text3)", marginTop: 6 }}>Answer in the chat below, or click Confirm to proceed with defaults.</p>
               </div>
             )}
             {preview && (
               <div className="fu" style={{ background: "var(--bg2)", border: "1px solid var(--border2)", borderRadius: 9, overflow: "hidden" }}>
                 <div style={{ padding: "10px 14px", background: "var(--bg3)", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div><div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "#5DC484", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 2 }}>✓ Extraction Complete</div><div style={{ fontSize: 13, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)" }}>Programme Baseline Ready</div></div>
+                  <div><div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "#5DC484", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 2 }}>✓ Extraction Complete</div><div style={{ fontSize: 13, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)" }}>Programme Baseline Ready</div></div>
                   <div style={{ display: "flex", gap: 6 }}><button onClick={confirmExtract} style={{ background: "var(--green)", color: "#000", borderRadius: 5, padding: "6px 13px", fontFamily: "var(--font-d)", fontWeight: 700, fontSize: 10 }}>Confirm & Continue →</button><button onClick={() => setPreview(null)} style={{ border: "1px solid var(--border2)", borderRadius: 5, padding: "6px 10px", color: "var(--text3)", fontSize: 9 }}>Edit</button></div>
                 </div>
                 <div style={{ padding: "11px 14px", display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 8 }}>
                   {[{ l: "Tasks", v: preview.tasks?.length || 0, c: "var(--blue)" }, { l: "Risks", v: preview.risks?.length || 0, c: "var(--orange)" }, { l: "RAID", v: preview.raidItems?.length || 0, c: "var(--violet)" }, { l: "Benefits", v: preview.benefits?.length || 0, c: "var(--green)" }, { l: "Metrics", v: preview.metrics?.length || 0, c: "var(--accent)" }, { l: "Events", v: preview.calendarEvents?.length || 0, c: "var(--yellow)" }].map((s, i) => (
                     <div key={i} style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: 5, padding: "8px", textAlign: "center" }}>
                       <div style={{ fontSize: 18, fontFamily: "var(--font-d)", fontWeight: 800, color: s.c }}>{s.v}</div>
-                      <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 2 }}>{s.l}</div>
+                      <div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 2 }}>{s.l}</div>
                     </div>
                   ))}
                 </div>
@@ -541,7 +541,7 @@ const OnboardingWizard = ({ onComplete, onCancel, isModal = false }) => {
             <div style={{ padding: "0 18px 9px" }}>
               <div onDragOver={e => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={e => { e.preventDefault(); setDragOver(false); setFiles(prev => [...prev, ...Array.from(e.dataTransfer.files)]); }} style={{ border: `2px dashed ${dragOver ? "var(--accent)" : "var(--border2)"}`, borderRadius: 6, padding: "10px", textAlign: "center", background: dragOver ? "rgba(42,191,191,0.05)" : "var(--bg2)", cursor: "pointer", transition: "all 0.2s" }} onClick={() => fileRef.current?.click()}>
                 <input ref={fileRef} type="file" multiple style={{ display: "none" }} onChange={e => setFiles(prev => [...prev, ...Array.from(e.target.files)])} />
-                <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>{files.length ? `${files.length} file(s) queued` : "Drop files or click to browse"}</div>
+                <div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>{files.length ? `${files.length} file(s) queued` : "Drop files or click to browse"}</div>
               </div>
               {files.length > 0 && <button onClick={ingestFiles} disabled={loading} style={{ marginTop: 6, width: "100%", background: "var(--accent)", color: "#000", borderRadius: 5, padding: "7px", fontFamily: "var(--font-d)", fontWeight: 700, fontSize: 11, opacity: loading ? 0.5 : 1 }}>{loading ? <Spinner s={11} /> : `Ingest ${files.length} File(s)`}</button>}
             </div>
@@ -551,24 +551,24 @@ const OnboardingWizard = ({ onComplete, onCancel, isModal = false }) => {
             <textarea value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} placeholder={stage.id === "documents" ? "Or paste document content here…" : "Type your response…"} rows={2} style={{ flex: 1, background: "var(--bg3)", border: "1px solid var(--border2)", borderRadius: 5, color: "var(--text)", fontFamily: "var(--font-b)", fontSize: 11, padding: "7px 9px", resize: "none", lineHeight: 1.5 }} />
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               <button onClick={() => send()} disabled={loading || !input.trim()} style={{ background: loading || !input.trim() ? "var(--bg3)" : "var(--accent)", color: loading || !input.trim() ? "var(--text3)" : "#000", border: "none", borderRadius: 5, padding: "0 13px", fontFamily: "var(--font-d)", fontWeight: 700, fontSize: 11, flex: 1, minWidth: 44, transition: "all 0.2s" }}>{loading ? <Spinner /> : "↑"}</button>
-              <button onClick={skip} style={{ background: "transparent", border: "1px solid var(--border2)", borderRadius: 4, padding: "3px 7px", fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", whiteSpace: "nowrap" }}>Skip →</button>
+              <button onClick={skip} style={{ background: "transparent", border: "1px solid var(--border2)", borderRadius: 4, padding: "3px 7px", fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", whiteSpace: "nowrap" }}>Skip →</button>
             </div>
           </div>
         </div>
 
         <div style={{ width: 190, background: "var(--bg1)", borderLeft: "1px solid var(--border)", padding: "13px", overflowY: "auto", flexShrink: 0 }}>
-          <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>Collected so far</div>
+          <div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>Collected so far</div>
           {Object.entries(collected).map(([key, val]) => { const s = STAGES.find(s => s.id === key); if (!s || !val || !Object.keys(val).length) return null; return (
             <div key={key} style={{ marginBottom: 12 }}>
-              <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "#5DC484", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>✓ {s.label}</div>
-              {key === "outputs" && <div style={{ fontSize: 8, fontFamily: "var(--font-b)", color: "var(--text2)" }}>{val.enabledOutputs?.length || 0} output{val.enabledOutputs?.length !== 1 ? "s" : ""} enabled</div>}
-              {key === "vision" && <><div style={{ fontSize: 10, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)", marginBottom: 2 }}>{val.name}</div><div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--accent)", textTransform: "uppercase", marginBottom: 2 }}>{val.type}</div></>}
-              {key === "blueprint" && <div style={{ fontSize: 8, fontFamily: "var(--font-b)", color: "var(--text2)" }}>{val.scale} · {val.currentPhase}</div>}
-              {key === "organisation" && val.leads?.map((l, i) => <div key={i} style={{ fontSize: 8, fontFamily: "var(--font-b)", color: "var(--text2)", marginBottom: 1 }}>{l.name} · {l.role}</div>)}
-              {key === "benefits" && <div style={{ fontSize: 8, fontFamily: "var(--font-b)", color: "var(--text2)" }}>{val.benefits?.length || 0} benefit{val.benefits?.length !== 1 ? "s" : ""}</div>}
+              <div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "#5DC484", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>✓ {s.label}</div>
+              {key === "outputs" && <div style={{ fontSize: 10, fontFamily: "var(--font-b)", color: "var(--text2)" }}>{val.enabledOutputs?.length || 0} output{val.enabledOutputs?.length !== 1 ? "s" : ""} enabled</div>}
+              {key === "vision" && <><div style={{ fontSize: 10, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)", marginBottom: 2 }}>{val.name}</div><div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--accent)", textTransform: "uppercase", marginBottom: 2 }}>{val.type}</div></>}
+              {key === "blueprint" && <div style={{ fontSize: 10, fontFamily: "var(--font-b)", color: "var(--text2)" }}>{val.scale} · {val.currentPhase}</div>}
+              {key === "organisation" && val.leads?.map((l, i) => <div key={i} style={{ fontSize: 10, fontFamily: "var(--font-b)", color: "var(--text2)", marginBottom: 1 }}>{l.name} · {l.role}</div>)}
+              {key === "benefits" && <div style={{ fontSize: 10, fontFamily: "var(--font-b)", color: "var(--text2)" }}>{val.benefits?.length || 0} benefit{val.benefits?.length !== 1 ? "s" : ""}</div>}
             </div>
           ); })}
-          {!Object.keys(collected).length && <div style={{ fontSize: 8, fontFamily: "var(--font-m)", color: "var(--text3)", lineHeight: 1.6 }}>Data appears here as confirmed.</div>}
+          {!Object.keys(collected).length && <div style={{ fontSize: 10, fontFamily: "var(--font-m)", color: "var(--text3)", lineHeight: 1.6 }}>Data appears here as confirmed.</div>}
         </div>
       </div>
     </div>
@@ -589,7 +589,7 @@ const OnboardingWizard = ({ onComplete, onCancel, isModal = false }) => {
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg0)", display: "flex", flexDirection: "column" }}>
       <div style={{ background: "var(--bg1)", borderBottom: "1px solid var(--border)", padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 46, flexShrink: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}><div style={{ width: 24, height: 24, background: "var(--accent)", borderRadius: 3, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: "#000", fontFamily: "var(--font-d)" }}>◆</div><div><div style={{ fontSize: 13, fontFamily: "var(--font-d)", fontWeight: 800, color: "var(--text)", letterSpacing: "-0.02em" }}>APEX</div><div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", letterSpacing: "0.15em", textTransform: "uppercase" }}>Programme Execution & Control</div></div></div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}><div style={{ width: 24, height: 24, background: "var(--accent)", borderRadius: 3, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: "#000", fontFamily: "var(--font-d)" }}>◆</div><div><div style={{ fontSize: 13, fontFamily: "var(--font-d)", fontWeight: 800, color: "var(--text)", letterSpacing: "-0.02em" }}>APEX</div><div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", letterSpacing: "0.15em", textTransform: "uppercase" }}>Programme Execution & Control</div></div></div>
       </div>
       <div style={{ flex: 1, overflow: "hidden" }}>{inner}</div>
     </div>
@@ -611,28 +611,28 @@ const MetricPanel = ({ metric, tasks, onClose, onSave, onNavigate }) => {
       <div className="sr" style={{ width: 400, height: "100%", background: "var(--bg2)", borderLeft: "1px solid var(--border2)", display: "flex", flexDirection: "column", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
         <div style={{ padding: "15px 17px", borderBottom: "1px solid var(--border)", background: "var(--bg3)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-            <div><div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: fam.color, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 3 }}>{fam.icon} {fam.label}</div><div style={{ fontSize: 14, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)", lineHeight: 1.25 }}>{metric.name}</div></div>
+            <div><div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: fam.color, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 3 }}>{fam.icon} {fam.label}</div><div style={{ fontSize: 14, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)", lineHeight: 1.25 }}>{metric.name}</div></div>
             <button onClick={onClose} style={{ color: "var(--text3)", fontSize: 17, padding: "2px 4px" }}>✕</button>
           </div>
           <div style={{ display: "flex", alignItems: "flex-end", gap: 11, marginBottom: 9 }}>
             <div style={{ fontSize: 38, fontFamily: "var(--font-d)", fontWeight: 800, color: RAG[metric.rag].color, lineHeight: 1 }}>{fmtVal(metric)}</div>
-            <div style={{ paddingBottom: 2 }}><div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)" }}>Target</div><div style={{ fontSize: 14, fontFamily: "var(--font-m)", color: "var(--text2)", fontWeight: 500 }}>{metric.target}{metric.unit}</div></div>
+            <div style={{ paddingBottom: 2 }}><div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)" }}>Target</div><div style={{ fontSize: 14, fontFamily: "var(--font-m)", color: "var(--text2)", fontWeight: 500 }}>{metric.target}{metric.unit}</div></div>
             <Spark data={metric.trend} color={RAG[metric.rag].color} positive={metric.direction === "higher"} />
           </div>
-          {metric.trend && <div style={{ height: 38 }}><ResponsiveContainer width="100%" height="100%"><AreaChart data={metric.trend.map((v, i) => ({ v, l: metric.trendL?.[i] || `Wk${i + 1}` }))} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}><defs><linearGradient id="dp-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={RAG[metric.rag].color} stopOpacity={0.4} /><stop offset="100%" stopColor={RAG[metric.rag].color} stopOpacity={0} /></linearGradient></defs><XAxis dataKey="l" tick={{ fontSize: 7, fontFamily: "var(--font-m)", fill: "var(--text3)" }} axisLine={false} tickLine={false} /><Area type="monotone" dataKey="v" stroke={RAG[metric.rag].color} strokeWidth={2} fill="url(#dp-g)" dot={{ fill: RAG[metric.rag].color, r: 2 }} /></AreaChart></ResponsiveContainer></div>}
+          {metric.trend && <div style={{ height: 38 }}><ResponsiveContainer width="100%" height="100%"><AreaChart data={metric.trend.map((v, i) => ({ v, l: metric.trendL?.[i] || `Wk${i + 1}` }))} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}><defs><linearGradient id="dp-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={RAG[metric.rag].color} stopOpacity={0.4} /><stop offset="100%" stopColor={RAG[metric.rag].color} stopOpacity={0} /></linearGradient></defs><XAxis dataKey="l" tick={{ fontSize: 9, fontFamily: "var(--font-m)", fill: "var(--text3)" }} axisLine={false} tickLine={false} /><Area type="monotone" dataKey="v" stroke={RAG[metric.rag].color} strokeWidth={2} fill="url(#dp-g)" dot={{ fill: RAG[metric.rag].color, r: 2 }} /></AreaChart></ResponsiveContainer></div>}
         </div>
         <div style={{ padding: "15px 17px", flex: 1 }}>
           {linked.length > 0 && <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 7 }}>Task Linkages ({linked.length})</div>
+            <div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 7 }}>Task Linkages ({linked.length})</div>
             {linked.map(l => { const lm = LINK_META[l.type] || LINK_META.influences; return (
               <div key={l.taskId} onClick={() => { onNavigate && onNavigate(l.task); onClose(); }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 8px", marginBottom: 2, background: "var(--bg3)", borderRadius: 4, border: `1px solid ${lm.color}20`, cursor: "pointer" }}><Badge status={l.task.status} /><div style={{ flex: 1 }}><div style={{ fontSize: 9, fontFamily: "var(--font-b)", color: "var(--text)" }}>{l.task.name}</div></div></div>
             ); })}
           </div>}
           <div style={{ borderTop: "1px solid var(--border)", paddingTop: 14 }}>
-            <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>Manual Update</div>
-            <div style={{ marginBottom: 9 }}><label style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", display: "block", marginBottom: 3 }}>Value ({metric.unit})</label><input value={val} onChange={e => setVal(e.target.value)} style={{ width: "100%", background: "var(--bg3)", border: "1px solid var(--border2)", borderRadius: 5, color: "var(--text)", fontFamily: "var(--font-m)", fontSize: 21, fontWeight: 700, padding: "8px 10px" }} /></div>
-            <div style={{ marginBottom: 9 }}><label style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", display: "block", marginBottom: 3 }}>RAG</label><div style={{ display: "flex", gap: 5 }}>{Object.entries(RAG).map(([k, r]) => <button key={k} onClick={() => setRag(k)} style={{ flex: 1, padding: "5px", border: `1px solid ${rag === k ? r.color : "var(--border2)"}`, borderRadius: 5, background: rag === k ? r.bg : "transparent", color: rag === k ? r.color : "var(--text3)", fontSize: 7, fontFamily: "var(--font-m)", textTransform: "uppercase" }}>{r.label}</button>)}</div></div>
-            <div style={{ marginBottom: 12 }}><label style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", display: "block", marginBottom: 3 }}>Commentary</label><textarea value={note} onChange={e => setNote(e.target.value)} rows={3} style={{ width: "100%", background: "var(--bg3)", border: "1px solid var(--border2)", borderRadius: 5, color: "var(--text)", fontFamily: "var(--font-b)", fontSize: 10, padding: "6px 8px", resize: "none", lineHeight: 1.5 }} /></div>
+            <div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>Manual Update</div>
+            <div style={{ marginBottom: 9 }}><label style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", display: "block", marginBottom: 3 }}>Value ({metric.unit})</label><input value={val} onChange={e => setVal(e.target.value)} style={{ width: "100%", background: "var(--bg3)", border: "1px solid var(--border2)", borderRadius: 5, color: "var(--text)", fontFamily: "var(--font-m)", fontSize: 21, fontWeight: 700, padding: "8px 10px" }} /></div>
+            <div style={{ marginBottom: 9 }}><label style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", display: "block", marginBottom: 3 }}>RAG</label><div style={{ display: "flex", gap: 5 }}>{Object.entries(RAG).map(([k, r]) => <button key={k} onClick={() => setRag(k)} style={{ flex: 1, padding: "5px", border: `1px solid ${rag === k ? r.color : "var(--border2)"}`, borderRadius: 5, background: rag === k ? r.bg : "transparent", color: rag === k ? r.color : "var(--text3)", fontSize: 9, fontFamily: "var(--font-m)", textTransform: "uppercase" }}>{r.label}</button>)}</div></div>
+            <div style={{ marginBottom: 12 }}><label style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", display: "block", marginBottom: 3 }}>Commentary</label><textarea value={note} onChange={e => setNote(e.target.value)} rows={3} style={{ width: "100%", background: "var(--bg3)", border: "1px solid var(--border2)", borderRadius: 5, color: "var(--text)", fontFamily: "var(--font-b)", fontSize: 10, padding: "6px 8px", resize: "none", lineHeight: 1.5 }} /></div>
             <div style={{ display: "flex", gap: 6 }}><button onClick={save} style={{ flex: 1, background: "var(--accent)", color: "#000", borderRadius: 5, padding: "8px", fontFamily: "var(--font-d)", fontWeight: 700, fontSize: 11 }}>Save</button><button onClick={onClose} style={{ padding: "8px 12px", border: "1px solid var(--border2)", borderRadius: 5, color: "var(--text3)", fontSize: 10 }}>Cancel</button></div>
           </div>
         </div>
@@ -648,26 +648,26 @@ const TaskDrawer = ({ task, tasks, metrics, onClose, onUpdate, onOpenMetric }) =
   return (
     <div style={{ position: "fixed", right: 0, top: 0, bottom: 0, width: 300, background: "var(--bg2)", borderLeft: "1px solid var(--border2)", zIndex: 100, display: "flex", flexDirection: "column", boxShadow: "-8px 0 32px rgba(0,0,0,0.5)", animation: "fadeUp 0.2s ease" }}>
       <div style={{ padding: "13px 14px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div><div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 3 }}>{task.phase}</div><div style={{ fontSize: 12, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)", lineHeight: 1.3 }}>{task.name}</div></div>
+        <div><div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 3 }}>{task.phase}</div><div style={{ fontSize: 12, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)", lineHeight: 1.3 }}>{task.name}</div></div>
         <button onClick={onClose} style={{ color: "var(--text3)", fontSize: 16, padding: "2px 4px" }}>✕</button>
       </div>
       <div style={{ padding: 12, flex: 1, overflowY: "auto" }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7, marginBottom: 10 }}>
           {[{ l: "Owner", v: task.owner, c: "var(--blue)" }, { l: "Status", v: <Badge status={task.status} /> }, { l: "Start", v: fmt(task.start) }, { l: "End", v: fmt(task.end) }, { l: "Progress", v: `${task.progress}%`, c: meta.color }, { l: "Deps", v: task.deps?.join(", ") || "None", c: "var(--text3)" }].map((f, i) => (
-            <div key={i} style={{ background: "var(--bg3)", padding: "7px 9px", borderRadius: 4, border: "1px solid var(--border)" }}><div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 2 }}>{f.l}</div><div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: f.c || "var(--text)" }}>{f.v}</div></div>
+            <div key={i} style={{ background: "var(--bg3)", padding: "7px 9px", borderRadius: 4, border: "1px solid var(--border)" }}><div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 2 }}>{f.l}</div><div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: f.c || "var(--text)" }}>{f.v}</div></div>
           ))}
         </div>
         <div style={{ background: "var(--bg3)", borderRadius: 3, height: 3, overflow: "hidden", border: "1px solid var(--border)", marginBottom: 11 }}><div style={{ width: `${task.progress}%`, height: "100%", background: `linear-gradient(90deg,${meta.color}88,${meta.color})`, borderRadius: 3 }} /></div>
         {linkedMetrics.length > 0 && <div style={{ marginBottom: 11 }}>
-          <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 6 }}>◆ Driving Metrics ({linkedMetrics.length})</div>
+          <div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 6 }}>◆ Driving Metrics ({linkedMetrics.length})</div>
           {linkedMetrics.map(m => (
             <div key={m.id} onClick={() => onOpenMetric && onOpenMetric(m)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 7px", marginBottom: 2, background: "var(--bg3)", borderRadius: 4, border: "1px solid var(--border)", cursor: "pointer" }}>
               <RagPip rag={m.rag} /><div style={{ flex: 1 }}><div style={{ fontSize: 9, fontFamily: "var(--font-b)", color: "var(--text)" }}>{m.name}</div></div><div style={{ fontSize: 10, fontFamily: "var(--font-m)", fontWeight: 700, color: RAG[m.rag].color }}>{fmtVal(m)}</div>
             </div>
           ))}
         </div>}
-        <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 5 }}>Quick Status</div>
-        <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>{Object.entries(STATUS_META).map(([key, m]) => <button key={key} onClick={() => onUpdate(task.id, { status: key })} style={{ fontSize: 7, fontFamily: "var(--font-m)", padding: "3px 7px", border: `1px solid ${task.status === key ? m.color : "var(--border2)"}`, borderRadius: 3, color: task.status === key ? m.color : "var(--text3)", background: task.status === key ? m.bg : "transparent", textTransform: "uppercase" }}>{m.label}</button>)}</div>
+        <div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 5 }}>Quick Status</div>
+        <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>{Object.entries(STATUS_META).map(([key, m]) => <button key={key} onClick={() => onUpdate(task.id, { status: key })} style={{ fontSize: 9, fontFamily: "var(--font-m)", padding: "3px 7px", border: `1px solid ${task.status === key ? m.color : "var(--border2)"}`, borderRadius: 3, color: task.status === key ? m.color : "var(--text3)", background: task.status === key ? m.bg : "transparent", textTransform: "uppercase" }}>{m.label}</button>)}</div>
       </div>
     </div>
   );
@@ -710,12 +710,12 @@ const RAIDLog = ({ raidItems, setRaidItems }) => {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, gap: 12 }}>
         <div>
           <div style={{ fontSize: 13, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)", marginBottom: 4 }}>RAID Log</div>
-          <div style={{ display: "flex", gap: 10 }}>{Object.entries(RAID_TYPES).map(([t, tm]) => (<div key={t} style={{ display: "flex", alignItems: "center", gap: 4 }}><span style={{ fontSize: 9, fontFamily: "var(--font-m)", color: tm.color, fontWeight: 600 }}>{counts[t] || 0}</span><span style={{ fontSize: 8, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase" }}>{tm.label}s</span></div>))}</div>
+          <div style={{ display: "flex", gap: 10 }}>{Object.entries(RAID_TYPES).map(([t, tm]) => (<div key={t} style={{ display: "flex", alignItems: "center", gap: 4 }}><span style={{ fontSize: 9, fontFamily: "var(--font-m)", color: tm.color, fontWeight: 600 }}>{counts[t] || 0}</span><span style={{ fontSize: 10, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase" }}>{tm.label}s</span></div>))}</div>
         </div>
-        <button onClick={() => setShowAdd(!showAdd)} style={{ fontSize: 8, fontFamily: "var(--font-m)", padding: "6px 13px", background: "rgba(42,191,191,0.12)", border: "1px solid rgba(42,191,191,0.35)", borderRadius: 5, color: "var(--accent)", textTransform: "uppercase" }}>+ Add</button>
+        <button onClick={() => setShowAdd(!showAdd)} style={{ fontSize: 10, fontFamily: "var(--font-m)", padding: "6px 13px", background: "rgba(42,191,191,0.12)", border: "1px solid rgba(42,191,191,0.35)", borderRadius: 5, color: "var(--accent)", textTransform: "uppercase" }}>+ Add</button>
       </div>
       <div style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 7, padding: "11px 13px", marginBottom: 14 }}>
-        <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>◆ Natural Language Entry</div>
+        <div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>◆ Natural Language Entry</div>
         <div style={{ display: "flex", gap: 7 }}>
           <input value={aiInput} onChange={e => setAiInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter") addViaAI(); }} placeholder="Describe a risk, assumption, issue, or decision…" style={{ flex: 1, background: "var(--bg3)", border: "1px solid var(--border2)", borderRadius: 5, color: "var(--text)", fontFamily: "var(--font-b)", fontSize: 10, padding: "7px 9px" }} />
           <button onClick={addViaAI} disabled={aiLoading || !aiInput.trim()} style={{ background: aiLoading || !aiInput.trim() ? "var(--bg3)" : "var(--accent)", color: aiLoading || !aiInput.trim() ? "var(--text3)" : "#000", border: "none", borderRadius: 5, padding: "0 14px", fontFamily: "var(--font-d)", fontWeight: 700, fontSize: 11, minWidth: 50 }}>{aiLoading ? <Spinner /> : "↑"}</button>
@@ -723,7 +723,7 @@ const RAIDLog = ({ raidItems, setRaidItems }) => {
       </div>
       {showAdd && (
         <div className="fu" style={{ background: "var(--bg2)", border: "1px solid var(--border2)", borderRadius: 7, padding: "13px", marginBottom: 14 }}>
-          <div style={{ display: "flex", gap: 6, marginBottom: 9 }}>{Object.entries(RAID_TYPES).map(([t, tm]) => (<button key={t} onClick={() => setAddType(t)} style={{ fontSize: 8, fontFamily: "var(--font-m)", padding: "4px 11px", border: `1px solid ${addType === t ? tm.color : "var(--border2)"}`, borderRadius: 4, color: addType === t ? tm.color : "var(--text3)", background: addType === t ? `${tm.color}15` : "transparent", textTransform: "uppercase" }}>{tm.icon} {tm.label}</button>))}</div>
+          <div style={{ display: "flex", gap: 6, marginBottom: 9 }}>{Object.entries(RAID_TYPES).map(([t, tm]) => (<button key={t} onClick={() => setAddType(t)} style={{ fontSize: 10, fontFamily: "var(--font-m)", padding: "4px 11px", border: `1px solid ${addType === t ? tm.color : "var(--border2)"}`, borderRadius: 4, color: addType === t ? tm.color : "var(--text3)", background: addType === t ? `${tm.color}15` : "transparent", textTransform: "uppercase" }}>{tm.icon} {tm.label}</button>))}</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
             <input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="Title *" style={{ background: "var(--bg3)", border: "1px solid var(--border2)", borderRadius: 4, color: "var(--text)", fontSize: 10, padding: "6px 8px" }} />
             <input value={form.owner} onChange={e => setForm(p => ({ ...p, owner: e.target.value }))} placeholder="Owner" style={{ background: "var(--bg3)", border: "1px solid var(--border2)", borderRadius: 4, color: "var(--text)", fontSize: 10, padding: "6px 8px" }} />
@@ -735,21 +735,21 @@ const RAIDLog = ({ raidItems, setRaidItems }) => {
         </div>
       )}
       <div style={{ display: "flex", gap: 5, marginBottom: 12 }}>
-        {[["all", "All"], ...Object.entries(RAID_TYPES).map(([t, tm]) => [t, tm.label + "s"])].map(([key, label]) => (<button key={key} onClick={() => setFilter(key)} style={{ fontSize: 7, fontFamily: "var(--font-m)", padding: "3px 10px", border: `1px solid ${filter === key ? (RAID_TYPES[key]?.color || "var(--accent)") : "var(--border2)"}`, borderRadius: 20, color: filter === key ? (RAID_TYPES[key]?.color || "var(--accent)") : "var(--text3)", background: filter === key ? `${RAID_TYPES[key]?.color || "var(--accent)"}15` : "transparent", textTransform: "uppercase" }}>{label}</button>))}
+        {[["all", "All"], ...Object.entries(RAID_TYPES).map(([t, tm]) => [t, tm.label + "s"])].map(([key, label]) => (<button key={key} onClick={() => setFilter(key)} style={{ fontSize: 9, fontFamily: "var(--font-m)", padding: "3px 10px", border: `1px solid ${filter === key ? (RAID_TYPES[key]?.color || "var(--accent)") : "var(--border2)"}`, borderRadius: 20, color: filter === key ? (RAID_TYPES[key]?.color || "var(--accent)") : "var(--text3)", background: filter === key ? `${RAID_TYPES[key]?.color || "var(--accent)"}15` : "transparent", textTransform: "uppercase" }}>{label}</button>))}
       </div>
       {filtered.length === 0 && <div style={{ textAlign: "center", padding: "32px", fontSize: 10, fontFamily: "var(--font-m)", color: "var(--text3)" }}>No items yet.</div>}
       <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
         {filtered.map((item, i) => { const tm = RAID_TYPES[item.type] || RAID_TYPES.risk; const sc = item.status === "Agreed" || item.status === "Closed" ? "#5DC484" : item.status === "Open" ? "#F5C544" : "var(--text3)"; return (
           <div key={item.id} className="fu" style={{ animationDelay: `${i * 0.02}s`, background: "var(--bg2)", border: `1px solid ${tm.color}25`, borderLeft: `3px solid ${tm.color}`, borderRadius: 6, padding: "11px 13px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 4, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 8, fontFamily: "var(--font-m)", color: tm.color, background: `${tm.color}15`, border: `1px solid ${tm.color}30`, padding: "1px 7px", borderRadius: 3, textTransform: "uppercase", fontWeight: 600 }}>{tm.icon} {tm.label}</span>
-              {item.impact && <span style={{ fontSize: 7, fontFamily: "var(--font-m)", color: { High: "#E8734A", Medium: "#F5C544", Low: "#5DC484" }[item.impact], textTransform: "uppercase" }}>▲ {item.impact}</span>}
+              <span style={{ fontSize: 10, fontFamily: "var(--font-m)", color: tm.color, background: `${tm.color}15`, border: `1px solid ${tm.color}30`, padding: "1px 7px", borderRadius: 3, textTransform: "uppercase", fontWeight: 600 }}>{tm.icon} {tm.label}</span>
+              {item.impact && <span style={{ fontSize: 9, fontFamily: "var(--font-m)", color: { High: "#E8734A", Medium: "#F5C544", Low: "#5DC484" }[item.impact], textTransform: "uppercase" }}>▲ {item.impact}</span>}
               <span style={{ fontSize: 10, fontFamily: "var(--font-b)", fontWeight: 500, color: "var(--text)" }}>{item.title}</span>
             </div>
             {item.description && <p style={{ fontSize: 9, fontFamily: "var(--font-b)", color: "var(--text2)", lineHeight: 1.6, marginBottom: 5 }}>{item.description}</p>}
             <div style={{ display: "flex", gap: 10 }}>
-              {item.owner && <span style={{ fontSize: 8, fontFamily: "var(--font-m)", color: "var(--blue)" }}>{item.owner}</span>}
-              {item.dueDate && <span style={{ fontSize: 8, fontFamily: "var(--font-m)", color: "var(--text3)" }}>Due: {fmt(item.dueDate)}</span>}
+              {item.owner && <span style={{ fontSize: 10, fontFamily: "var(--font-m)", color: "var(--blue)" }}>{item.owner}</span>}
+              {item.dueDate && <span style={{ fontSize: 10, fontFamily: "var(--font-m)", color: "var(--text3)" }}>Due: {fmt(item.dueDate)}</span>}
             </div>
           </div>
         ); })}
@@ -772,8 +772,8 @@ const BenefitsStrip = ({ benefits, onOpen }) => {
   return (
     <div style={{ marginBottom: 14 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 8 }}>
-        <span style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "#5DC484", textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 600 }}>✚ Benefits</span>
-        <span style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)" }}>{benefits.length} tracked · {benefits.filter(b => b.status === "realised").length} realised</span>
+        <span style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "#5DC484", textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 600 }}>✚ Benefits</span>
+        <span style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)" }}>{benefits.length} tracked · {benefits.filter(b => b.status === "realised").length} realised</span>
       </div>
       <div style={{ display: "flex", gap: 9, overflowX: "auto", paddingBottom: 6 }}>
         {benefits.map((b, i) => {
@@ -783,11 +783,11 @@ const BenefitsStrip = ({ benefits, onOpen }) => {
           return (
             <div key={b.id} className="fu" onClick={() => onOpen(b)} style={{ animationDelay: `${i * 0.02}s`, minWidth: 240, maxWidth: 280, background: "var(--bg2)", border: `1px solid ${st.color}30`, borderLeft: `3px solid ${tm.color}`, borderRadius: 6, padding: "10px 12px", cursor: "pointer", flexShrink: 0, transition: "background 0.15s" }} onMouseEnter={e => e.currentTarget.style.background = "var(--bg3)"} onMouseLeave={e => e.currentTarget.style.background = "var(--bg2)"}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
-                <span style={{ fontSize: 7, fontFamily: "var(--font-m)", color: tm.color, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>{tm.label}</span>
-                <span style={{ fontSize: 7, fontFamily: "var(--font-m)", color: st.color, background: st.bg, border: `1px solid ${st.color}30`, padding: "1px 5px", borderRadius: 2, textTransform: "uppercase" }}>{st.label}</span>
+                <span style={{ fontSize: 9, fontFamily: "var(--font-m)", color: tm.color, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>{tm.label}</span>
+                <span style={{ fontSize: 9, fontFamily: "var(--font-m)", color: st.color, background: st.bg, border: `1px solid ${st.color}30`, padding: "1px 5px", borderRadius: 2, textTransform: "uppercase" }}>{st.label}</span>
               </div>
               <div style={{ fontSize: 10, fontFamily: "var(--font-b)", color: "var(--text)", fontWeight: 500, lineHeight: 1.3, marginBottom: 6 }}>{b.title}</div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 8, fontFamily: "var(--font-m)", color: "var(--text3)", marginBottom: 4 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, fontFamily: "var(--font-m)", color: "var(--text3)", marginBottom: 4 }}>
                 <span>{b.baseline}{b.unit} → {b.target}{b.unit}</span>
                 <span>{b.owner}</span>
               </div>
@@ -812,7 +812,7 @@ const BenefitDrawer = ({ benefit, onClose, onSave, metrics }) => {
         <div style={{ padding: "15px 17px", borderBottom: "1px solid var(--border)", background: "var(--bg3)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
             <div>
-              <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: tm.color, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 3 }}>✚ {tm.label} Benefit</div>
+              <div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: tm.color, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 3 }}>✚ {tm.label} Benefit</div>
               <div style={{ fontSize: 14, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)", lineHeight: 1.25 }}>{b.title}</div>
             </div>
             <button onClick={onClose} style={{ color: "var(--text3)", fontSize: 17, padding: "2px 4px" }}>✕</button>
@@ -822,34 +822,34 @@ const BenefitDrawer = ({ benefit, onClose, onSave, metrics }) => {
         <div style={{ padding: "15px 17px", flex: 1 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
             <div style={{ background: "var(--bg3)", padding: "8px 10px", borderRadius: 4, border: "1px solid var(--border)" }}>
-              <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 2 }}>Baseline</div>
+              <div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 2 }}>Baseline</div>
               <div style={{ fontSize: 16, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text2)" }}>{b.baseline}{b.unit}</div>
             </div>
             <div style={{ background: "var(--bg3)", padding: "8px 10px", borderRadius: 4, border: "1px solid var(--border)" }}>
-              <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 2 }}>Target</div>
+              <div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 2 }}>Target</div>
               <div style={{ fontSize: 16, fontFamily: "var(--font-d)", fontWeight: 700, color: tm.color }}>{b.target}{b.unit}</div>
             </div>
           </div>
           <div style={{ marginBottom: 10 }}>
-            <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 3 }}>Owner</div>
+            <div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 3 }}>Owner</div>
             <div style={{ fontSize: 10, fontFamily: "var(--font-b)", color: "var(--blue)" }}>{b.owner}</div>
           </div>
           <div style={{ marginBottom: 10 }}>
-            <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 3 }}>Measurement KPI</div>
+            <div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 3 }}>Measurement KPI</div>
             <div style={{ fontSize: 9, fontFamily: "var(--font-b)", color: "var(--text)" }}>{b.measurementKPI}</div>
           </div>
           <div style={{ marginBottom: 10 }}>
-            <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 3 }}>Expected Realisation</div>
+            <div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 3 }}>Expected Realisation</div>
             <div style={{ fontSize: 10, fontFamily: "var(--font-b)", color: "var(--text)" }}>{fmt(b.expectedRealisation)} {b.tranche && `· ${b.tranche}`}</div>
           </div>
           {linkedMetric && <div style={{ marginBottom: 10 }}>
-            <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 3 }}>Linked Metric</div>
+            <div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 3 }}>Linked Metric</div>
             <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 8px", background: "var(--bg3)", borderRadius: 4, border: "1px solid var(--border)" }}><RagPip rag={linkedMetric.rag} /><span style={{ fontSize: 9, fontFamily: "var(--font-b)", color: "var(--text)", flex: 1 }}>{linkedMetric.name}</span><span style={{ fontSize: 10, fontFamily: "var(--font-m)", fontWeight: 700, color: RAG[linkedMetric.rag].color }}>{fmtVal(linkedMetric)}</span></div>
           </div>}
           <div style={{ borderTop: "1px solid var(--border)", paddingTop: 14, marginTop: 14 }}>
-            <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 10 }}>Update Status</div>
+            <div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", marginBottom: 10 }}>Update Status</div>
             <div style={{ display: "flex", gap: 5, marginBottom: 12, flexWrap: "wrap" }}>
-              {Object.entries(BENEFIT_STATUS).map(([k, s]) => <button key={k} onClick={() => setB(p => ({ ...p, status: k }))} style={{ fontSize: 7, fontFamily: "var(--font-m)", padding: "4px 9px", border: `1px solid ${b.status === k ? s.color : "var(--border2)"}`, borderRadius: 4, color: b.status === k ? s.color : "var(--text3)", background: b.status === k ? s.bg : "transparent", textTransform: "uppercase" }}>{s.label}</button>)}
+              {Object.entries(BENEFIT_STATUS).map(([k, s]) => <button key={k} onClick={() => setB(p => ({ ...p, status: k }))} style={{ fontSize: 9, fontFamily: "var(--font-m)", padding: "4px 9px", border: `1px solid ${b.status === k ? s.color : "var(--border2)"}`, borderRadius: 4, color: b.status === k ? s.color : "var(--text3)", background: b.status === k ? s.bg : "transparent", textTransform: "uppercase" }}>{s.label}</button>)}
             </div>
             <button onClick={save} style={{ width: "100%", background: "var(--accent)", color: "#000", borderRadius: 5, padding: "8px", fontFamily: "var(--font-d)", fontWeight: 700, fontSize: 11 }}>Save</button>
           </div>
@@ -956,16 +956,16 @@ ${calendarEvents.slice(0, 6).map(e => `- ${e.title} on ${e.date} [${e.type}]`).j
       <div style={{ width: "min(760px,100%)", height: "min(85vh,760px)", background: "var(--bg1)", border: "1px solid var(--border2)", borderRadius: 10, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,0.8)", display: "flex", flexDirection: "column" }}>
         <div style={{ padding: "12px 18px", borderBottom: "1px solid var(--border)", background: "var(--bg2)", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
           <div>
-            <div style={{ fontSize: 8, fontFamily: "var(--font-m)", color: meta.color, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 2 }}>{meta.icon} {meta.label}</div>
+            <div style={{ fontSize: 10, fontFamily: "var(--font-m)", color: meta.color, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 2 }}>{meta.icon} {meta.label}</div>
             <div style={{ fontSize: 13, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)" }}>{programme.name} · {fmtL(d(0))}</div>
           </div>
           <div style={{ display: "flex", gap: 7, alignItems: "center" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", background: `${phiC}15`, border: `1px solid ${phiC}40`, borderRadius: 20 }}>
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: phiC }} />
-              <span style={{ fontSize: 8, fontFamily: "var(--font-m)", color: phiC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em" }}>PHI {phi}</span>
+              <span style={{ fontSize: 10, fontFamily: "var(--font-m)", color: phiC, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em" }}>PHI {phi}</span>
             </div>
-            {report && <button onClick={copy} style={{ fontSize: 8, fontFamily: "var(--font-m)", padding: "5px 11px", background: "rgba(42,191,191,0.15)", border: "1px solid rgba(42,191,191,0.3)", borderRadius: 5, color: "var(--accent)" }}>{copied ? "Copied ✓" : "Copy"}</button>}
-            {report && <button onClick={generate} disabled={loading} style={{ fontSize: 8, fontFamily: "var(--font-m)", padding: "5px 11px", background: `${meta.color}15`, border: `1px solid ${meta.color}30`, borderRadius: 5, color: meta.color }}>↻ Refresh</button>}
+            {report && <button onClick={copy} style={{ fontSize: 10, fontFamily: "var(--font-m)", padding: "5px 11px", background: "rgba(42,191,191,0.15)", border: "1px solid rgba(42,191,191,0.3)", borderRadius: 5, color: "var(--accent)" }}>{copied ? "Copied ✓" : "Copy"}</button>}
+            {report && <button onClick={generate} disabled={loading} style={{ fontSize: 10, fontFamily: "var(--font-m)", padding: "5px 11px", background: `${meta.color}15`, border: `1px solid ${meta.color}30`, borderRadius: 5, color: meta.color }}>↻ Refresh</button>}
             <button onClick={onClose} style={{ color: "var(--text3)", fontSize: 16, padding: "2px 5px" }}>✕</button>
           </div>
         </div>
@@ -992,7 +992,7 @@ const ReportsTab = ({ state, onOpenReport }) => {
     <div style={{ padding: "16px 20px" }}>
       <div style={{ marginBottom: 14 }}>
         <div style={{ fontSize: 13, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)", marginBottom: 3 }}>Reports & Outputs</div>
-        <div style={{ fontSize: 8, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Generate formal outputs from live programme data</div>
+        <div style={{ fontSize: 10, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Generate formal outputs from live programme data</div>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(320px,1fr))", gap: 12 }}>
         {enabled.map((out, i) => {
@@ -1007,7 +1007,7 @@ const ReportsTab = ({ state, onOpenReport }) => {
                   <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 5 }}>
                     <span style={{ fontSize: 18 }}>{meta.icon}</span>
                     <div>
-                      <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: meta.color, textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 600 }}>{out.frequency}</div>
+                      <div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: meta.color, textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 600 }}>{out.frequency}</div>
                       <div style={{ fontSize: 12, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)", lineHeight: 1.3 }}>{meta.label}</div>
                     </div>
                   </div>
@@ -1016,11 +1016,11 @@ const ReportsTab = ({ state, onOpenReport }) => {
               <p style={{ fontSize: 9, fontFamily: "var(--font-b)", color: "var(--text2)", lineHeight: 1.55 }}>{meta.desc}</p>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border)", paddingTop: 9 }}>
                 <div>
-                  <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Audience</div>
+                  <div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Audience</div>
                   <div style={{ fontSize: 9, fontFamily: "var(--font-b)", color: "var(--text2)" }}>{out.audience || "—"}</div>
                 </div>
                 {due && <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Next Due</div>
+                  <div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Next Due</div>
                   <div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: dueColour }}>{fmt(due)}{daysToDue !== null && ` · ${daysToDue > 0 ? "in " + daysToDue + "d" : daysToDue === 0 ? "today" : Math.abs(daysToDue) + "d overdue"}`}</div>
                 </div>}
               </div>
@@ -1172,16 +1172,16 @@ Omit JSON blocks if not needed.`;
       <div style={{ background: "var(--bg1)", borderBottom: "1px solid var(--border)", padding: "0 18px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 48, flexShrink: 0, position: "sticky", top: 0, zIndex: 50 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 24, height: 24, background: "var(--accent)", borderRadius: 3, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: "#000", fontFamily: "var(--font-d)" }}>◆</div>
-          <div><div style={{ fontSize: 12, fontFamily: "var(--font-d)", fontWeight: 800, color: "var(--text)", letterSpacing: "-0.02em" }}>APEX</div><div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", letterSpacing: "0.15em", textTransform: "uppercase" }}>Programme Execution & Control</div></div>
+          <div><div style={{ fontSize: 12, fontFamily: "var(--font-d)", fontWeight: 800, color: "var(--text)", letterSpacing: "-0.02em" }}>APEX</div><div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", letterSpacing: "0.15em", textTransform: "uppercase" }}>Programme Execution & Control</div></div>
           <div style={{ width: 1, height: 16, background: "var(--border)", margin: "0 5px" }} />
-          <div><div style={{ fontSize: 10, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)" }}>{programme.name}</div><div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{programme.type} · {programme.phase}</div></div>
+          <div><div style={{ fontSize: 10, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)" }}>{programme.name}</div><div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{programme.type} · {programme.phase}</div></div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <select value={role} onChange={e => setRole(e.target.value)} style={{ background: "var(--bg3)", border: "1px solid var(--border2)", borderRadius: 4, color: "var(--accent)", fontFamily: "var(--font-m)", fontSize: 8, padding: "4px 8px", textTransform: "uppercase" }}>
+          <select value={role} onChange={e => setRole(e.target.value)} style={{ background: "var(--bg3)", border: "1px solid var(--border2)", borderRadius: 4, color: "var(--accent)", fontFamily: "var(--font-m)", fontSize: 10, padding: "4px 8px", textTransform: "uppercase" }}>
             {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
           </select>
-          <button onClick={() => setShowModal(true)} style={{ fontSize: 7, fontFamily: "var(--font-m)", padding: "5px 11px", background: "rgba(42,191,191,0.1)", border: "1px solid rgba(42,191,191,0.3)", borderRadius: 4, color: "var(--accent)", textTransform: "uppercase" }}>+ New Programme</button>
-          <div style={{ display: "flex", alignItems: "center", gap: 4 }}><span style={{ width: 5, height: 5, borderRadius: "50%", background: "#5DC484", display: "inline-block", animation: "blink 2s infinite" }} /><span style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "#5DC484", textTransform: "uppercase" }}>Live</span></div>
+          <button onClick={() => setShowModal(true)} style={{ fontSize: 9, fontFamily: "var(--font-m)", padding: "5px 11px", background: "rgba(42,191,191,0.1)", border: "1px solid rgba(42,191,191,0.3)", borderRadius: 4, color: "var(--accent)", textTransform: "uppercase" }}>+ New Programme</button>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}><span style={{ width: 5, height: 5, borderRadius: "50%", background: "#5DC484", display: "inline-block", animation: "blink 2s infinite" }} /><span style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "#5DC484", textTransform: "uppercase" }}>Live</span></div>
         </div>
       </div>
 
@@ -1190,14 +1190,14 @@ Omit JSON blocks if not needed.`;
         {[{ l: "Complete", v: tasks.filter(t => t.status === "complete").length, c: "#5DC484" }, { l: "In Progress", v: tasks.filter(t => t.status === "in-progress").length, c: "#F5C544" }, { l: "Open Risks", v: openRisks, c: "#E8734A" }, { l: "RAID Open", v: raidItems.filter(i => i.status === "Open" || i.status === "Active" || i.status === "Pending").length, c: "#A78BFA" }, { l: "On Track", v: g, c: "#5DC484" }, { l: "PHI", v: phi, c: phiC }].map((s, i, arr) => (
           <div key={i} style={{ flex: 1, padding: "8px 10px", borderRight: i < arr.length - 1 ? "1px solid var(--border)" : "none", textAlign: "center" }}>
             <div style={{ fontSize: 17, fontFamily: "var(--font-d)", fontWeight: 700, color: s.c }}>{s.v}</div>
-            <div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 2 }}>{s.l}</div>
+            <div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 2 }}>{s.l}</div>
           </div>
         ))}
       </div>
 
       {/* Tabs */}
       <div style={{ display: "flex", background: "var(--bg1)", borderBottom: "1px solid var(--border)", padding: "0 18px", flexShrink: 0 }}>
-        {TABS.map(t => <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: "8px 14px", fontSize: 8, fontFamily: "var(--font-m)", fontWeight: tab === t.id ? 600 : 400, color: tab === t.id ? "var(--accent)" : "var(--text3)", borderBottom: tab === t.id ? "2px solid var(--accent)" : "2px solid transparent", background: "none", textTransform: "uppercase", letterSpacing: "0.08em", transition: "all 0.15s" }}>{t.label}</button>)}
+        {TABS.map(t => <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: "10px 16px", fontSize: 11, fontFamily: "var(--font-d)", fontWeight: tab === t.id ? 700 : 500, color: tab === t.id ? "var(--accent)" : "var(--text2)", borderBottom: tab === t.id ? "2px solid var(--accent)" : "2px solid transparent", background: "none", textTransform: "none", letterSpacing: "0", transition: "all 0.15s", cursor: "pointer" }}>{t.label}</button>)}
       </div>
 
       {/* Content */}
@@ -1209,20 +1209,20 @@ Omit JSON blocks if not needed.`;
             <InsightCardsRow insights={insights} loading={insightLoad} onDismiss={id => setInsights(prev => prev.filter(i => i.id !== id))} onAction={(ins, action) => { setTab("ai"); setInput(action === "View Details" ? `Tell me more about: ${ins.title}` : ins.title); }} onRefresh={generateInsights} />
             <BenefitsStrip benefits={benefits} onOpen={setOpenBenefit} />
             <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr) 170px", gap: 8, marginBottom: 16 }}>
-              {[{ l: "On Track", v: g, c: "#5DC484" }, { l: "At Risk", v: a, c: "#F5C544" }, { l: "Off Track", v: r, c: "#E8734A" }, { l: "Total", v: metrics.length, c: "var(--text2)" }, { l: "Families", v: [...new Set(metrics.map(m => m.family))].length, c: "var(--violet)" }].map((s, i) => (<div key={i} style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 6, padding: "9px 12px" }}><div style={{ fontSize: 21, fontFamily: "var(--font-d)", fontWeight: 800, color: s.c }}>{s.v}</div><div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 2 }}>{s.l}</div></div>))}
-              <div style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 6, padding: "9px 12px" }}><div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--violet)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>Portfolio Health</div><div style={{ display: "flex", alignItems: "center", gap: 8 }}><div style={{ fontSize: 25, fontFamily: "var(--font-d)", fontWeight: 800, color: phiC }}>{phi}</div><div style={{ flex: 1 }}><div style={{ background: "var(--bg0)", borderRadius: 3, height: 4, overflow: "hidden" }}><div style={{ width: `${phi}%`, height: "100%", background: `linear-gradient(90deg,${phiC}88,${phiC})`, borderRadius: 3 }} /></div><div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", marginTop: 2 }}>Target 80+</div></div></div></div>
+              {[{ l: "On Track", v: g, c: "#5DC484" }, { l: "At Risk", v: a, c: "#F5C544" }, { l: "Off Track", v: r, c: "#E8734A" }, { l: "Total", v: metrics.length, c: "var(--text2)" }, { l: "Families", v: [...new Set(metrics.map(m => m.family))].length, c: "var(--violet)" }].map((s, i) => (<div key={i} style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 6, padding: "9px 12px" }}><div style={{ fontSize: 21, fontFamily: "var(--font-d)", fontWeight: 800, color: s.c }}>{s.v}</div><div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 2 }}>{s.l}</div></div>))}
+              <div style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 6, padding: "9px 12px" }}><div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--violet)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>Portfolio Health</div><div style={{ display: "flex", alignItems: "center", gap: 8 }}><div style={{ fontSize: 25, fontFamily: "var(--font-d)", fontWeight: 800, color: phiC }}>{phi}</div><div style={{ flex: 1 }}><div style={{ background: "var(--bg0)", borderRadius: 3, height: 4, overflow: "hidden" }}><div style={{ width: `${phi}%`, height: "100%", background: `linear-gradient(90deg,${phiC}88,${phiC})`, borderRadius: 3 }} /></div><div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", marginTop: 2 }}>Target 80+</div></div></div></div>
             </div>
             <div style={{ display: "flex", gap: 5, marginBottom: 12, flexWrap: "wrap" }}>
-              {[["all", "All", "var(--text2)"], ...Object.entries(FAMILIES).map(([k, v]) => [k, v.label, v.color])].map(([key, label, color]) => <button key={key} onClick={() => setActiveFam(key)} style={{ fontSize: 7, fontFamily: "var(--font-m)", padding: "3px 9px", border: `1px solid ${activeFam === key ? color : "var(--border2)"}`, borderRadius: 20, color: activeFam === key ? color : "var(--text3)", background: activeFam === key ? `${color}15` : "transparent", textTransform: "uppercase", transition: "all 0.15s" }}>{label}</button>)}
+              {[["all", "All", "var(--text2)"], ...Object.entries(FAMILIES).map(([k, v]) => [k, v.label, v.color])].map(([key, label, color]) => <button key={key} onClick={() => setActiveFam(key)} style={{ fontSize: 9, fontFamily: "var(--font-m)", padding: "3px 9px", border: `1px solid ${activeFam === key ? color : "var(--border2)"}`, borderRadius: 20, color: activeFam === key ? color : "var(--text3)", background: activeFam === key ? `${color}15` : "transparent", textTransform: "uppercase", transition: "all 0.15s" }}>{label}</button>)}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(265px,1fr))", gap: 9 }}>
               {filteredMetrics.map((m, i) => { const fam = FAMILIES[m.family] || FAMILIES.delivery, rag = RAG[m.rag] || RAG.amber, pct = progPct(m), linked = (m.links || []).map(l => ({ ...l, task: tasks.find(t => t.id === l.taskId) })).filter(l => l.task);
                 return (<div key={m.id} className="fu" onClick={() => setOpenM(m)} style={{ animationDelay: `${i * 0.025}s`, background: "var(--bg2)", border: "1px solid var(--border)", borderTop: `2px solid ${rag.color}`, borderRadius: 6, padding: "11px 13px", cursor: "pointer", transition: "background 0.15s, border-color 0.15s", display: "flex", flexDirection: "column", gap: 7 }} onMouseEnter={e => { e.currentTarget.style.background = "var(--bg3)"; }} onMouseLeave={e => { e.currentTarget.style.background = "var(--bg2)"; }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 7 }}><div style={{ flex: 1 }}><div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: fam.color, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 2 }}>{fam.icon} {fam.label}</div><div style={{ fontSize: 10, fontFamily: "var(--font-b)", color: "var(--text)", fontWeight: 500, lineHeight: 1.3 }}>{m.name}</div></div><div style={{ textAlign: "right", flexShrink: 0 }}><div style={{ fontSize: 18, fontFamily: "var(--font-d)", fontWeight: 800, color: rag.color, lineHeight: 1 }}>{fmtVal(m)}</div><div style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", marginTop: 2 }}>of {m.target}{m.unit}</div></div></div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 7 }}><div style={{ flex: 1 }}><div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: fam.color, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 2 }}>{fam.icon} {fam.label}</div><div style={{ fontSize: 10, fontFamily: "var(--font-b)", color: "var(--text)", fontWeight: 500, lineHeight: 1.3 }}>{m.name}</div></div><div style={{ textAlign: "right", flexShrink: 0 }}><div style={{ fontSize: 18, fontFamily: "var(--font-d)", fontWeight: 800, color: rag.color, lineHeight: 1 }}>{fmtVal(m)}</div><div style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", marginTop: 2 }}>of {m.target}{m.unit}</div></div></div>
                   <div style={{ background: "var(--bg0)", borderRadius: 3, height: 3, overflow: "hidden" }}><div style={{ width: `${pct}%`, height: "100%", background: `linear-gradient(90deg,${rag.color}66,${rag.color})`, borderRadius: 3, transition: "width 0.5s ease" }} /></div>
-                  <p style={{ fontSize: 8, fontFamily: "var(--font-m)", color: "var(--text2)", lineHeight: 1.5 }}>{m.note}</p>
+                  <p style={{ fontSize: 10, fontFamily: "var(--font-m)", color: "var(--text2)", lineHeight: 1.5 }}>{m.note}</p>
                   {linked.length > 0 && <div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>{linked.slice(0, 3).map(l => <LinkChip key={l.taskId} task={l.task} linkType={l.type} onClick={navigateToTask} />)}</div>}
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}><span style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)" }}>{fmt(m.lastUpdated)}</span><Spark data={m.trend} color={rag.color} positive={m.direction === "higher"} /></div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}><span style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)" }}>{fmt(m.lastUpdated)}</span><Spark data={m.trend} color={rag.color} positive={m.direction === "higher"} /></div>
                 </div>);
               })}
             </div>
@@ -1230,18 +1230,18 @@ Omit JSON blocks if not needed.`;
 
           {/* GANTT */}
           {tab === "gantt" && <div style={{ overflowX: "auto" }}>
-            <div style={{ display: "flex", borderBottom: "1px solid var(--border)" }}><div style={{ width: 205, minWidth: 205, padding: "5px 10px", fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase" }}>Task</div><div style={{ flex: 1, position: "relative", height: 24 }}>{wkL.map((w, i) => <span key={i} style={{ position: "absolute", left: `${w.pct}%`, fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", transform: "translateX(-50%)", top: 5, whiteSpace: "nowrap" }}>{w.label}</span>)}</div></div>
+            <div style={{ display: "flex", borderBottom: "1px solid var(--border)" }}><div style={{ width: 205, minWidth: 205, padding: "5px 10px", fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase" }}>Task</div><div style={{ flex: 1, position: "relative", height: 24 }}>{wkL.map((w, i) => <span key={i} style={{ position: "absolute", left: `${w.pct}%`, fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", transform: "translateX(-50%)", top: 5, whiteSpace: "nowrap" }}>{w.label}</span>)}</div></div>
             {phases.map(phase => (<div key={phase}>
-              <div style={{ padding: "4px 10px", background: "var(--bg3)", borderBottom: "1px solid var(--border)" }}><span style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--accent)", textTransform: "uppercase", fontWeight: 600 }}>◆ {phase}</span></div>
+              <div style={{ padding: "4px 10px", background: "var(--bg3)", borderBottom: "1px solid var(--border)" }}><span style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--accent)", textTransform: "uppercase", fontWeight: 600 }}>◆ {phase}</span></div>
               {tasks.filter(t => t.phase === phase).map(task => {
                 const left = Math.max(0, daysBetween(gS, new Date(task.start))), width = Math.max(1, daysBetween(new Date(task.start), new Date(task.end)));
                 const lp = (left / GW) * 100, wp = (width / GW) * 100, meta = STATUS_META[task.status] || STATUS_META["not-started"], hl = task.id === hlTask;
                 return (<div key={task.id} id={`tr-${task.id}`} style={{ display: "flex", alignItems: "center", borderBottom: "1px solid var(--border)", minHeight: 33, background: hl ? "var(--bg4)" : "var(--bg1)", transition: "background 0.3s" }} onMouseEnter={e => e.currentTarget.style.background = "var(--bg2)"} onMouseLeave={e => e.currentTarget.style.background = hl ? "var(--bg4)" : "var(--bg1)"}>
-                  <div style={{ width: 205, minWidth: 205, padding: "0 10px", display: "flex", alignItems: "center", gap: 4 }}><Badge status={task.status} /><span style={{ fontSize: 8, fontFamily: "var(--font-m)", color: "var(--text2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{task.name}</span></div>
+                  <div style={{ width: 205, minWidth: 205, padding: "0 10px", display: "flex", alignItems: "center", gap: 4 }}><Badge status={task.status} /><span style={{ fontSize: 10, fontFamily: "var(--font-m)", color: "var(--text2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{task.name}</span></div>
                   <div style={{ flex: 1, position: "relative", height: 33 }}>
                     {wkL.map((w, i) => <div key={i} style={{ position: "absolute", left: `${w.pct}%`, top: 0, bottom: 0, borderLeft: "1px solid var(--border)" }} />)}
                     {todayPct >= 0 && todayPct <= 100 && <div style={{ position: "absolute", left: `${todayPct}%`, top: 0, bottom: 0, borderLeft: "1px dashed var(--accent)", zIndex: 2, opacity: 0.7 }} />}
-                    {left < GW && left + width > 0 && <div onClick={() => { setSelTask(task); setHlTask(task.id); }} style={{ position: "absolute", left: `${Math.max(0, lp)}%`, width: `${Math.min(wp, 100 - Math.max(0, lp))}%`, top: "50%", transform: "translateY(-50%)", height: 18, background: meta.bg, border: `1px solid ${meta.color}55`, borderLeft: `3px solid ${meta.color}`, borderRadius: 3, overflow: "hidden", cursor: "pointer", transition: "box-shadow 0.3s" }} onMouseEnter={e => e.currentTarget.style.filter = "brightness(1.3)"} onMouseLeave={e => e.currentTarget.style.filter = "brightness(1)"}><div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${task.progress}%`, background: `${meta.color}20` }} /><span style={{ position: "relative", zIndex: 1, fontSize: 7, fontFamily: "var(--font-m)", color: meta.color, paddingLeft: 4, lineHeight: "18px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>{task.name}</span></div>}
+                    {left < GW && left + width > 0 && <div onClick={() => { setSelTask(task); setHlTask(task.id); }} style={{ position: "absolute", left: `${Math.max(0, lp)}%`, width: `${Math.min(wp, 100 - Math.max(0, lp))}%`, top: "50%", transform: "translateY(-50%)", height: 18, background: meta.bg, border: `1px solid ${meta.color}55`, borderLeft: `3px solid ${meta.color}`, borderRadius: 3, overflow: "hidden", cursor: "pointer", transition: "box-shadow 0.3s" }} onMouseEnter={e => e.currentTarget.style.filter = "brightness(1.3)"} onMouseLeave={e => e.currentTarget.style.filter = "brightness(1)"}><div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${task.progress}%`, background: `${meta.color}20` }} /><span style={{ position: "relative", zIndex: 1, fontSize: 9, fontFamily: "var(--font-m)", color: meta.color, paddingLeft: 4, lineHeight: "18px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>{task.name}</span></div>}
                   </div>
                 </div>);
               })}
@@ -1250,10 +1250,10 @@ Omit JSON blocks if not needed.`;
 
           {/* RISKS */}
           {tab === "risks" && <div>
-            <div style={{ padding: "7px 14px", background: "var(--bg2)", borderBottom: "1px solid var(--border)", fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase" }}>{risks.length} total · {openRisks} open</div>
+            <div style={{ padding: "7px 14px", background: "var(--bg2)", borderBottom: "1px solid var(--border)", fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase" }}>{risks.length} total · {openRisks} open</div>
             {risks.map((r, i) => (<div key={r.id} style={{ padding: "10px 14px", borderBottom: "1px solid var(--border)", background: i % 2 === 0 ? "var(--bg1)" : "var(--bg0)", display: "grid", gridTemplateColumns: "1fr auto", gap: 7 }}>
-              <div><div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}><span style={{ fontSize: 7, fontFamily: "var(--font-m)", fontWeight: 600, color: { High: "#E8734A", Medium: "#F5C544", Low: "#5DC484" }[r.impact], textTransform: "uppercase" }}>▲ {r.impact}</span><span style={{ fontSize: 10, fontFamily: "var(--font-b)", fontWeight: 500, color: "var(--text)" }}>{r.title}</span><span style={{ fontSize: 7, fontFamily: "var(--font-m)", color: r.status === "Mitigated" ? "var(--green)" : "var(--yellow)", background: r.status === "Mitigated" ? "rgba(93,196,132,0.1)" : "rgba(245,197,68,0.1)", padding: "1px 5px", borderRadius: 2 }}>{r.status}</span></div><p style={{ fontSize: 8, color: "var(--text2)", fontFamily: "var(--font-m)", lineHeight: 1.6 }}><span style={{ color: "var(--text3)" }}>MITIGATION: </span>{r.mitigation}</p></div>
-              <div style={{ textAlign: "right" }}><div style={{ fontSize: 8, fontFamily: "var(--font-m)", color: "var(--blue)" }}>{r.owner}</div></div>
+              <div><div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}><span style={{ fontSize: 9, fontFamily: "var(--font-m)", fontWeight: 600, color: { High: "#E8734A", Medium: "#F5C544", Low: "#5DC484" }[r.impact], textTransform: "uppercase" }}>▲ {r.impact}</span><span style={{ fontSize: 10, fontFamily: "var(--font-b)", fontWeight: 500, color: "var(--text)" }}>{r.title}</span><span style={{ fontSize: 9, fontFamily: "var(--font-m)", color: r.status === "Mitigated" ? "var(--green)" : "var(--yellow)", background: r.status === "Mitigated" ? "rgba(93,196,132,0.1)" : "rgba(245,197,68,0.1)", padding: "1px 5px", borderRadius: 2 }}>{r.status}</span></div><p style={{ fontSize: 10, color: "var(--text2)", fontFamily: "var(--font-m)", lineHeight: 1.6 }}><span style={{ color: "var(--text3)" }}>MITIGATION: </span>{r.mitigation}</p></div>
+              <div style={{ textAlign: "right" }}><div style={{ fontSize: 10, fontFamily: "var(--font-m)", color: "var(--blue)" }}>{r.owner}</div></div>
             </div>))}
           </div>}
 
@@ -1267,8 +1267,8 @@ Omit JSON blocks if not needed.`;
           {tab === "ai" && <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
             <div style={{ padding: "7px 14px", borderBottom: "1px solid var(--border)", background: "var(--bg3)", display: "flex", alignItems: "center", gap: 7, flexShrink: 0 }}>
               <span style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--accent)", display: "inline-block", animation: "blink 2s infinite" }} />
-              <span style={{ fontSize: 8, fontFamily: "var(--font-b)", color: "var(--text2)" }}>Anthropic Claude</span>
-              <span style={{ fontSize: 7, fontFamily: "var(--font-m)", color: "var(--text3)", marginLeft: "auto" }}>Role: {role} · Ask contextual questions for focused views</span>
+              <span style={{ fontSize: 10, fontFamily: "var(--font-b)", color: "var(--text2)" }}>Anthropic Claude</span>
+              <span style={{ fontSize: 9, fontFamily: "var(--font-m)", color: "var(--text3)", marginLeft: "auto" }}>Role: {role} · Ask contextual questions for focused views</span>
             </div>
             <div style={{ flex: 1, overflowY: "auto", padding: "11px 14px", display: "flex", flexDirection: "column", gap: 9 }}>
               {contextView && <ContextView view={contextView} tasks={tasks} risks={risks} metrics={metrics} raidItems={raidItems} benefits={benefits} onClose={() => setContextView(null)} onNavigateTask={navigateToTask} onOpenMetric={m => { setTab("metrics"); setTimeout(() => setOpenM(m), 100); }} onOpenBenefit={b => { setTab("metrics"); setTimeout(() => setOpenBenefit(b), 100); }} />}
