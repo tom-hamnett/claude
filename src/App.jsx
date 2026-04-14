@@ -1,7 +1,5 @@
-import APEX from './APEX.jsx'
+import ApexApp from './apex/App.jsx'
 
-function App() {
-  return <APEX />
+export default function App() {
+  return <ApexApp />
 }
-
-export default App
