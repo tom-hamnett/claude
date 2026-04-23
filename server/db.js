@@ -58,6 +58,59 @@ export function initDB() {
 
     CREATE UNIQUE INDEX IF NOT EXISTS idx_chat_context
       ON chat_history(programme_id, context_id);
+
+    -- Source data tables (parsed from uploaded Excel/CSV)
+    CREATE TABLE IF NOT EXISTS data_tables (
+      id TEXT PRIMARY KEY,
+      programme_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT,
+      columns_meta TEXT NOT NULL,
+      row_count INTEGER DEFAULT 0,
+      source_document_id TEXT,
+      version INTEGER DEFAULT 1,
+      previous_version_id TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (programme_id) REFERENCES programmes(id)
+    );
+
+    -- Data rows for source tables
+    CREATE TABLE IF NOT EXISTS data_rows (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      table_id TEXT NOT NULL,
+      row_data TEXT NOT NULL,
+      FOREIGN KEY (table_id) REFERENCES data_tables(id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_data_rows_table ON data_rows(table_id);
+
+    -- KPI definitions (user-configured headline metrics)
+    CREATE TABLE IF NOT EXISTS kpi_definitions (
+      id TEXT PRIMARY KEY,
+      programme_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT,
+      source_table_id TEXT,
+      value_column TEXT,
+      time_column TEXT,
+      dimension_columns TEXT,
+      aggregation TEXT DEFAULT 'sum',
+      target REAL,
+      direction TEXT DEFAULT 'higher',
+      rag_green REAL,
+      rag_amber REAL,
+      unit TEXT,
+      domain TEXT,
+      panel TEXT,
+      is_headline INTEGER DEFAULT 0,
+      linked_kpi_ids TEXT,
+      chart_type TEXT DEFAULT 'bar',
+      sort_order INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (programme_id) REFERENCES programmes(id),
+      FOREIGN KEY (source_table_id) REFERENCES data_tables(id)
+    );
   `);
 
   return db;
