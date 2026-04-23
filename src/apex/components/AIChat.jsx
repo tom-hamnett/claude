@@ -12,7 +12,7 @@ export default function AIChat({ programmeId, contextId = "global", contextLabel
   const programme = state.programmes[programmeId];
   const engineId = state.settings.aiEngine;
 
-  const [messages, setMessages] = useState(() => loadChat(programmeId, contextId));
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState([]);
@@ -23,7 +23,16 @@ export default function AIChat({ programmeId, contextId = "global", contextLabel
 
   const gaps = gapSection ? gapsForSection(programmeId, gapSection) : [];
 
-  useEffect(() => { saveChat(programmeId, contextId, messages); }, [messages, programmeId, contextId]);
+  // Load chat history async
+  useEffect(() => {
+    let cancelled = false;
+    loadChat(programmeId, contextId).then(msgs => {
+      if (!cancelled && Array.isArray(msgs)) setMessages(msgs);
+    });
+    return () => { cancelled = true; };
+  }, [programmeId, contextId]);
+
+  useEffect(() => { if (messages.length) saveChat(programmeId, contextId, messages); }, [messages, programmeId, contextId]);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
   function buildSystemPrompt() {
