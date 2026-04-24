@@ -1,6 +1,7 @@
 // Seed the database with IHG PE reference data from the code-based data files.
 // This runs once on first start if the programme doesn't exist yet.
 import { getDB } from "./db.js";
+import { seedTemplates } from "./smartIngest.js";
 
 // We import the structured data and flatten it into a single JSON blob
 // that represents the full programme state.
@@ -66,8 +67,13 @@ export function seedIfNeeded() {
   db.prepare("INSERT INTO programmes (id, data) VALUES (?, ?)").run("ihg-pe", JSON.stringify(programme));
   console.log("[seed] IHG PE seeded with", IHG_PROJECTS.length, "projects,", IHG_RISKS.length, "risks,", IHG_AUDIT_ACTIONS.length, "audit actions.");
 
-  // Seed pre-loaded metrics data as source data tables (so users can browse, filter, export, KPI)
+  // Seed pre-loaded metrics data as source data tables
   seedDataTables(db);
+
+  // Seed data templates
+  db.close();
+  seedTemplates("ihg-pe");
+  return; // seedTemplates opens/closes its own DB connection
 
   db.close();
 }

@@ -85,6 +85,22 @@ export function initDB() {
 
     CREATE INDEX IF NOT EXISTS idx_data_rows_table ON data_rows(table_id);
 
+    -- Data templates (expected shapes for uploads)
+    CREATE TABLE IF NOT EXISTS data_templates (
+      id TEXT PRIMARY KEY,
+      programme_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT,
+      required_columns TEXT NOT NULL,
+      optional_columns TEXT,
+      expected_dimensions TEXT,
+      linked_kpi_ids TEXT,
+      domain TEXT,
+      panel TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (programme_id) REFERENCES programmes(id)
+    );
+
     -- KPI definitions (user-configured headline metrics)
     CREATE TABLE IF NOT EXISTS kpi_definitions (
       id TEXT PRIMARY KEY,

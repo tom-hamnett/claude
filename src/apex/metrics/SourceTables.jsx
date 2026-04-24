@@ -1,34 +1,14 @@
-// Source Data Tables: browse, upload, view, download
+// Source Data Tables: browse, upload (smart), view, download
 import { useState, useRef } from "react";
 import { Spinner, Card, EmptyState } from "../components/ui.jsx";
 import DataExplorer from "./DataExplorer.jsx";
+import SmartUpload from "./SmartUpload.jsx";
 
 export default function SourceTables({ programmeId, tables, onRefresh }) {
-  const [uploading, setUploading] = useState(false);
+  const [showSmartUpload, setShowSmartUpload] = useState(false);
   const [viewTable, setViewTable] = useState(null);
   const [viewData, setViewData] = useState(null);
   const [diff, setDiff] = useState(null);
-  const fileRef = useRef(null);
-
-  async function handleUpload(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    setDiff(null);
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("name", file.name.replace(/\.[^.]+$/, ""));
-    try {
-      const r = await fetch(`/api/programmes/${programmeId}/data-tables`, { method: "POST", body: formData });
-      const result = await r.json();
-      if (result.diff && (result.diff.modified > 0 || result.diff.added > 0 || result.diff.removed > 0)) {
-        setDiff(result);
-      }
-      onRefresh();
-    } catch (e) { console.error("Upload failed", e); }
-    setUploading(false);
-    if (fileRef.current) fileRef.current.value = "";
-  }
 
   async function openTable(table) {
     setViewTable(table);
@@ -62,11 +42,7 @@ export default function SourceTables({ programmeId, tables, onRefresh }) {
           <div style={{ fontSize: 15, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)" }}>Source Data Tables</div>
           <div style={{ fontSize: 12, fontFamily: "var(--font-b)", color: "var(--text2)", marginTop: 2 }}>Upload Excel or CSV files. Data is parsed, stored, and available for KPI definitions.</div>
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {uploading && <Spinner />}
-          <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" style={{ display: "none" }} onChange={handleUpload} />
-          <button onClick={() => fileRef.current?.click()} disabled={uploading} style={{ fontSize: 12, fontFamily: "var(--font-d)", fontWeight: 700, padding: "8px 16px", borderRadius: 6, background: "var(--accent)", color: "#000" }}>📄 Upload File</button>
-        </div>
+        <button onClick={() => setShowSmartUpload(true)} style={{ fontSize: 12, fontFamily: "var(--font-d)", fontWeight: 700, padding: "8px 16px", borderRadius: 6, background: "var(--accent)", color: "#000" }}>📄 Smart Upload</button>
       </div>
 
       {/* Version diff banner */}
@@ -113,6 +89,10 @@ export default function SourceTables({ programmeId, tables, onRefresh }) {
           </button>
         ))}
       </div>
+
+      {showSmartUpload && (
+        <SmartUpload programmeId={programmeId} onComplete={(result) => { setShowSmartUpload(false); setDiff(result.diff ? result : null); onRefresh(); }} onClose={() => setShowSmartUpload(false)} />
+      )}
     </div>
   );
 }

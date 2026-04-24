@@ -10,6 +10,7 @@ import dotenv from "dotenv";
 import { initDB, getDB } from "./db.js";
 import { seedIfNeeded } from "./seed.js";
 import { parseFile, diffTables, parseAllSheets } from "./dataParser.js";
+import { analyzeUpload } from "./smartIngest.js";
 
 dotenv.config();
 
@@ -279,6 +280,71 @@ app.delete("/api/data-tables/:tableId", (req, res) => {
   const db = getDB();
   db.prepare("DELETE FROM data_rows WHERE table_id = ?").run(req.params.tableId);
   db.prepare("DELETE FROM data_tables WHERE id = ?").run(req.params.tableId);
+  db.close();
+  res.json({ ok: true });
+});
+
+// ── Smart Ingestion (analyze before storing) ────────────────────────────────
+
+// Analyze an uploaded file: AI preview, template match, version check, gap fill
+app.post("/api/programmes/:programmeId/data-tables/analyze", upload.single("file"), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: "No file" });
+  try {
+    const analysis = analyzeUpload(req.params.programmeId, req.file.path, req.file.originalname);
+    // Keep the temp file path so we can store it if user confirms
+    analysis.tempFilePath = req.file.path;
+    analysis.originalName = req.file.originalname;
+    analysis.fileSize = req.file.size;
+    analysis.mimeType = req.file.mimetype;
+    res.json(analysis);
+  } catch (e) {
+    res.status(500).json({ error: "Analysis error: " + e.message });
+  }
+});
+
+// ── Data Templates ──────────────────────────────────────────────────────────
+
+app.get("/api/programmes/:programmeId/templates", (req, res) => {
+  const db = getDB();
+  const rows = db.prepare("SELECT * FROM data_templates WHERE programme_id = ? ORDER BY name").all(req.params.programmeId);
+  db.close();
+  res.json(rows.map(r => ({
+    ...r,
+    requiredColumns: JSON.parse(r.required_columns),
+    optionalColumns: JSON.parse(r.optional_columns || "[]"),
+    expectedDimensions: JSON.parse(r.expected_dimensions || "{}"),
+    linkedKpiIds: JSON.parse(r.linked_kpi_ids || "[]"),
+  })));
+});
+
+app.post("/api/programmes/:programmeId/templates", (req, res) => {
+  const db = getDB();
+  const id = `tpl-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
+  const t = req.body;
+  db.prepare("INSERT INTO data_templates (id, programme_id, name, description, required_columns, optional_columns, expected_dimensions, linked_kpi_ids, domain, panel) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run(
+    id, req.params.programmeId, t.name, t.description || "", JSON.stringify(t.requiredColumns || []), JSON.stringify(t.optionalColumns || []), JSON.stringify(t.expectedDimensions || {}), JSON.stringify(t.linkedKpiIds || []), t.domain || "", t.panel || ""
+  );
+  db.close();
+  res.json({ id, ...t });
+});
+
+app.post("/api/programmes/:programmeId/templates/from-table/:tableId", (req, res) => {
+  const db = getDB();
+  const table = db.prepare("SELECT * FROM data_tables WHERE id = ?").get(req.params.tableId);
+  if (!table) { db.close(); return res.status(404).json({ error: "Table not found" }); }
+  const columns = JSON.parse(table.columns_meta);
+  const id = `tpl-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
+  const required = columns.filter(c => c.type === "number" || c.isDimension).map(c => ({ name: c.name, type: c.type, role: c.isDimension ? "dimension" : c.type === "number" ? "value" : "info" }));
+  db.prepare("INSERT INTO data_templates (id, programme_id, name, description, required_columns, optional_columns, expected_dimensions) VALUES (?, ?, ?, ?, ?, ?, ?)").run(
+    id, req.params.programmeId, req.body.name || table.name, req.body.description || `Template created from ${table.name}`, JSON.stringify(required), "[]", "{}"
+  );
+  db.close();
+  res.json({ id, name: req.body.name || table.name, requiredColumns: required });
+});
+
+app.delete("/api/templates/:id", (req, res) => {
+  const db = getDB();
+  db.prepare("DELETE FROM data_templates WHERE id = ?").run(req.params.id);
   db.close();
   res.json({ ok: true });
 });
