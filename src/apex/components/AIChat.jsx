@@ -25,18 +25,30 @@ const DOC_TYPES = [
 export default function AIChat({ programmeId, contextId = "global", contextLabel = "programme", contextPayload = {}, gapSection = null }) {
   const [state] = useStore();
   const programme = state.programmes[programmeId];
-  const engineId = state.settings.aiEngine;
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState([]);
-  const [fileContexts, setFileContexts] = useState([]); // structured ingestion context per file
+  const [fileContexts, setFileContexts] = useState([]);
   const [showIngestionPanel, setShowIngestionPanel] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [engines, setEngines] = useState([]);
+  const [selectedEngineId, setSelectedEngineId] = useState(null);
   const bottomRef = useRef(null);
   const fileRef = useRef(null);
+
+  // Load available engines
+  useEffect(() => {
+    fetch(`/api/programmes/${programmeId}/engines`).then(r => r.json()).then(list => {
+      setEngines(list || []);
+      const def = (list || []).find(e => e.isDefault) || (list || [])[0];
+      if (def) setSelectedEngineId(def.id);
+    }).catch(() => {});
+  }, [programmeId]);
+
+  const activeEngine = engines.find(e => e.id === selectedEngineId);
 
   const gaps = gapSection ? gapsForSection(programmeId, gapSection) : [];
 
@@ -90,7 +102,7 @@ Response format:
     if (!override) setInput("");
     setLoading(true);
     try {
-      const reply = await aiCall(engineId, buildSystemPrompt(), newMsgs.map(m => ({ role: m.role, content: m.content })));
+      const reply = await aiCall(null, buildSystemPrompt(), newMsgs.map(m => ({ role: m.role, content: m.content })), { engineId: selectedEngineId, programmeId });
       const proposal = extractJson(reply);
       setMessages(prev => [...prev, { role: "assistant", content: stripJson(reply), ts: Date.now(), proposal: proposal?.proposal || null }]);
     } catch (e) {
@@ -172,7 +184,13 @@ Response format:
           <div style={{ width: 22, height: 22, background: "var(--accent)", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: "#000", fontFamily: "var(--font-d)" }}>◆</div>
           <div style={{ fontSize: 13, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)" }}>APEX AI</div>
           <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)" }}>— {contextLabel}</div>
-          <span style={{ fontSize: 10, fontFamily: "var(--font-m)", color: "var(--accent)", background: "rgba(42,191,191,0.12)", border: "1px solid rgba(42,191,191,0.3)", padding: "2px 7px", borderRadius: 3 }}>{engineId}</span>
+          {engines.length > 0 ? (
+            <select value={selectedEngineId || ""} onChange={e => setSelectedEngineId(e.target.value)} style={{ fontSize: 10, fontFamily: "var(--font-m)", color: "var(--accent)", background: "rgba(42,191,191,0.12)", border: "1px solid rgba(42,191,191,0.3)", borderRadius: 3, padding: "2px 6px", cursor: "pointer" }}>
+              {engines.map(e => <option key={e.id} value={e.id}>{e.name} ({e.provider}){e.isDefault ? " ★" : ""}</option>)}
+            </select>
+          ) : (
+            <span style={{ fontSize: 10, fontFamily: "var(--font-m)", color: "#E8734A", background: "rgba(232,115,74,0.12)", border: "1px solid rgba(232,115,74,0.3)", padding: "2px 7px", borderRadius: 3 }}>No engines — configure in ⚙ Settings</span>
+          )}
         </div>
         <button onClick={() => setCollapsed(true)} style={{ fontSize: 12, fontFamily: "var(--font-d)", color: "var(--text3)", padding: "4px 10px" }}>Collapse ▼</button>
       </div>

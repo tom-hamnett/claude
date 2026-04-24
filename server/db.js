@@ -101,6 +101,56 @@ export function initDB() {
       FOREIGN KEY (programme_id) REFERENCES programmes(id)
     );
 
+    -- LLM engines (user-configured AI providers)
+    CREATE TABLE IF NOT EXISTS llm_engines (
+      id TEXT PRIMARY KEY,
+      programme_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      provider TEXT NOT NULL,
+      api_key TEXT,
+      endpoint_url TEXT,
+      model_name TEXT,
+      deployment_name TEXT,
+      is_default INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (programme_id) REFERENCES programmes(id)
+    );
+
+    -- Live data sources (folder/file links that are polled on schedule)
+    CREATE TABLE IF NOT EXISTS data_sources (
+      id TEXT PRIMARY KEY,
+      programme_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      type TEXT NOT NULL,
+      config TEXT NOT NULL,
+      poll_interval_minutes INTEGER DEFAULT 60,
+      last_polled_at TEXT,
+      last_sync_summary TEXT,
+      enabled INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (programme_id) REFERENCES programmes(id)
+    );
+
+    -- Files seen from data sources (for change detection + pending ingestion queue)
+    CREATE TABLE IF NOT EXISTS data_source_files (
+      id TEXT PRIMARY KEY,
+      source_id TEXT NOT NULL,
+      file_id TEXT NOT NULL,
+      filename TEXT NOT NULL,
+      last_modified TEXT,
+      last_ingested_at TEXT,
+      status TEXT DEFAULT 'pending',
+      content_hash TEXT,
+      download_url TEXT,
+      target_table_id TEXT,
+      size_bytes INTEGER,
+      mime_type TEXT,
+      FOREIGN KEY (source_id) REFERENCES data_sources(id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_source_files_source ON data_source_files(source_id);
+    CREATE INDEX IF NOT EXISTS idx_source_files_status ON data_source_files(status);
+
     -- KPI definitions (user-configured headline metrics)
     CREATE TABLE IF NOT EXISTS kpi_definitions (
       id TEXT PRIMARY KEY,

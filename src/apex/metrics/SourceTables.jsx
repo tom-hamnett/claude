@@ -3,6 +3,7 @@ import { useState, useRef } from "react";
 import { Spinner, Card, EmptyState } from "../components/ui.jsx";
 import DataExplorer from "./DataExplorer.jsx";
 import SmartUpload from "./SmartUpload.jsx";
+import PendingIngestions from "./PendingIngestions.jsx";
 
 export default function SourceTables({ programmeId, tables, onRefresh }) {
   const [showSmartUpload, setShowSmartUpload] = useState(false);
@@ -37,6 +38,8 @@ export default function SourceTables({ programmeId, tables, onRefresh }) {
 
   return (
     <div>
+      <PendingIngestions programmeId={programmeId} onIngestFile={(p) => { setShowSmartUpload(true); /* TODO: could pre-load via URL */ }} />
+
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
         <div>
           <div style={{ fontSize: 15, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)" }}>Source Data Tables</div>

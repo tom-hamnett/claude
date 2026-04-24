@@ -11,6 +11,9 @@ import { initDB, getDB } from "./db.js";
 import { seedIfNeeded } from "./seed.js";
 import { parseFile, diffTables, parseAllSheets } from "./dataParser.js";
 import { analyzeUpload } from "./smartIngest.js";
+import { PROVIDERS, callEngine, testEngine } from "./ai/providers.js";
+import { syncSource, startScheduler } from "./sources/scheduler.js";
+import { FETCHERS } from "./sources/fetchers.js";
 
 dotenv.config();
 
@@ -457,26 +460,188 @@ app.get("/api/kpis/:kpiId/data", (req, res) => {
   }
 });
 
-// ── AI proxy ────────────────────────────────────────────────────────────────
+// ── LLM Engines (multi-provider) ────────────────────────────────────────────
+
+app.get("/api/providers", (req, res) => {
+  res.json(Object.entries(PROVIDERS).map(([id, p]) => ({ id, label: p.label, fields: p.fields })));
+});
+
+app.get("/api/programmes/:programmeId/engines", (req, res) => {
+  const db = getDB();
+  const rows = db.prepare("SELECT id, name, provider, endpoint_url, model_name, deployment_name, is_default, created_at FROM llm_engines WHERE programme_id = ? ORDER BY is_default DESC, created_at").all(req.params.programmeId);
+  db.close();
+  res.json(rows.map(r => ({ ...r, isDefault: !!r.is_default })));
+});
+
+app.post("/api/programmes/:programmeId/engines", (req, res) => {
+  const db = getDB();
+  const id = `eng-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  const e = req.body;
+  // If this engine is marked default, clear other defaults
+  if (e.isDefault) db.prepare("UPDATE llm_engines SET is_default = 0 WHERE programme_id = ?").run(req.params.programmeId);
+  db.prepare("INSERT INTO llm_engines (id, programme_id, name, provider, api_key, endpoint_url, model_name, deployment_name, is_default) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)").run(
+    id, req.params.programmeId, e.name, e.provider, e.apiKey || null, e.endpointUrl || null, e.modelName || null, e.deploymentName || null, e.isDefault ? 1 : 0
+  );
+  db.close();
+  res.json({ id, ...e });
+});
+
+app.put("/api/engines/:id", (req, res) => {
+  const db = getDB();
+  const existing = db.prepare("SELECT programme_id FROM llm_engines WHERE id = ?").get(req.params.id);
+  if (!existing) { db.close(); return res.status(404).json({ error: "Engine not found" }); }
+  const e = req.body;
+  if (e.isDefault) db.prepare("UPDATE llm_engines SET is_default = 0 WHERE programme_id = ?").run(existing.programme_id);
+  const sets = [];
+  const vals = [];
+  for (const [k, col] of [["name","name"],["provider","provider"],["apiKey","api_key"],["endpointUrl","endpoint_url"],["modelName","model_name"],["deploymentName","deployment_name"]]) {
+    if (e[k] !== undefined) { sets.push(`${col} = ?`); vals.push(e[k]); }
+  }
+  if (e.isDefault !== undefined) { sets.push("is_default = ?"); vals.push(e.isDefault ? 1 : 0); }
+  if (sets.length) db.prepare(`UPDATE llm_engines SET ${sets.join(", ")} WHERE id = ?`).run(...vals, req.params.id);
+  db.close();
+  res.json({ ok: true });
+});
+
+app.delete("/api/engines/:id", (req, res) => {
+  const db = getDB();
+  db.prepare("DELETE FROM llm_engines WHERE id = ?").run(req.params.id);
+  db.close();
+  res.json({ ok: true });
+});
+
+app.post("/api/engines/:id/test", async (req, res) => {
+  const db = getDB();
+  const engine = db.prepare("SELECT * FROM llm_engines WHERE id = ?").get(req.params.id);
+  db.close();
+  if (!engine) return res.status(404).json({ error: "Engine not found" });
+  const result = await testEngine(engine);
+  res.json(result);
+});
+
+// ── Data Sources (live folder/file polling) ─────────────────────────────────
+
+app.get("/api/source-types", (req, res) => {
+  res.json(Object.entries(FETCHERS).map(([id, f]) => ({ id, label: f.label, fields: f.fields })));
+});
+
+app.get("/api/programmes/:programmeId/sources", (req, res) => {
+  const db = getDB();
+  const rows = db.prepare("SELECT * FROM data_sources WHERE programme_id = ? ORDER BY created_at DESC").all(req.params.programmeId);
+  db.close();
+  res.json(rows.map(r => ({ ...r, config: JSON.parse(r.config), lastSyncSummary: r.last_sync_summary ? JSON.parse(r.last_sync_summary) : null, enabled: !!r.enabled })));
+});
+
+app.post("/api/programmes/:programmeId/sources", (req, res) => {
+  const db = getDB();
+  const id = `src-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  const s = req.body;
+  db.prepare("INSERT INTO data_sources (id, programme_id, name, type, config, poll_interval_minutes, enabled) VALUES (?, ?, ?, ?, ?, ?, ?)").run(
+    id, req.params.programmeId, s.name, s.type, JSON.stringify(s.config || {}), s.pollIntervalMinutes || 60, s.enabled === false ? 0 : 1
+  );
+  db.close();
+  res.json({ id, ...s });
+});
+
+app.put("/api/sources/:id", (req, res) => {
+  const db = getDB();
+  const s = req.body;
+  const sets = [];
+  const vals = [];
+  if (s.name !== undefined) { sets.push("name = ?"); vals.push(s.name); }
+  if (s.config !== undefined) { sets.push("config = ?"); vals.push(JSON.stringify(s.config)); }
+  if (s.pollIntervalMinutes !== undefined) { sets.push("poll_interval_minutes = ?"); vals.push(s.pollIntervalMinutes); }
+  if (s.enabled !== undefined) { sets.push("enabled = ?"); vals.push(s.enabled ? 1 : 0); }
+  if (sets.length) db.prepare(`UPDATE data_sources SET ${sets.join(", ")} WHERE id = ?`).run(...vals, req.params.id);
+  db.close();
+  res.json({ ok: true });
+});
+
+app.delete("/api/sources/:id", (req, res) => {
+  const db = getDB();
+  db.prepare("DELETE FROM data_sources WHERE id = ?").run(req.params.id);
+  db.close();
+  res.json({ ok: true });
+});
+
+app.post("/api/sources/:id/sync-now", async (req, res) => {
+  try {
+    const result = await syncSource(req.params.id);
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── Pending Ingestions (from sync poller) ───────────────────────────────────
+
+app.get("/api/programmes/:programmeId/pending-ingestions", (req, res) => {
+  const db = getDB();
+  const rows = db.prepare(`
+    SELECT dsf.*, ds.name as source_name, ds.type as source_type
+    FROM data_source_files dsf
+    JOIN data_sources ds ON ds.id = dsf.source_id
+    WHERE ds.programme_id = ? AND dsf.status = 'pending'
+    ORDER BY dsf.last_modified DESC
+  `).all(req.params.programmeId);
+  db.close();
+  res.json(rows);
+});
+
+app.post("/api/pending-ingestions/:id/skip", (req, res) => {
+  const db = getDB();
+  db.prepare("UPDATE data_source_files SET status = 'skipped' WHERE id = ?").run(req.params.id);
+  db.close();
+  res.json({ ok: true });
+});
+
+app.post("/api/pending-ingestions/:id/dismiss", (req, res) => {
+  const db = getDB();
+  db.prepare("DELETE FROM data_source_files WHERE id = ?").run(req.params.id);
+  db.close();
+  res.json({ ok: true });
+});
+
+// Mark as ingested (called after SmartUpload completes)
+app.post("/api/pending-ingestions/:id/mark-ingested", (req, res) => {
+  const db = getDB();
+  db.prepare("UPDATE data_source_files SET status = 'ingested', last_ingested_at = datetime('now'), target_table_id = ? WHERE id = ?").run(req.body.tableId || null, req.params.id);
+  db.close();
+  res.json({ ok: true });
+});
+
+// ── AI proxy (multi-provider) ───────────────────────────────────────────────
 
 app.post("/api/ai", async (req, res) => {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: "ANTHROPIC_API_KEY not set in .env" });
+  const engineId = req.query.engineId || req.body.engineId;
+  const programmeId = req.query.programmeId || req.body.programmeId;
+  const db = getDB();
+
+  let engine;
+  if (engineId) {
+    engine = db.prepare("SELECT * FROM llm_engines WHERE id = ?").get(engineId);
+  } else if (programmeId) {
+    engine = db.prepare("SELECT * FROM llm_engines WHERE programme_id = ? AND is_default = 1").get(programmeId);
+    if (!engine) engine = db.prepare("SELECT * FROM llm_engines WHERE programme_id = ? ORDER BY created_at LIMIT 1").get(programmeId);
+  }
+  db.close();
+
+  // Fallback: if no engine configured, try env var (old behaviour)
+  if (!engine && process.env.ANTHROPIC_API_KEY) {
+    engine = { provider: "anthropic", api_key: process.env.ANTHROPIC_API_KEY, model_name: "claude-sonnet-4-20250514" };
+  }
+
+  if (!engine) {
+    return res.status(500).json({ error: "No LLM engine configured. Go to Settings → Engines to add one." });
+  }
 
   try {
-    const upstream = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify(req.body),
-    });
-    const data = await upstream.text();
-    res.status(upstream.status).set("Content-Type", "application/json").send(data);
+    const { system, messages } = req.body;
+    const result = await callEngine(engine, system, messages);
+    // Return in Anthropic-compatible shape (frontend already parses this)
+    res.json({ content: [{ text: result.text }], _engine: { provider: engine.provider, name: engine.name } });
   } catch (e) {
-    res.status(502).json({ error: "Proxy error: " + e.message });
+    res.status(502).json({ error: "AI call failed: " + e.message });
   }
 });
 
@@ -496,4 +661,5 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log(`[apex] Server running on http://0.0.0.0:${PORT}`);
   console.log(`[apex] API: http://0.0.0.0:${PORT}/api/programmes`);
   console.log(`[apex] Uploads: ${UPLOADS_DIR}`);
+  startScheduler();
 });
