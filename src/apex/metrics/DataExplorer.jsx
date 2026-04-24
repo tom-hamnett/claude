@@ -77,17 +77,34 @@ export default function DataExplorer({ kpi, data: rawData, columns: rawColumns, 
     return [...keys];
   }, [chartData, timeCol]);
 
-  // Add variance to table data
+  // Add variance to table data — compares same dimension group MoM
   const tableData = useMemo(() => {
-    if (!varianceMode || !timeCol) return filteredData;
-    return filteredData.map((row, i) => {
-      if (i === 0) return { ...row, _variance: null };
-      const prev = filteredData[i - 1];
+    if (!varianceMode || !timeCol || !activeValue) return filteredData;
+
+    // Group rows by their dimension values (everything except time and value columns)
+    const dimCols = dimensions.map(d => d.name).filter(n => n !== timeCol);
+
+    // Build lookup: dimensionKey → sorted array of {time, value}
+    const groups = {};
+    for (const row of filteredData) {
+      const dimKey = dimCols.map(c => String(row[c] ?? "")).join("|") || "__all__";
+      if (!groups[dimKey]) groups[dimKey] = [];
+      groups[dimKey].push(row);
+    }
+
+    // For each row, find the previous time period row with the same dimensions
+    return filteredData.map((row) => {
+      const dimKey = dimCols.map(c => String(row[c] ?? "")).join("|") || "__all__";
+      const group = groups[dimKey] || [];
+      const idx = group.indexOf(row);
+      if (idx <= 0) return { ...row, _variance: null, _variancePct: null };
+      const prev = group[idx - 1];
       const curr = Number(row[activeValue]) || 0;
       const prevVal = Number(prev[activeValue]) || 0;
-      return { ...row, _variance: curr - prevVal, _variancePct: prevVal ? ((curr - prevVal) / prevVal * 100).toFixed(1) : null };
+      const delta = curr - prevVal;
+      return { ...row, _variance: delta, _variancePct: prevVal ? ((delta / prevVal) * 100).toFixed(1) : null };
     });
-  }, [filteredData, varianceMode, activeValue, timeCol]);
+  }, [filteredData, varianceMode, activeValue, timeCol, dimensions]);
 
   // Export CSV
   function exportCSV() {
