@@ -7,6 +7,21 @@ import { useStore, saveChat, loadChat, gapsForSection, resolveGap, addUpdate, ad
 import { Spinner } from "./ui.jsx";
 import { GAP_SEVERITY } from "../lib/theme.js";
 
+const DOC_TYPES = [
+  { id: "status-report", label: "Status report / programme update" },
+  { id: "project-update", label: "Project-specific update" },
+  { id: "risk-register", label: "Risk register" },
+  { id: "plan", label: "Plan / timeline / milestones" },
+  { id: "budget", label: "Budget / financials" },
+  { id: "metrics-data", label: "Metrics / KPI data (spreadsheet)" },
+  { id: "org-chart", label: "Org chart / team structure" },
+  { id: "policy", label: "Policy / governance document" },
+  { id: "charter", label: "Project charter" },
+  { id: "audit", label: "Audit report / actions" },
+  { id: "steerco-pack", label: "SteerCo / board pack" },
+  { id: "other", label: "Other" },
+];
+
 export default function AIChat({ programmeId, contextId = "global", contextLabel = "programme", contextPayload = {}, gapSection = null }) {
   const [state] = useStore();
   const programme = state.programmes[programmeId];
@@ -16,6 +31,8 @@ export default function AIChat({ programmeId, contextId = "global", contextLabel
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState([]);
+  const [fileContexts, setFileContexts] = useState([]); // structured ingestion context per file
+  const [showIngestionPanel, setShowIngestionPanel] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const bottomRef = useRef(null);
@@ -82,17 +99,41 @@ Response format:
     setLoading(false);
   }
 
-  async function ingestFiles() {
+  // When files are added, show the ingestion context panel
+  function prepareIngestion() {
     if (!files.length) return;
+    setFileContexts(files.map(f => ({
+      file: f,
+      docType: "status-report",
+      project: "programme-wide",
+      instructions: "",
+      mode: "update", // update | replace | reference
+    })));
+    setShowIngestionPanel(true);
+  }
+
+  function updateFileContext(idx, field, value) {
+    setFileContexts(prev => prev.map((fc, i) => i === idx ? { ...fc, [field]: value } : fc));
+  }
+
+  async function ingestWithContext() {
+    if (!fileContexts.length) return;
+    setShowIngestionPanel(false);
     setLoading(true);
+
     let combined = "";
-    for (const f of files) {
-      const text = await readFile(f);
-      combined += `\n\n=== FILE: ${f.name} ===\n${text.slice(0, 20000)}`;
+    for (const fc of fileContexts) {
+      const text = await readFile(fc.file);
+      const docTypeLabel = DOC_TYPES.find(t => t.id === fc.docType)?.label || fc.docType;
+      const modeLabel = fc.mode === "replace" ? "REPLACE existing data for this period" : fc.mode === "reference" ? "REFERENCE ONLY — do not update programme state" : "ADD TO / UPDATE existing data";
+      combined += `\n\n=== FILE: ${fc.file.name} ===\nDocument type: ${docTypeLabel}\nRelates to: ${fc.project}\nUser instructions: ${fc.instructions || "(none)"}\nIngestion mode: ${modeLabel}\n\n${text.slice(0, 20000)}`;
     }
-    const names = files.map(f => f.name).join(", ");
+
+    const names = fileContexts.map(fc => fc.file.name).join(", ");
     setFiles([]);
-    await send(`I've uploaded: ${names}. Please read this content, extract anything relevant to the current context (${contextLabel}), identify gaps, and summarise what you found. Propose structured updates where appropriate.\n\n${combined}`);
+    setFileContexts([]);
+
+    await send(`I've uploaded ${fileContexts.length} document(s): ${names}.\n\nEach file has been annotated with its type, the project/area it relates to, and specific instructions on how to use it. Please:\n1. Read each file carefully\n2. Follow the user's instructions for each file\n3. Extract relevant data according to the document type\n4. Respect the ingestion mode (update/replace/reference)\n5. Summarise what you found and propose structured updates\n\n${combined}`);
   }
 
   function acceptProposal(msg) {
@@ -188,11 +229,11 @@ Response format:
       {/* File chip row */}
       {files.length > 0 && (
         <div style={{ padding: "6px 20px", background: "var(--bg2)", borderTop: "1px solid var(--border)", display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-          <span style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)" }}>Ready to ingest:</span>
+          <span style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)" }}>Files queued:</span>
           {files.map((f, i) => (
             <span key={i} style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--accent)", background: "rgba(42,191,191,0.12)", border: "1px solid rgba(42,191,191,0.3)", padding: "2px 8px", borderRadius: 3 }}>{f.name}</span>
           ))}
-          <button onClick={ingestFiles} disabled={loading} style={{ fontSize: 11, fontFamily: "var(--font-d)", fontWeight: 700, padding: "4px 12px", background: "var(--accent)", color: "#000", borderRadius: 4, marginLeft: "auto" }}>Ingest {files.length} file{files.length !== 1 ? "s" : ""}</button>
+          <button onClick={prepareIngestion} disabled={loading} style={{ fontSize: 11, fontFamily: "var(--font-d)", fontWeight: 700, padding: "4px 12px", background: "var(--accent)", color: "#000", borderRadius: 4, marginLeft: "auto" }}>Prepare Ingestion →</button>
           <button onClick={() => setFiles([])} style={{ fontSize: 11, fontFamily: "var(--font-d)", padding: "4px 10px", color: "var(--text3)" }}>Clear</button>
         </div>
       )}
@@ -204,6 +245,71 @@ Response format:
         <textarea value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} placeholder={dragOver ? "Drop files here…" : `Ask about ${contextLabel}, paste content, or drop files…`} rows={2} style={{ flex: 1, background: "var(--bg3)", border: "1px solid var(--border2)", borderRadius: 6, color: "var(--text)", fontFamily: "var(--font-b)", fontSize: 13, padding: "8px 12px", resize: "none", lineHeight: 1.5 }} />
         <button onClick={() => send()} disabled={loading || !input.trim()} style={{ background: loading || !input.trim() ? "var(--bg3)" : "var(--accent)", color: loading || !input.trim() ? "var(--text3)" : "#000", borderRadius: 6, padding: "0 18px", fontFamily: "var(--font-d)", fontWeight: 700, fontSize: 14, minWidth: 52, alignSelf: "stretch" }}>{loading ? <Spinner /> : "↑"}</button>
       </div>
+
+      {/* Ingestion context panel */}
+      {showIngestionPanel && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => setShowIngestionPanel(false)}>
+          <div onClick={e => e.stopPropagation()} style={{ width: "min(700px,100%)", maxHeight: "80vh", overflow: "auto", background: "var(--bg2)", border: "1px solid var(--border2)", borderRadius: 12, padding: 24 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: 18, fontFamily: "var(--font-d)", fontWeight: 800, color: "var(--text)" }}>Prepare Document Ingestion</div>
+                <div style={{ fontSize: 13, fontFamily: "var(--font-b)", color: "var(--text2)", marginTop: 4 }}>Tell APEX what each file is and how to use it. The more context you provide, the better the extraction.</div>
+              </div>
+              <button onClick={() => setShowIngestionPanel(false)} style={{ fontSize: 18, color: "var(--text3)" }}>✕</button>
+            </div>
+
+            {fileContexts.map((fc, i) => (
+              <div key={i} style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: 8, padding: 16, marginBottom: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, paddingBottom: 10, borderBottom: "1px solid var(--border)" }}>
+                  <span style={{ fontSize: 20 }}>📄</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)" }}>{fc.file.name}</div>
+                    <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", marginTop: 2 }}>{(fc.file.size / 1024).toFixed(0)} KB</div>
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+                  <div>
+                    <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>What is this document?</div>
+                    <select value={fc.docType} onChange={e => updateFileContext(i, "docType", e.target.value)} style={{ width: "100%", background: "var(--bg2)", border: "1px solid var(--border2)", borderRadius: 5, color: "var(--text)", fontFamily: "var(--font-b)", fontSize: 12, padding: "8px 10px" }}>
+                      {DOC_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Relates to</div>
+                    <select value={fc.project} onChange={e => updateFileContext(i, "project", e.target.value)} style={{ width: "100%", background: "var(--bg2)", border: "1px solid var(--border2)", borderRadius: 5, color: "var(--text)", fontFamily: "var(--font-b)", fontSize: 12, padding: "8px 10px" }}>
+                      <option value="programme-wide">Programme-wide</option>
+                      {(programme?.projects || []).map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>How should APEX use this?</div>
+                  <textarea value={fc.instructions} onChange={e => updateFileContext(i, "instructions", e.target.value)} placeholder="e.g. 'This is the latest monthly update — treat as the most recent source of truth for March 2026. Update project statuses, risks, and metrics accordingly.'" rows={3} style={{ width: "100%", background: "var(--bg2)", border: "1px solid var(--border2)", borderRadius: 5, color: "var(--text)", fontFamily: "var(--font-b)", fontSize: 12, padding: "8px 10px", resize: "vertical", lineHeight: 1.5 }} />
+                </div>
+
+                <div style={{ display: "flex", gap: 6 }}>
+                  {[
+                    { id: "update", label: "Add to / update existing data", desc: "Merge with current programme state" },
+                    { id: "replace", label: "Replace data for this period", desc: "Overwrite matching records" },
+                    { id: "reference", label: "Reference only", desc: "Don't change programme state" },
+                  ].map(m => (
+                    <button key={m.id} onClick={() => updateFileContext(i, "mode", m.id)} title={m.desc} style={{ flex: 1, padding: "8px 10px", borderRadius: 5, fontSize: 11, fontFamily: "var(--font-d)", fontWeight: fc.mode === m.id ? 700 : 500, background: fc.mode === m.id ? "var(--accent)" : "var(--bg2)", color: fc.mode === m.id ? "#000" : "var(--text2)", border: `1px solid ${fc.mode === m.id ? "var(--accent)" : "var(--border2)"}`, textAlign: "center" }}>
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 16 }}>
+              <button onClick={() => setShowIngestionPanel(false)} style={{ fontSize: 13, fontFamily: "var(--font-d)", padding: "10px 18px", borderRadius: 6, color: "var(--text2)", border: "1px solid var(--border2)" }}>Cancel</button>
+              <button onClick={ingestWithContext} style={{ fontSize: 13, fontFamily: "var(--font-d)", fontWeight: 700, padding: "10px 24px", borderRadius: 6, background: "var(--accent)", color: "#000" }}>Ingest {fileContexts.length} file{fileContexts.length !== 1 ? "s" : ""} with context →</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
