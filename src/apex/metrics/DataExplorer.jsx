@@ -10,6 +10,7 @@ export default function DataExplorer({ kpi, data: rawData, columns: rawColumns, 
   const [chartType, setChartType] = useState(kpi?.chart_type || "bar");
   const [filters, setFilters] = useState({});
   const [layout, setLayout] = useState("split"); // split | chart | table
+  const [tableView, setTableView] = useState("pivot"); // pivot | long
   const [varianceMode, setVarianceMode] = useState(null); // null | mom | qoq
 
   // Determine columns and data
@@ -200,34 +201,44 @@ export default function DataExplorer({ kpi, data: rawData, columns: rawColumns, 
 
         {/* Table */}
         {layout !== "chart" && (
-          <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: 8, overflow: "auto", maxHeight: 350 }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: "var(--font-m)" }}>
-              <thead>
-                <tr>
-                  {columns.map(c => (
-                    <th key={c.name} style={{ padding: "8px 10px", textAlign: "left", borderBottom: "1px solid var(--border)", color: "var(--text2)", background: "var(--bg4)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em", position: "sticky", top: 0 }}>{c.label || c.name}</th>
-                  ))}
-                  {varianceMode && <th style={{ padding: "8px 10px", textAlign: "right", borderBottom: "1px solid var(--border)", color: "var(--yellow)", background: "var(--bg4)", fontSize: 11, position: "sticky", top: 0 }}>Δ MoM</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {(varianceMode ? tableData : filteredData).slice(0, 200).map((row, i) => (
-                  <tr key={i} style={{ borderBottom: "1px solid var(--border)" }} onMouseEnter={e => e.currentTarget.style.background = "var(--bg4)"} onMouseLeave={e => e.currentTarget.style.background = ""}>
-                    {columns.map(c => (
-                      <td key={c.name} style={{ padding: "6px 10px", color: c.type === "number" ? "var(--text)" : "var(--text2)", fontWeight: c.type === "number" ? 600 : 400, textAlign: c.type === "number" ? "right" : "left" }}>{row[c.name] ?? "—"}</td>
-                    ))}
-                    {varianceMode && (
-                      <td style={{ padding: "6px 10px", textAlign: "right", fontWeight: 700, color: row._variance > 0 ? "#5DC484" : row._variance < 0 ? "#E8734A" : "var(--text3)" }}>
-                        {row._variance != null ? `${row._variance > 0 ? "+" : ""}${row._variance} (${row._variancePct}%)` : "—"}
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div style={{ padding: "6px 10px", fontSize: 11, fontFamily: "var(--font-m)", color: "var(--text3)", borderTop: "1px solid var(--border)" }}>
-              {filteredData.length} row{filteredData.length !== 1 ? "s" : ""}{Object.keys(filters).some(k => filters[k] && filters[k] !== "__all__") ? " (filtered)" : ""}
+          <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: 8, overflow: "auto", maxHeight: 500 }}>
+            {/* Pivot / Long toggle */}
+            <div style={{ padding: "8px 10px", borderBottom: "1px solid var(--border)", display: "flex", gap: 4, background: "var(--bg4)", position: "sticky", top: 0, zIndex: 1 }}>
+              {[["pivot", "Pivot (by time)"], ["long", "Long format"]].map(([id, label]) => (
+                <button key={id} onClick={() => setTableView(id)} style={{ fontSize: 10, fontFamily: "var(--font-d)", fontWeight: tableView === id ? 700 : 500, padding: "4px 10px", borderRadius: 4, background: tableView === id ? "var(--accent)" : "transparent", color: tableView === id ? "#000" : "var(--text2)", border: `1px solid ${tableView === id ? "var(--accent)" : "var(--border2)"}` }}>{label}</button>
+              ))}
+              <div style={{ flex: 1 }} />
+              <span style={{ fontSize: 10, fontFamily: "var(--font-m)", color: "var(--text3)", alignSelf: "center" }}>{filteredData.length} row{filteredData.length !== 1 ? "s" : ""}{Object.keys(filters).some(k => filters[k] && filters[k] !== "__all__") ? " (filtered)" : ""}</span>
             </div>
+
+            {tableView === "pivot" ? (
+              <PivotTable data={filteredData} columns={columns} dimensions={dimensions} timeCol={timeCol} valueColumns={valueColumns} varianceMode={varianceMode} filters={filters} />
+            ) : (
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: "var(--font-m)" }}>
+                <thead>
+                  <tr>
+                    {columns.map(c => (
+                      <th key={c.name} style={{ padding: "8px 10px", textAlign: "left", borderBottom: "1px solid var(--border)", color: "var(--text2)", background: "var(--bg4)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em", position: "sticky", top: 40 }}>{c.label || c.name}</th>
+                    ))}
+                    {varianceMode && <th style={{ padding: "8px 10px", textAlign: "right", borderBottom: "1px solid var(--border)", color: "var(--yellow)", background: "var(--bg4)", fontSize: 11, position: "sticky", top: 40 }}>Δ MoM</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {(varianceMode ? tableData : filteredData).slice(0, 200).map((row, i) => (
+                    <tr key={i} style={{ borderBottom: "1px solid var(--border)" }} onMouseEnter={e => e.currentTarget.style.background = "var(--bg4)"} onMouseLeave={e => e.currentTarget.style.background = ""}>
+                      {columns.map(c => (
+                        <td key={c.name} style={{ padding: "6px 10px", color: c.type === "number" ? "var(--text)" : "var(--text2)", fontWeight: c.type === "number" ? 600 : 400, textAlign: c.type === "number" ? "right" : "left" }}>{row[c.name] ?? "—"}</td>
+                      ))}
+                      {varianceMode && (
+                        <td style={{ padding: "6px 10px", textAlign: "right", fontWeight: 700, color: row._variance > 0 ? "#5DC484" : row._variance < 0 ? "#E8734A" : "var(--text3)" }}>
+                          {row._variance != null ? `${row._variance > 0 ? "+" : ""}${row._variance} (${row._variancePct}%)` : "—"}
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         )}
       </div>
@@ -291,4 +302,117 @@ function renderChart(type, data, xKey, seriesKeys, valueCol, target) {
       {targetLine}
     </BarChart>
   );
+}
+
+// ── Pivot Table: time across top, value columns stacked, dimensions nested, variance on right
+function PivotTable({ data, columns, dimensions, timeCol, valueColumns, varianceMode, filters }) {
+  if (!timeCol || !valueColumns.length) {
+    return <div style={{ padding: 20, fontSize: 12, color: "var(--text3)", textAlign: "center" }}>Pivot view needs a time column and at least one numeric column.</div>;
+  }
+
+  // Get unique time periods in order
+  const timeValues = [...new Set(data.map(r => r[timeCol]))].filter(v => v != null);
+
+  // Dimension columns (exclude time column and any that are fully filtered to one value)
+  const dimCols = dimensions
+    .map(d => d.name)
+    .filter(n => n !== timeCol)
+    .filter(n => !(filters[n] && filters[n] !== "__all__"));
+
+  // Get unique dimension combinations in order of first appearance
+  const dimKeys = [];
+  const dimKeySet = new Set();
+  for (const row of data) {
+    const key = dimCols.map(c => String(row[c] ?? "")).join("|");
+    if (!dimKeySet.has(key)) { dimKeySet.add(key); dimKeys.push({ key, values: dimCols.reduce((o, c) => ({ ...o, [c]: row[c] }), {}) }); }
+  }
+
+  // Helper: find value for a metric at a time & dim combo
+  const lookup = (valueCol, time, dimKey) => {
+    const match = data.find(r => r[timeCol] === time && dimCols.map(c => String(r[c] ?? "")).join("|") === dimKey);
+    return match ? match[valueCol] : null;
+  };
+
+  // Total per time
+  const totalFor = (valueCol, time) => {
+    return data.filter(r => r[timeCol] === time).reduce((s, r) => s + (Number(r[valueCol]) || 0), 0);
+  };
+
+  return (
+    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: "var(--font-m)" }}>
+      <thead>
+        <tr>
+          <th style={{ padding: "10px 12px", textAlign: "left", borderBottom: "2px solid var(--border)", color: "var(--text2)", background: "var(--bg4)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em", position: "sticky", top: 40 }}></th>
+          {timeValues.map(t => (
+            <th key={t} style={{ padding: "10px 12px", textAlign: "right", borderBottom: "2px solid var(--border)", color: "var(--text)", background: "var(--bg4)", fontSize: 12, fontWeight: 700, fontFamily: "var(--font-d)", position: "sticky", top: 40 }}>{t}</th>
+          ))}
+          {varianceMode && <th style={{ padding: "10px 12px", textAlign: "right", borderBottom: "2px solid var(--border)", color: "var(--yellow)", background: "var(--bg4)", fontSize: 11, position: "sticky", top: 40 }}>Δ MoM</th>}
+        </tr>
+      </thead>
+      <tbody>
+        {valueColumns.map(vc => (
+          <>
+            {/* Section header for this value column */}
+            <tr key={`h-${vc.name}`}>
+              <td colSpan={timeValues.length + 1 + (varianceMode ? 1 : 0)} style={{ padding: "10px 12px 6px", fontSize: 11, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "1px solid var(--border)", background: "var(--bg2)" }}>
+                {vc.label || vc.name}
+              </td>
+            </tr>
+
+            {/* Rows: one per dimension combination */}
+            {dimKeys.map(dk => {
+              const values = timeValues.map(t => lookup(vc.name, t, dk.key));
+              const lastNonNull = [...values].reverse().find(v => v != null);
+              const prevNonNull = [...values].reverse().filter(v => v != null)[1];
+              const mom = (lastNonNull != null && prevNonNull != null) ? lastNonNull - prevNonNull : null;
+              const momPct = (mom != null && prevNonNull) ? ((mom / prevNonNull) * 100).toFixed(1) : null;
+              return (
+                <tr key={`${vc.name}-${dk.key}`} style={{ borderBottom: "1px solid var(--border)" }} onMouseEnter={e => e.currentTarget.style.background = "var(--bg4)"} onMouseLeave={e => e.currentTarget.style.background = ""}>
+                  <td style={{ padding: "6px 12px 6px 24px", color: "var(--text2)", fontWeight: 500 }}>
+                    {dimCols.map(c => dk.values[c]).filter(Boolean).join(" · ") || "—"}
+                  </td>
+                  {values.map((v, i) => (
+                    <td key={i} style={{ padding: "6px 12px", textAlign: "right", color: "var(--text)", fontWeight: 600 }}>{v != null ? formatNum(v) : "—"}</td>
+                  ))}
+                  {varianceMode && (
+                    <td style={{ padding: "6px 12px", textAlign: "right", fontWeight: 700, color: mom > 0 ? "#5DC484" : mom < 0 ? "#E8734A" : "var(--text3)" }}>
+                      {mom != null ? `${mom > 0 ? "+" : ""}${formatNum(mom)}${momPct ? ` (${momPct}%)` : ""}` : "—"}
+                    </td>
+                  )}
+                </tr>
+              );
+            })}
+
+            {/* Total row (only if more than one dimension combo) */}
+            {dimKeys.length > 1 && (
+              <tr key={`t-${vc.name}`} style={{ borderBottom: "1px solid var(--border)", background: "rgba(42,191,191,0.04)" }}>
+                <td style={{ padding: "8px 12px", fontWeight: 700, color: "var(--accent)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em" }}>Total</td>
+                {timeValues.map((t, i) => {
+                  const total = totalFor(vc.name, t);
+                  return <td key={i} style={{ padding: "8px 12px", textAlign: "right", color: "var(--accent)", fontWeight: 700 }}>{formatNum(total)}</td>;
+                })}
+                {varianceMode && (() => {
+                  const vals = timeValues.map(t => totalFor(vc.name, t)).filter(v => v != null);
+                  const last = vals[vals.length - 1], prev = vals[vals.length - 2];
+                  const delta = (last != null && prev != null) ? last - prev : null;
+                  const pct = (delta != null && prev) ? ((delta / prev) * 100).toFixed(1) : null;
+                  return <td style={{ padding: "8px 12px", textAlign: "right", fontWeight: 700, color: delta > 0 ? "#5DC484" : delta < 0 ? "#E8734A" : "var(--text3)" }}>{delta != null ? `${delta > 0 ? "+" : ""}${formatNum(delta)}${pct ? ` (${pct}%)` : ""}` : "—"}</td>;
+                })()}
+              </tr>
+            )}
+          </>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function formatNum(v) {
+  if (v == null) return "—";
+  const n = Number(v);
+  if (isNaN(n)) return String(v);
+  if (Math.abs(n) >= 1000000) return (n / 1000000).toFixed(1) + "M";
+  if (Math.abs(n) >= 10000) return Math.round(n).toLocaleString();
+  if (Number.isInteger(n)) return n.toString();
+  return n.toFixed(1);
 }
