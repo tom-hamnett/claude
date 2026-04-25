@@ -2,6 +2,22 @@
 
 Touch-first assessment app for educators (and any other context where someone marks a group of people on customisable criteria). Designed to feel native on iPad.
 
+## Try it now (one-tap deploy)
+
+Tap one of these from your phone — sign in with GitHub, pick this repo, and it'll deploy in ~1 minute. You'll get a public URL you can open in Safari and *Share → Add to Home Screen*.
+
+**Netlify** (easiest on mobile — auto-detects everything):
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/tom-hamnett/claude)
+
+> When prompted for the branch, choose **`claude/student-assessment-app-SZfol`**. Build settings come from `netlify.toml` at the repo root — nothing to configure manually.
+
+**Vercel**:
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Ftom-hamnett%2Fclaude&project-name=assessiq&root-directory=assessment-app)
+
+> On Vercel, set **Root Directory** to `assessment-app` (the link above pre-fills it) and pick branch **`claude/student-assessment-app-SZfol`**.
+
+After it's live, open the URL in **iOS Safari**, tap **Share → Add to Home Screen**, and AssessIQ launches fullscreen like a native app.
+
 ## What it does
 
 - **Classes** – manage cohorts of students/players/employees.
