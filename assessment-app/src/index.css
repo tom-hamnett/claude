@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-feature-settings: 'cv11', 'ss01';
+  text-rendering: optimizeLegibility;
+}
+
+/* Disable text selection on UI chrome to feel native on iPad. Inputs/textareas remain selectable. */
+button, .no-select {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Custom slider styles - large, touch-friendly */
+input[type='range'].assess-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 14px;
+  background: linear-gradient(90deg, #d9eaff, #86bbff);
+  border-radius: 999px;
+  outline: none;
+  touch-action: manipulation;
+}
+input[type='range'].assess-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fff;
+  border: 4px solid #2a6dff;
+  box-shadow: 0 4px 10px rgba(42, 109, 255, 0.35);
+  cursor: pointer;
+}
+input[type='range'].assess-slider::-moz-range-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fff;
+  border: 4px solid #2a6dff;
+  box-shadow: 0 4px 10px rgba(42, 109, 255, 0.35);
+  cursor: pointer;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm transition active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-brand-500 text-white hover:bg-brand-600 shadow-soft;
+  }
+  .btn-secondary {
+    @apply btn bg-white text-ink-700 border border-ink-200 hover:bg-ink-50 shadow-soft;
+  }
+  .btn-ghost {
+    @apply btn bg-transparent text-ink-600 hover:bg-ink-100;
+  }
+  .btn-danger {
+    @apply btn bg-red-500 text-white hover:bg-red-600 shadow-soft;
+  }
+  .input {
+    @apply w-full px-4 py-3 rounded-xl border border-ink-200 bg-white text-ink-800 placeholder-ink-400 focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 transition;
+  }
+  .card {
+    @apply bg-white rounded-2xl shadow-soft border border-ink-100;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-ink-100 text-ink-700;
+  }
+  .label {
+    @apply text-xs font-semibold uppercase tracking-wide text-ink-500;
+  }
+  .h-screen-safe {
+    height: 100dvh;
+  }
+}
