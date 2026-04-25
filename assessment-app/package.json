@@ -1,9 +1,9 @@
 {
-  "name": "assessiq",
+  "name": "sigma",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Touch-first assessment app for educators - rapid, customisable, offline-capable",
+  "description": "Sigma — rapid, customisable assessment for any context. Define criteria, set a sliding scale, sweep through the group.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

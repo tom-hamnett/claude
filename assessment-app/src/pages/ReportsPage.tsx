@@ -158,7 +158,7 @@ export default function ReportsPage() {
     });
     const csv = buildCSV([header, ...rows]);
     const stamp = new Date().toISOString().slice(0, 10);
-    downloadFile(`assessiq-rollup-${stamp}.csv`, csv);
+    downloadFile(`sigma-rollup-${stamp}.csv`, csv);
   };
 
   return (

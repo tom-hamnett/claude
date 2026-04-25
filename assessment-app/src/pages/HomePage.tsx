@@ -26,12 +26,12 @@ export default function HomePage() {
     <div className="space-y-8">
       <header>
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-brand-500 flex items-center justify-center text-white shadow-soft">
-            <Icon name="check" size={26} />
+          <div className="w-12 h-12 rounded-2xl bg-brand-500 flex items-center justify-center text-white shadow-soft font-bold text-2xl">
+            Σ
           </div>
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-ink-800">AssessIQ</h1>
-            <p className="text-ink-500">Quick, customisable assessment for any lesson.</p>
+            <h1 className="text-3xl font-extrabold tracking-tight text-ink-800">Sigma</h1>
+            <p className="text-ink-500">Rapid, customisable assessment for any context.</p>
           </div>
         </div>
       </header>

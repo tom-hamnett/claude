@@ -22,7 +22,7 @@ export default function SettingsPage() {
       ]);
       const payload = { version: 1, exportedAt: Date.now(), groups, people, templates, sessions, marks };
       const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
-      downloadFile(`assessiq-backup-${stamp}.json`, JSON.stringify(payload, null, 2), 'application/json');
+      downloadFile(`sigma-backup-${stamp}.json`, JSON.stringify(payload, null, 2), 'application/json');
     } finally {
       setBusy(false);
     }

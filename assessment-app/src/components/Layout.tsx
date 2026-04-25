@@ -25,12 +25,12 @@ function SideNav() {
   return (
     <nav className="hidden md:flex md:flex-col md:w-60 md:shrink-0 md:border-r md:border-ink-100 md:bg-white md:py-6 md:px-3 md:gap-1">
       <div className="px-3 pb-6 flex items-center gap-2">
-        <div className="w-9 h-9 rounded-xl bg-brand-500 flex items-center justify-center text-white shadow-soft">
-          <Icon name="check" size={22} />
+        <div className="w-9 h-9 rounded-xl bg-brand-500 flex items-center justify-center text-white shadow-soft font-bold text-lg">
+          Σ
         </div>
         <div>
-          <div className="font-bold text-ink-800 leading-tight">AssessIQ</div>
-          <div className="text-[11px] text-ink-400 leading-tight">Quick Assessment</div>
+          <div className="font-bold text-ink-800 leading-tight">Sigma</div>
+          <div className="text-[11px] text-ink-400 leading-tight">Rapid Assessment</div>
         </div>
       </div>
       {items.map((item) => (

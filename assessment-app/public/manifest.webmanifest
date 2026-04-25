@@ -1,7 +1,7 @@
 {
-  "name": "AssessIQ — Quick Assessment",
-  "short_name": "AssessIQ",
-  "description": "Touch-first assessment app for educators. Mark students on custom criteria with sliding scales.",
+  "name": "Sigma — Rapid Assessment",
+  "short_name": "Sigma",
+  "description": "Rapid, customisable assessment for any context. Define criteria, set a sliding scale, sweep through the group.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
