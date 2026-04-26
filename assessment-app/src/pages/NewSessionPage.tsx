@@ -86,14 +86,14 @@ export default function NewSessionPage() {
           Sessions
         </Link>
       </div>
-      <PageHeader title="New session" subtitle="Pick a class, choose criteria, then start assessing." />
+      <PageHeader title="New session" subtitle="Pick a group, choose criteria, then start assessing." />
 
       <div className="card p-5 space-y-4">
         <div>
-          <label className="label">Class</label>
+          <label className="label">Group</label>
           {groups && groups.length === 0 ? (
             <div className="mt-2 p-3 rounded-xl bg-amber-50 text-amber-800 text-sm">
-              You need a class first.{' '}
+              You need a group first.{' '}
               <Link to="/groups" className="font-semibold underline">Create one →</Link>
             </div>
           ) : (

@@ -1,19 +1,24 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '../db';
+import { db, getSettings } from '../db';
+import type { InsightBullet } from '../services/sigmaAI';
 import type { Mark, Person, Session } from '../types';
 import { Icon } from '../components/Icon';
 import { Avatar } from '../components/Avatar';
 import { PageHeader } from '../components/Layout';
 import { fmtDate, buildCSV, downloadFile, labelForValue } from '../lib/format';
 import { EmptyState } from '../components/Empty';
+import { AIBadge, AIUpsell } from '../components/AIBadge';
+import { PaywallModal } from '../components/PaywallModal';
+import { generateInsights } from '../services/sigmaAI';
+import { canUseAI } from '../services/license';
+import { AIError } from '../services/ai';
 
 interface PersonAggregate {
   person: Person;
   sessionsCount: number;
   totalMarks: number;
-  // Map criterion-name -> { sum, count }
   byCriterion: Map<string, { sum: number; count: number; lastValue?: number; lastDate?: number }>;
   overallAvg?: number;
   trend: { date: number; avg: number }[];
@@ -21,9 +26,18 @@ interface PersonAggregate {
 
 export default function ReportsPage() {
   const groups = useLiveQuery(() => db.groups.orderBy('name').toArray(), []);
+  const settings = useLiveQuery(() => getSettings(), []);
   const [groupId, setGroupId] = useState<string>('');
   const [from, setFrom] = useState<string>('');
   const [to, setTo] = useState<string>('');
+  const [insightsBusy, setInsightsBusy] = useState(false);
+  const [insights, setInsights] = useState<InsightBullet[] | null>(null);
+  const [insightsError, setInsightsError] = useState<string | null>(null);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [paywallReason, setPaywallReason] = useState<string | undefined>();
+
+  // Validate date range — UI hint only.
+  const dateRangeInvalid = from && to && new Date(from).getTime() > new Date(to).getTime();
 
   const sessions = useLiveQuery(
     async () => {
@@ -32,26 +46,22 @@ export default function ReportsPage() {
         if (groupId && s.groupId !== groupId) return false;
         if (from && s.date < new Date(from).getTime()) return false;
         if (to && s.date > new Date(to).getTime() + 24 * 3600_000) return false;
-        return s.status === 'complete' || true; // include in_progress for visibility
+        return true;
       });
     },
-    [groupId, from, to]
+    [groupId, from, to],
   );
 
   const sessionIds = useMemo(() => (sessions ?? []).map((s) => s.id), [sessions]);
+  const sessionIdsKey = sessionIds.join(',');
 
   const marks = useLiveQuery(
     async () => {
       if (sessionIds.length === 0) return [];
-      const arr: Mark[] = [];
-      // Dexie has no whereIn for compound; iterate.
-      for (const id of sessionIds) {
-        const ms = await db.marks.where('sessionId').equals(id).toArray();
-        arr.push(...ms);
-      }
-      return arr;
+      // Use whereAnyOf for one indexed query rather than N queries.
+      return db.marks.where('sessionId').anyOf(sessionIds).toArray();
     },
-    [sessionIds.join(',')]
+    [sessionIdsKey],
   );
 
   const people = useLiveQuery(
@@ -59,16 +69,23 @@ export default function ReportsPage() {
       if (groupId) return db.people.where('groupId').equals(groupId).toArray();
       return db.people.toArray();
     },
-    [groupId]
+    [groupId],
   );
+
+  const sessionById = useMemo(() => new Map((sessions ?? []).map((s) => [s.id, s])), [sessions]);
 
   const aggregates = useMemo<PersonAggregate[]>(() => {
     if (!people || !sessions || !marks) return [];
-    const sessionById = new Map(sessions.map((s) => [s.id, s]));
+    // Pre-bucket marks by personId once — was being filtered O(n) per person.
+    const marksByPerson = new Map<string, Mark[]>();
+    for (const m of marks) {
+      if (!marksByPerson.has(m.personId)) marksByPerson.set(m.personId, []);
+      marksByPerson.get(m.personId)!.push(m);
+    }
     const out: PersonAggregate[] = [];
     for (const p of people) {
       if (p.archived) continue;
-      const personMarks = marks.filter((m) => m.personId === p.id);
+      const personMarks = marksByPerson.get(p.id) ?? [];
       if (personMarks.length === 0 && groupId) {
         out.push({
           person: p,
@@ -82,7 +99,6 @@ export default function ReportsPage() {
       if (personMarks.length === 0) continue;
       const byCriterion = new Map<string, { sum: number; count: number; lastValue?: number; lastDate?: number }>();
       const sessionsSet = new Set<string>();
-      // For trend: aggregate per session normalised to 0..1 by scale, then average.
       const perSession = new Map<string, { date: number; sum: number; count: number; min: number; max: number }>();
       for (const m of personMarks) {
         const session = sessionById.get(m.sessionId);
@@ -110,8 +126,8 @@ export default function ReportsPage() {
         ps.count += 1;
         perSession.set(m.sessionId, ps);
       }
-      let oSum = 0,
-        oCount = 0;
+      let oSum = 0;
+      let oCount = 0;
       for (const v of byCriterion.values()) {
         oSum += v.sum;
         oCount += v.count;
@@ -132,13 +148,19 @@ export default function ReportsPage() {
       });
     }
     return out.sort((a, b) => a.person.name.localeCompare(b.person.name));
-  }, [people, sessions, marks, groupId]);
+  }, [people, sessions, marks, groupId, sessionById]);
 
   const allCriteriaNames = useMemo(() => {
     const set = new Set<string>();
     for (const a of aggregates) for (const k of a.byCriterion.keys()) set.add(k);
     return Array.from(set).sort();
   }, [aggregates]);
+
+  // Reset insights when filters change.
+  useEffect(() => {
+    setInsights(null);
+    setInsightsError(null);
+  }, [groupId, from, to]);
 
   const exportRollup = () => {
     if (aggregates.length === 0) return;
@@ -161,28 +183,105 @@ export default function ReportsPage() {
     downloadFile(`sigma-rollup-${stamp}.csv`, csv);
   };
 
+  const runInsights = async () => {
+    setInsightsBusy(true);
+    setInsightsError(null);
+    setInsights(null);
+    try {
+      const gate = await canUseAI();
+      if (!gate.ok) {
+        setInsightsBusy(false);
+        setPaywallReason(gate.reason);
+        setShowPaywall(true);
+        return;
+      }
+      // Build a roll-up payload AI can reason about.
+      const rolledUpAverages = allCriteriaNames.map((c) => {
+        let sum = 0;
+        let count = 0;
+        const trendBuckets: number[] = [];
+        for (const a of aggregates) {
+          const cur = a.byCriterion.get(c);
+          if (cur) {
+            sum += cur.sum;
+            count += cur.count;
+          }
+        }
+        // Trend: average per session over the time window.
+        for (const s of sessions ?? []) {
+          let sSum = 0;
+          let sCount = 0;
+          for (const m of marks ?? []) {
+            if (m.sessionId !== s.id) continue;
+            const crit = s.criteria.find((cr) => cr.id === m.criterionId);
+            if (crit?.name === c) {
+              sSum += m.value;
+              sCount++;
+            }
+          }
+          if (sCount > 0) trendBuckets.push(sSum / sCount);
+        }
+        return { criterion: c, avg: count ? sum / count : 0, count, trend: trendBuckets };
+      });
+      const groupName = groupId ? groups?.find((g) => g.id === groupId)?.name ?? 'Group' : 'All groups';
+      const vertical = groupId
+        ? groups?.find((g) => g.id === groupId)?.vertical ?? settings?.defaultVertical
+        : settings?.defaultVertical;
+      const result = await generateInsights({
+        groupName,
+        vertical,
+        sessions: (sessions ?? []).map((s) => ({
+          title: s.title,
+          date: s.date,
+          criteria: s.criteria,
+          scale: { min: s.scale.min, max: s.scale.max },
+        })),
+        rolledUpAverages,
+      });
+      setInsights(result);
+    } catch (err) {
+      setInsightsError(err instanceof AIError ? err.message : err instanceof Error ? err.message : 'Insights failed.');
+    } finally {
+      setInsightsBusy(false);
+    }
+  };
+
+  const aiUnlocked = settings?.license?.tier && settings.license.tier !== 'free';
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Reports"
         subtitle="Aggregated marks across sessions — perfect for end-of-year roll-ups."
         actions={
-          <button className="btn-primary" disabled={aggregates.length === 0} onClick={exportRollup}>
-            <Icon name="export" size={18} />
-            Export roll-up CSV
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              className={aiUnlocked ? 'btn-primary' : 'btn-gold'}
+              disabled={aggregates.length === 0 || insightsBusy}
+              onClick={runInsights}
+              title="AI insight surfacer"
+            >
+              <Icon name="lightbulb" size={16} />
+              {insightsBusy ? 'Reading…' : 'Insights'}
+            </button>
+            <button className="btn-secondary" disabled={aggregates.length === 0} onClick={exportRollup}>
+              <Icon name="export" size={18} />
+              Export CSV
+            </button>
+          </div>
         }
       />
 
       <div className="card p-4 grid sm:grid-cols-3 gap-3">
         <div>
-          <label className="label">Class</label>
+          <label htmlFor="reports-group" className="label">Group</label>
           <select
+            id="reports-group"
             className="input mt-1"
             value={groupId}
             onChange={(e) => setGroupId(e.target.value)}
           >
-            <option value="">All classes</option>
+            <option value="">All groups</option>
             {groups?.map((g) => (
               <option key={g.id} value={g.id}>
                 {g.name}
@@ -191,31 +290,84 @@ export default function ReportsPage() {
           </select>
         </div>
         <div>
-          <label className="label">From</label>
+          <label htmlFor="reports-from" className="label">From</label>
           <input
+            id="reports-from"
             type="date"
-            className="input mt-1"
+            className={`input mt-1 ${dateRangeInvalid ? 'border-hot-400 ring-1 ring-hot-200' : ''}`}
             value={from}
             onChange={(e) => setFrom(e.target.value)}
           />
         </div>
         <div>
-          <label className="label">To</label>
+          <label htmlFor="reports-to" className="label">To</label>
           <input
+            id="reports-to"
             type="date"
-            className="input mt-1"
+            className={`input mt-1 ${dateRangeInvalid ? 'border-hot-400 ring-1 ring-hot-200' : ''}`}
             value={to}
             onChange={(e) => setTo(e.target.value)}
           />
         </div>
+        {dateRangeInvalid ? (
+          <div className="sm:col-span-3 text-xs text-hot-600">
+            'From' must be before 'to'.
+          </div>
+        ) : null}
       </div>
+
+      {(insights || insightsBusy || insightsError) && (
+        <section className="ai-card">
+          <div className="flex items-center gap-2 mb-2">
+            <Icon name="lightbulb" size={18} className="text-brand-600" />
+            <h3 className="font-bold text-ink-800">Sigma AI insights</h3>
+            <AIBadge />
+          </div>
+          {insightsBusy ? (
+            <div className="text-ink-500">Reading the data…</div>
+          ) : insightsError ? (
+            <div className="text-sm text-hot-600">{insightsError}</div>
+          ) : insights && insights.length === 0 ? (
+            <div className="text-ink-600">Not enough data for confident patterns yet.</div>
+          ) : insights ? (
+            <ul className="space-y-2">
+              {insights.map((b, i) => (
+                <li key={i} className="bg-white rounded-xl border border-brand-100 p-3">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`chip text-[10px] uppercase ${
+                        b.kind === 'risk'
+                          ? 'bg-hot-100 text-hot-700'
+                          : b.kind === 'strength'
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : b.kind === 'trend'
+                          ? 'chip-brand'
+                          : 'chip-gold'
+                      }`}
+                    >
+                      {b.kind}
+                    </span>
+                    <div className="font-bold text-ink-800">{b.headline}</div>
+                  </div>
+                  <div className="text-sm text-ink-600 mt-1">{b.detail}</div>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </section>
+      )}
 
       {aggregates.length === 0 ? (
         <EmptyState
           icon="reports"
           title="No data in this view"
           description="Run an assessment session — or change the filters above — to see aggregated marks here."
-          action={<Link to="/sessions/new" className="btn-primary"><Icon name="play" size={18} />Start a session</Link>}
+          action={
+            <Link to="/sessions/new" className="btn-primary">
+              <Icon name="play" size={18} />
+              Start a session
+            </Link>
+          }
         />
       ) : (
         <div className="space-y-3">
@@ -229,6 +381,24 @@ export default function ReportsPage() {
           ))}
         </div>
       )}
+
+      {!aiUnlocked && aggregates.length > 0 && !insights && (
+        <div className="ai-card flex items-start gap-3">
+          <Icon name="lightbulb" size={22} className="text-brand-600 mt-0.5" />
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="font-bold text-ink-800">Spot patterns you'd otherwise miss</h3>
+              <AIUpsell />
+            </div>
+            <p className="text-sm text-ink-600">
+              Sigma AI reads your roll-up and flags trends, risks, strengths and cohort patterns in plain English.
+              Unlock from £4.99 (BYOK) or subscribe.
+            </p>
+          </div>
+        </div>
+      )}
+
+      <PaywallModal open={showPaywall} onClose={() => setShowPaywall(false)} reason={paywallReason} />
     </div>
   );
 }
@@ -243,7 +413,6 @@ function PersonReportCard({
   latestSession?: Session;
 }) {
   const { person, byCriterion, overallAvg, sessionsCount, totalMarks, trend } = aggregate;
-  // Use the latest session's scale to label averages, if available.
   const scale = latestSession?.scale;
   return (
     <div className="card p-4">
@@ -306,7 +475,7 @@ function Sparkline({ points }: { points: { date: number; avg: number }[] }) {
   const colour = delta >= 0 ? '#10b981' : '#ef4444';
   return (
     <div className="mt-3 flex items-center gap-3">
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-xs h-10">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-xs h-10" aria-label="Trend sparkline">
         <path d={d} fill="none" stroke={colour} strokeWidth="2.4" strokeLinecap="round" />
         {ys.map((y, i) => (
           <circle key={i} cx={xs[i]} cy={y} r="2.5" fill={colour} />

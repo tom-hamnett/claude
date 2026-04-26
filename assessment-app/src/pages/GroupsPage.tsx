@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, now, uid } from '../db';
+import { db, getSettings, now, uid } from '../db';
 import { Icon } from '../components/Icon';
 import { Avatar } from '../components/Avatar';
 import { Modal } from '../components/Modal';
 import { PageHeader } from '../components/Layout';
 import { EmptyState } from '../components/Empty';
+import { VERTICAL_LABELS } from '../services/seeds/galleryTemplates';
+import type { Vertical } from '../types';
 
 export default function GroupsPage() {
   const [open, setOpen] = useState(false);
@@ -25,12 +27,12 @@ export default function GroupsPage() {
   return (
     <div>
       <PageHeader
-        title="Classes"
-        subtitle="A class is any group you assess — students, players, employees."
+        title="Groups"
+        subtitle="A group is any cohort you assess — a class, a team, a site, a ward."
         actions={
           <button className="btn-primary" onClick={() => setOpen(true)}>
             <Icon name="plus" size={18} />
-            New class
+            New group
           </button>
         }
       />
@@ -38,12 +40,12 @@ export default function GroupsPage() {
       {groups && groups.length === 0 ? (
         <EmptyState
           icon="group"
-          title="No classes yet"
-          description="Create a class to add students and start assessing."
+          title="No groups yet"
+          description="Create a group to add people and start assessing."
           action={
             <button className="btn-primary" onClick={() => setOpen(true)}>
               <Icon name="plus" size={18} />
-              New class
+              New group
             </button>
           }
         />
@@ -57,10 +59,20 @@ export default function GroupsPage() {
             >
               <Avatar name={g.name} size={48} />
               <div className="flex-1 min-w-0">
-                <div className="font-semibold text-ink-800 truncate">{g.name}</div>
+                <div className="flex items-center gap-1.5">
+                  <div className="font-semibold text-ink-800 truncate">{g.name}</div>
+                </div>
                 {g.subject ? <div className="text-xs text-ink-500 truncate">{g.subject}</div> : null}
-                <div className="text-xs text-ink-400 mt-1">
-                  {peopleCounts?.get(g.id) ?? 0} people
+                <div className="text-xs text-ink-400 mt-1 flex items-center gap-2">
+                  <span>{peopleCounts?.get(g.id) ?? 0} people</span>
+                  {g.vertical ? (
+                    <>
+                      <span>·</span>
+                      <span>
+                        {VERTICAL_LABELS[g.vertical].emoji} {VERTICAL_LABELS[g.vertical].label}
+                      </span>
+                    </>
+                  ) : null}
                 </div>
               </div>
               <Icon name="chevron-right" size={20} />
@@ -77,6 +89,12 @@ export default function GroupsPage() {
 function NewGroupModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [name, setName] = useState('');
   const [subject, setSubject] = useState('');
+  const [vertical, setVertical] = useState<Vertical | undefined>();
+  const settings = useLiveQuery(() => getSettings(), []);
+
+  useEffect(() => {
+    if (open) setVertical(settings?.defaultVertical);
+  }, [open, settings?.defaultVertical]);
 
   const reset = () => {
     setName('');
@@ -90,6 +108,7 @@ function NewGroupModal({ open, onClose }: { open: boolean; onClose: () => void }
       id: uid(),
       name: name.trim(),
       subject: subject.trim() || undefined,
+      vertical,
       createdAt: t,
       updatedAt: t,
     });
@@ -97,10 +116,12 @@ function NewGroupModal({ open, onClose }: { open: boolean; onClose: () => void }
     onClose();
   };
 
+  const verticals: Vertical[] = ['school', 'tuition', 'sport', 'health', 'construction', 'corporate', 'field', 'other'];
+
   return (
     <Modal
       open={open}
-      title="New class"
+      title="New group"
       onClose={() => {
         reset();
         onClose();
@@ -125,23 +146,44 @@ function NewGroupModal({ open, onClose }: { open: boolean; onClose: () => void }
     >
       <div className="space-y-3">
         <div>
-          <label className="label">Class name</label>
+          <label htmlFor="group-name" className="label">
+            Group name
+          </label>
           <input
+            id="group-name"
             className="input mt-1"
-            placeholder="e.g. Year 7 PE — Set A"
+            placeholder="e.g. Year 7 PE — Set A · Site B North · Ward 4 students"
             value={name}
             onChange={(e) => setName(e.target.value)}
             autoFocus
           />
         </div>
         <div>
-          <label className="label">Subject / context (optional)</label>
+          <label htmlFor="group-subject" className="label">
+            Context (optional)
+          </label>
           <input
+            id="group-subject"
             className="input mt-1"
-            placeholder="e.g. Physical Education"
+            placeholder="e.g. PE · Steel frame · Year 1 paeds"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
           />
+        </div>
+        <div>
+          <div className="label mb-1">Domain</div>
+          <div className="flex flex-wrap gap-1.5">
+            {verticals.map((v) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setVertical((cur) => (cur === v ? undefined : v))}
+                className={`chip ${vertical === v ? 'chip-brand' : ''}`}
+              >
+                {VERTICAL_LABELS[v].emoji} {VERTICAL_LABELS[v].label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </Modal>

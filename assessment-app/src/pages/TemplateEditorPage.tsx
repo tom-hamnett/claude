@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { db, now, uid } from '../db';
+import { db, getSettings, now, uid } from '../db';
+import { useLiveQuery } from 'dexie-react-hooks';
 import type { Scale, Template, TemplateCriterion } from '../types';
 import { Icon } from '../components/Icon';
 import { ScaleEditor } from '../components/ScaleEditor';
 import { ConfirmDialog } from '../components/Modal';
+import { RubricGeneratorModal } from '../components/RubricGeneratorModal';
 
 const blank = (): Template => ({
   id: uid(),
@@ -24,6 +26,8 @@ export default function TemplateEditorPage() {
   const [t, setT] = useState<Template | null>(null);
   const [tagInput, setTagInput] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showAI, setShowAI] = useState(false);
+  const settings = useLiveQuery(() => getSettings(), []);
 
   useEffect(() => {
     (async () => {
@@ -103,11 +107,17 @@ export default function TemplateEditorPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between">
         <Link to="/templates" className="btn-ghost">
           <Icon name="chevron-left" size={18} />
           Templates
         </Link>
+        {isNew ? (
+          <button className="btn-secondary" onClick={() => setShowAI(true)}>
+            <Icon name="wand" size={16} />
+            Fill with AI
+          </button>
+        ) : null}
       </div>
 
       <div className="card p-5 space-y-4">
@@ -261,6 +271,29 @@ export default function TemplateEditorPage() {
         confirmLabel="Delete template"
         onConfirm={remove}
         onClose={() => setConfirmDelete(false)}
+      />
+
+      <RubricGeneratorModal
+        open={showAI}
+        onClose={() => setShowAI(false)}
+        vertical={settings?.defaultVertical}
+        onAccept={(rubric) => {
+          setT({
+            ...t,
+            name: rubric.name,
+            description: rubric.description,
+            scale: rubric.scale,
+            criteria: rubric.criteria.map((c) => ({
+              id: uid(),
+              name: c.name,
+              description: c.description,
+            })),
+            tags: Array.from(new Set([...(t.tags ?? []), ...rubric.tags])),
+            vertical: settings?.defaultVertical,
+            source: 'ai',
+            updatedAt: now(),
+          });
+        }}
       />
     </div>
   );

@@ -1,26 +1,32 @@
 import { Link } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '../db';
+import { db, getSettings } from '../db';
 import { Icon } from '../components/Icon';
 import { fmtRelative } from '../lib/format';
 import { Avatar } from '../components/Avatar';
+import { AIBadge, AIUpsell } from '../components/AIBadge';
+import { VERTICAL_LABELS } from '../services/seeds/galleryTemplates';
 
 export default function HomePage() {
   const groups = useLiveQuery(() => db.groups.orderBy('updatedAt').reverse().toArray(), []);
   const recentSessions = useLiveQuery(
     () => db.sessions.orderBy('date').reverse().limit(5).toArray(),
-    []
+    [],
   );
   const inProgress = useLiveQuery(
     () => db.sessions.where('status').equals('in_progress').toArray(),
-    []
+    [],
   );
   const totalPeople = useLiveQuery(() => db.people.count(), []);
   const totalMarks = useLiveQuery(() => db.marks.count(), []);
+  const settings = useLiveQuery(() => getSettings(), []);
   const groupsById = useLiveQuery(async () => {
     const all = await db.groups.toArray();
     return new Map(all.map((g) => [g.id, g.name]));
   }, []);
+
+  const aiUnlocked = settings?.license?.tier && settings.license.tier !== 'free';
+  const verticalMeta = settings?.defaultVertical ? VERTICAL_LABELS[settings.defaultVertical] : null;
 
   return (
     <div className="space-y-8">
@@ -31,7 +37,11 @@ export default function HomePage() {
           </div>
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight text-ink-800">Sigma</h1>
-            <p className="text-ink-500">Rapid, customisable assessment for any context.</p>
+            <p className="text-ink-500">
+              {verticalMeta
+                ? `${verticalMeta.emoji} ${verticalMeta.label} — clipboard, in your pocket.`
+                : 'The clipboard for anyone evaluating people in the field.'}
+            </p>
           </div>
         </div>
       </header>
@@ -52,10 +62,63 @@ export default function HomePage() {
           </Link>
         </div>
         <p className="text-ink-500 text-sm">
-          Pick a class, choose a template (or define criteria on the spot), set the sliding scale,
-          then sweep through your students with one tap per criterion.
+          Pick a group, choose a template (or define criteria on the spot), set the sliding scale,
+          then sweep through your people with one tap per criterion.
         </p>
       </section>
+
+      {!aiUnlocked && (
+        <section className="ai-card flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl ai-grad text-white flex items-center justify-center shrink-0">
+            <Icon name="sparkles" size={20} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="font-bold text-ink-800">Sigma AI — your domain expert in your pocket</h3>
+              <AIUpsell />
+            </div>
+            <p className="text-sm text-ink-600 leading-snug">
+              Generate credible rubrics from a one-line brief. Spot calibration drift while you mark.
+              Draft the report you'd otherwise write by hand. Free clipboard work continues forever — AI is the optional upgrade.
+            </p>
+            <div className="flex flex-wrap gap-2 mt-3">
+              <Link to="/settings#ai" className="btn-gold">
+                <Icon name="unlock" size={16} />
+                Unlock from £4.99
+              </Link>
+              <a
+                href="https://quantumtools.ai/sigma"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-secondary"
+              >
+                Learn more
+                <Icon name="arrow-up-right" size={14} />
+              </a>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {aiUnlocked && (
+        <section className="ai-card flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl ai-grad text-white flex items-center justify-center">
+            <Icon name="sparkles" size={20} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-ink-800">Sigma AI active</h3>
+              <AIBadge />
+            </div>
+            <p className="text-sm text-ink-600">
+              Use the wand icon in Templates and Sessions to generate rubrics, drafts and insights.
+            </p>
+          </div>
+          <Link to="/settings#ai" className="btn-ghost text-sm">
+            Manage
+          </Link>
+        </section>
+      )}
 
       {inProgress && inProgress.length > 0 && (
         <section>
@@ -85,13 +148,17 @@ export default function HomePage() {
 
       <section>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-ink-800">Your classes</h2>
-          <Link to="/groups" className="text-sm font-semibold text-brand-600">View all</Link>
+          <h2 className="font-bold text-ink-800">Your groups</h2>
+          <Link to="/groups" className="text-sm font-semibold text-brand-600">
+            View all
+          </Link>
         </div>
         {groups && groups.length === 0 ? (
           <div className="card p-6 text-ink-500">
-            No classes yet.{' '}
-            <Link to="/groups" className="text-brand-600 font-semibold">Create your first class →</Link>
+            No groups yet.{' '}
+            <Link to="/groups" className="text-brand-600 font-semibold">
+              Create your first group →
+            </Link>
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 gap-3">
@@ -116,7 +183,9 @@ export default function HomePage() {
       <section>
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-bold text-ink-800">Recent sessions</h2>
-          <Link to="/sessions" className="text-sm font-semibold text-brand-600">View all</Link>
+          <Link to="/sessions" className="text-sm font-semibold text-brand-600">
+            View all
+          </Link>
         </div>
         {recentSessions && recentSessions.length === 0 ? (
           <div className="card p-6 text-ink-500">No sessions recorded yet.</div>

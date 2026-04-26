@@ -33,7 +33,7 @@ export default function GroupDetailPage() {
   );
 
   if (!group) {
-    return <div className="text-ink-500">Class not found.</div>;
+    return <div className="text-ink-500">Group not found.</div>;
   }
 
   const addOne = async (name: string) => {
@@ -90,7 +90,7 @@ export default function GroupDetailPage() {
       <div className="flex items-center gap-2">
         <Link to="/groups" className="btn-ghost">
           <Icon name="chevron-left" size={18} />
-          Classes
+          Groups
         </Link>
       </div>
 
@@ -129,7 +129,7 @@ export default function GroupDetailPage() {
         <h2 className="font-bold text-ink-800 mb-2">People</h2>
         {people && people.length === 0 ? (
           <div className="card p-6 text-ink-500">
-            No one in this class yet.{' '}
+            No one in this group yet.{' '}
             <button className="text-brand-600 font-semibold" onClick={() => setAdding(true)}>
               Add people →
             </button>
@@ -166,7 +166,7 @@ export default function GroupDetailPage() {
       </section>
 
       <section>
-        <h2 className="font-bold text-ink-800 mb-2">Recent sessions for this class</h2>
+        <h2 className="font-bold text-ink-800 mb-2">Recent sessions for this group</h2>
         {sessions && sessions.length === 0 ? (
           <div className="card p-6 text-ink-500">No sessions yet.</div>
         ) : (
@@ -214,7 +214,7 @@ export default function GroupDetailPage() {
         }
       >
         <p className="text-ink-500 text-sm mb-2">
-          One name per line. Paste a class list straight from your spreadsheet.
+          One name per line. Paste straight from your spreadsheet.
         </p>
         <textarea
           className="input min-h-[180px] font-mono"
@@ -266,7 +266,7 @@ export default function GroupDetailPage() {
 
       <Modal
         open={editingGroup}
-        title="Edit class"
+        title="Edit group"
         onClose={() => setEditingGroup(false)}
         footer={
           <>
@@ -288,7 +288,7 @@ export default function GroupDetailPage() {
       >
         <div className="space-y-3">
           <div>
-            <label className="label">Class name</label>
+            <label className="label">Group name</label>
             <input
               className="input mt-1"
               defaultValue={group.name}
@@ -308,9 +308,9 @@ export default function GroupDetailPage() {
 
       <ConfirmDialog
         open={confirmDelete}
-        title="Delete this class?"
-        message="This permanently deletes the class, its people, sessions, and marks. This can't be undone."
-        confirmLabel="Delete class"
+        title="Delete this group?"
+        message="This permanently deletes the group, its people, sessions, and marks. This can't be undone."
+        confirmLabel="Delete group"
         onConfirm={deleteGroup}
         onClose={() => setConfirmDelete(false)}
       />

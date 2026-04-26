@@ -1,13 +1,14 @@
 {
-  "name": "Sigma — Rapid Assessment",
+  "name": "Sigma — Clipboard for the field",
   "short_name": "Sigma",
-  "description": "Rapid, customisable assessment for any context. Define criteria, set a sliding scale, sweep through the group.",
+  "description": "Rapid, customisable assessment for anyone evaluating people in the field — schools, sites, clinics, pitches. Offline-first.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#f7f8fb",
-  "theme_color": "#2a6dff",
+  "background_color": "#fafafe",
+  "theme_color": "#6c63ff",
+  "categories": ["productivity", "education", "business"],
   "icons": [
     {
       "src": "/icon-192.png",
