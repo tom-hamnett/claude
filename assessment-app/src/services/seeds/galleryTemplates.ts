@@ -213,9 +213,166 @@ export const GALLERY: GalleryTemplate[] = [
     tags: ['Football', 'Technical'],
   },
 
+  {
+    vertical: 'sport',
+    name: 'Rugby — Tackle Technique',
+    description: 'Pitchside per-player rating during a contact session.',
+    scale: { min: 1, max: 5, step: 1, labels: ['Avoid', 'Tentative', 'Effective', 'Strong', 'Game-changing'] },
+    criteria: [
+      { name: 'Body height', description: 'Drops below ball-carrier hip line.' },
+      { name: 'Footwork', description: 'Last-stride approach is short and balanced.' },
+      { name: 'Wrap & drive', description: 'Wraps both arms; drives through contact.' },
+      { name: 'Head position', description: 'Cheek to cheek, head up the side.' },
+      { name: 'Recovery', description: 'Back to feet quickly to compete or chase.' },
+    ],
+    tags: ['Rugby', 'Defence'],
+  },
+  {
+    vertical: 'sport',
+    name: 'Cricket — Batting Phase',
+    description: 'Net-session or live-game observation across an over.',
+    scale: { min: 1, max: 4, step: 1, labels: ['Below', 'Approaching', 'Match-ready', 'Standout'] },
+    criteria: [
+      { name: 'Stance & guard', description: 'Balanced base, head still, alignment.' },
+      { name: 'Shot selection', description: 'Correct shot for length and line.' },
+      { name: 'Footwork', description: 'Forward press or back foot as appropriate.' },
+      { name: 'Running between wickets', description: 'Calling, turn, awareness.' },
+    ],
+    tags: ['Cricket', 'Batting'],
+  },
+
+  // ============================================================================
+  // FIELD SERVICE / RETAIL
+  // ============================================================================
+  {
+    vertical: 'field',
+    name: 'Retail Store Visit — Standards',
+    description: 'District manager or area lead visiting a retail unit.',
+    scale: { min: 1, max: 5, step: 1, labels: ['Below brand', 'Patchy', 'On brand', 'Strong', 'Flagship'] },
+    criteria: [
+      { name: 'Window & entrance', description: 'Cleanliness, signage, on-message.' },
+      { name: 'Layout & flow', description: 'Hot spots stocked; sight lines clear.' },
+      { name: 'Stock & sizing', description: 'Available sizes, replenishment, BOH tidy.' },
+      { name: 'Team presence', description: 'Greeting, attentive, on-uniform.' },
+      { name: 'Till & queue', description: 'Speed, accuracy, upsell where appropriate.' },
+    ],
+    tags: ['Retail', 'Store visit'],
+  },
+  {
+    vertical: 'field',
+    name: 'Food Hygiene — Quick Audit',
+    description: 'Brief environmental health-style observation in a kitchen.',
+    scale: { min: 1, max: 3, step: 1, labels: ['Major non-compliance', 'Minor non-compliance', 'Compliant'] },
+    criteria: [
+      { name: 'Personal hygiene', description: 'Hand-wash, hair, jewellery, illness reporting.' },
+      { name: 'Cleaning schedule', description: 'Surfaces, equipment, signed cleaning log.' },
+      { name: 'Temperature controls', description: 'Fridge / freezer / hot-hold logs current.' },
+      { name: 'Cross-contamination', description: 'Colour-coded boards, raw/RTE separation.' },
+      { name: 'Pest control', description: 'No evidence of pests; doors and screens.' },
+      { name: 'Allergens', description: 'Allergen matrix current; cross-contact controls.' },
+    ],
+    tags: ['Food hygiene', 'EHO'],
+  },
+  {
+    vertical: 'field',
+    name: 'Property Condition — Mid-Term',
+    description: 'Letting agent mid-tenancy property inspection.',
+    scale: { min: 1, max: 4, step: 1, labels: ['Damaged', 'Wear & tear', 'Good', 'As new'] },
+    criteria: [
+      { name: 'Walls & ceilings', description: 'Marks, scuffs, damp.' },
+      { name: 'Floors', description: 'Carpet/laminate condition; staining.' },
+      { name: 'Kitchen', description: 'Appliances, surfaces, sealants.' },
+      { name: 'Bathroom', description: 'Tiling, sealant, mould, fittings.' },
+      { name: 'Windows & doors', description: 'Operate, seal, locks.' },
+      { name: 'Garden / external', description: 'Maintained, no rubbish accumulation.' },
+    ],
+    tags: ['Property', 'Inspection'],
+  },
+
+  // ============================================================================
+  // ADDITIONAL HEALTH
+  // ============================================================================
+  {
+    vertical: 'health',
+    name: 'Mental Health — Brief Status',
+    description: 'Therapist or community team brief check during a session.',
+    scale: { min: 0, max: 4, step: 1, labels: ['Crisis', 'Concern', 'Stable', 'Improving', 'Recovered'] },
+    criteria: [
+      { name: 'Mood', description: 'Self-reported and observed.' },
+      { name: 'Sleep', description: 'Quality and duration this week.' },
+      { name: 'Engagement', description: 'Attendance, openness, follow-through on tasks.' },
+      { name: 'Risk', description: 'Self-harm / harm to others / safeguarding flags.' },
+      { name: 'Social functioning', description: 'Work, relationships, daily activities.' },
+    ],
+    tags: ['Mental health', 'Wellbeing'],
+  },
+  {
+    vertical: 'health',
+    name: 'Pharmacy — MUR Quality Check',
+    description: 'Pharmacy peer-review of a Medicines Use Review consultation.',
+    scale: { min: 1, max: 4, step: 1, labels: ['Concern', 'Developing', 'Competent', 'Exemplary'] },
+    criteria: [
+      { name: 'Patient introduction', description: 'Consent, purpose, confidentiality.' },
+      { name: 'Medicines reconciliation', description: 'Accurate list against records.' },
+      { name: 'Adherence exploration', description: 'Open questions; non-judgemental.' },
+      { name: 'Counselling', description: 'Plain-language explanation of action / side effects.' },
+      { name: 'Documentation', description: 'Clear, complete, actionable record.' },
+    ],
+    tags: ['Pharmacy', 'Clinical review'],
+  },
+
+  // ============================================================================
+  // ADDITIONAL TUITION
+  // ============================================================================
+  {
+    vertical: 'tuition',
+    name: '11+ / Entrance — Verbal Reasoning',
+    description: 'After a timed VR practice session.',
+    scale: { min: 1, max: 5, step: 1, labels: ['Foundation', 'Building', 'Test-ready', 'Strong', 'Top-band'] },
+    criteria: [
+      { name: 'Pace', description: 'Working through items at target rate.' },
+      { name: 'Accuracy', description: 'Answers correct under time pressure.' },
+      { name: 'Strategy', description: 'Eliminates options; flags hard items to return to.' },
+      { name: 'Vocabulary', description: 'Range and confidence with synonyms / antonyms.' },
+      { name: 'Confidence', description: 'Composure, self-talk, response to setbacks.' },
+    ],
+    tags: ['11+', 'Entrance', 'VR'],
+  },
+
+  // ============================================================================
+  // ADDITIONAL CONSTRUCTION
+  // ============================================================================
+  {
+    vertical: 'construction',
+    name: 'Mechanical Install — First-Fix QA',
+    description: 'M&E supervisor sign-off check on first fix per zone.',
+    scale: { min: 1, max: 3, step: 1, labels: ['Fail', 'Conditional', 'Pass'] },
+    criteria: [
+      { name: 'Pipework alignment', description: 'Levels, falls, supports per spec.' },
+      { name: 'Penetrations', description: 'Fire-stopped, sleeved, sealed correctly.' },
+      { name: 'Bracketing', description: 'Spacings, fixings, anti-vibration where needed.' },
+      { name: 'Identification', description: 'Labelled, colour-coded, drawing-numbered.' },
+      { name: 'Pressure test', description: 'Witnessed, recorded, signed.' },
+    ],
+    tags: ['M&E', 'First fix', 'QA'],
+  },
+
   // ============================================================================
   // CORPORATE
   // ============================================================================
+  {
+    vertical: 'corporate',
+    name: 'L&D — Skill Workshop Check',
+    description: 'L&D facilitator assessing transfer of a taught skill at the end of a workshop.',
+    scale: { min: 1, max: 4, step: 1, labels: ['Awareness', 'Guided', 'Independent', 'Coaches others'] },
+    criteria: [
+      { name: 'Demonstration', description: 'Performs the skill correctly under observation.' },
+      { name: 'Articulation', description: 'Explains why and when to use the skill.' },
+      { name: 'Application', description: 'Applies in a realistic role-play or scenario.' },
+      { name: 'Reflection', description: 'Identifies where they will use it back at work.' },
+    ],
+    tags: ['L&D', 'Workshop', 'Skill transfer'],
+  },
   {
     vertical: 'corporate',
     name: 'Customer Conversation Audit',

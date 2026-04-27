@@ -10,6 +10,7 @@ import { ConfirmDialog } from '../components/Modal';
 import { EvidenceTile } from '../components/EvidenceCapture';
 import { SignaturePadModal } from '../components/SignaturePad';
 import { AIBadge } from '../components/AIBadge';
+import { Markdown } from '../components/Markdown';
 import { PaywallModal } from '../components/PaywallModal';
 import { draftReport } from '../services/sigmaAI';
 import { canUseAI } from '../services/license';
@@ -480,8 +481,8 @@ function AIDraftCard({
       ) : null}
 
       {session.aiNarrative ? (
-        <article className="mt-4 prose prose-sm max-w-none whitespace-pre-wrap text-ink-700 leading-relaxed">
-          {session.aiNarrative.markdown}
+        <article className="mt-4 max-w-none">
+          <Markdown source={session.aiNarrative.markdown} />
         </article>
       ) : (
         <div className="mt-3 text-sm text-ink-500 print:hidden">
