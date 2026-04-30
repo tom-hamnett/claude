@@ -5,7 +5,7 @@
 // - MoM variance callouts
 // - Chart type toggles
 import { useState } from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend, ComposedChart, ReferenceLine } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend, ComposedChart, ReferenceLine, AreaChart, Area } from "recharts";
 import { EmptyState } from "../components/ui.jsx";
 
 const REGION_COLORS = { GC: "#5DC484", EMEAA: "#4A9EFF", AMER: "#F5C544", total: "#2ABFBF" };
@@ -106,7 +106,7 @@ function CRFCollection({ data }) {
   return (
     <div>
       <Headline text={d.headline} />
-      <ChartToggle options={[{ id: "stacked", label: "Stacked Bars" }, { id: "trend", label: "Trend Lines" }]} active={view} onChange={setView} />
+      <ChartToggle options={[{ id: "stacked", label: "Stacked Bars" }, { id: "trend", label: "Trend Lines" }, { id: "area", label: "Area" }]} active={view} onChange={setView} />
 
       {/* CRF Eligible */}
       <div style={{ fontSize: 12, fontFamily: "var(--font-m)", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>CRF Eligible ($M)</div>
@@ -123,6 +123,17 @@ function CRFCollection({ data }) {
               <Bar dataKey="EMEAA" fill="#4A9EFF" stackId="a" name="EMEAA" />
               <Bar dataKey="GC" fill="#5DC484" stackId="a" name="GC" />
             </BarChart>
+          ) : view === "area" ? (
+            <AreaChart data={rows}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#E0ECF4" }} />
+              <YAxis tick={{ fontSize: 11, fill: "#B0CBE0" }} />
+              <Tooltip contentStyle={{ background: "#0F3A52", border: "1px solid #1E6080", color: "#fff" }} />
+              <Legend />
+              <Area type="monotone" dataKey="AMER" stackId="a" stroke="#F5C544" fill="rgba(245,197,68,0.35)" name="AMER" />
+              <Area type="monotone" dataKey="EMEAA" stackId="a" stroke="#4A9EFF" fill="rgba(74,158,255,0.35)" name="EMEAA" />
+              <Area type="monotone" dataKey="GC" stackId="a" stroke="#5DC484" fill="rgba(93,196,132,0.35)" name="GC" />
+            </AreaChart>
           ) : (
             <LineChart data={rows}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -280,7 +291,7 @@ function CRFPerPlatform({ data }) {
   return (
     <div>
       <Headline text={d.headline} />
-      <ChartToggle options={[{ id: "grouped", label: "Grouped Bars" }, { id: "trend", label: "Trend Lines" }]} active={view} onChange={setView} />
+      <ChartToggle options={[{ id: "grouped", label: "Grouped Bars" }, { id: "trend", label: "Trend Lines" }, { id: "area", label: "Area" }]} active={view} onChange={setView} />
       <div style={{ height: 260 }}>
         <ResponsiveContainer width="100%" height="100%">
           {view === "grouped" ? (
@@ -294,6 +305,17 @@ function CRFPerPlatform({ data }) {
               <Bar dataKey="EMEAA" fill="#4A9EFF" name="EMEAA" />
               <Bar dataKey="GC" fill="#5DC484" name="GC" />
             </BarChart>
+          ) : view === "area" ? (
+            <AreaChart data={d.byMonth || []}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#E0ECF4" }} />
+              <YAxis tick={{ fontSize: 11, fill: "#B0CBE0" }} />
+              <Tooltip contentStyle={{ background: "#0F3A52", border: "1px solid #1E6080", color: "#fff" }} formatter={(v) => `$${v.toLocaleString()}`} />
+              <Legend />
+              <Area type="monotone" dataKey="AMER" stackId="a" stroke="#F5C544" fill="rgba(245,197,68,0.35)" name="AMER" />
+              <Area type="monotone" dataKey="EMEAA" stackId="a" stroke="#4A9EFF" fill="rgba(74,158,255,0.35)" name="EMEAA" />
+              <Area type="monotone" dataKey="GC" stackId="a" stroke="#5DC484" fill="rgba(93,196,132,0.35)" name="GC" />
+            </AreaChart>
           ) : (
             <LineChart data={d.byMonth || []}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -346,19 +368,31 @@ function SCProjects({ data }) {
   const months = d.byMonth || [];
   const last = months[months.length - 1];
   const prev = months[months.length - 2];
+  const [view, setView] = useState("bar");
   return (
     <div>
       <Headline text={d.headline} />
       {last && prev && <div style={{ marginBottom: 12 }}><MoMBadge label="Projects" current={last.count} previous={prev.count} /></div>}
+      <ChartToggle options={[{ id: "bar", label: "Bar" }, { id: "area", label: "Area" }]} active={view} onChange={setView} />
       <div style={{ height: 220 }}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={months} barCategoryGap="30%">
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-            <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#E0ECF4" }} />
-            <YAxis tick={{ fontSize: 11, fill: "#B0CBE0" }} />
-            <Tooltip contentStyle={{ background: "#0F3A52", border: "1px solid #1E6080", color: "#fff" }} />
-            <Bar dataKey="count" fill="#5DC484" name="Projects Completed" radius={[4, 4, 0, 0]} />
-          </BarChart>
+          {view === "area" ? (
+            <AreaChart data={months}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#E0ECF4" }} />
+              <YAxis tick={{ fontSize: 11, fill: "#B0CBE0" }} />
+              <Tooltip contentStyle={{ background: "#0F3A52", border: "1px solid #1E6080", color: "#fff" }} />
+              <Area type="monotone" dataKey="count" stroke="#5DC484" fill="rgba(93,196,132,0.35)" name="Projects Completed" />
+            </AreaChart>
+          ) : (
+            <BarChart data={months} barCategoryGap="30%">
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#E0ECF4" }} />
+              <YAxis tick={{ fontSize: 11, fill: "#B0CBE0" }} />
+              <Tooltip contentStyle={{ background: "#0F3A52", border: "1px solid #1E6080", color: "#fff" }} />
+              <Bar dataKey="count" fill="#5DC484" name="Projects Completed" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          )}
         </ResponsiveContainer>
       </div>
     </div>
@@ -371,21 +405,35 @@ function Headcount({ data }) {
   const months = d.byMonth || [];
   const last = months[months.length - 1];
   const prev = months[months.length - 2];
+  const [view, setView] = useState("stacked");
   return (
     <div>
       <Headline text={d.headline} />
       {last && prev && <div style={{ marginBottom: 12 }}><MoMBadge label="Total HC" current={last.total} previous={prev.total} /></div>}
+      <ChartToggle options={[{ id: "stacked", label: "Stacked Bars" }, { id: "area", label: "Area" }]} active={view} onChange={setView} />
       <div style={{ height: 240 }}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={months} barCategoryGap="25%">
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-            <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#E0ECF4" }} />
-            <YAxis tick={{ fontSize: 11, fill: "#B0CBE0" }} />
-            <Tooltip contentStyle={{ background: "#0F3A52", border: "1px solid #1E6080", color: "#fff" }} />
-            <Legend />
-            <Bar dataKey="filled" stackId="h" fill="#5DC484" name="Filled" />
-            <Bar dataKey="open" stackId="h" fill="#F5C544" name="Open" />
-          </BarChart>
+          {view === "area" ? (
+            <AreaChart data={months}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#E0ECF4" }} />
+              <YAxis tick={{ fontSize: 11, fill: "#B0CBE0" }} />
+              <Tooltip contentStyle={{ background: "#0F3A52", border: "1px solid #1E6080", color: "#fff" }} />
+              <Legend />
+              <Area type="monotone" dataKey="filled" stackId="h" stroke="#5DC484" fill="rgba(93,196,132,0.35)" name="Filled" />
+              <Area type="monotone" dataKey="open" stackId="h" stroke="#F5C544" fill="rgba(245,197,68,0.35)" name="Open" />
+            </AreaChart>
+          ) : (
+            <BarChart data={months} barCategoryGap="25%">
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#E0ECF4" }} />
+              <YAxis tick={{ fontSize: 11, fill: "#B0CBE0" }} />
+              <Tooltip contentStyle={{ background: "#0F3A52", border: "1px solid #1E6080", color: "#fff" }} />
+              <Legend />
+              <Bar dataKey="filled" stackId="h" fill="#5DC484" name="Filled" />
+              <Bar dataKey="open" stackId="h" fill="#F5C544" name="Open" />
+            </BarChart>
+          )}
         </ResponsiveContainer>
       </div>
       {d.note && <div style={{ padding: "10px 14px", background: "rgba(42,191,191,0.08)", border: "1px solid rgba(42,191,191,0.25)", borderRadius: 6, marginTop: 10, fontSize: 12, fontFamily: "var(--font-b)", color: "var(--text)", lineHeight: 1.5, fontStyle: "italic" }}>{d.note}</div>}
