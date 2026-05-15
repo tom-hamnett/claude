@@ -12,6 +12,8 @@ Usage:
     python main.py content [N]          Generate content batch (old-style, N pieces)
     python main.py ideas [N]            Generate N content ideas into the Idea Bank
     python main.py segments             Print the Core-Five segment spec
+    python main.py strategy-build       Auto-build Content Strategy from existing brief
+    python main.py avatar               List avatar providers + current config
     python main.py signal               Live intelligence feed (submit signals)
     python main.py deploy               Run deployment cycle (dry run)
     python main.py deploy --live        Run deployment cycle (auto-publish)
@@ -346,6 +348,32 @@ def cmd_segments():
         print(f"  - {rule}")
 
 
+def cmd_strategy_build():
+    """Auto-build the content strategy from the existing GTM brief."""
+    from gtm_engine.strategy_framework.builder import autopopulate_from_existing_brief
+    print("Auto-building content strategy from existing brief (4-5 Claude calls)...")
+    strategy = autopopulate_from_existing_brief()
+    print(f"\n[OK] Built {len(strategy.pillars)} pillars across "
+          f"{len(strategy.channels)} channels.")
+    print(f"     Funnel stages: {len(strategy.funnel_stages)}")
+    print(f"     Sequencing phases: {len(strategy.sequencing)}")
+    print(f"\nLaunch the UI to review and edit: python main.py ui")
+    print(f"  → Visit 'Strategy Builder' or 'Strategy Dashboard'")
+
+
+def cmd_avatar():
+    """List avatar providers and current configuration."""
+    from gtm_engine.avatar import list_providers, get_provider
+    print("\nAvatar Providers (BYOK):\n")
+    for p in list_providers():
+        status = "[CONFIGURED]" if p["configured"] else "[needs API key]"
+        print(f"  {p['id']:<10}  {p['name']}  {status}")
+    active = get_provider()
+    print(f"\nActive provider: {active.provider_name} ({active.provider_id})")
+    if active.provider_id != "none" and not active.is_configured():
+        print("  Warning: provider selected but API key missing.")
+
+
 COMMANDS = {
     "discover": cmd_discover,
     "prefill": cmd_prefill,
@@ -357,6 +385,8 @@ COMMANDS = {
     "content": cmd_content,
     "ideas": cmd_ideas,
     "segments": cmd_segments,
+    "strategy-build": cmd_strategy_build,
+    "avatar": cmd_avatar,
     "signal": cmd_signal,
     "list-models": cmd_list_models,
     "deploy": cmd_deploy,

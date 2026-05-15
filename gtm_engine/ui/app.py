@@ -64,6 +64,8 @@ def main():
         "Navigate",
         [
             "Dashboard",
+            "Strategy Builder",
+            "Strategy Dashboard",
             "Strategy Context",
             "Data Vault",
             "Brief Requests",
@@ -73,6 +75,7 @@ def main():
             "Deployment",
             "Scene Library",
             "Character Library",
+            "Avatar Settings",
             "Segments (Core-Five)",
             "Brand Standards",
             "Intelligence Feed",
@@ -86,6 +89,8 @@ def main():
     # Route to the selected page
     routes = {
         "Dashboard": page_dashboard,
+        "Strategy Builder": page_strategy_builder,
+        "Strategy Dashboard": page_strategy_dashboard,
         "Strategy Context": page_strategy_context,
         "Data Vault": page_data_vault,
         "Brief Requests": page_briefs,
@@ -95,6 +100,7 @@ def main():
         "Deployment": page_deployment,
         "Scene Library": page_scenes,
         "Character Library": page_characters,
+        "Avatar Settings": page_avatar_settings,
         "Segments (Core-Five)": page_segments,
         "Brand Standards": page_brand,
         "Intelligence Feed": page_intelligence,
@@ -126,6 +132,12 @@ def _initialise_libraries():
     try:
         from gtm_engine.briefs import BriefQueue
         BriefQueue()
+    except Exception:
+        pass
+
+    try:
+        from gtm_engine.strategy_framework import StrategyStore
+        StrategyStore()
     except Exception:
         pass
 
@@ -1468,6 +1480,594 @@ def page_intelligence():
             st.markdown(f"**Summary:** {assessment.get('significance_summary', '')}")
             st.markdown(f"**Recommended action:** {assessment.get('recommended_action', '')}")
             st.markdown(f"**Master asset topic:** {assessment.get('master_asset_topic', '')}")
+
+
+# -----------------------------------------------------------------------------
+# STRATEGY BUILDER — 5-stage guided wizard
+# -----------------------------------------------------------------------------
+
+def page_strategy_builder():
+    """The 5-stage guided wizard that produces a Content Strategy."""
+    from gtm_engine.strategy_framework import (
+        StrategyStore, ContentStrategy, AudienceSegment, Pillar, ChannelConfig,
+        FunnelStageConfig, SequencingPhase,
+        PILLAR_ARCHETYPES, FUNNEL_STAGES, CHANNEL_CATALOGUE, BUSINESS_PHASES,
+    )
+    from gtm_engine.strategy_framework import builder as strat_builder
+
+    st.title("Strategy Builder")
+    st.caption(
+        "A 5-stage guided wizard that turns natural-language input about your "
+        "business into a structured content strategy. Each stage produces "
+        "output the next one builds on. You can re-run any stage at any time."
+    )
+
+    store = StrategyStore()
+    strategy = store.load()
+
+    # Quick-start: auto-populate from existing brief
+    if not strategy.setup_complete and not strategy.pillars:
+        with st.container(border=True):
+            st.markdown("### Quick start")
+            st.markdown(
+                "You haven't built a content strategy yet. If you've already "
+                "completed the GTM brief and strategy generation (Strategy Context "
+                "page), you can auto-populate all five stages from that work as "
+                "a starting point. You can then edit anything."
+            )
+            from gtm_engine.config import OUTPUT_DIR
+            has_brief = (OUTPUT_DIR / "gtm_brief.json").exists()
+            if has_brief:
+                if st.button("Auto-populate from existing brief", type="primary"):
+                    with st.spinner("Building strategy from your existing brief... (4-5 Claude calls)"):
+                        try:
+                            strategy = strat_builder.autopopulate_from_existing_brief()
+                            st.success("Strategy populated. Review and edit below.")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Auto-populate failed: {e}")
+            else:
+                st.warning(
+                    "No GTM brief found. Either run `python main.py prefill` "
+                    "in the terminal, or build the strategy from scratch below."
+                )
+
+    # 5 expandable stages
+    stages_completed = set(strategy.stages_completed)
+
+    # ---- STAGE 1: AUDIENCE ----
+    stage1_done = "audience" in stages_completed
+    with st.expander(
+        f"{'✓' if stage1_done else '1.'} **Stage 1 — Audience Definition** "
+        f"({len(strategy.audience_segments)} segments)",
+        expanded=not stage1_done,
+    ):
+        st.markdown(
+            "**Why this matters:** Everything downstream depends on who you're "
+            "talking to. Get this wrong and nothing else works."
+        )
+        if strategy.audience_segments:
+            st.markdown("**Current segments:**")
+            for seg in strategy.audience_segments:
+                with st.container(border=True):
+                    st.markdown(f"**{seg.name}** — {seg.description}")
+                    if seg.job_title:
+                        st.caption(f"Job title: {seg.job_title}")
+                    if seg.pain_points:
+                        st.markdown("Pain points: " + ", ".join(seg.pain_points[:3]))
+                    if seg.channels_they_use:
+                        st.markdown(f"Channels: {', '.join(seg.channels_they_use)}")
+
+        audience_input = st.text_area(
+            "Describe your target audience in natural language",
+            placeholder=(
+                "Example: I'm building a SaaS that helps small dental practices "
+                "automate their billing. My audience is solo dentists or small "
+                "practice owners (2-5 dentists), often technically uncomfortable, "
+                "spending evenings on admin instead of patient care. They've tried "
+                "off-the-shelf accounting software but it's too generic..."
+            ),
+            height=180,
+            key="stage1_input",
+        )
+        if st.button("Build / Rebuild Audience Segments", key="run_stage1"):
+            if not audience_input.strip():
+                st.warning("Please describe your audience first.")
+            else:
+                with st.spinner("Building audience segments..."):
+                    try:
+                        segments = strat_builder.build_audience(audience_input)
+                        strategy.audience_segments = segments
+                        if "audience" not in strategy.stages_completed:
+                            strategy.stages_completed.append("audience")
+                        store.save(strategy)
+                        st.success(f"Built {len(segments)} segments. Scroll up to review.")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Stage 1 failed: {e}")
+
+    # ---- STAGE 2: PILLARS ----
+    stage2_done = "pillars" in stages_completed
+    with st.expander(
+        f"{'✓' if stage2_done else '2.'} **Stage 2 — Content Pillars** "
+        f"({len(strategy.pillars)} pillars)",
+        expanded=stage1_done and not stage2_done,
+    ):
+        st.markdown(
+            "**Why this matters:** A pillar is a territory you OWN. Not a single "
+            "post — a recurring theme. Every piece of content should fit under "
+            "exactly one pillar."
+        )
+        with st.expander("Universal archetypes you can start from"):
+            for a in PILLAR_ARCHETYPES:
+                st.markdown(
+                    f"- **{a['default_name']}** ({a['archetype_id']}): {a['description']}"
+                )
+
+        if strategy.pillars:
+            st.markdown("**Current pillars:**")
+            for p in strategy.pillars:
+                with st.container(border=True):
+                    st.markdown(
+                        f"**{p.name}** — target {p.target_percentage}% · "
+                        f"funnel: `{p.funnel_stage}` · archetype: `{p.archetype}`"
+                    )
+                    st.caption(p.description)
+                    if p.why_it_matters:
+                        st.markdown(f"*Why it matters:* {p.why_it_matters}")
+                    if p.example_topics:
+                        st.markdown(
+                            "Example topics: " + " · ".join(f"*{t}*" for t in p.example_topics[:3])
+                        )
+
+        biz_context = st.text_area(
+            "Brief business context (your product, worldview, who you sell to)",
+            placeholder=(
+                "Example: We sell PRISM, a workforce intelligence tool. We believe "
+                "the consulting industry's data providers are structurally broken "
+                "because they sell per-record data. Our buyers are independent "
+                "consultants and boutique PE firms..."
+            ),
+            height=140,
+            key="stage2_context",
+        )
+        if st.button("Build / Rebuild Pillars", key="run_stage2", disabled=not stage1_done):
+            if not strategy.audience_segments:
+                st.warning("Complete Stage 1 first.")
+            elif not biz_context.strip():
+                st.warning("Provide some business context.")
+            else:
+                with st.spinner("Building content pillars..."):
+                    try:
+                        pillars = strat_builder.build_pillars(
+                            strategy.audience_segments, biz_context,
+                        )
+                        strategy.pillars = pillars
+                        if "pillars" not in strategy.stages_completed:
+                            strategy.stages_completed.append("pillars")
+                        store.save(strategy)
+                        st.success(f"Built {len(pillars)} pillars.")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Stage 2 failed: {e}")
+
+    # ---- STAGE 3: CHANNELS ----
+    stage3_done = "channels" in stages_completed
+    with st.expander(
+        f"{'✓' if stage3_done else '3.'} **Stage 3 — Channel Strategy** "
+        f"({len([c for c in strategy.channels if c.enabled])} channels)",
+        expanded=stage2_done and not stage3_done,
+    ):
+        st.markdown(
+            "**Why this matters:** Different channels need different things. "
+            "Picking 3-5 well-matched channels beats publishing everywhere."
+        )
+
+        if strategy.channels:
+            for c in strategy.channels:
+                if not c.enabled:
+                    continue
+                spec = next((cs for cs in CHANNEL_CATALOGUE if cs["id"] == c.channel_id), {})
+                with st.container(border=True):
+                    st.markdown(
+                        f"**{spec.get('name', c.channel_id)}** — "
+                        f"{c.cadence_per_week}/week · pillars: {', '.join(c.primary_pillars)}"
+                    )
+                    if c.notes:
+                        st.caption(c.notes)
+
+        if st.button("Recommend channels", key="run_stage3", disabled=not stage2_done):
+            with st.spinner("Recommending channels..."):
+                try:
+                    channels = strat_builder.build_channels(
+                        strategy.audience_segments, strategy.pillars,
+                    )
+                    strategy.channels = channels
+                    if "channels" not in strategy.stages_completed:
+                        strategy.stages_completed.append("channels")
+                    store.save(strategy)
+                    st.success(f"Recommended {len(channels)} channels.")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Stage 3 failed: {e}")
+
+    # ---- STAGE 4: FUNNEL ----
+    stage4_done = "funnel" in stages_completed
+    with st.expander(
+        f"{'✓' if stage4_done else '4.'} **Stage 4 — Funnel Mapping** "
+        f"({len(strategy.funnel_stages)} stages)",
+        expanded=stage3_done and not stage4_done,
+    ):
+        st.markdown(
+            "**Why this matters:** Audiences move through stages — awareness, "
+            "trust, conversion. Your content needs to serve each stage."
+        )
+
+        if strategy.funnel_stages:
+            for stage in strategy.funnel_stages:
+                with st.container(border=True):
+                    st.markdown(
+                        f"**{stage.name}** — {stage.target_percentage}% target · "
+                        f"pillars: {', '.join(stage.pillar_ids)}"
+                    )
+                    if stage.user_definition:
+                        st.caption(stage.user_definition)
+
+        if st.button("Map funnel", key="run_stage4", disabled=not stage3_done):
+            with st.spinner("Mapping pillars to funnel stages..."):
+                try:
+                    business_context = "Defined in earlier stages"
+                    funnel = strat_builder.build_funnel(
+                        strategy.audience_segments, strategy.pillars, business_context,
+                    )
+                    strategy.funnel_stages = funnel
+                    if "funnel" not in strategy.stages_completed:
+                        strategy.stages_completed.append("funnel")
+                    store.save(strategy)
+                    st.success(f"Mapped {len(funnel)} funnel stages.")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Stage 4 failed: {e}")
+
+    # ---- STAGE 5: CAPACITY & SEQUENCING ----
+    stage5_done = "sequencing" in stages_completed
+    with st.expander(
+        f"{'✓' if stage5_done else '5.'} **Stage 5 — Capacity & Sequencing**",
+        expanded=stage4_done and not stage5_done,
+    ):
+        st.markdown(
+            "**Why this matters:** Strategy fails when it ignores reality. How "
+            "much content can you ship per week, and what phase is your business "
+            "in?"
+        )
+
+        col_a, col_b = st.columns(2)
+        with col_a:
+            capacity = st.slider(
+                "Pieces of content per week",
+                min_value=1, max_value=20, value=strategy.capacity_per_week,
+                key="stage5_capacity",
+            )
+        with col_b:
+            phase_options = {p["id"]: p["name"] for p in BUSINESS_PHASES}
+            phase = st.selectbox(
+                "Current business phase",
+                options=list(phase_options.keys()),
+                format_func=lambda x: phase_options[x],
+                index=list(phase_options.keys()).index(strategy.business_phase)
+                if strategy.business_phase in phase_options else 0,
+                key="stage5_phase",
+            )
+            phase_def = next((p for p in BUSINESS_PHASES if p["id"] == phase), {})
+            if phase_def:
+                st.caption(phase_def["description"])
+
+        if st.button("Build sequencing plan", key="run_stage5"):
+            try:
+                sequencing = strat_builder.build_sequencing(
+                    capacity, phase, strategy.pillars,
+                )
+                strategy.capacity_per_week = capacity
+                strategy.business_phase = phase
+                strategy.sequencing = sequencing
+                if "sequencing" not in strategy.stages_completed:
+                    strategy.stages_completed.append("sequencing")
+                # Mark setup complete if all 5 stages done
+                if len(strategy.stages_completed) >= 5:
+                    strategy.setup_complete = True
+                store.save(strategy)
+                st.success("Sequencing plan built. Strategy is live.")
+                st.rerun()
+            except Exception as e:
+                st.error(f"Stage 5 failed: {e}")
+
+    # Summary at bottom
+    if strategy.setup_complete:
+        st.markdown("---")
+        st.success(
+            "**Strategy setup complete.** Visit the Strategy Dashboard to "
+            "see distributions, gaps, and rebalance recommendations."
+        )
+
+
+# -----------------------------------------------------------------------------
+# STRATEGY DASHBOARD — 6-panel ongoing view
+# -----------------------------------------------------------------------------
+
+def page_strategy_dashboard():
+    from gtm_engine.strategy_framework import StrategyStore, StrategyFeedback
+    from gtm_engine.strategy_framework.analyzer import (
+        compute_pillar_distribution,
+        compute_funnel_distribution,
+        compute_channel_coverage,
+        detect_gaps_and_recommend,
+    )
+
+    st.title("Strategy Dashboard")
+    st.caption(
+        "Live view of how your content is distributed against your strategy. "
+        "Spot gaps, give feedback, accept rebalance recommendations."
+    )
+
+    store = StrategyStore()
+    strategy = store.load()
+
+    if not strategy.setup_complete:
+        st.warning(
+            "Strategy not yet built. Visit **Strategy Builder** to run the "
+            "5-stage wizard first."
+        )
+        return
+
+    # ---- PANEL 1: Pillar Health ----
+    st.markdown("### Pillar Health")
+    pillar_dist = compute_pillar_distribution(strategy)
+    cols = st.columns(min(3, len(pillar_dist)) or 1)
+    for i, row in enumerate(pillar_dist):
+        with cols[i % len(cols)]:
+            with st.container(border=True):
+                status_label = {
+                    "ok": "[OK]",
+                    "thin": "[THIN]",
+                    "gap": "[GAP]",
+                }.get(row["status"], "")
+                st.markdown(f"**{row['name']}** {status_label}")
+                st.markdown(f"Target: **{row['target_pct']}%** · Actual: **{row['actual_pct']}%**")
+                st.progress(min(1.0, row["actual_pct"] / max(row["target_pct"], 1)))
+                st.caption(f"{row['idea_count']} ideas · gap: {row['gap_pct']}%")
+
+    # ---- PANEL 2: Funnel Balance ----
+    st.markdown("---")
+    st.markdown("### Funnel Balance")
+    funnel_dist = compute_funnel_distribution(strategy)
+    for row in funnel_dist:
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.markdown(f"**{row['name']}**")
+            st.progress(min(1.0, row["actual_pct"] / max(row["target_pct"], 1)))
+        with col2:
+            st.markdown(f"{row['actual_pct']}% / {row['target_pct']}%")
+            st.caption(f"{row['idea_count']} ideas")
+
+    # ---- PANEL 3: Channel × Pillar Coverage ----
+    st.markdown("---")
+    st.markdown("### Channel × Pillar Coverage")
+    coverage = compute_channel_coverage(strategy)
+    if coverage:
+        # Build a simple table
+        pillar_ids = [p.id for p in strategy.pillars]
+        pillar_names_short = [p.name[:18] for p in strategy.pillars]
+        header_cols = st.columns([2] + [1] * len(pillar_ids))
+        with header_cols[0]:
+            st.markdown("**Channel**")
+        for i, name in enumerate(pillar_names_short):
+            with header_cols[i + 1]:
+                st.markdown(f"**{name}**")
+
+        for row in coverage:
+            cols = st.columns([2] + [1] * len(pillar_ids))
+            with cols[0]:
+                st.markdown(f"{row['channel_name']} ({row['cadence_per_week']}/wk)")
+            for i, pid in enumerate(pillar_ids):
+                with cols[i + 1]:
+                    count = row["cells"].get(pid, 0)
+                    if count == 0:
+                        st.markdown("`–`")
+                    else:
+                        st.markdown(f"**{count}**")
+    else:
+        st.info("No channel data yet. Make sure your channels are enabled in Strategy Builder.")
+
+    # ---- PANEL 4: Sequencing Timeline ----
+    st.markdown("---")
+    st.markdown("### Sequencing Plan")
+    st.caption(f"Current phase: **{strategy.business_phase}** · Capacity: {strategy.capacity_per_week}/week")
+    for phase in strategy.sequencing:
+        with st.expander(f"**{phase.label}** ({phase.weeks_duration} weeks)"):
+            if phase.pillar_weights:
+                for pid, weight in sorted(
+                    phase.pillar_weights.items(), key=lambda x: -x[1]
+                ):
+                    pillar_name = next(
+                        (p.name for p in strategy.pillars if p.id == pid), pid,
+                    )
+                    st.markdown(f"- **{pillar_name}**: {weight}%")
+
+    # ---- PANEL 5: Strategic Feedback ----
+    st.markdown("---")
+    st.markdown("### Strategic Feedback")
+    st.caption(
+        "Notes you write here feed into the next idea generation. Use this to "
+        "steer the engine: 'more product demos using real data', 'less abstract "
+        "thought leadership', etc."
+    )
+
+    feedback_list = store.list_feedback(status="active")
+    if feedback_list:
+        for fb in feedback_list[:10]:
+            with st.container(border=True):
+                col1, col2 = st.columns([5, 1])
+                with col1:
+                    st.markdown(fb.text)
+                    if fb.tagged_pillar or fb.tagged_channel or fb.tagged_funnel_stage:
+                        tags = []
+                        if fb.tagged_pillar:
+                            tags.append(f"pillar={fb.tagged_pillar}")
+                        if fb.tagged_channel:
+                            tags.append(f"channel={fb.tagged_channel}")
+                        if fb.tagged_funnel_stage:
+                            tags.append(f"funnel={fb.tagged_funnel_stage}")
+                        st.caption(" · ".join(tags))
+                    st.caption(fb.created_at)
+                with col2:
+                    if st.button("✓", key=f"fb_done_{fb.id}", help="Mark addressed"):
+                        store.update_feedback_status(fb.id, "addressed")
+                        st.rerun()
+
+    new_feedback = st.text_area(
+        "Add a strategic note",
+        placeholder="e.g. 'I want more content showing PRISM analysing real companies, less abstract industry commentary.'",
+        height=80,
+    )
+    cols_fb = st.columns(4)
+    with cols_fb[0]:
+        tag_pillar = st.selectbox(
+            "Tag pillar (optional)",
+            [""] + [p.id for p in strategy.pillars],
+            format_func=lambda x: next((p.name for p in strategy.pillars if p.id == x), "(none)") if x else "(none)",
+        )
+    with cols_fb[1]:
+        tag_channel = st.selectbox(
+            "Tag channel (optional)",
+            [""] + [c.channel_id for c in strategy.channels],
+        )
+    with cols_fb[2]:
+        tag_funnel = st.selectbox(
+            "Tag funnel (optional)",
+            [""] + [s.id for s in strategy.funnel_stages],
+        )
+    with cols_fb[3]:
+        if st.button("Save feedback", disabled=not new_feedback.strip()):
+            store.add_feedback(StrategyFeedback(
+                text=new_feedback.strip(),
+                tagged_pillar=tag_pillar,
+                tagged_channel=tag_channel,
+                tagged_funnel_stage=tag_funnel,
+            ))
+            st.success("Feedback saved.")
+            st.rerun()
+
+    # ---- PANEL 6: Rebalance Recommendations ----
+    st.markdown("---")
+    st.markdown("### Rebalance Recommendations")
+
+    if st.button("Run gap analysis now"):
+        with st.spinner("Analysing..."):
+            new_recs = detect_gaps_and_recommend(strategy)
+            st.success(f"Generated {len(new_recs)} recommendations.")
+            st.rerun()
+
+    recs = store.list_recommendations(status="pending")
+    if not recs:
+        st.info("No pending recommendations. Click 'Run gap analysis' to refresh.")
+    for rec in recs:
+        with st.container(border=True):
+            severity_label = {"high": "[HIGH]", "medium": "[MED]", "low": "[LOW]"}.get(rec.severity, "")
+            st.markdown(f"{severity_label} **{rec.recommendation}**")
+            if rec.rationale:
+                st.caption(rec.rationale)
+
+            col_a, col_b = st.columns([1, 1])
+            with col_a:
+                if rec.action_type == "generate" and rec.target_pillar:
+                    if st.button(f"Accept · Generate 5 ideas for this pillar",
+                                 key=f"acc_{rec.id}", type="primary"):
+                        try:
+                            from gtm_engine.ideas.generator import generate_for_pillar
+                            with st.spinner("Generating..."):
+                                ids = generate_for_pillar(rec.target_pillar, n=5)
+                            store.update_recommendation_status(rec.id, "accepted")
+                            st.success(f"Generated {len(ids)} ideas.")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Failed: {e}")
+                else:
+                    st.caption(f"Action type: `{rec.action_type}`")
+            with col_b:
+                if st.button("Dismiss", key=f"dis_{rec.id}"):
+                    store.update_recommendation_status(rec.id, "dismissed")
+                    st.rerun()
+
+
+# -----------------------------------------------------------------------------
+# AVATAR SETTINGS
+# -----------------------------------------------------------------------------
+
+def page_avatar_settings():
+    from gtm_engine.avatar import get_provider, list_providers, PROVIDERS
+
+    st.title("Avatar Settings")
+    st.caption(
+        "Configure your avatar provider. You bring your own API key (BYOK). "
+        "The engine generates scripts and producer briefs; the avatar provider "
+        "turns the spoken script into a talking-head video of your trained avatar."
+    )
+
+    providers = list_providers()
+    st.markdown("### Available Providers")
+    for p in providers:
+        with st.container(border=True):
+            label_state = "[CONFIGURED]" if p["configured"] else "[NOT CONFIGURED]"
+            st.markdown(f"**{p['name']}** {label_state}")
+            if p["id"] == "none":
+                st.caption(
+                    "Default mode — no avatar. Reels use TTS voiceover, "
+                    "B-roll, and text overlays. Cheapest and easiest."
+                )
+            elif p["id"] == "heygen":
+                st.caption(
+                    "HeyGen creates a digital twin from a 2-minute video of you. "
+                    "You then send scripts via API and get back talking-head videos. "
+                    "Pricing starts ~$49/month."
+                )
+                if not p["configured"]:
+                    st.markdown(
+                        "**To configure:** add `HEYGEN_API_KEY=<your-key>` and "
+                        "`AVATAR_PROVIDER=heygen` to your `.env` file, then restart the UI."
+                    )
+                    st.markdown(
+                        "Get your API key at: [app.heygen.com](https://app.heygen.com)"
+                    )
+
+    # If HeyGen is configured, show the avatar/voice picker
+    active = get_provider()
+    if active.provider_id == "heygen" and active.is_configured():
+        st.markdown("---")
+        st.markdown("### Your HeyGen Avatars")
+        with st.spinner("Loading your trained avatars..."):
+            avatars = active.list_avatars()
+        if avatars:
+            cols = st.columns(min(3, len(avatars)) or 1)
+            for i, av in enumerate(avatars):
+                with cols[i % len(cols)]:
+                    with st.container(border=True):
+                        if av.get("preview_url"):
+                            st.image(av["preview_url"], use_container_width=True)
+                        st.markdown(f"**{av['name']}**")
+                        st.caption(f"id: `{av['id']}`")
+        else:
+            st.warning("No avatars found. Train one in HeyGen first.")
+
+        st.markdown("---")
+        st.markdown("### Available Voices")
+        with st.spinner("Loading voices..."):
+            voices = active.list_voices()
+        if voices:
+            st.markdown(f"Found {len(voices)} voices. First 10:")
+            for v in voices[:10]:
+                st.markdown(
+                    f"- **{v['name']}** ({v.get('language', '?')}) · `{v['id']}`"
+                )
 
 
 if __name__ == "__main__":
