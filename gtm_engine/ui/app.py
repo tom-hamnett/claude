@@ -55,57 +55,76 @@ def main():
     _apply_dark_theme()
     _initialise_libraries()
 
-    # Sidebar navigation
+    # Sidebar navigation — grouped into logical phases
     st.sidebar.markdown("### Quantum Tools")
     st.sidebar.markdown("*GTM Intelligence Engine*")
     st.sidebar.markdown("---")
 
-    page = st.sidebar.radio(
-        "Navigate",
-        [
-            "Dashboard",
-            "Strategy Builder",
-            "Strategy Dashboard",
-            "Strategy Context",
-            "Data Vault",
-            "Brief Requests",
-            "Ideas",
-            "Producer Briefs",
-            "Content",
-            "Deployment",
-            "Scene Library",
-            "Character Library",
-            "Avatar Settings",
-            "Segments (Core-Five)",
-            "Brand Standards",
-            "Intelligence Feed",
+    # Groups of pages — keeps the menu scannable as the surface grows.
+    nav_groups = {
+        "OVERVIEW": [
+            ("Dashboard", page_dashboard),
         ],
-        label_visibility="collapsed",
-    )
+        "STRATEGY": [
+            ("Strategy Builder", page_strategy_builder),
+            ("Strategy Dashboard", page_strategy_dashboard),
+            ("Strategy Context", page_strategy_context),
+            ("Live Signals", page_intelligence),
+        ],
+        "IDEATION": [
+            ("Brief Requests", page_briefs),
+            ("Ideas", page_ideas),
+            ("Data Vault", page_data_vault),
+        ],
+        "PRODUCTION": [
+            ("Producer Briefs", page_producer_briefs),
+            ("Content Queue", page_content),
+            ("Scene Library", page_scenes),
+            ("Character Library", page_characters),
+        ],
+        "DEPLOYMENT": [
+            ("Deployment", page_deployment),
+        ],
+        "SETTINGS": [
+            ("Brand Standards", page_brand),
+            ("Avatar Settings", page_avatar_settings),
+            ("Core-Five Spec", page_segments),
+        ],
+    }
+
+    # Initialise session state for selected page
+    if "selected_page" not in st.session_state:
+        st.session_state.selected_page = "Dashboard"
+
+    # Render each group with a header and a radio inside
+    for group_label, pages in nav_groups.items():
+        st.sidebar.markdown(
+            f"<div style='color:#8aa0c0;font-size:0.7rem;letter-spacing:0.12em;"
+            f"margin-top:0.6rem;margin-bottom:0.2rem;font-weight:600;'>{group_label}</div>",
+            unsafe_allow_html=True,
+        )
+        for label, _ in pages:
+            is_selected = st.session_state.selected_page == label
+            btn_style = (
+                f"width:100%;text-align:left;padding:6px 10px;border-radius:4px;"
+                f"background:{'#1b2e44' if is_selected else 'transparent'};"
+                f"color:{'#ffd166' if is_selected else '#ffffff'};border:none;"
+                f"font-weight:{'600' if is_selected else '400'};"
+            )
+            if st.sidebar.button(label, key=f"nav_{label}", use_container_width=True):
+                st.session_state.selected_page = label
+                st.rerun()
 
     st.sidebar.markdown("---")
     _sidebar_pipeline_snapshot()
 
-    # Route to the selected page
-    routes = {
-        "Dashboard": page_dashboard,
-        "Strategy Builder": page_strategy_builder,
-        "Strategy Dashboard": page_strategy_dashboard,
-        "Strategy Context": page_strategy_context,
-        "Data Vault": page_data_vault,
-        "Brief Requests": page_briefs,
-        "Ideas": page_ideas,
-        "Producer Briefs": page_producer_briefs,
-        "Content": page_content,
-        "Deployment": page_deployment,
-        "Scene Library": page_scenes,
-        "Character Library": page_characters,
-        "Avatar Settings": page_avatar_settings,
-        "Segments (Core-Five)": page_segments,
-        "Brand Standards": page_brand,
-        "Intelligence Feed": page_intelligence,
-    }
-    routes[page]()
+    # Route to selected page
+    routes = {label: fn for pages in nav_groups.values() for label, fn in pages}
+    selected = st.session_state.selected_page
+    if selected in routes:
+        routes[selected]()
+    else:
+        page_dashboard()
 
 
 def _initialise_libraries():
@@ -152,6 +171,23 @@ def _apply_dark_theme():
     st.markdown(
         f"""
         <style>
+        /* Hide Streamlit's default top toolbar / white header that overlays the app */
+        header[data-testid="stHeader"] {{
+            background-color: {BRAND_COLOURS['bg']} !important;
+            height: 0 !important;
+        }}
+        div[data-testid="stToolbar"] {{
+            display: none !important;
+        }}
+        /* Hide the default "Deploy" / hamburger that floats top-right */
+        .stApp > header {{
+            background-color: {BRAND_COLOURS['bg']} !important;
+        }}
+        /* Remove default top padding so content starts higher */
+        .block-container {{
+            padding-top: 2rem !important;
+        }}
+
         /* Base background and text — dark navy with white text */
         .stApp {{
             background-color: {BRAND_COLOURS['bg']};
@@ -287,8 +323,9 @@ def _sidebar_pipeline_snapshot():
 
 def page_dashboard():
     st.title("Dashboard")
-    st.caption("Quantum Tools GTM Intelligence Engine — Overview")
+    st.caption("Engine overview — pipeline state, configuration health, recent activity")
 
+    # --- Pipeline counts ---
     col1, col2, col3, col4 = st.columns(4)
     counts = get_pipeline_counts()
 
@@ -303,20 +340,38 @@ def page_dashboard():
 
     st.markdown("---")
 
-    # Engine state
+    # --- Configuration health (strategic foundations only — no project-specific assets) ---
     col_a, col_b = st.columns(2)
 
     with col_a:
-        st.subheader("Engine State")
+        st.subheader("Configuration")
         brief_exists = (OUTPUT_DIR / "gtm_brief.json").exists()
         strategy_exists = (OUTPUT_DIR / "gtm_strategy.json").exists()
         brand_exists = (DATA_DIR / "brand_standards.json").exists()
-        theo_exists = (DATA_DIR.parent / "references" / "influencers" / "theo" / "hero.png").exists() if (DATA_DIR.parent / "references").exists() else False
+
+        # Content Strategy framework status
+        strategy_complete = False
+        try:
+            from gtm_engine.strategy_framework import StrategyStore
+            strategy_complete = StrategyStore().load().setup_complete
+        except Exception:
+            pass
+
+        # Avatar provider status
+        try:
+            from gtm_engine.avatar import get_provider
+            avatar = get_provider()
+            avatar_label = avatar.provider_name
+            avatar_ok = avatar.is_configured() or avatar.provider_id == "none"
+        except Exception:
+            avatar_label = "—"
+            avatar_ok = False
 
         st.markdown(f"- GTM Brief: {'Ready' if brief_exists else '**Missing**'}")
         st.markdown(f"- GTM Strategy: {'Ready' if strategy_exists else '**Missing**'}")
+        st.markdown(f"- Content Strategy: {'Ready' if strategy_complete else '**Not built**'}")
         st.markdown(f"- Brand Standards: {'Ready' if brand_exists else '**Missing**'}")
-        st.markdown(f"- Theo Hero: {'Ready' if theo_exists else '**Missing**'}")
+        st.markdown(f"- Avatar Provider: `{avatar_label}` {'OK' if avatar_ok else 'needs config'}")
 
     with col_b:
         st.subheader("Recent Decisions")
