@@ -106,7 +106,9 @@ Return a JSON array. Each idea object must have:
   - strategic_objective: awareness | trust | conversion
   - edginess_score: 1-10 (vary across the batch)
   - estimated_reach: low | medium | high
-  - tags: 2-4 short tags
+  - tags: 2-4 short tags (INCLUDE the pillar_id as one of the tags so we can track distribution)
+  - pillar_id: REQUIRED if a Content Strategy Framework is provided — must match
+    one of the pillar ids in the framework. If no framework is provided, omit.
   - narrative_anchor: which anchor above this connects to (brief explanation)
 
 Return ONLY the JSON array. No preamble."""
@@ -134,6 +136,18 @@ def _load_full_context() -> dict:
 
     # Core-Five segment spec
     context["segments"] = load_segments()
+
+    # Content Strategy Framework (pillars / channels / funnel / sequencing)
+    try:
+        from gtm_engine.strategy_framework import StrategyStore
+        store = StrategyStore()
+        strategy_fw = store.load()
+        if strategy_fw.setup_complete:
+            context["content_strategy"] = strategy_fw
+        else:
+            context["content_strategy"] = None
+    except Exception:
+        context["content_strategy"] = None
 
     # Existing master assets (narrative memory — MA-001 is the anchor)
     master_assets_dir = DATA_DIR / "master_assets"
@@ -257,6 +271,60 @@ def _format_context_for_prompt(context: dict, funnel_level: str) -> str:
             if ma.get("body_excerpt"):
                 parts.append(f"\nExcerpt:\n> {ma['body_excerpt'][:1200]}")
 
+    # --- Content Strategy Framework (pillars, channels, funnel) ---
+    content_strategy = context.get("content_strategy")
+    if content_strategy:
+        parts.append("\n## CONTENT STRATEGY FRAMEWORK\n")
+        parts.append(
+            "The founder has defined a structured content strategy. EVERY idea "
+            "you generate must be tagged with the correct pillar_id from this "
+            "list, and should fit one of these themes. If an idea doesn't fit "
+            "any pillar, don't generate it.\n"
+        )
+
+        parts.append("\n### CONTENT PILLARS (assign idea to ONE of these via pillar_id):\n")
+        for p in content_strategy.pillars:
+            parts.append(
+                f"- **{p.name}** (id: `{p.id}`) — {p.description} "
+                f"[target {p.target_percentage}%, archetype: {p.archetype}, "
+                f"funnel: {p.funnel_stage}]"
+            )
+            if p.why_it_matters:
+                parts.append(f"  *Why it matters:* {p.why_it_matters}")
+
+        parts.append("\n### CHANNELS IN USE:\n")
+        for c in content_strategy.channels:
+            if c.enabled:
+                parts.append(
+                    f"- **{c.channel_id}** at {c.cadence_per_week}/week — "
+                    f"pillars: {', '.join(c.primary_pillars)}"
+                )
+
+        parts.append(
+            f"\n### CURRENT BUSINESS PHASE: {content_strategy.business_phase}\n"
+        )
+        parts.append(
+            "Weight idea generation according to this phase's priorities.\n"
+        )
+
+        # Active feedback notes from the user
+        try:
+            from gtm_engine.strategy_framework import StrategyStore
+            store = StrategyStore()
+            feedback = store.list_feedback(status="active")
+            if feedback:
+                parts.append("\n### STRATEGIC FEEDBACK (from the founder — incorporate):\n")
+                for fb in feedback[:10]:
+                    tag_parts = []
+                    if fb.tagged_pillar:
+                        tag_parts.append(f"pillar={fb.tagged_pillar}")
+                    if fb.tagged_channel:
+                        tag_parts.append(f"channel={fb.tagged_channel}")
+                    tag_str = f" [{', '.join(tag_parts)}]" if tag_parts else ""
+                    parts.append(f"- {fb.text}{tag_str}")
+        except Exception:
+            pass
+
     # --- Session context (founder history if available) ---
     if context.get("session_context"):
         parts.append(f"\n## FOUNDER SESSION CONTEXT\n{context['session_context'][:2500]}\n")
@@ -375,11 +443,19 @@ def generate_idea_batch(
 
         for item in raw:
             try:
-                # Store narrative_anchor in the notes field (keeps schema simple)
+                # Store narrative_anchor + pillar_id in notes/tags for retrieval
                 notes = item.get("notes", "")
                 anchor = item.get("narrative_anchor", "")
+                pillar_id = item.get("pillar_id", "")
                 if anchor:
                     notes = (notes + f"\n[Anchor: {anchor}]").strip()
+                if pillar_id:
+                    notes = (notes + f"\n[Pillar: {pillar_id}]").strip()
+
+                tags = list(item.get("tags", []) or [])
+                # Ensure pillar_id is in tags for fast filtering
+                if pillar_id and pillar_id not in tags:
+                    tags.append(pillar_id)
 
                 idea = Idea(
                     title=item.get("title", ""),
@@ -393,7 +469,7 @@ def generate_idea_batch(
                     strategic_objective=item.get("strategic_objective", "awareness"),
                     edginess_score=int(item.get("edginess_score", 7)),
                     estimated_reach=item.get("estimated_reach", "medium"),
-                    tags=item.get("tags", []) or [],
+                    tags=tags,
                     notes=notes,
                 )
                 all_ideas.append(idea)
@@ -418,6 +494,86 @@ def generate_and_save(n: int = 50) -> list[int]:
     bank = IdeaBank()
     ids = bank.create_many(ideas)
     logger.info("Saved %d ideas to database", len(ids))
+    return ids
+
+
+def generate_for_pillar(pillar_id: str, n: int = 5) -> list[int]:
+    """Generate ideas targeted at a specific pillar to fill a gap.
+
+    Used by the rebalance recommendation system when the user accepts a
+    "Generate more X content" suggestion.
+    """
+    context = _load_full_context()
+    content_strategy = context.get("content_strategy")
+    if not content_strategy:
+        logger.warning("No content strategy — falling back to generic generation")
+        return generate_and_save(n=n)
+
+    pillar = next((p for p in content_strategy.pillars if p.id == pillar_id), None)
+    if not pillar:
+        logger.error("Pillar %s not found", pillar_id)
+        return []
+
+    # Build a focused prompt for this pillar
+    base_context = _format_context_for_prompt(context, funnel_level="mixed")
+    focus_block = (
+        f"\n\n## TARGETED GENERATION — FILL THIS PILLAR GAP\n\n"
+        f"You are generating ideas SPECIFICALLY for the **{pillar.name}** pillar.\n\n"
+        f"**Pillar description:** {pillar.description}\n"
+        f"**Archetype:** {pillar.archetype}\n"
+        f"**Funnel stage:** {pillar.funnel_stage}\n"
+        f"**Why it matters:** {pillar.why_it_matters}\n\n"
+        f"Every single idea you generate must have `pillar_id: \"{pillar.id}\"` and "
+        f"include the pillar id in its tags.\n\n"
+        f"Generate exactly {n} ideas. Return JSON array."
+    )
+
+    prompt = base_context + focus_block
+
+    response = call_claude(
+        prompt, system=IDEA_GENERATION_SYSTEM, max_tokens=8192, temperature=0.85,
+    )
+    raw = _parse_json_array(response)
+
+    ideas = []
+    for item in raw:
+        item["pillar_id"] = pillar.id  # force pillar id
+        notes = item.get("notes", "")
+        anchor = item.get("narrative_anchor", "")
+        if anchor:
+            notes = (notes + f"\n[Anchor: {anchor}]").strip()
+        notes = (notes + f"\n[Pillar: {pillar.id}]").strip()
+
+        tags = list(item.get("tags", []) or [])
+        if pillar.id not in tags:
+            tags.append(pillar.id)
+
+        try:
+            ideas.append(Idea(
+                title=item.get("title", ""),
+                hook=item.get("hook", ""),
+                angle=item.get("angle", ""),
+                data_requirement=item.get("data_requirement", ""),
+                funnel_level=item.get("funnel_level", "product"),
+                product=item.get("product", ""),
+                target_segment=item.get("target_segment", ""),
+                segment_type=item.get("segment_type", "standalone"),
+                strategic_objective=item.get("strategic_objective", "awareness"),
+                edginess_score=int(item.get("edginess_score", 7)),
+                estimated_reach=item.get("estimated_reach", "medium"),
+                tags=tags,
+                notes=notes,
+            ))
+        except Exception as e:
+            logger.warning("Failed to parse idea: %s", e)
+
+    bank = IdeaBank()
+    ids = bank.create_many(ideas)
+    log_decision(
+        "pillar_gap_filled",
+        f"Generated {len(ideas)} ideas for pillar {pillar_id}",
+        f"Pillar: {pillar.name}",
+    )
     return ids
 
 
