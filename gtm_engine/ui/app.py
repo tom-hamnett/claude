@@ -74,8 +74,13 @@ def main():
 
 def _apply_theme():
     st.markdown(f"""<style>
-    header[data-testid="stHeader"] {{ background:{C['bg']}!important; height:0!important; }}
+    /* Kill every trace of the Streamlit default header/toolbar */
+    header {{ display:none!important; }}
+    header[data-testid="stHeader"] {{ display:none!important; }}
     div[data-testid="stToolbar"] {{ display:none!important; }}
+    .stDeployButton {{ display:none!important; }}
+    #MainMenu {{ display:none!important; }}
+    footer {{ display:none!important; }}
     .stApp {{ background:{C['bg']}; color:{C['text']}; }}
     .stApp p, .stApp span, .stApp div, .stApp li, .stApp label {{ color:{C['text']}; }}
     .block-container {{ padding-top:1.5rem!important; max-width:1400px; }}
@@ -252,6 +257,7 @@ def _render_plan():
         compute_pillar_distribution, compute_funnel_distribution,
         compute_channel_coverage, detect_gaps_and_recommend,
     )
+    from gtm_engine.approval import get_pipeline_counts
 
     store = StrategyStore()
     strategy = store.load()
@@ -260,19 +266,217 @@ def _render_plan():
         st.warning("Strategy not built yet. Complete the onboarding wizard first.")
         return
 
-    # ── Phase indicator ──
+    counts = get_pipeline_counts()
     phase_def = next((p for p in BUSINESS_PHASES if p["id"] == strategy.business_phase), {})
-    col_phase, col_cap, col_edit = st.columns([3, 1, 1])
-    with col_phase:
-        st.markdown(f"### Phase: **{phase_def.get('name', strategy.business_phase)}**")
-        st.caption(phase_def.get("description", ""))
-    with col_cap:
-        st.metric("Capacity", f"{strategy.capacity_per_week}/wk")
+
+    # ═══════════════════════════════════════════════════════════════════
+    #  SECTION 1: THIS WEEK — the command centre header
+    # ═══════════════════════════════════════════════════════════════════
+
+    # Top bar: phase + capacity
+    st.markdown(
+        f"<div style='display:flex;justify-content:space-between;align-items:center;'>"
+        f"<div><span style='color:{C['muted']};font-size:0.8rem;letter-spacing:0.1em;'>THIS WEEK</span>"
+        f"<h2 style='margin:0;'>What needs your attention</h2></div>"
+        f"<div style='text-align:right;'>"
+        f"<span style='color:{C['muted']};font-size:0.75rem;'>Phase</span><br>"
+        f"<span style='color:{C['gold']};font-size:1.1rem;font-weight:600;'>"
+        f"{phase_def.get('name', strategy.business_phase)}</span>"
+        f"<span style='color:{C['muted']};font-size:0.8rem;'> · {strategy.capacity_per_week}/wk</span>"
+        f"</div></div>",
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("")
+
+    # Four key numbers
+    n_drafts = counts.get("idea_draft", 0)
+    n_approved = counts.get("idea_approved", 0)
+    n_produced = counts.get("content_generated", 0) + counts.get("content_approved", 0)
+    n_deployed = counts.get("deployed", 0)
+    n_scheduled = counts.get("deployment_scheduled", 0)
+
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.markdown(
+            f"<div style='background:{C['card']};padding:20px;border-radius:8px;text-align:center;'>"
+            f"<span style='font-size:2.2rem;font-weight:700;color:{C['gold']};'>{n_drafts}</span><br>"
+            f"<span style='color:{C['muted']};font-size:0.85rem;'>ideas to review</span></div>",
+            unsafe_allow_html=True,
+        )
+    with col2:
+        st.markdown(
+            f"<div style='background:{C['card']};padding:20px;border-radius:8px;text-align:center;'>"
+            f"<span style='font-size:2.2rem;font-weight:700;color:{C['primary']};'>{n_approved}</span><br>"
+            f"<span style='color:{C['muted']};font-size:0.85rem;'>approved, need scripts</span></div>",
+            unsafe_allow_html=True,
+        )
+    with col3:
+        st.markdown(
+            f"<div style='background:{C['card']};padding:20px;border-radius:8px;text-align:center;'>"
+            f"<span style='font-size:2.2rem;font-weight:700;color:{C['green']};'>{n_produced + n_scheduled}</span><br>"
+            f"<span style='color:{C['muted']};font-size:0.85rem;'>ready / scheduled</span></div>",
+            unsafe_allow_html=True,
+        )
+    with col4:
+        st.markdown(
+            f"<div style='background:{C['card']};padding:20px;border-radius:8px;text-align:center;'>"
+            f"<span style='font-size:2.2rem;font-weight:700;color:{C['text']};'>{n_deployed}</span><br>"
+            f"<span style='color:{C['muted']};font-size:0.85rem;'>deployed</span></div>",
+            unsafe_allow_html=True,
+        )
+
+    # ═══════════════════════════════════════════════════════════════════
+    #  SECTION 2: DO THIS NEXT — actionable recommendations
+    # ═══════════════════════════════════════════════════════════════════
+
+    st.markdown("")
+    st.markdown(
+        f"<span style='color:{C['muted']};font-size:0.8rem;letter-spacing:0.1em;'>DO THIS NEXT</span>",
+        unsafe_allow_html=True,
+    )
+
+    actions_shown = 0
+
+    # Action 1: Review drafts
+    if n_drafts > 0:
+        _action_card(
+            icon="⚡", color=C["gold"],
+            text=f"**{n_drafts} draft ideas** need your review — approve or reject to keep the pipeline moving",
+            button_label="Review now →", button_key="act_review",
+            target_tab="CREATE",
+        )
+        actions_shown += 1
+
+    # Action 2: Generate producer briefs
+    if n_approved > 0:
+        _action_card(
+            icon="📋", color=C["primary"],
+            text=f"**{n_approved} approved ideas** need producer briefs before content can be generated",
+            button_label="Go to CREATE →", button_key="act_produce",
+            target_tab="CREATE",
+        )
+        actions_shown += 1
+
+    # Action 3: Pillar gaps
+    pillar_dist = compute_pillar_distribution(strategy)
+    gap_pillars = [p for p in pillar_dist if p["status"] == "gap"]
+    if gap_pillars:
+        gap_names = ", ".join(f"**{p['name']}**" for p in gap_pillars[:3])
+        col_gap, col_gapbtn = st.columns([5, 1])
+        with col_gap:
+            st.markdown(
+                f"<div style='background:{C['card']};padding:12px 16px;border-radius:6px;"
+                f"border-left:4px solid {C['hot']};margin:4px 0;'>"
+                f"⚠️ {len(gap_pillars)} pillar{'s' if len(gap_pillars) > 1 else ''} "
+                f"with <strong>zero content</strong>: {gap_names}. "
+                f"Your strategy has gaps that need filling.</div>",
+                unsafe_allow_html=True,
+            )
+        with col_gapbtn:
+            st.markdown("")
+            if st.button("Fill gaps", key="act_fill"):
+                with st.spinner("Generating ideas for gap pillars..."):
+                    from gtm_engine.ideas.generator import generate_for_pillar
+                    total = 0
+                    for gp in gap_pillars[:3]:
+                        ids = generate_for_pillar(gp["pillar_id"], n=5)
+                        total += len(ids)
+                    st.success(f"Generated {total} ideas across {min(3, len(gap_pillars))} pillars")
+                    st.rerun()
+        actions_shown += 1
+
+    # Action 4: Nothing deployed yet
+    if n_deployed == 0 and n_produced == 0 and actions_shown < 3:
+        _action_card(
+            icon="🚀", color=C["muted"],
+            text="**No content produced yet.** Approve some ideas on the CREATE tab to start producing content.",
+            button_label="Go to CREATE →", button_key="act_start",
+            target_tab="CREATE",
+        )
+        actions_shown += 1
+
+    # If everything looks healthy
+    if actions_shown == 0:
+        st.markdown(
+            f"<div style='background:{C['card']};padding:16px;border-radius:6px;"
+            f"border-left:4px solid {C['green']};'>"
+            f"✓ Everything looks good. Pipeline is flowing. Check the CREATE tab "
+            f"to keep moving content forward.</div>",
+            unsafe_allow_html=True,
+        )
+
+    # ═══════════════════════════════════════════════════════════════════
+    #  SECTION 3: STRATEGY HEALTH — collapsed detail
+    # ═══════════════════════════════════════════════════════════════════
+
+    st.markdown("---")
+    st.markdown(
+        f"<span style='color:{C['muted']};font-size:0.8rem;letter-spacing:0.1em;'>STRATEGY HEALTH</span>",
+        unsafe_allow_html=True,
+    )
+
+    # Pillars (collapsed)
+    with st.expander(f"Content Pillars ({len(pillar_dist)} pillars)", expanded=False):
+        cols = st.columns(min(len(pillar_dist), 3) or 1)
+        for i, row in enumerate(pillar_dist):
+            with cols[i % len(cols)]:
+                sc = {"ok": C["green"], "thin": C["gold"], "gap": C["hot"]}.get(row["status"], C["muted"])
+                st.markdown(
+                    f"<div style='background:{C['card']};padding:14px;border-radius:8px;"
+                    f"border-left:4px solid {sc};margin-bottom:10px;'>"
+                    f"<strong>{row['name']}</strong><br>"
+                    f"<span style='color:{C['muted']};font-size:0.8rem;'>"
+                    f"Target {row['target_pct']}% · Actual {row['actual_pct']}% · "
+                    f"{row['idea_count']} ideas</span></div>",
+                    unsafe_allow_html=True,
+                )
+
+    # Funnel (collapsed)
+    funnel_dist = compute_funnel_distribution(strategy)
+    with st.expander(f"Funnel Coverage ({len(funnel_dist)} stages)", expanded=False):
+        for row in funnel_dist:
+            col1, col2, col3 = st.columns([2, 5, 1])
+            with col1:
+                st.markdown(f"**{row['name']}**")
+            with col2:
+                fill = min(1.0, row["actual_pct"] / max(row["target_pct"], 1))
+                st.progress(fill)
+            with col3:
+                st.caption(f"{row['actual_pct']}%/{row['target_pct']}%")
+
+    # Channels (collapsed)
+    coverage = compute_channel_coverage(strategy)
+    if coverage and strategy.pillars:
+        with st.expander(f"Channel Coverage ({len(coverage)} channels)", expanded=False):
+            pillar_names = [p.name[:14] for p in strategy.pillars]
+            header = "| Channel | " + " | ".join(pillar_names) + " |"
+            separator = "|---|" + "|".join(["---"] * len(pillar_names)) + "|"
+            rows = []
+            for ch_row in coverage:
+                spec = next((cc for cc in CHANNEL_CATALOGUE if cc["id"] == ch_row["channel_id"]), {})
+                name = spec.get("name", ch_row["channel_id"])[:16]
+                cells = [f"**{ch_row['cells'].get(p.id, 0)}**" if ch_row['cells'].get(p.id, 0) > 0 else "–"
+                         for p in strategy.pillars]
+                rows.append(f"| {name} | " + " | ".join(cells) + " |")
+            st.markdown("\n".join([header, separator] + rows))
+
+    # ═══════════════════════════════════════════════════════════════════
+    #  SECTION 4: STEER — feedback + edit strategy
+    # ═══════════════════════════════════════════════════════════════════
+
+    st.markdown("---")
+    col_steer, col_edit = st.columns([5, 1])
+    with col_steer:
+        st.markdown(
+            f"<span style='color:{C['muted']};font-size:0.8rem;letter-spacing:0.1em;'>STEER THE ENGINE</span>",
+            unsafe_allow_html=True,
+        )
     with col_edit:
         if st.button("Edit strategy"):
-            st.session_state["show_strategy_editor"] = True
+            st.session_state["show_strategy_editor"] = not st.session_state.get("show_strategy_editor", False)
 
-    # ── Strategy editor (hidden by default) ──
+    # Strategy editor (hidden)
     if st.session_state.get("show_strategy_editor"):
         with st.expander("Strategy Editor", expanded=True):
             new_cap = st.slider("Content per week", 1, 20, strategy.capacity_per_week, key="edit_cap")
@@ -291,111 +495,42 @@ def _render_plan():
                 st.session_state["show_strategy_editor"] = False
                 st.rerun()
 
-    st.markdown("---")
-
-    # ── Pillar Health ──
-    st.markdown("### Content Pillars")
-    pillar_dist = compute_pillar_distribution(strategy)
-    cols = st.columns(min(len(pillar_dist), 3) or 1)
-    for i, row in enumerate(pillar_dist):
-        with cols[i % len(cols)]:
-            status_color = {"ok": C["green"], "thin": C["gold"], "gap": C["hot"]}.get(row["status"], C["muted"])
-            st.markdown(
-                f"<div style='background:{C['card']};padding:16px;border-radius:8px;"
-                f"border-left:4px solid {status_color};margin-bottom:12px;'>"
-                f"<strong>{row['name']}</strong><br>"
-                f"<span style='color:{C['muted']};font-size:0.85rem;'>"
-                f"Target {row['target_pct']}% · Actual {row['actual_pct']}% · "
-                f"{row['idea_count']} ideas</span></div>",
-                unsafe_allow_html=True,
-            )
-
-    # ── Funnel Balance ──
-    st.markdown("### Funnel Coverage")
-    funnel_dist = compute_funnel_distribution(strategy)
-    for row in funnel_dist:
-        col1, col2, col3 = st.columns([3, 5, 1])
-        with col1:
-            st.markdown(f"**{row['name']}**")
-        with col2:
-            fill = min(1.0, row["actual_pct"] / max(row["target_pct"], 1))
-            st.progress(fill)
-        with col3:
-            st.caption(f"{row['actual_pct']}%/{row['target_pct']}%")
-
-    # ── Channel × Pillar ──
-    st.markdown("### Channel Coverage")
-    coverage = compute_channel_coverage(strategy)
-    if coverage and strategy.pillars:
-        # Simple heatmap-style table
-        pillar_names = [p.name[:14] for p in strategy.pillars]
-        header = "| Channel | " + " | ".join(pillar_names) + " |"
-        separator = "|---|" + "|".join(["---"] * len(pillar_names)) + "|"
-        rows = []
-        for ch_row in coverage:
-            spec = next((c for c in CHANNEL_CATALOGUE if c["id"] == ch_row["channel_id"]), {})
-            name = spec.get("name", ch_row["channel_id"])[:16]
-            cells = []
-            for p in strategy.pillars:
-                count = ch_row["cells"].get(p.id, 0)
-                cells.append(f"**{count}**" if count > 0 else "–")
-            rows.append(f"| {name} | " + " | ".join(cells) + " |")
-        st.markdown("\n".join([header, separator] + rows))
-
-    st.markdown("---")
-
-    # ── AI Recommendations ──
-    st.markdown("### Recommendations")
-    recs = store.list_recommendations(status="pending")
-    if not recs:
-        if st.button("Run gap analysis"):
-            with st.spinner("Analysing..."):
-                new_recs = detect_gaps_and_recommend(strategy)
-                st.success(f"Found {len(new_recs)} recommendations.")
-                st.rerun()
-    else:
-        for rec in recs[:5]:
-            sev = {"high": C["hot"], "medium": C["gold"], "low": C["muted"]}.get(rec.severity, C["muted"])
-            col_r, col_a = st.columns([5, 1])
-            with col_r:
-                st.markdown(
-                    f"<div style='border-left:3px solid {sev};padding:8px 12px;"
-                    f"background:{C['card']};border-radius:4px;margin:4px 0;'>"
-                    f"{rec.recommendation}</div>",
-                    unsafe_allow_html=True,
-                )
-            with col_a:
-                if rec.action_type == "generate" and rec.target_pillar:
-                    if st.button("Fill gap", key=f"fill_{rec.id}"):
-                        with st.spinner("Generating..."):
-                            from gtm_engine.ideas.generator import generate_for_pillar
-                            ids = generate_for_pillar(rec.target_pillar, n=5)
-                            store.update_recommendation_status(rec.id, "accepted")
-                            st.success(f"Generated {len(ids)} ideas")
-                            st.rerun()
-                else:
-                    if st.button("Dismiss", key=f"dis_{rec.id}"):
-                        store.update_recommendation_status(rec.id, "dismissed")
-                        st.rerun()
-
-    # ── Feedback ──
-    st.markdown("---")
-    st.markdown("### Your Feedback")
-    st.caption("Notes here feed into the next idea generation. Steer the engine.")
-    feedback_text = st.text_input("Add a strategic note", placeholder="e.g. 'More PRISM content showing real company benchmarks'")
-    if st.button("Save note", disabled=not feedback_text.strip()):
+    # Feedback input
+    feedback_text = st.text_input(
+        "Strategic note",
+        placeholder="e.g. 'More PRISM content using real companies' or 'Less abstract thought leadership'",
+        label_visibility="collapsed",
+    )
+    if st.button("Save note", disabled=not (feedback_text or "").strip()):
         store.add_feedback(StrategyFeedback(text=feedback_text.strip()))
         st.rerun()
 
     active_fb = store.list_feedback(status="active")
-    for fb in active_fb[:8]:
-        col_fb, col_fbx = st.columns([6, 1])
-        with col_fb:
-            st.caption(f"• {fb.text}")
-        with col_fbx:
-            if st.button("✓", key=f"fbdone_{fb.id}"):
-                store.update_feedback_status(fb.id, "addressed")
-                st.rerun()
+    if active_fb:
+        for fb in active_fb[:5]:
+            col_fb, col_fbx = st.columns([6, 1])
+            with col_fb:
+                st.caption(f"• {fb.text}")
+            with col_fbx:
+                if st.button("✓", key=f"fbdone_{fb.id}"):
+                    store.update_feedback_status(fb.id, "addressed")
+                    st.rerun()
+
+
+def _action_card(icon: str, color: str, text: str, button_label: str,
+                 button_key: str, target_tab: str = ""):
+    """Render a single action recommendation card."""
+    col_body, col_btn = st.columns([5, 1])
+    with col_body:
+        st.markdown(
+            f"<div style='background:{C['card']};padding:12px 16px;border-radius:6px;"
+            f"border-left:4px solid {color};margin:4px 0;'>"
+            f"{icon} {text}</div>",
+            unsafe_allow_html=True,
+        )
+    with col_btn:
+        st.markdown("")
+        st.button(button_label, key=button_key)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
