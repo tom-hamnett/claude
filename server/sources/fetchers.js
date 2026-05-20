@@ -90,12 +90,81 @@ async function fetchHttpUrl(source) {
 async function fetchSharePointFile(source) {
   const { shareLink, filename } = JSON.parse(source.config);
   if (!shareLink) throw new Error("shareLink required");
-  // SharePoint anonymous links can be transformed by appending &download=1 for direct download
   let downloadUrl = shareLink;
   if (!downloadUrl.includes("download=1")) {
     downloadUrl += (downloadUrl.includes("?") ? "&" : "?") + "download=1";
   }
   return fetchHttpUrl({ config: JSON.stringify({ url: downloadUrl, filename }) });
+}
+
+// Encode a sharing URL for the Microsoft Graph /shares endpoint (no auth needed for anonymous links)
+function encodeShareUrl(url) {
+  const base64 = Buffer.from(url).toString("base64").replace(/=/g, "").replace(/\//g, "_").replace(/\+/g, "-");
+  return "u!" + base64;
+}
+
+// SharePoint shared folder — uses the Graph /shares API with an anonymous sharing link
+// NO API keys, NO app registration, NO IT involvement. Just a sharing link to a folder.
+async function fetchSharePointSharedFolder(source) {
+  const config = typeof source.config === "string" ? JSON.parse(source.config) : source.config;
+  const { shareLink, fileTypes, recursive } = config;
+  if (!shareLink) throw new Error("shareLink required — copy a sharing link from SharePoint for the folder");
+
+  const encoded = encodeShareUrl(shareLink);
+  const childrenUrl = `https://graph.microsoft.com/v1.0/shares/${encoded}/driveItem/children`;
+  const r = await fetch(childrenUrl);
+  if (!r.ok) {
+    const body = await r.text();
+    if (r.status === 401 || r.status === 403) {
+      throw new Error("Access denied — make sure the folder sharing link is set to 'Anyone with the link can view'. In SharePoint: right-click folder → Share → People you choose → change to 'Anyone' → Apply → Copy link.");
+    }
+    throw new Error(`SharePoint folder listing failed ${r.status}: ${body}`);
+  }
+  const listing = await r.json();
+
+  const allowedTypes = fileTypes ? fileTypes.split(",").map(t => t.trim().toLowerCase()) : null;
+
+  let files = (listing.value || [])
+    .filter(f => !f.folder)
+    .filter(f => !allowedTypes || allowedTypes.some(ext => f.name.toLowerCase().endsWith(ext)))
+    .map(f => ({
+      id: f.id,
+      name: f.name,
+      lastModified: f.lastModifiedDateTime,
+      contentHash: f.file?.hashes?.sha256Hash || f.eTag || f.lastModifiedDateTime,
+      downloadUrl: f["@microsoft.graph.downloadUrl"],
+      sizeBytes: f.size || 0,
+      mimeType: f.file?.mimeType || "application/octet-stream",
+    }));
+
+  // Optionally recurse into subfolders
+  if (recursive) {
+    const subfolders = (listing.value || []).filter(f => f.folder);
+    for (const sub of subfolders) {
+      const subUrl = `https://graph.microsoft.com/v1.0/shares/${encoded}/driveItem:/${encodeURIComponent(sub.name)}:/children`;
+      try {
+        const sr = await fetch(subUrl);
+        if (sr.ok) {
+          const subListing = await sr.json();
+          const subFiles = (subListing.value || [])
+            .filter(f => !f.folder)
+            .filter(f => !allowedTypes || allowedTypes.some(ext => f.name.toLowerCase().endsWith(ext)))
+            .map(f => ({
+              id: f.id,
+              name: `${sub.name}/${f.name}`,
+              lastModified: f.lastModifiedDateTime,
+              contentHash: f.file?.hashes?.sha256Hash || f.eTag || f.lastModifiedDateTime,
+              downloadUrl: f["@microsoft.graph.downloadUrl"],
+              sizeBytes: f.size || 0,
+              mimeType: f.file?.mimeType || "application/octet-stream",
+            }));
+          files = files.concat(subFiles);
+        }
+      } catch (e) { /* skip inaccessible subfolders */ }
+    }
+  }
+
+  return { files };
 }
 
 // ZIP: extract contents, return each file
@@ -219,13 +288,14 @@ async function fetchOneDriveFolder(source) {
 }
 
 export const FETCHERS = {
-  "sharepoint-folder": { label: "SharePoint folder (Microsoft 365)", fetch: fetchSharePointFolder, fields: ["tenantId", "clientId", "clientSecret", "siteHostname", "sitePath", "folderPath", "fileTypes"] },
-  "onedrive-folder":   { label: "OneDrive folder (Microsoft 365)",   fetch: fetchOneDriveFolder,   fields: ["tenantId", "clientId", "clientSecret", "userId", "folderPath", "fileTypes"] },
-  "google-drive":      { label: "Google Drive folder", fetch: fetchGoogleDrive, fields: ["link", "apiKey"] },
-  "gcs":               { label: "Google Cloud Storage bucket", fetch: fetchGCS, fields: ["bucketName", "prefix"] },
-  "http-url":          { label: "HTTPS file URL", fetch: fetchHttpUrl, fields: ["url", "filename"] },
-  "sharepoint-file":   { label: "SharePoint share link (single file)", fetch: fetchSharePointFile, fields: ["shareLink", "filename"] },
-  "uploaded-zip":      { label: "Uploaded ZIP archive", fetch: fetchZip, fields: ["zipPath"] },
+  "sharepoint-shared":  { label: "SharePoint shared folder (no IT needed)", fetch: fetchSharePointSharedFolder, fields: ["shareLink", "fileTypes", "recursive"] },
+  "sharepoint-folder":  { label: "SharePoint folder (IT-managed)", fetch: fetchSharePointFolder, fields: ["tenantId", "clientId", "clientSecret", "siteHostname", "sitePath", "folderPath", "fileTypes"] },
+  "onedrive-folder":    { label: "OneDrive folder (IT-managed)",   fetch: fetchOneDriveFolder,   fields: ["tenantId", "clientId", "clientSecret", "userId", "folderPath", "fileTypes"] },
+  "google-drive":       { label: "Google Drive folder", fetch: fetchGoogleDrive, fields: ["link", "apiKey"] },
+  "gcs":                { label: "Google Cloud Storage bucket", fetch: fetchGCS, fields: ["bucketName", "prefix"] },
+  "http-url":           { label: "HTTPS file URL", fetch: fetchHttpUrl, fields: ["url", "filename"] },
+  "sharepoint-file":    { label: "SharePoint share link (single file)", fetch: fetchSharePointFile, fields: ["shareLink", "filename"] },
+  "uploaded-zip":       { label: "Uploaded ZIP archive", fetch: fetchZip, fields: ["zipPath"] },
 };
 
 export async function fetchSource(source) {

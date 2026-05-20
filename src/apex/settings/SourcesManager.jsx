@@ -15,13 +15,18 @@ const FIELD_HINTS = {
 };
 
 const SOURCE_HELP = {
+  "sharepoint-shared": {
+    title: "SharePoint shared folder (no IT needed)",
+    explain: "The easiest way to connect SharePoint. Share a folder from SharePoint, paste the link here, and APEX will browse all files inside it — Excel, CSV, everything. No API keys, no IT tickets, no app registrations.\n\nHow to get the link: in SharePoint, right-click the folder → Share → set to 'Anyone with the link can view' → Copy link. Paste it below.\n\nSet 'recursive' to 'true' to also scan subfolders. Use 'fileTypes' to filter (e.g. .xlsx,.csv).",
+    sample: "https://yourcompany.sharepoint.com/:f:/s/ProcurementTeam/EaBc123...",
+  },
   "sharepoint-folder": {
-    title: "SharePoint folder (Microsoft 365)",
-    explain: "Connect to a SharePoint document library via Microsoft Graph API. APEX polls the folder for new or changed Excel/CSV files and queues them for ingestion. Requires an Azure AD app registration with Sites.Read.All permission — ask your IT team to set this up (it takes 5 minutes).",
+    title: "SharePoint folder (IT-managed)",
+    explain: "Full integration via Microsoft Graph API. Requires an Azure AD app registration from your IT team with Sites.Read.All permission. More powerful (no sharing link needed) but requires IT involvement.",
     sample: "Site: yourcompany.sharepoint.com → sites/ProcurementTeam → Shared Documents/Monthly Reports",
   },
   "onedrive-folder": {
-    title: "OneDrive folder (Microsoft 365)",
+    title: "OneDrive folder (IT-managed)",
     explain: "Connect to a user's OneDrive folder via Microsoft Graph API. Uses the same Azure AD app registration as SharePoint. Provide the user's email and folder path. Requires Files.Read.All permission on the Azure AD app.",
     sample: "User: tom.hamnett@company.com → Documents/QBR Data",
   },
