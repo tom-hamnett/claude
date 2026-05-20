@@ -2,7 +2,29 @@
 import { useState, useEffect } from "react";
 import { Spinner, Card } from "../components/ui.jsx";
 
+const FIELD_HINTS = {
+  tenantId: { placeholder: "e.g. a1b2c3d4-e5f6-7890-abcd-ef1234567890", type: "text" },
+  clientId: { placeholder: "Azure AD App (client) ID", type: "text" },
+  clientSecret: { placeholder: "Azure AD client secret", type: "password" },
+  siteHostname: { placeholder: "e.g. yourcompany.sharepoint.com", type: "text" },
+  sitePath: { placeholder: "e.g. sites/ProcurementData (optional)", type: "text" },
+  folderPath: { placeholder: "e.g. Shared Documents/QBR Reports (optional, blank = root)", type: "text" },
+  userId: { placeholder: "user@yourcompany.com", type: "text" },
+  fileTypes: { placeholder: "e.g. .xlsx,.csv,.xls (blank = all files)", type: "text" },
+  apiKey: { placeholder: "API key", type: "password" },
+};
+
 const SOURCE_HELP = {
+  "sharepoint-folder": {
+    title: "SharePoint folder (Microsoft 365)",
+    explain: "Connect to a SharePoint document library via Microsoft Graph API. APEX polls the folder for new or changed Excel/CSV files and queues them for ingestion. Requires an Azure AD app registration with Sites.Read.All permission — ask your IT team to set this up (it takes 5 minutes).",
+    sample: "Site: yourcompany.sharepoint.com → sites/ProcurementTeam → Shared Documents/Monthly Reports",
+  },
+  "onedrive-folder": {
+    title: "OneDrive folder (Microsoft 365)",
+    explain: "Connect to a user's OneDrive folder via Microsoft Graph API. Uses the same Azure AD app registration as SharePoint. Provide the user's email and folder path. Requires Files.Read.All permission on the Azure AD app.",
+    sample: "User: tom.hamnett@company.com → Documents/QBR Data",
+  },
   "google-drive": {
     title: "Google Drive folder",
     explain: "Paste a share link to a public Google Drive folder. Needs a Google Drive API key (can be created in GCP console — just enable Drive API and create an API key). Works for folders set to 'Anyone with the link can view'.",
@@ -19,7 +41,7 @@ const SOURCE_HELP = {
     sample: "https://example.com/data/crf.csv",
   },
   "sharepoint-file": {
-    title: "SharePoint share link",
+    title: "SharePoint share link (single file)",
     explain: "Right-click a file in SharePoint → Share → 'Anyone with the link can view' → Copy link. APEX polls that URL for changes. Works for single files; doesn't list folder contents.",
     sample: "https://yourcompany.sharepoint.com/:x:/s/site/...",
   },
@@ -170,9 +192,10 @@ function SourceForm({ programmeId, types, existing, onClose, onSaved }) {
         </div>
       )}
 
-      {fields.map(f => (
-        <Field key={f} label={f} value={form.config[f] || ""} onChange={v => updateConfig(f, v)} placeholder={f === "apiKey" ? "Google API key" : ""} type={f === "apiKey" ? "password" : "text"} />
-      ))}
+      {fields.map(f => {
+        const hint = FIELD_HINTS[f] || {};
+        return <Field key={f} label={f} value={form.config[f] || ""} onChange={v => updateConfig(f, v)} placeholder={hint.placeholder || ""} type={hint.type || "text"} />;
+      })}
 
       <Field label="Poll Interval (minutes)" value={form.pollIntervalMinutes} onChange={v => setForm(f => ({ ...f, pollIntervalMinutes: parseInt(v) || 60 }))} type="number" />
 

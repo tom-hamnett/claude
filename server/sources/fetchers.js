@@ -120,12 +120,112 @@ async function fetchZip(source) {
   };
 }
 
+// Microsoft Graph API: get access token using client credentials (Azure AD app registration)
+async function getMicrosoftToken(tenantId, clientId, clientSecret) {
+  const r = await fetch(`https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      scope: "https://graph.microsoft.com/.default",
+      grant_type: "client_credentials",
+    }),
+  });
+  if (!r.ok) throw new Error(`Azure AD token error ${r.status}: ${await r.text()}`);
+  const data = await r.json();
+  return data.access_token;
+}
+
+// SharePoint folder via Microsoft Graph API
+async function fetchSharePointFolder(source) {
+  const config = typeof source.config === "string" ? JSON.parse(source.config) : source.config;
+  const { tenantId, clientId, clientSecret, siteHostname, sitePath, folderPath, fileTypes } = config;
+  if (!tenantId || !clientId || !clientSecret) throw new Error("tenantId, clientId, and clientSecret are required (from Azure AD app registration)");
+  if (!siteHostname) throw new Error("siteHostname required (e.g. yourcompany.sharepoint.com)");
+
+  const token = await getMicrosoftToken(tenantId, clientId, clientSecret);
+  const headers = { Authorization: `Bearer ${token}` };
+
+  // Resolve the SharePoint site ID
+  const siteLookup = sitePath
+    ? `https://graph.microsoft.com/v1.0/sites/${siteHostname}:/${sitePath}`
+    : `https://graph.microsoft.com/v1.0/sites/${siteHostname}:/`;
+  const siteRes = await fetch(siteLookup, { headers });
+  if (!siteRes.ok) throw new Error(`SharePoint site lookup failed ${siteRes.status}: ${await siteRes.text()}`);
+  const site = await siteRes.json();
+
+  // List files in the folder (or root)
+  const drivePath = folderPath
+    ? `https://graph.microsoft.com/v1.0/sites/${site.id}/drive/root:/${folderPath}:/children`
+    : `https://graph.microsoft.com/v1.0/sites/${site.id}/drive/root/children`;
+  const listRes = await fetch(drivePath, { headers });
+  if (!listRes.ok) throw new Error(`SharePoint file listing failed ${listRes.status}: ${await listRes.text()}`);
+  const listing = await listRes.json();
+
+  const allowedTypes = fileTypes ? fileTypes.split(",").map(t => t.trim().toLowerCase()) : null;
+
+  return {
+    files: (listing.value || [])
+      .filter(f => !f.folder)
+      .filter(f => !allowedTypes || allowedTypes.some(ext => f.name.toLowerCase().endsWith(ext)))
+      .map(f => ({
+        id: f.id,
+        name: f.name,
+        lastModified: f.lastModifiedDateTime,
+        contentHash: f.file?.hashes?.sha256Hash || f.eTag || f.lastModifiedDateTime,
+        downloadUrl: f["@microsoft.graph.downloadUrl"] || `https://graph.microsoft.com/v1.0/sites/${site.id}/drive/items/${f.id}/content`,
+        sizeBytes: f.size || 0,
+        mimeType: f.file?.mimeType || "application/octet-stream",
+        _graphToken: token,
+      })),
+  };
+}
+
+// OneDrive folder via Microsoft Graph API (uses a specific user's drive)
+async function fetchOneDriveFolder(source) {
+  const config = typeof source.config === "string" ? JSON.parse(source.config) : source.config;
+  const { tenantId, clientId, clientSecret, userId, folderPath, fileTypes } = config;
+  if (!tenantId || !clientId || !clientSecret) throw new Error("tenantId, clientId, and clientSecret are required");
+  if (!userId) throw new Error("userId required (email address or user ID of the OneDrive owner)");
+
+  const token = await getMicrosoftToken(tenantId, clientId, clientSecret);
+  const headers = { Authorization: `Bearer ${token}` };
+
+  const drivePath = folderPath
+    ? `https://graph.microsoft.com/v1.0/users/${userId}/drive/root:/${folderPath}:/children`
+    : `https://graph.microsoft.com/v1.0/users/${userId}/drive/root/children`;
+  const listRes = await fetch(drivePath, { headers });
+  if (!listRes.ok) throw new Error(`OneDrive listing failed ${listRes.status}: ${await listRes.text()}`);
+  const listing = await listRes.json();
+
+  const allowedTypes = fileTypes ? fileTypes.split(",").map(t => t.trim().toLowerCase()) : null;
+
+  return {
+    files: (listing.value || [])
+      .filter(f => !f.folder)
+      .filter(f => !allowedTypes || allowedTypes.some(ext => f.name.toLowerCase().endsWith(ext)))
+      .map(f => ({
+        id: f.id,
+        name: f.name,
+        lastModified: f.lastModifiedDateTime,
+        contentHash: f.file?.hashes?.sha256Hash || f.eTag || f.lastModifiedDateTime,
+        downloadUrl: f["@microsoft.graph.downloadUrl"] || `https://graph.microsoft.com/v1.0/users/${userId}/drive/items/${f.id}/content`,
+        sizeBytes: f.size || 0,
+        mimeType: f.file?.mimeType || "application/octet-stream",
+        _graphToken: token,
+      })),
+  };
+}
+
 export const FETCHERS = {
-  "google-drive":    { label: "Google Drive folder", fetch: fetchGoogleDrive, fields: ["link", "apiKey"] },
-  "gcs":             { label: "Google Cloud Storage bucket", fetch: fetchGCS, fields: ["bucketName", "prefix"] },
-  "http-url":        { label: "HTTPS file URL", fetch: fetchHttpUrl, fields: ["url", "filename"] },
-  "sharepoint-file": { label: "SharePoint share link (single file)", fetch: fetchSharePointFile, fields: ["shareLink", "filename"] },
-  "uploaded-zip":    { label: "Uploaded ZIP archive", fetch: fetchZip, fields: ["zipPath"] },
+  "sharepoint-folder": { label: "SharePoint folder (Microsoft 365)", fetch: fetchSharePointFolder, fields: ["tenantId", "clientId", "clientSecret", "siteHostname", "sitePath", "folderPath", "fileTypes"] },
+  "onedrive-folder":   { label: "OneDrive folder (Microsoft 365)",   fetch: fetchOneDriveFolder,   fields: ["tenantId", "clientId", "clientSecret", "userId", "folderPath", "fileTypes"] },
+  "google-drive":      { label: "Google Drive folder", fetch: fetchGoogleDrive, fields: ["link", "apiKey"] },
+  "gcs":               { label: "Google Cloud Storage bucket", fetch: fetchGCS, fields: ["bucketName", "prefix"] },
+  "http-url":          { label: "HTTPS file URL", fetch: fetchHttpUrl, fields: ["url", "filename"] },
+  "sharepoint-file":   { label: "SharePoint share link (single file)", fetch: fetchSharePointFile, fields: ["shareLink", "filename"] },
+  "uploaded-zip":      { label: "Uploaded ZIP archive", fetch: fetchZip, fields: ["zipPath"] },
 };
 
 export async function fetchSource(source) {
@@ -144,7 +244,11 @@ export async function downloadFile(file, destPath) {
     fs.writeFileSync(destPath, entry.getData());
     return destPath;
   }
-  const r = await fetch(file.downloadUrl);
+  const headers = {};
+  if (file._graphToken && file.downloadUrl.includes("graph.microsoft.com")) {
+    headers.Authorization = `Bearer ${file._graphToken}`;
+  }
+  const r = await fetch(file.downloadUrl, { headers });
   if (!r.ok) throw new Error(`Download failed ${r.status}`);
   const buf = Buffer.from(await r.arrayBuffer());
   fs.writeFileSync(destPath, buf);
