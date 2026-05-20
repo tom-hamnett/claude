@@ -99,7 +99,24 @@ async function callCustom(engine, system, messages) {
   return { text, raw: data };
 }
 
+async function callGitHubModels(engine, system, messages) {
+  const key = engine.api_key || process.env.GITHUB_TOKEN;
+  if (!key) throw new Error("GitHub token not set — create a Personal Access Token at github.com/settings/tokens");
+  const model = engine.model_name || "gpt-4o";
+  const allMessages = system ? [{ role: "system", content: system }, ...messages] : messages;
+
+  const r = await fetch("https://models.inference.ai.azure.com/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${key}` },
+    body: JSON.stringify({ model, messages: allMessages, max_tokens: 4000 }),
+  });
+  if (!r.ok) throw new Error(`GitHub Models ${r.status}: ${await r.text()}`);
+  const data = await r.json();
+  return { text: data.choices?.[0]?.message?.content || "", raw: data };
+}
+
 export const PROVIDERS = {
+  "github-copilot": { label: "GitHub Copilot (easiest — uses your GitHub account)", call: callGitHubModels, fields: ["api_key", "model_name"] },
   anthropic: { label: "Anthropic Claude", call: callAnthropic, fields: ["api_key", "model_name"] },
   gemini:    { label: "Google Gemini",    call: callGemini,    fields: ["api_key", "model_name"] },
   copilot:   { label: "Microsoft Azure OpenAI / Copilot", call: callAzureOpenAI, fields: ["api_key", "endpoint_url", "deployment_name"] },

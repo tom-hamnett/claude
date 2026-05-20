@@ -51,7 +51,7 @@ export default function EnginesManager({ programmeId }) {
       </div>
 
       {engines.length === 0 && (
-        <Card color="#F5C544"><div style={{ fontSize: 13, fontFamily: "var(--font-b)", color: "var(--text)", lineHeight: 1.6 }}>No engines configured. Add at least one to use AI features. The most common setups are Google Gemini (via GCP API key) or Microsoft Azure OpenAI (via endpoint + deployment).</div></Card>
+        <Card color="#F5C544"><div style={{ fontSize: 13, fontFamily: "var(--font-b)", color: "var(--text)", lineHeight: 1.6 }}>No engines configured. Add at least one to use AI features.<br /><br /><strong>Quickest setup:</strong> GitHub Copilot — uses your existing GitHub account. Just create a Personal Access Token at github.com → Settings → Developer settings → Personal access tokens → Generate. No IT approval needed.</div></Card>
       )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -146,7 +146,20 @@ function EngineForm({ programmeId, providers, existing, onClose, onSaved }) {
         {providers.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
       </select>
 
-      {fields.includes("api_key") && <Field label="API Key" value={form.apiKey} onChange={v => setForm(f => ({ ...f, apiKey: v }))} placeholder={existing ? "Leave blank to keep existing" : "Paste your API key"} type="password" />}
+      {form.provider === "github-copilot" && (
+        <div style={{ padding: "12px 16px", background: "rgba(42,191,191,0.08)", border: "1px solid rgba(42,191,191,0.2)", borderRadius: 6, marginBottom: 14, fontSize: 12, fontFamily: "var(--font-b)", color: "var(--text2)", lineHeight: 1.7 }}>
+          <strong style={{ color: "var(--accent)" }}>Setup (30 seconds, no IT needed):</strong><br />
+          1. Go to <strong>github.com</strong> → click your avatar → <strong>Settings</strong><br />
+          2. Scroll to <strong>Developer settings</strong> → <strong>Personal access tokens</strong> → <strong>Tokens (classic)</strong><br />
+          3. Click <strong>Generate new token (classic)</strong><br />
+          4. Give it a name (e.g. "APEX Dashboard"), no special scopes needed<br />
+          5. Copy the token and paste it below as the API Key<br />
+          <br />
+          <span style={{ fontSize: 11, color: "var(--text3)" }}>In Codespaces, you can also leave API Key blank — it will try to use the built-in GITHUB_TOKEN automatically.</span>
+        </div>
+      )}
+
+      {fields.includes("api_key") && <Field label={form.provider === "github-copilot" ? "GitHub Personal Access Token" : "API Key"} value={form.apiKey} onChange={v => setForm(f => ({ ...f, apiKey: v }))} placeholder={form.provider === "github-copilot" ? (existing ? "Leave blank to keep existing" : "ghp_xxxxxxxxxxxx (or leave blank in Codespaces)") : (existing ? "Leave blank to keep existing" : "Paste your API key")} type="password" />}
       {fields.includes("endpoint_url") && <Field label="Endpoint URL" value={form.endpointUrl} onChange={v => setForm(f => ({ ...f, endpointUrl: v }))} placeholder="https://..." />}
       {fields.includes("model_name") && <Field label="Model Name" value={form.modelName} onChange={v => setForm(f => ({ ...f, modelName: v }))} placeholder={modelPlaceholder(form.provider)} />}
       {fields.includes("deployment_name") && <Field label="Deployment Name" value={form.deploymentName} onChange={v => setForm(f => ({ ...f, deploymentName: v }))} placeholder="e.g. my-gpt4-deployment" />}
@@ -172,6 +185,7 @@ function EngineForm({ programmeId, providers, existing, onClose, onSaved }) {
 
 function modelPlaceholder(provider) {
   return {
+    "github-copilot": "gpt-4o (default) or gpt-4o-mini",
     anthropic: "claude-sonnet-4-20250514",
     gemini: "gemini-1.5-pro",
     openai: "gpt-4-turbo",
