@@ -9,7 +9,10 @@ A taught **curriculum of training modules** for gravitas and leadership communic
 - `curriculum/` — module teaching + practice content. Drafted so far:
   - `module-01-grounded-presence.md`
   - `module-05-curiosity-calibrated-questions.md`
-- `rubric/bars-rubric.md` — behaviourally-anchored scoring rubric for the competencies those modules map to (the basis for the AI diagnostic).
+- `rubric/bars-rubric.md` — behaviourally-anchored scoring rubric for the competencies those modules map to (the basis for the AI diagnostic), including OFNR competencies derived from Tom's database.
+- `research/` — source material and integration notes:
+  - `say-what-you-mean-practical-items-minto-structured.csv` — Tom's Minto-structured database of practical items from Sofer's *Say What You Mean*.
+  - `say-what-you-mean-integration.md` — how that database maps onto the curriculum and feeds the rubric.
 
 ---
 

@@ -75,6 +75,56 @@ Levels: **1 Emerging · 2 Developing · 3 Strong · 4 Exemplary.**
 
 ---
 
+---
+
+## Competencies derived from Tom's *Say What You Mean* database (OFNR)
+
+*These three come straight from the NVC backbone in `research/say-what-you-mean-integration.md`. They are chosen because they are both teachable and **directly detectable in a transcript**.*
+
+### Competency: OBSERVATION vs. EVALUATION
+*(Modules 2/5/6 · DB unit "Observation and clarity", 66 items · Sofer/NVC)*
+
+**Definition:** Describing what actually happened (observable facts) before/instead of layering judgment, blame, or absolutes onto it.
+
+**Observable signals (lexical):** observational framing ("when… happened", specific facts, "I" statements) vs. evaluative markers (absolutes "always/never", character labels, "you" blame, mind-reading).
+
+| Level | Anchored behaviour | Example |
+|---|---|---|
+| **1 Emerging** | Speaks mostly in judgments/absolutes/blame. | "You never listen / you don't care." |
+| **2 Developing** | Mixes some observation with frequent evaluation. | "You keep cutting me off — you're so dismissive." |
+| **3 Strong** | Usually separates fact from interpretation. | "When the topic changed mid-point, I felt cut off." |
+| **4 Exemplary** | Consistently grounds points in clean observation, then owns the interpretation as their own. | "Twice the agenda moved before I finished — the story I told myself was that it didn't matter; can we check that?" |
+
+### Competency: FEELINGS & NEEDS LITERACY
+*(Modules 3/6 · DB units "Emotional literacy" 141 + "Needs and values" 71 · Sofer/NVC)*
+
+**Definition:** Naming the real feeling and the underlying need/value driving it — rather than firing an accusation or thought disguised as a feeling.
+
+**Observable signals (lexical):** genuine feeling words + need/value statements ("I feel X because I need Y") vs. pseudo-feelings/accusations ("I feel ignored", "you are…").
+
+| Level | Anchored behaviour | Example |
+|---|---|---|
+| **1 Emerging** | Accusations or thoughts in place of feelings/needs. | "You just don't care." |
+| **2 Developing** | Names feelings but as blame ("I feel ignored"); needs implicit. | "I feel let down by you." |
+| **3 Strong** | Names actual feeling and links it to a need. | "I'm anxious about this because I need clarity on the deadline." |
+| **4 Exemplary** | Owns feeling + need cleanly and uses it to open dialogue, incl. naming others' likely needs. | "I'm frustrated because I need reliability here — and I'm guessing you need room to prioritise. Can we find both?" |
+
+### Competency: CLEAR REQUESTS
+*(Modules 12/14 · DB unit "Requests and agreements" · Sofer/NVC)*
+
+**Definition:** Turning a need into a concrete, specific, doable request — rather than a vague complaint, hint, or veiled demand.
+
+**Observable signals (lexical/semantic):** specific actionable asks (who/what/when) and check for agreement vs. open-ended complaints, hints, or ultimatums.
+
+| Level | Anchored behaviour | Example |
+|---|---|---|
+| **1 Emerging** | Complains/hints; no actual ask. | "Nobody ever keeps me in the loop." |
+| **2 Developing** | Vague or non-actionable request. | "Can you communicate better?" |
+| **3 Strong** | Concrete, doable, specific request. | "Would you text me by 5 if you'll be late?" |
+| **4 Exemplary** | Specific request + checks it works for the other person (request, not demand). | "Could you send a one-line status by Friday 12:00 — does that work for you?" |
+
+---
+
 ## Roadmap for the full rubric
 - Author the remaining competencies across all 14 modules / 15 Bates facets, each in this format.
 - Build the **expert-labelled gold set**: human coaches score real clips; measure AI-judge agreement (inter-rater reliability) per rubric version; iterate anchors until agreement is acceptable.
