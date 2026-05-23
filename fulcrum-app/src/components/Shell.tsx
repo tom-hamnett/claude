@@ -5,6 +5,7 @@ const NAV = [
   { to: '/', label: 'Home', icon: '◆', end: true },
   { to: '/learn', label: 'Learn', icon: '📚' },
   { to: '/evaluate', label: 'Evaluate', icon: '🎙️' },
+  { to: '/capture', label: 'Capture', icon: '🎥' },
   { to: '/coach', label: 'Coach', icon: '✦' },
   { to: '/progress', label: 'Progress', icon: '📈' },
   { to: '/settings', label: 'Settings', icon: '⚙︎' },
@@ -45,7 +46,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       <main className="flex-1 min-w-0 pb-24 md:pb-10">{children}</main>
 
       {/* Bottom nav (mobile) */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-20 bg-white/95 backdrop-blur border-t border-ink-100 grid grid-cols-6">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-20 bg-white/95 backdrop-blur border-t border-ink-100 grid grid-cols-7">
         {NAV.map((n) => (
           <NavLink
             key={n.to}

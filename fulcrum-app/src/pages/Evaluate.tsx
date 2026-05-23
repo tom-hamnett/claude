@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { db, getProfile, getSettings, recordUsage, getTodayUsage, saveMedia } from '../db';
 import { MODULES } from '../content/curriculum';
 import { analyze } from '../lib/analysis';
@@ -220,10 +220,15 @@ export default function Evaluate() {
         </div>
       )}
 
+      <div className="rounded-2xl border border-brand-100 bg-brand-50/50 p-3 mb-5 text-sm text-ink-700 flex items-center justify-between gap-3">
+        <span>Tired of uploading after every meeting? <strong>Auto-capture</strong> watches your recordings folder and does this for you.</span>
+        <Link to="/capture" className="btn-secondary btn-sm whitespace-nowrap">Set up →</Link>
+      </div>
+
       <div className="grid lg:grid-cols-5 gap-6">
         <div className="lg:col-span-3 space-y-5">
           {/* Media */}
-          <div className="card p-5">
+          <div className="card p-5" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) onMediaFile(f); }}>
             <div className="flex items-center justify-between mb-2">
               <span className="label">🎬 Audio / video {hasAsr ? '' : '(needs speech-to-text key)'}</span>
               <div className="flex gap-2">

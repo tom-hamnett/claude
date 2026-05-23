@@ -10,6 +10,7 @@ import Coach from './pages/Coach';
 import Progress from './pages/Progress';
 import Settings from './pages/Settings';
 import Admin from './pages/Admin';
+import Capture from './pages/Capture';
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
               <Route path="/learn" element={<Learn />} />
               <Route path="/learn/:slug" element={<ModulePage />} />
               <Route path="/evaluate" element={<Evaluate />} />
+              <Route path="/capture" element={<Capture />} />
               <Route path="/evaluate/:id" element={<Report />} />
               <Route path="/coach" element={<Coach />} />
               <Route path="/progress" element={<Progress />} />

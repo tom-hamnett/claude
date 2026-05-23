@@ -11,8 +11,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const folders = process.argv.slice(2);
-if (!folders.length) { console.error('Usage: node agent.mjs <folder> [more folders...]'); process.exit(1); }
+const rawArgs = process.argv.slice(2);
+let everyMin = 0;
+const folders = [];
+for (let i = 0; i < rawArgs.length; i++) {
+  if (rawArgs[i] === '--every') everyMin = Number(rawArgs[++i]) || 0;
+  else folders.push(rawArgs[i]);
+}
+if (!folders.length) { console.error('Usage: node agent.mjs <folder> [more folders...] [--every <minutes>]'); process.exit(1); }
 
 const GEMINI = process.env.GEMINI_API_KEY;
 const ANTHROPIC = process.env.ANTHROPIC_API_KEY;
@@ -122,9 +128,17 @@ async function process(file) {
   } catch (e) { console.error(`  ✗ ${path.basename(file)}: ${e.message}`); }
 }
 
-console.log(`FULCRUM agent watching:\n${folders.map((f) => '  ' + f).join('\n')}\nVideo ${GEMINI ? 'on (Gemini ' + GEMINI_MODEL + ')' : 'off'} · Audio ${DEEPGRAM && ANTHROPIC ? 'on' : 'off'} · Daily video budget ${DAILY_VIDEO_MIN}m. Ctrl-C to stop.`);
+function scanAll() {
+  for (const dir of folders) {
+    if (!fs.existsSync(dir)) continue;
+    for (const f of fs.readdirSync(dir)) process(path.join(dir, f));
+  }
+}
+
+console.log(`FULCRUM agent watching:\n${folders.map((f) => '  ' + f).join('\n')}\nVideo ${GEMINI ? 'on (Gemini ' + GEMINI_MODEL + ')' : 'off'} · Audio ${DEEPGRAM && ANTHROPIC ? 'on' : 'off'} · Daily video budget ${DAILY_VIDEO_MIN}m · ${everyMin > 0 ? 'rescan every ' + everyMin + 'm' : 'real-time'}. Ctrl-C to stop.`);
+scanAll();
 for (const dir of folders) {
   if (!fs.existsSync(dir)) { console.error(`  (missing) ${dir}`); continue; }
-  for (const f of fs.readdirSync(dir)) process(path.join(dir, f));
   fs.watch(dir, (_e, f) => { if (f) { const full = path.join(dir, f); setTimeout(() => fs.existsSync(full) && process(full), 800); } });
 }
+if (everyMin > 0) setInterval(scanAll, everyMin * 60 * 1000);
