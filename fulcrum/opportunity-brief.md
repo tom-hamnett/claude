@@ -332,14 +332,20 @@ Native video tokenises at ~1 fps (frames + audio), so cost scales with **length*
 
 Cropping to the user, clip/segment selection, de-duping already-analysed recordings, prompt-caching the rubric, and a **per-run cost estimate shown before you run** keep spend visible and bounded — without ever lowering quality.
 
-### 9A.3 Commercial model
+### 9A.3 Commercial model — managed by default
 
-Cost is metered by the **cost driver** (transcripts ≪ audio ≪ video) and protected by allowances, never by degrading the analysis:
+Asking consumers to create and fund their own Gemini/Anthropic accounts is too much friction. So the **default is a managed model: we own and fund the provider accounts, bundle a quota into the price, and meter + hard-cap centrally** so the cost envelope is always under our control. Cost is metered by the **cost driver** (transcripts ≪ audio ≪ video) and protected by allowances, never by degrading the analysis (always the top model).
 
-- **BYO-key (built):** users/enterprises supply their own Gemini/Anthropic/Deepgram keys; flat software fee; **zero AI-cost risk** to us. The de-risked floor and the natural enterprise/prosumer tier.
-- **Subscription + included allowance + top-ups (primary):** each plan includes a monthly budget — e.g. *unlimited transcripts, generous audio hours, a set number of full-quality video hours* — with **credit top-up packs** beyond it. Predictable for the user, margin-protected for us, upsell for heavy users.
-- **Pure credits (option):** consumption pricing where video costs more per minute than audio than transcript.
-- **Budget-aware auto-agent (critical):** the capture agent always runs **full quality**, but within a **per-day video budget** per plan (e.g. "3 of 5 deep video reads used today"); beyond budget it queues or falls back to audio/transcript (cheaper modality, same quality of analysis for what it can see) rather than dropping the model. This is what prevents an always-on agent from silently running up cost.
+**Managed architecture (the only backend):**
+- A thin **serverless proxy (Vercel functions)** holds the provider keys server-side; the app calls *it*, never the providers directly. Large media is uploaded straight to object storage (Vercel Blob) via a server-minted token, so it bypasses request-size limits; the function then orchestrates the provider call.
+- **Per-account quota** lives in a KV store and is enforced **server-side** (e.g. "20 video-min + 5 audio-hrs + unlimited transcripts / month"), so spend can never exceed what was paid — independent of the client.
+- **Access via a FULCRUM key/licence** (issued on purchase) in the prototype; **Stripe** subscription + top-up credits automate issuance at launch.
+- **Ingestion is optimised at source:** Gemini samples at ~1 fps and medium resolution (the cost levers), audio is kept intact for tone; optional **server-side pre-transcode** (downscale / fps / mono) trims upload bandwidth. None of this lowers analysis quality.
+
+**Tiers:**
+- **Managed subscription + included allowance + top-ups (primary):** the default consumer/team experience — predictable price, margin-protected, upsell for heavy users.
+- **BYO-key (built; Enterprise/privacy tier):** orgs or power users supply their own keys for a flat software fee — **zero AI-cost risk** to us and a hard data-boundary for enterprises that require it. No longer the default.
+- **Budget-aware auto-agent (critical):** the capture agent always runs **full quality**, but within a **per-day video budget** per plan; beyond budget it queues or falls back to the cheaper modality (audio/transcript) rather than dropping the model — preventing an always-on agent from silently running up cost.
 
 ### 9A.4 Automatic capture — environment connectors
 
