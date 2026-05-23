@@ -33,10 +33,9 @@ export const DEFAULT_SETTINGS: Settings = {
 };
 
 export async function getSettings(): Promise<Settings> {
+  // Read-only: must be safe to call inside a Dexie liveQuery (no writes here).
   const s = await db.settings.get('app');
-  if (s) return { ...DEFAULT_SETTINGS, ...s };
-  await db.settings.put(DEFAULT_SETTINGS);
-  return DEFAULT_SETTINGS;
+  return s ? { ...DEFAULT_SETTINGS, ...s } : DEFAULT_SETTINGS;
 }
 
 export async function saveSettings(patch: Partial<Settings>): Promise<void> {
