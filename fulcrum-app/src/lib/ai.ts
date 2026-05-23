@@ -26,6 +26,7 @@ export interface AnalysisArgs {
   profile?: Profile;
   activeModules: number[];
   interaction: InteractionType;
+  deliveryContext?: string;
 }
 
 export async function runAnalysis(args: AnalysisArgs): Promise<EvaluationResult> {
@@ -42,7 +43,7 @@ export async function runAnalysis(args: AnalysisArgs): Promise<EvaluationResult>
     messages: [
       {
         role: 'user',
-        content: analysisUserMessage(args.transcript, args.profile, args.activeModules, args.interaction),
+        content: analysisUserMessage(args.transcript, args.profile, args.activeModules, args.interaction, args.deliveryContext),
       },
     ],
   };

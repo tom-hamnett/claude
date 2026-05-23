@@ -9,6 +9,7 @@ export interface AnalyzeRequest {
   profile?: Profile;
   activeModules: number[];
   interaction: InteractionType;
+  deliveryContext?: string;
 }
 
 export async function analyze(req: AnalyzeRequest): Promise<{ result: EvaluationResult; demo: boolean }> {
@@ -22,6 +23,7 @@ export async function analyze(req: AnalyzeRequest): Promise<{ result: Evaluation
       profile: req.profile,
       activeModules: req.activeModules,
       interaction: req.interaction,
+      deliveryContext: req.deliveryContext,
     });
     return { result, demo: false };
   }

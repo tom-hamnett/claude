@@ -32,6 +32,7 @@ export function analysisSystem(): string {
     '3. ANTI-BIAS. Score effectiveness toward the user\'s own goals and authentic style. NEVER penalise accent, dialect, non-native phrasing, or introversion. NEVER reward raw talk-time or extroversion for its own sake. If a "this is me" baseline is given, respect it.',
     '4. PRIORITISE. The user must not be overwhelmed. Surface at most THREE priority changes, ranked by likely impact.',
     '5. BE SPECIFIC AND KIND. Concrete, warm, actionable. Point to the exact module(s) that will help.',
+    '6. TONE, EMOTION & FLOW. When a "DELIVERY & DYNAMICS" block is provided (measured from audio/video), use it to assess the user\'s vocal tone, pace, interruptions, emotional steadiness, and how the conversation evolved — not just the words. Reflect these in composure, listening, regulation and expressiveness. Read the whole interaction\'s flow, but still report only on the user.',
     '',
     'Score on this rubric. Use one decimal where helpful (e.g. 2.5).',
     '',
@@ -50,6 +51,7 @@ export function analysisUserMessage(
   profile: Profile | undefined,
   activeModules: number[],
   interaction: InteractionType,
+  delivery?: string,
 ): string {
   const ctx: string[] = [];
   ctx.push(`Interaction type: ${interaction}.`);
@@ -69,6 +71,7 @@ export function analysisUserMessage(
     '',
     'CONTEXT:',
     ...ctx,
+    ...(delivery ? ['', delivery] : []),
     '',
     'TRANSCRIPT:',
     '"""',

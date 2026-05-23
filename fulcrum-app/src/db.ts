@@ -27,6 +27,7 @@ export const DEFAULT_SETTINGS: Settings = {
   apiKey: (import.meta as any).env?.VITE_ANTHROPIC_API_KEY ?? '',
   model: 'claude-opus-4-7',
   coachModel: 'claude-opus-4-7',
+  asrKey: '',
   passiveAgent: false,
   retentionDays: 0,
   effort: 'high',

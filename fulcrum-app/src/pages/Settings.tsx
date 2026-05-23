@@ -59,6 +59,11 @@ export default function Settings() {
               ))}
             </div>
           </label>
+          <label className="block mt-4">
+            <span className="label block mb-1.5">Speech-to-text key (Deepgram) — for audio & video</span>
+            <input type="password" className="input font-mono" value={s.asrKey} onChange={(e) => patch({ asrKey: e.target.value })} placeholder="Deepgram API key" />
+            <span className="text-xs text-ink-400 mt-1 block">Enables uploading real recordings (audio or video). Deepgram transcribes and separates speakers in your browser; we then measure your tone, interruptions, pace and flow. Get a free key at deepgram.com. Without it, you can still paste/type transcripts.</span>
+          </label>
         </section>
 
         <section className="card p-5">

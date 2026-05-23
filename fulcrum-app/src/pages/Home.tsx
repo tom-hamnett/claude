@@ -32,23 +32,23 @@ export default function Home() {
       )}
 
       <div className="grid sm:grid-cols-2 gap-4 mb-8">
-        <Link to="/evaluate" className="card p-5 hover:shadow-lift transition group">
-          <div className="text-2xl mb-2">🎙️</div>
-          <h3 className="font-display text-xl text-ink-900 mb-1">Evaluate a conversation</h3>
-          <p className="text-ink-500 text-sm mb-3">
-            Upload, paste, or record a real conversation. Get a strengths-vs-focus dashboard with the exact moments and the modules to work on.
-          </p>
-          <span className="text-brand-600 font-semibold text-sm group-hover:underline">Start a diagnostic →</span>
-        </Link>
         <Link to="/learn" className="card p-5 hover:shadow-lift transition group">
           <div className="text-2xl mb-2">📚</div>
-          <h3 className="font-display text-xl text-ink-900 mb-1">Learn the modules</h3>
+          <h3 className="font-display text-xl text-ink-900 mb-1">1 · Learn the modules</h3>
           <p className="text-ink-500 text-sm mb-3">
-            Ten deeply-taught modules across presence, listening, clarity and influence — theory, principles, and real-world practice.
+            Ten deeply-taught modules across presence, listening, clarity and influence — theory, principles, and real-world practice. Read and learn first.
           </p>
           <span className="text-brand-600 font-semibold text-sm group-hover:underline">
             Browse the curriculum ({done}/{MODULES.length} completed) →
           </span>
+        </Link>
+        <Link to="/evaluate" className="card p-5 hover:shadow-lift transition group">
+          <div className="text-2xl mb-2">🎙️</div>
+          <h3 className="font-display text-xl text-ink-900 mb-1">2 · Evaluate a conversation</h3>
+          <p className="text-ink-500 text-sm mb-3">
+            Then upload audio/video, paste, or record a real conversation. Get a strengths-vs-focus dashboard with the exact moments and the modules to work on.
+          </p>
+          <span className="text-brand-600 font-semibold text-sm group-hover:underline">Start a diagnostic →</span>
         </Link>
       </div>
 

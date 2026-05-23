@@ -26,6 +26,7 @@ export default function Report() {
           <h1 className="font-display text-3xl text-ink-900">{evalRec.title}</h1>
           <p className="text-ink-400 text-sm mt-1">
             {new Date(evalRec.createdAt).toLocaleString()} · {evalRec.interactionType.replace('-', ' ')}
+            {evalRec.delivery && ' · 🎬 tone & flow measured'}
             {evalRec.demo && ' · offline preview'}
           </p>
         </div>

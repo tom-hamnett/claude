@@ -110,6 +110,8 @@ export interface Settings {
   apiKey: string;
   model: string;
   coachModel: string;
+  /** Deepgram (or compatible) speech-to-text key — enables audio/video analysis. */
+  asrKey: string;
   passiveAgent: boolean;
   retentionDays: number; // 0 = keep forever
   effort: 'low' | 'medium' | 'high';
@@ -164,7 +166,11 @@ export interface Evaluation {
   createdAt: number;
   title: string;
   interactionType: InteractionType;
-  source: 'upload' | 'paste' | 'record' | 'agent';
+  source: 'upload' | 'paste' | 'record' | 'agent' | 'media';
+  /** seconds of media analysed, if from audio/video */
+  mediaSeconds?: number;
+  /** true when delivery & dynamics (tone/flow) were measured from audio */
+  delivery?: boolean;
   transcriptPreview: string;
   weightsUsed: Record<number, number>;
   result: EvaluationResult;
