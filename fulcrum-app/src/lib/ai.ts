@@ -29,35 +29,31 @@ export interface AnalysisArgs {
   deliveryContext?: string;
 }
 
-export async function runAnalysis(args: AnalysisArgs): Promise<EvaluationResult> {
-  const client = await makeClient(args.apiKey);
-  const params: any = {
+export function buildAnalysisPayload(args: AnalysisArgs): any {
+  return {
     model: args.model || 'claude-opus-4-7',
     max_tokens: 8000,
     thinking: { type: 'adaptive' },
     system: [{ type: 'text', text: analysisSystem(), cache_control: { type: 'ephemeral' } }],
-    output_config: {
-      effort: args.effort,
-      format: { type: 'json_schema', schema: EVAL_SCHEMA },
-    },
+    output_config: { effort: args.effort, format: { type: 'json_schema', schema: EVAL_SCHEMA } },
     messages: [
-      {
-        role: 'user',
-        content: analysisUserMessage(args.transcript, args.profile, args.activeModules, args.interaction, args.deliveryContext),
-      },
+      { role: 'user', content: analysisUserMessage(args.transcript, args.profile, args.activeModules, args.interaction, args.deliveryContext) },
     ],
   };
-  const res: any = await client.messages.create(params);
-  const text = (res.content || [])
-    .filter((b: any) => b.type === 'text')
-    .map((b: any) => b.text)
-    .join('')
-    .trim();
-  return JSON.parse(stripFences(text)) as EvaluationResult;
 }
 
-function stripFences(s: string): string {
+export function extractText(res: any): string {
+  return (res?.content || []).filter((b: any) => b.type === 'text').map((b: any) => b.text).join('').trim();
+}
+
+export function stripFences(s: string): string {
   return s.replace(/^```json?\s*/i, '').replace(/```$/i, '').trim();
+}
+
+export async function runAnalysis(args: AnalysisArgs): Promise<EvaluationResult> {
+  const client = await makeClient(args.apiKey);
+  const res: any = await client.messages.create(buildAnalysisPayload(args));
+  return JSON.parse(stripFences(extractText(res))) as EvaluationResult;
 }
 
 export interface CoachArgs {
@@ -70,22 +66,23 @@ export interface CoachArgs {
   onText: (full: string) => void;
 }
 
-export async function streamCoach(args: CoachArgs): Promise<string> {
-  const client = await makeClient(args.apiKey);
+export function buildCoachPayload(args: Omit<CoachArgs, 'apiKey' | 'onText'>): any {
   const sys = args.context
     ? `${coachSystem(args.profile)}\n\nCURRENT CONTEXT:\n${args.context}`
     : coachSystem(args.profile);
-
-  const messages = args.history.map((m) => ({ role: m.role, content: m.content }));
-  const params: any = {
+  return {
     model: args.model || 'claude-opus-4-7',
     max_tokens: 4000,
     thinking: { type: 'adaptive' },
     output_config: { effort: args.effort },
     system: [{ type: 'text', text: sys, cache_control: { type: 'ephemeral' } }],
-    messages,
+    messages: args.history.map((m) => ({ role: m.role, content: m.content })),
   };
+}
 
+export async function streamCoach(args: CoachArgs): Promise<string> {
+  const client = await makeClient(args.apiKey);
+  const params: any = buildCoachPayload(args);
   let full = '';
   const stream: any = client.messages.stream(params);
   stream.on('text', (delta: string) => {

@@ -1,7 +1,8 @@
 import type { EvaluationResult, Finding, Profile, InteractionType, ModuleScore, Priority } from '../types';
 import { COMPETENCIES, competencyById } from '../content/rubric';
 import { moduleByNumber } from '../content/curriculum';
-import { runAnalysis } from './ai';
+import { runAnalysis, buildAnalysisPayload, extractText, stripFences } from './ai';
+import { managedAnthropic } from './managed';
 import { getSettings } from '../db';
 
 export interface AnalyzeRequest {
@@ -14,6 +15,15 @@ export interface AnalyzeRequest {
 
 export async function analyze(req: AnalyzeRequest): Promise<{ result: EvaluationResult; demo: boolean }> {
   const settings = await getSettings();
+  if (settings.aiMode === 'managed' && settings.fulcrumKey?.trim()) {
+    const payload = buildAnalysisPayload({
+      apiKey: '', model: settings.model, effort: settings.effort,
+      transcript: req.transcript, profile: req.profile, activeModules: req.activeModules,
+      interaction: req.interaction, deliveryContext: req.deliveryContext,
+    });
+    const res = await managedAnthropic(payload, settings.fulcrumKey);
+    return { result: JSON.parse(stripFences(extractText(res))) as EvaluationResult, demo: false };
+  }
   if (settings.apiKey && settings.apiKey.trim()) {
     const result = await runAnalysis({
       apiKey: settings.apiKey,

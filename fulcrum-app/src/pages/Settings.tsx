@@ -32,7 +32,23 @@ export default function Settings() {
       <div className="space-y-6 max-w-2xl">
         <section className="card p-5">
           <h2 className="font-display text-lg text-ink-900 mb-1">AI engine</h2>
-          <p className="text-ink-500 text-sm mb-4">Paste your Anthropic API key to unlock holistic evaluations and the coach. It's stored only in your browser (IndexedDB) and sent directly to Claude — there is no FULCRUM server.</p>
+          <p className="text-ink-500 text-sm mb-4"><strong>Managed</strong> uses a FULCRUM-hosted account with an included quota — just a key we issue you, video/audio/coaching all included. <strong>Bring your own keys</strong> calls the providers directly from your browser.</p>
+          <div className="flex gap-2 mb-4">
+            {(['managed', 'byo'] as const).map((m) => (
+              <button key={m} onClick={() => patch({ aiMode: m })} className={`flex-1 py-2 rounded-xl border text-sm font-semibold ${s.aiMode === m ? 'border-brand-400 bg-brand-50 text-brand-700' : 'border-ink-200 text-ink-600'}`}>
+                {m === 'managed' ? 'Managed (FULCRUM key)' : 'Bring your own keys'}
+              </button>
+            ))}
+          </div>
+          {s.aiMode === 'managed' && (
+            <label className="block mb-2">
+              <span className="label block mb-1.5">FULCRUM key</span>
+              <input type="password" className="input font-mono" value={s.fulcrumKey} onChange={(e) => patch({ fulcrumKey: e.target.value })} placeholder="fk-…" />
+              <span className="text-xs text-ink-400 mt-1 block">Includes your monthly quota (video / audio / unlimited transcripts), enforced on our server so spend stays within plan. Highest quality always — no keys of your own needed.</span>
+            </label>
+          )}
+          {s.aiMode === 'byo' && (<>
+          <p className="text-ink-500 text-sm mb-4">Your Anthropic key is stored only in your browser and sent directly to Claude.</p>
           <label className="block mb-4">
             <span className="label block mb-1.5">Anthropic API key</span>
             <input type="password" className="input font-mono" value={s.apiKey} onChange={(e) => patch({ apiKey: e.target.value })} placeholder="sk-ant-…" />
@@ -70,6 +86,7 @@ export default function Settings() {
             <input type="password" className="input font-mono" value={s.geminiKey} onChange={(e) => patch({ geminiKey: e.target.value })} placeholder="Gemini API key" />
             <span className="text-xs text-ink-400 mt-1 block">Enables full video analysis on Gemini Pro — eye contact, posture, gesture and expression, watched as motion. Always highest quality; efficiency comes from ~1 fps sampling, not a weaker model. Key from aistudio.google.com.</span>
           </label>
+          </>)}
         </section>
 
         <section className="card p-5">

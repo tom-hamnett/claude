@@ -31,21 +31,20 @@ export async function transcribeWithDeepgram(file: File, key: string): Promise<T
     const body = await res.text().catch(() => '');
     throw new Error(`Speech-to-text failed (${res.status}). ${body.slice(0, 200)}`);
   }
-  const data = await res.json();
-  let us = data?.results?.utterances as any[] | undefined;
+  return parseDeepgram(await res.json());
+}
 
-  // Fallback: group diarized words if utterances are absent.
+/** Parse a raw Deepgram response (used by both the direct and managed paths). */
+export function parseDeepgram(data: any): Transcription {
+  let us = data?.results?.utterances as any[] | undefined;
   if (!us || !us.length) {
     const words = data?.results?.channels?.[0]?.alternatives?.[0]?.words as any[] | undefined;
     us = groupWords(words || []);
   }
-
   const utterances: Utterance[] = (us || [])
     .filter((u) => (u.transcript ?? u.text ?? '').trim())
     .map((u) => ({ speaker: u.speaker ?? 0, text: (u.transcript ?? u.text).trim(), start: u.start ?? 0, end: u.end ?? 0 }));
-
   if (!utterances.length) throw new Error('No speech was detected in that file.');
-
   const durationSec = data?.metadata?.duration ?? utterances[utterances.length - 1].end;
   const speakers = [...new Set(utterances.map((u) => u.speaker))].sort((a, b) => a - b);
   return { utterances, durationSec, speakers };

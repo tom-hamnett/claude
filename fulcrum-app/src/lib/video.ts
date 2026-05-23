@@ -55,14 +55,18 @@ function geminiSchema(s: any): any {
   return s;
 }
 
-export interface VideoArgs {
-  geminiKey: string;
-  file: File;
+export interface VideoContext {
   profile?: Profile;
   activeModules: number[];
   interaction: InteractionType;
   whoAmI?: string;
 }
+export interface VideoArgs extends VideoContext {
+  geminiKey: string;
+  file: File;
+}
+
+export const GEMINI_EVAL_SCHEMA = geminiSchema(EVAL_SCHEMA);
 
 export async function analyzeVideoWithGemini(args: VideoArgs): Promise<EvaluationResult> {
   const key = args.geminiKey;
@@ -117,7 +121,7 @@ export async function analyzeVideoWithGemini(args: VideoArgs): Promise<Evaluatio
     ],
     generationConfig: {
       responseMimeType: 'application/json',
-      responseSchema: geminiSchema(EVAL_SCHEMA),
+      responseSchema: GEMINI_EVAL_SCHEMA,
       mediaResolution: 'MEDIA_RESOLUTION_MEDIUM',
       temperature: 0.4,
     },
@@ -134,7 +138,7 @@ export async function analyzeVideoWithGemini(args: VideoArgs): Promise<Evaluatio
   return JSON.parse(text) as EvaluationResult;
 }
 
-function videoSystem(): string {
+export function videoSystem(): string {
   return [
     analysisSystem(),
     '',
@@ -145,7 +149,7 @@ function videoSystem(): string {
   ].join('\n');
 }
 
-function videoUserMessage(args: VideoArgs): string {
+export function videoUserMessage(args: VideoContext): string {
   const ctx: string[] = [`Interaction type: ${args.interaction}.`];
   if (args.profile?.role) ctx.push(`User's role: ${args.profile.role}.`);
   if (args.profile?.goals?.length) ctx.push(`Goals: ${args.profile.goals.join(', ')}.`);

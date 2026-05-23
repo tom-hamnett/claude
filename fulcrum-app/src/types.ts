@@ -107,6 +107,10 @@ export interface Profile {
 
 export interface Settings {
   id: 'app';
+  /** 'managed' = use FULCRUM-hosted account via a FULCRUM key; 'byo' = your own provider keys. */
+  aiMode: 'managed' | 'byo';
+  /** FULCRUM licence key (managed mode). */
+  fulcrumKey: string;
   apiKey: string;
   model: string;
   coachModel: string;

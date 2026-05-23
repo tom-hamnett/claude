@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, getProfile, getSettings } from '../db';
-import { streamCoach, describeApiError } from '../lib/ai';
+import { streamCoach, describeApiError, buildCoachPayload, extractText } from '../lib/ai';
+import { managedAnthropic } from '../lib/managed';
 import { Markdown } from '../lib/markdown';
 import type { CoachMessage } from '../types';
 
@@ -23,7 +24,7 @@ export default function Coach() {
   const scroller = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    getSettings().then((s) => setHasKey(!!s.apiKey?.trim()));
+    getSettings().then((s) => setHasKey(!!s.apiKey?.trim() || (s.aiMode === 'managed' && !!s.fulcrumKey?.trim())));
   }, []);
   useEffect(() => {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: 'smooth' });
@@ -38,23 +39,27 @@ export default function Coach() {
     await db.coach.put(userMsg);
 
     const settings = await getSettings();
-    if (!settings.apiKey?.trim()) {
-      setError('The coach needs your Anthropic API key. Add it in Settings.');
+    const isManaged = settings.aiMode === 'managed' && !!settings.fulcrumKey?.trim();
+    if (!settings.apiKey?.trim() && !isManaged) {
+      setError('The coach needs your Anthropic API key or a FULCRUM managed key. Add it in Settings.');
       return;
     }
     const profile = await getProfile();
     const history = [...(await db.coach.where('threadId').equals(THREAD).sortBy('createdAt'))];
     setStreaming('');
     try {
-      const final = await streamCoach({
-        apiKey: settings.apiKey,
-        model: settings.coachModel,
-        effort: settings.effort,
-        profile,
-        history: history.map((m) => ({ ...m })),
-        onText: (full) => setStreaming(full),
-      });
-      await db.coach.put({ id: crypto.randomUUID(), threadId: THREAD, role: 'assistant', content: final, createdAt: Date.now() });
+      if (isManaged) {
+        const payload = buildCoachPayload({ model: settings.coachModel, effort: settings.effort, profile, history: history.map((m) => ({ ...m })) });
+        const res = await managedAnthropic(payload, settings.fulcrumKey);
+        const final = extractText(res);
+        await db.coach.put({ id: crypto.randomUUID(), threadId: THREAD, role: 'assistant', content: final, createdAt: Date.now() });
+      } else {
+        const final = await streamCoach({
+          apiKey: settings.apiKey, model: settings.coachModel, effort: settings.effort,
+          profile, history: history.map((m) => ({ ...m })), onText: (full) => setStreaming(full),
+        });
+        await db.coach.put({ id: crypto.randomUUID(), threadId: THREAD, role: 'assistant', content: final, createdAt: Date.now() });
+      }
     } catch (e) {
       setError(describeApiError(e));
     } finally {

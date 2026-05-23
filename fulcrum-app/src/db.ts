@@ -33,6 +33,8 @@ export const db = new FulcrumDB();
 
 export const DEFAULT_SETTINGS: Settings = {
   id: 'app',
+  aiMode: 'byo',
+  fulcrumKey: '',
   apiKey: (import.meta as any).env?.VITE_ANTHROPIC_API_KEY ?? '',
   model: 'claude-opus-4-7',
   coachModel: 'claude-opus-4-7',

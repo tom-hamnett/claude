@@ -5,6 +5,7 @@ import { MODULES } from '../content/curriculum';
 import { analyze } from '../lib/analysis';
 import { describeApiError } from '../lib/ai';
 import { analyzeVideoWithGemini, estimateVideoCost, getMediaDuration, type VideoCost } from '../lib/video';
+import { managedTranscribe, managedVideo } from '../lib/managed';
 import {
   transcribeWithDeepgram, buildDiarizedTranscript, computeFlow, sampleLines, buildDeliveryContext,
   type Transcription, type FlowMetrics, type Prosody,
@@ -40,6 +41,7 @@ export default function Evaluate() {
   const [hasKey, setHasKey] = useState(false);
   const [hasAsr, setHasAsr] = useState(false);
   const [hasGemini, setHasGemini] = useState(false);
+  const [managed, setManaged] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [isVideo, setIsVideo] = useState(false);
@@ -62,9 +64,11 @@ export default function Evaluate() {
       const p = await getProfile();
       profile.current = p;
       const s = await getSettings();
-      setHasKey(!!s.apiKey?.trim());
-      setHasAsr(!!s.asrKey?.trim());
-      setHasGemini(!!s.geminiKey?.trim());
+      const isManaged = s.aiMode === 'managed' && !!s.fulcrumKey?.trim();
+      setManaged(isManaged);
+      setHasKey(!!s.apiKey?.trim() || isManaged);
+      setHasAsr(!!s.asrKey?.trim() || isManaged);
+      setHasGemini(!!s.geminiKey?.trim() || isManaged);
       const base: Record<number, number> = {};
       for (const m of MODULES) base[m.number] = p?.weights?.[m.number] ?? 1;
       const focus = params.get('modules');
@@ -98,7 +102,8 @@ export default function Evaluate() {
   async function runVideo() {
     if (!mediaFile) return;
     const s = await getSettings();
-    if (!s.geminiKey?.trim()) { setError('Add a Gemini key in Settings to analyse video.'); return; }
+    const isManaged = s.aiMode === 'managed' && !!s.fulcrumKey?.trim();
+    if (!isManaged && !s.geminiKey?.trim()) { setError('Add a Gemini key in Settings, or switch to a FULCRUM managed key, to analyse video.'); return; }
     if (activeModules.length === 0) { setError('Select at least one module to score against.'); return; }
     const today = await getTodayUsage();
     const mins = (videoDuration || 0) / 60;
@@ -107,7 +112,10 @@ export default function Evaluate() {
     }
     setBusy(true); setError('');
     try {
-      const result = await analyzeVideoWithGemini({ geminiKey: s.geminiKey, file: mediaFile, profile: profile.current, activeModules, interaction, whoAmI });
+      const ctx = { profile: profile.current, activeModules, interaction, whoAmI };
+      const result = isManaged
+        ? await managedVideo(mediaFile, videoDuration || 0, ctx, s.fulcrumKey)
+        : await analyzeVideoWithGemini({ geminiKey: s.geminiKey, file: mediaFile, ...ctx });
       const cost = estimateVideoCost(videoDuration || 0);
       await recordUsage({ videoSec: videoDuration || 0, estUsd: cost.usd });
       const id = crypto.randomUUID();
@@ -128,10 +136,11 @@ export default function Evaluate() {
   async function transcribe() {
     if (!mediaFile) return;
     const s = await getSettings();
-    if (!s.asrKey?.trim()) { setError('Add a speech-to-text (Deepgram) key in Settings to analyse audio/video.'); return; }
+    const isManaged = s.aiMode === 'managed' && !!s.fulcrumKey?.trim();
+    if (!isManaged && !s.asrKey?.trim()) { setError('Add a speech-to-text (Deepgram) key in Settings, or switch to a FULCRUM managed key.'); return; }
     setTranscribing(true); setError('');
     try {
-      const t = await transcribeWithDeepgram(mediaFile, s.asrKey);
+      const t = isManaged ? await managedTranscribe(mediaFile, s.fulcrumKey) : await transcribeWithDeepgram(mediaFile, s.asrKey);
       setTranscription(t);
       pickSpeaker(t, t.speakers[0]); // sensible default; user can change
     } catch (e) {
