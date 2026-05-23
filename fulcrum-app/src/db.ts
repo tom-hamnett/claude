@@ -8,6 +8,7 @@ class FulcrumDB extends Dexie {
   progress!: Table<Progress, number>;
   coach!: Table<CoachMessage, string>;
   usage!: Table<UsageDay, string>;
+  media!: Table<{ id: string; blob: Blob }, string>;
 
   constructor() {
     super('fulcrum');
@@ -25,6 +26,15 @@ class FulcrumDB extends Dexie {
       progress: 'moduleNumber',
       coach: 'id, threadId, createdAt',
       usage: 'date',
+    });
+    this.version(3).stores({
+      settings: 'id',
+      profile: 'id',
+      evaluations: 'id, createdAt',
+      progress: 'moduleNumber',
+      coach: 'id, threadId, createdAt',
+      usage: 'date',
+      media: 'id',
     });
   }
 }
@@ -82,11 +92,21 @@ export async function saveProfile(p: Profile): Promise<void> {
   await db.profile.put({ ...p, id: 'me' });
 }
 
+/** Store media for in-report playback. Skips very large files to protect quota. */
+export async function saveMedia(id: string, blob: Blob): Promise<void> {
+  if (blob.size > 250 * 1024 * 1024) return; // >250MB: skip to avoid quota issues
+  try { await db.media.put({ id, blob }); } catch { /* quota — skip */ }
+}
+export async function getMedia(id: string): Promise<Blob | undefined> {
+  return (await db.media.get(id))?.blob;
+}
+
 export async function wipeAllData(): Promise<void> {
   await Promise.all([
     db.evaluations.clear(),
     db.progress.clear(),
     db.coach.clear(),
     db.profile.clear(),
+    db.media.clear(),
   ]);
 }

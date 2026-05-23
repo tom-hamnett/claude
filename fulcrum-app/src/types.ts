@@ -187,6 +187,12 @@ export interface Evaluation {
   mediaSeconds?: number;
   /** true when delivery & dynamics (tone/flow) were measured from audio */
   delivery?: boolean;
+  /** full transcript text shown in the report (when available) */
+  transcriptFull?: string;
+  /** diarised utterances with timings, for click-to-seek + highlighting */
+  utterances?: { speaker: number; text: string; start: number; end: number }[];
+  /** kind of stored media, if any (enables the in-report player) */
+  mediaKind?: 'audio' | 'video';
   transcriptPreview: string;
   weightsUsed: Record<number, number>;
   result: EvaluationResult;

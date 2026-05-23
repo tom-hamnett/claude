@@ -1,14 +1,48 @@
+import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '../db';
+import { db, getMedia } from '../db';
 import { moduleByNumber } from '../content/curriculum';
 import { competencyById } from '../content/rubric';
 import { Meter, ScoreBadge, Empty } from '../components/ui';
-import type { Finding } from '../types';
+import type { Finding, Evaluation } from '../types';
+
+function fmt(s: number): string {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${m}:${sec.toString().padStart(2, '0')}`;
+}
+function parseTime(str?: string): number | undefined {
+  if (!str) return undefined;
+  const m = str.match(/(\d{1,2}):(\d{2})/);
+  if (m) return Number(m[1]) * 60 + Number(m[2]);
+  return undefined;
+}
+function findSeconds(f: Finding, utts?: Evaluation['utterances']): number | undefined {
+  const t = parseTime(f.timestampLabel) ?? parseTime(f.quote);
+  if (t != null) return t;
+  if (utts && f.quote) {
+    const snip = f.quote.replace(/[“”"]/g, '').trim().slice(0, 24).toLowerCase();
+    if (snip.length > 6) {
+      const u = utts.find((x) => x.text.toLowerCase().includes(snip));
+      if (u) return u.start;
+    }
+  }
+  return undefined;
+}
 
 export default function Report() {
   const { id } = useParams();
   const evalRec = useLiveQuery(() => (id ? db.evaluations.get(id) : undefined), [id]);
+  const [mediaUrl, setMediaUrl] = useState('');
+  const player = useRef<HTMLVideoElement & HTMLAudioElement>(null);
+  const [showTranscript, setShowTranscript] = useState(false);
+
+  useEffect(() => {
+    let url = '';
+    if (id) getMedia(id).then((blob) => { if (blob) { url = URL.createObjectURL(blob); setMediaUrl(url); } });
+    return () => { if (url) URL.revokeObjectURL(url); };
+  }, [id]);
 
   if (evalRec === undefined) return <div className="max-w-3xl mx-auto px-6 py-10"><div className="skeleton h-40" /></div>;
   if (!evalRec) return <Empty icon="🔍" title="Evaluation not found" body="It may have been deleted." action={<Link to="/evaluate" className="btn-primary">New evaluation</Link>} />;
@@ -16,6 +50,12 @@ export default function Report() {
   const r = evalRec.result;
   const strengths = r.findings.filter((f) => f.type === 'strength');
   const growth = r.findings.filter((f) => f.type === 'growth');
+
+  function seek(s: number) {
+    const el = player.current;
+    if (el) { el.currentTime = s; el.play?.(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  }
+  const seekable = !!mediaUrl;
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 animate-fade-up">
@@ -33,18 +73,26 @@ export default function Report() {
         <Link to={`/coach?eval=${evalRec.id}`} className="btn-secondary">✦ Discuss with coach</Link>
       </header>
 
-      {/* Overall + headline */}
+      {/* Player */}
+      {mediaUrl && (
+        <section className="card p-3 mb-6">
+          {evalRec.mediaKind === 'video'
+            ? <video ref={player} src={mediaUrl} controls playsInline className="w-full rounded-xl max-h-[60vh] bg-black" />
+            : <audio ref={player} src={mediaUrl} controls className="w-full" />}
+          <p className="text-xs text-ink-400 mt-2 px-1">Tap a ▶ moment below to jump straight to it.</p>
+        </section>
+      )}
+
+      {/* Overall */}
       <div className="ai-card mb-6 flex items-center gap-5">
         <div className="text-center flex-none">
           <div className="text-4xl font-display text-ink-900">{r.overall.toFixed(1)}</div>
           <div className="text-[10px] uppercase tracking-wide text-ink-400 font-semibold">/ 4 overall</div>
         </div>
-        <div className="flex-1">
-          <p className="font-semibold text-ink-900">{r.headline}</p>
-        </div>
+        <p className="flex-1 font-semibold text-ink-900">{r.headline}</p>
       </div>
 
-      {/* Situation narrative */}
+      {/* Situation */}
       <section className="card p-5 mb-6">
         <div className="label mb-1.5">How you handled the situation</div>
         <p className="text-ink-700 leading-relaxed">{r.situation}</p>
@@ -54,7 +102,7 @@ export default function Report() {
       <section className="mb-6">
         <h2 className="font-display text-xl text-ink-900 mb-3">By capability</h2>
         <div className="card divide-y divide-ink-100">
-          {r.moduleScores.sort((a, b) => a.score - b.score).map((ms) => {
+          {[...r.moduleScores].sort((a, b) => a.score - b.score).map((ms) => {
             const m = moduleByNumber(ms.moduleNumber);
             return (
               <Link key={ms.moduleNumber} to={m ? `/learn/${m.slug}` : '#'} className="flex items-center gap-4 p-4 hover:bg-ink-50 transition">
@@ -103,14 +151,44 @@ export default function Report() {
 
       {/* Findings */}
       <div className="grid md:grid-cols-2 gap-6">
-        <FindingColumn title="Strengths" tone="teal" findings={strengths} empty="No specific strengths surfaced — add an API key for richer detail." />
-        <FindingColumn title="Growth moments" tone="hot" findings={growth} empty="No growth moments surfaced." />
+        <FindingColumn title="Strengths" tone="teal" findings={strengths} utts={evalRec.utterances} seekable={seekable} onSeek={seek} empty="No specific strengths surfaced." />
+        <FindingColumn title="Growth moments" tone="hot" findings={growth} utts={evalRec.utterances} seekable={seekable} onSeek={seek} empty="No growth moments surfaced." />
       </div>
+
+      {/* Transcript */}
+      {(evalRec.utterances?.length || evalRec.transcriptFull) && (
+        <section className="mt-6">
+          <button onClick={() => setShowTranscript((v) => !v)} className="font-display text-xl text-ink-900 flex items-center gap-2">
+            Transcript <span className={`text-ink-300 text-base transition ${showTranscript ? 'rotate-90' : ''}`}>›</span>
+          </button>
+          {showTranscript && (
+            <div className="card p-4 mt-3 max-h-[420px] overflow-auto text-sm leading-relaxed">
+              {evalRec.utterances?.length ? (
+                evalRec.utterances.map((u, i) => {
+                  const cited = r.findings.some((f) => f.quote && u.text.toLowerCase().includes(f.quote.replace(/[“”"]/g, '').trim().slice(0, 24).toLowerCase()) && f.quote.length > 8);
+                  return (
+                    <div key={i} className={`py-1 px-2 rounded ${cited ? 'bg-gold-50 border-l-2 border-gold-300' : ''}`}>
+                      <button disabled={!seekable} onClick={() => seek(u.start)} className={`text-[11px] font-mono mr-2 ${seekable ? 'text-brand-600' : 'text-ink-300'}`}>{fmt(u.start)}</button>
+                      <span className="font-semibold text-ink-700">{u.speaker === 0 ? 'Speaker 0' : `Speaker ${u.speaker}`}:</span>{' '}
+                      <span className="text-ink-700">{u.text}</span>
+                    </div>
+                  );
+                })
+              ) : (
+                <pre className="whitespace-pre-wrap font-sans text-ink-700">{evalRec.transcriptFull}</pre>
+              )}
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }
 
-function FindingColumn({ title, tone, findings, empty }: { title: string; tone: 'teal' | 'hot'; findings: Finding[]; empty: string }) {
+function FindingColumn({ title, tone, findings, utts, seekable, onSeek, empty }: {
+  title: string; tone: 'teal' | 'hot'; findings: Finding[];
+  utts?: Evaluation['utterances']; seekable: boolean; onSeek: (s: number) => void; empty: string;
+}) {
   return (
     <section>
       <h2 className="font-display text-xl text-ink-900 mb-3">{title}</h2>
@@ -121,11 +199,16 @@ function FindingColumn({ title, tone, findings, empty }: { title: string; tone: 
           {findings.map((f, i) => {
             const comp = f.competencyId ? competencyById(f.competencyId) : undefined;
             const m = f.moduleNumber ? moduleByNumber(f.moduleNumber) : undefined;
+            const secs = findSeconds(f, utts);
             return (
               <div key={i} className={`card p-4 border-l-4 ${tone === 'teal' ? 'border-teal-300' : 'border-hot-300'}`}>
-                <div className="flex items-center gap-2 mb-1.5">
+                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                   {comp && <span className="chip">{comp.name}</span>}
-                  {f.timestampLabel && <span className="text-[11px] text-ink-400">{f.timestampLabel}</span>}
+                  {secs != null && seekable ? (
+                    <button onClick={() => onSeek(secs)} className="chip-brand">▶ {fmt(secs)}</button>
+                  ) : f.timestampLabel ? (
+                    <span className="text-[11px] text-ink-400">{f.timestampLabel}</span>
+                  ) : null}
                 </div>
                 <blockquote className="text-sm italic text-ink-600 border-l-2 border-ink-200 pl-3 mb-2">“{f.quote}”</blockquote>
                 <p className="text-sm text-ink-700">{f.note}</p>

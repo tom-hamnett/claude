@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { db, getProfile, getSettings, recordUsage, getTodayUsage } from '../db';
+import { db, getProfile, getSettings, recordUsage, getTodayUsage, saveMedia } from '../db';
 import { MODULES } from '../content/curriculum';
 import { analyze } from '../lib/analysis';
 import { describeApiError } from '../lib/ai';
@@ -128,7 +128,9 @@ export default function Evaluate() {
         transcriptPreview: '(native video analysis — visual presence, tone & words)',
         weightsUsed: weights, result, demo: false,
         mediaSeconds: videoDuration, delivery: true,
+        mediaKind: 'video',
       });
+      if (mediaFile) await saveMedia(id, mediaFile);
       nav(`/evaluate/${id}`);
     } catch (e) {
       setError(describeApiError(e));
@@ -199,7 +201,11 @@ export default function Evaluate() {
         weightsUsed: weights, result, demo,
         mediaSeconds: transcription?.durationSec,
         delivery: !!deliveryContext,
+        transcriptFull: transcript,
+        utterances: transcription?.utterances,
+        mediaKind: mediaFile ? (mediaFile.type.startsWith('video/') ? 'video' : 'audio') : undefined,
       });
+      if (mediaFile) await saveMedia(id, mediaFile);
       nav(`/evaluate/${id}`);
     } catch (e) {
       setError(describeApiError(e));
