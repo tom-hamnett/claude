@@ -307,6 +307,55 @@ Ingest (upload or passive capture)
 
 ---
 
+## 9A. Seeing and hearing: the multimodal engine, cost model & capture
+
+Executive presence is profoundly **non-verbal**. Gravitas is carried in eye contact, posture, stillness, gesture, facial expression and vocal tone as much as in words. So the engine must evaluate **video and audio**, not just transcripts — while remaining **self-only** and **highest-quality, with no "lite" tier**.
+
+### 9A.1 The multimodal pipeline (three inputs, one verdict)
+
+| Layer | What it captures | How |
+|---|---|---|
+| **Verbal** | structure, hedging, questions, observation-vs-evaluation, framing | LLM over the transcript |
+| **Vocal (prosody & flow)** | pace, pauses, pitch variation, energy; interruptions, talk-time, response latency, longest monologue | speech-to-text diarisation (Deepgram) + on-device Web-Audio analysis |
+| **Visual (presence)** | eye contact, posture/openness, gesture, stillness vs. fidget, facial expression, how one "holds" the room | **native video understanding (Gemini Pro)** — watches motion + audio together |
+
+For video, the chosen architecture is **native video reasoning on the top model (Gemini Pro)** rather than stills, because presence lives in *motion and continuity*. The decisive cost insight: **resolution and frame-rate are independent of model intelligence**. We run Pro's full reasoning brain but sample at ~1 fps and at a sensible media-resolution, and **crop to the user**. Body language reads perfectly at ~1 fps, so this is an efficiency lever, **not** a quality downgrade — the interpretation stays top-tier. There are no Flash/Pro quality tiers exposed to the user; it is always the best read.
+
+### 9A.2 Why native video is affordable
+
+Native video tokenises at ~1 fps (frames + audio), so cost scales with **length**, not motion. Approximate per-evaluation cost on Pro (verify at build):
+
+| Pro setting | ~tokens/sec | 30-min meeting | Heavy day (7×30-min) | Facilitator (~6 h) |
+|---|---|---|---|---|
+| Full res, 1 fps | ~300 | ~$0.68 | ~$4.70 | ~$8 |
+| **Medium res, 1 fps (default)** | ~130 | ~$0.29 | ~$2.05 | ~$3.50 |
+
+Cropping to the user, clip/segment selection, de-duping already-analysed recordings, prompt-caching the rubric, and a **per-run cost estimate shown before you run** keep spend visible and bounded — without ever lowering quality.
+
+### 9A.3 Commercial model
+
+Cost is metered by the **cost driver** (transcripts ≪ audio ≪ video) and protected by allowances, never by degrading the analysis:
+
+- **BYO-key (built):** users/enterprises supply their own Gemini/Anthropic/Deepgram keys; flat software fee; **zero AI-cost risk** to us. The de-risked floor and the natural enterprise/prosumer tier.
+- **Subscription + included allowance + top-ups (primary):** each plan includes a monthly budget — e.g. *unlimited transcripts, generous audio hours, a set number of full-quality video hours* — with **credit top-up packs** beyond it. Predictable for the user, margin-protected for us, upsell for heavy users.
+- **Pure credits (option):** consumption pricing where video costs more per minute than audio than transcript.
+- **Budget-aware auto-agent (critical):** the capture agent always runs **full quality**, but within a **per-day video budget** per plan (e.g. "3 of 5 deep video reads used today"); beyond budget it queues or falls back to audio/transcript (cheaper modality, same quality of analysis for what it can see) rather than dropping the model. This is what prevents an always-on agent from silently running up cost.
+
+### 9A.4 Automatic capture — environment connectors
+
+To deliver "evaluate my real meetings without uploading each one," the agent pulls only the **user's own** recordings via read-only, OAuth-scoped connectors, each governed by the video budget and provider-abstracted (Gemini native video where available; Claude high-res frames as fallback):
+
+| Environment | Source of recordings | Connector |
+|---|---|---|
+| **Microsoft / Teams** | OneDrive / SharePoint (Stream) | Microsoft Graph API (user OAuth) or local OneDrive-folder watcher |
+| **Google / Meet** | Google Drive | Google Drive API + Gemini |
+| **Zoom** | Zoom Cloud Recording | Zoom API + `recording.completed` webhook |
+| **Local / anything** | files on disk (local recordings, Loom exports) | the local companion agent (folder watcher) |
+
+Between Graph, Drive, Zoom and the local watcher, the large majority of real-world meeting capture is covered. All capture is strictly opt-in, read-only to the user's own content, cropped to the user, and budget-bounded.
+
+---
+
 ## 10. Configurable assessment — user-controlled selection & weighting
 
 Configurability is not an advanced setting; it is a necessary expression of customer reality. Three modes:
