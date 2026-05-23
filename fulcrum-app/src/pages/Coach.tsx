@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, getProfile, getSettings } from '../db';
 import { streamCoach, describeApiError, buildCoachPayload, extractText } from '../lib/ai';
 import { managedAnthropic } from '../lib/managed';
+import { buildCoachContext } from '../lib/coachContext';
 import { Markdown } from '../lib/markdown';
 import type { CoachMessage } from '../types';
 
@@ -17,6 +18,8 @@ const SUGGESTIONS = [
 
 export default function Coach() {
   const messages = useLiveQuery(() => db.coach.where('threadId').equals(THREAD).sortBy('createdAt'), []) || [];
+  const [params] = useSearchParams();
+  const evalId = params.get('eval') || undefined;
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState<string | null>(null);
   const [error, setError] = useState('');
@@ -46,17 +49,18 @@ export default function Coach() {
     }
     const profile = await getProfile();
     const history = [...(await db.coach.where('threadId').equals(THREAD).sortBy('createdAt'))];
+    const context = await buildCoachContext(evalId);
     setStreaming('');
     try {
       if (isManaged) {
-        const payload = buildCoachPayload({ model: settings.coachModel, effort: settings.effort, profile, history: history.map((m) => ({ ...m })) });
+        const payload = buildCoachPayload({ model: settings.coachModel, effort: settings.effort, profile, history: history.map((m) => ({ ...m })), context });
         const res = await managedAnthropic(payload, settings.fulcrumKey || 'local');
         const final = extractText(res);
         await db.coach.put({ id: crypto.randomUUID(), threadId: THREAD, role: 'assistant', content: final, createdAt: Date.now() });
       } else {
         const final = await streamCoach({
           apiKey: settings.apiKey, model: settings.coachModel, effort: settings.effort,
-          profile, history: history.map((m) => ({ ...m })), onText: (full) => setStreaming(full),
+          profile, history: history.map((m) => ({ ...m })), context, onText: (full) => setStreaming(full),
         });
         await db.coach.put({ id: crypto.randomUUID(), threadId: THREAD, role: 'assistant', content: final, createdAt: Date.now() });
       }
@@ -82,6 +86,12 @@ export default function Coach() {
       {!hasKey && (
         <div className="rounded-2xl border border-gold-200 bg-gold-50 p-3 mb-3 text-sm text-ink-700">
           The coach runs on Claude — add your API key in <Link to="/settings" className="text-brand-600 font-semibold">Settings</Link> to chat.
+        </div>
+      )}
+
+      {evalId && (
+        <div className="rounded-2xl border border-brand-200 bg-brand-50 p-3 mb-3 text-sm text-ink-700">
+          ✦ I've got your evaluation and recent history in mind — ask me anything about it, or how to improve.
         </div>
       )}
 

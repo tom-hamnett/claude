@@ -30,7 +30,7 @@ export default function Report() {
             {evalRec.demo && ' · offline preview'}
           </p>
         </div>
-        <Link to="/coach" className="btn-secondary">✦ Discuss with coach</Link>
+        <Link to={`/coach?eval=${evalRec.id}`} className="btn-secondary">✦ Discuss with coach</Link>
       </header>
 
       {/* Overall + headline */}
