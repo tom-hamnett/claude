@@ -75,8 +75,15 @@ export default function Settings() {
         <section className="card p-5">
           <h2 className="font-display text-lg text-ink-900 mb-1">Passive agent (optional)</h2>
           <p className="text-ink-500 text-sm mb-4">
-            Let a local agent find new recordings and queue them for evaluation automatically, instead of uploading each one by hand. It is strictly opt-in. A web app cannot read your files automatically, so this works with the companion <code>local-agent</code> (see the repo) running on your machine — it watches a folder you choose and never sends audio anywhere except your own Claude calls.
+            Let a local agent find new recordings and evaluate them automatically — at full quality, within your daily video budget — instead of uploading each one by hand. Strictly opt-in and local. The companion <code>local-agent</code> (in the repo) watches folders you choose; point it at your sync folders to capture each environment:
           </p>
+          <div className="flex flex-wrap gap-1.5 mb-4">
+            <span className="chip">Teams → OneDrive folder</span>
+            <span className="chip">Meet → Google Drive folder</span>
+            <span className="chip">Zoom → Zoom recordings folder</span>
+            <span className="chip">Local → any folder</span>
+          </div>
+          <p className="text-xs text-ink-400 mb-4">Video → Gemini Pro · Audio → Deepgram + Claude · Transcripts → Claude. It never sends anything except to your own keys.</p>
           <label className="flex items-center justify-between rounded-xl border border-ink-200 p-3">
             <div>
               <div className="font-semibold text-ink-800 text-sm">Enable passive agent</div>
