@@ -15,13 +15,13 @@ export interface AnalyzeRequest {
 
 export async function analyze(req: AnalyzeRequest): Promise<{ result: EvaluationResult; demo: boolean }> {
   const settings = await getSettings();
-  if (settings.aiMode === 'managed' && settings.fulcrumKey?.trim()) {
+  if ((settings.aiMode === 'managed' && settings.fulcrumKey?.trim()) || settings.aiMode === 'local') {
     const payload = buildAnalysisPayload({
       apiKey: '', model: settings.model, effort: settings.effort,
       transcript: req.transcript, profile: req.profile, activeModules: req.activeModules,
       interaction: req.interaction, deliveryContext: req.deliveryContext,
     });
-    const res = await managedAnthropic(payload, settings.fulcrumKey);
+    const res = await managedAnthropic(payload, settings.fulcrumKey || 'local');
     return { result: JSON.parse(stripFences(extractText(res))) as EvaluationResult, demo: false };
   }
   if (settings.apiKey && settings.apiKey.trim()) {

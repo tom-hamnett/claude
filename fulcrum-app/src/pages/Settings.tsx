@@ -32,14 +32,23 @@ export default function Settings() {
       <div className="space-y-6 max-w-2xl">
         <section className="card p-5">
           <h2 className="font-display text-lg text-ink-900 mb-1">AI engine</h2>
-          <p className="text-ink-500 text-sm mb-4"><strong>Managed</strong> uses a FULCRUM-hosted account with an included quota — just a key we issue you, video/audio/coaching all included. <strong>Bring your own keys</strong> calls the providers directly from your browser.</p>
-          <div className="flex gap-2 mb-4">
-            {(['managed', 'byo'] as const).map((m) => (
-              <button key={m} onClick={() => patch({ aiMode: m })} className={`flex-1 py-2 rounded-xl border text-sm font-semibold ${s.aiMode === m ? 'border-brand-400 bg-brand-50 text-brand-700' : 'border-ink-200 text-ink-600'}`}>
-                {m === 'managed' ? 'Managed (FULCRUM key)' : 'Bring your own keys'}
+          <p className="text-ink-500 text-sm mb-4"><strong>Self-hosted</strong> runs everything on your own machine with your keys — no limits, no Vercel. <strong>Managed</strong> uses a FULCRUM-hosted account. <strong>BYO</strong> calls providers from your browser.</p>
+          <div className="grid grid-cols-3 gap-2 mb-4">
+            {([['local', 'Self-hosted'], ['managed', 'Managed'], ['byo', 'BYO keys']] as const).map(([m, label]) => (
+              <button key={m} onClick={() => patch({ aiMode: m })} className={`py-2 rounded-xl border text-sm font-semibold ${s.aiMode === m ? 'border-brand-400 bg-brand-50 text-brand-700' : 'border-ink-200 text-ink-600'}`}>
+                {label}
               </button>
             ))}
           </div>
+          {s.aiMode === 'local' && (
+            <div className="rounded-xl border border-teal-200 bg-teal-50 p-3 mb-2 text-sm text-ink-700">
+              <div className="label text-teal-700 mb-1">Self-hosted — full power, no limits</div>
+              <p className="mb-2">Run it on your machine and everything works (long video included), with no CORS or serverless caps and no per-feature keys to paste here:</p>
+              <pre className="bg-white border border-ink-100 rounded-lg p-2 text-xs overflow-x-auto whitespace-pre-wrap">npm run build
+GEMINI_API_KEY=… ANTHROPIC_API_KEY=… DEEPGRAM_API_KEY=… node server.mjs</pre>
+              <p className="text-xs text-ink-500 mt-2">Then open the <code>http://localhost:8787</code> it prints (not the Vite dev server) and use the app from there.</p>
+            </div>
+          )}
           {s.aiMode === 'managed' && (
             <label className="block mb-2">
               <span className="label block mb-1.5">FULCRUM key</span>

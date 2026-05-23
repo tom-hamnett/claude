@@ -37,14 +37,28 @@ Part of the **Quantum Tools** house (shares the design system with Sigma).
 
 ## Run
 
+Three ways, depending on what you want:
+
+**A) Self-hosted (recommended — full power, no limits).** Runs everything on your
+machine with your keys: long video included, no CORS, no serverless caps, no
+per-feature keys to paste in the UI.
+
 ```bash
 npm install
-npm run dev      # http://localhost:5173
-npm run build    # production build (dist/)
+npm run build
+GEMINI_API_KEY=... ANTHROPIC_API_KEY=... DEEPGRAM_API_KEY=... node server.mjs
+# open the printed http://localhost:8787  → Settings → AI engine → "Self-hosted"
 ```
 
-Then open **Settings** and paste your Anthropic API key (from console.anthropic.com),
-or explore in offline-preview mode first.
+**B) BYO-key in the browser (quick, no server).**
+```bash
+npm run dev      # http://localhost:5173
+# Settings → "BYO keys" → paste your Anthropic (+ optional Deepgram / Gemini) keys
+```
+Note: in-browser Gemini video upload can hit a CORS limit; for reliable video use A.
+
+**C) Managed (deployed on Vercel).** The hosted, quota-metered product — see
+`api/` and the env vars in `.env.example`. Users only need a FULCRUM key.
 
 ## Privacy
 

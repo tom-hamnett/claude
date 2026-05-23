@@ -107,8 +107,8 @@ export interface Profile {
 
 export interface Settings {
   id: 'app';
-  /** 'managed' = use FULCRUM-hosted account via a FULCRUM key; 'byo' = your own provider keys. */
-  aiMode: 'managed' | 'byo';
+  /** 'managed' = FULCRUM-hosted proxy; 'local' = your own machine (node server.mjs); 'byo' = your own provider keys in-browser. */
+  aiMode: 'managed' | 'local' | 'byo';
   /** FULCRUM licence key (managed mode). */
   fulcrumKey: string;
   apiKey: string;

@@ -24,7 +24,7 @@ export default function Coach() {
   const scroller = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    getSettings().then((s) => setHasKey(!!s.apiKey?.trim() || (s.aiMode === 'managed' && !!s.fulcrumKey?.trim())));
+    getSettings().then((s) => setHasKey(!!s.apiKey?.trim() || s.aiMode === 'local' || (s.aiMode === 'managed' && !!s.fulcrumKey?.trim())));
   }, []);
   useEffect(() => {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: 'smooth' });
@@ -39,9 +39,9 @@ export default function Coach() {
     await db.coach.put(userMsg);
 
     const settings = await getSettings();
-    const isManaged = settings.aiMode === 'managed' && !!settings.fulcrumKey?.trim();
+    const isManaged = settings.aiMode === 'local' || (settings.aiMode === 'managed' && !!settings.fulcrumKey?.trim());
     if (!settings.apiKey?.trim() && !isManaged) {
-      setError('The coach needs your Anthropic API key or a FULCRUM managed key. Add it in Settings.');
+      setError('The coach needs an Anthropic key (BYO), a FULCRUM key (Managed), or the local server (Self-hosted). Set it in Settings.');
       return;
     }
     const profile = await getProfile();
@@ -50,7 +50,7 @@ export default function Coach() {
     try {
       if (isManaged) {
         const payload = buildCoachPayload({ model: settings.coachModel, effort: settings.effort, profile, history: history.map((m) => ({ ...m })) });
-        const res = await managedAnthropic(payload, settings.fulcrumKey);
+        const res = await managedAnthropic(payload, settings.fulcrumKey || 'local');
         const final = extractText(res);
         await db.coach.put({ id: crypto.randomUUID(), threadId: THREAD, role: 'assistant', content: final, createdAt: Date.now() });
       } else {
