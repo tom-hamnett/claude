@@ -362,6 +362,40 @@ Between Graph, Drive, Zoom and the local watcher, the large majority of real-wor
 
 ---
 
+## 9B. Zero-friction ingestion & onboarding (the adoption make-or-break)
+
+**Principle: capture must be automatic. Manual upload is the fallback, not the product.** If a user has to find a file and upload it after every meeting, they will stop within a week. The default experience must be: *set it once, then insights appear on their own.*
+
+### The native capture agent (default)
+At install/onboarding, a small **per-user agent is provisioned in the user's own work profile** and pointed at wherever their organisation saves their recordings. It then runs on an agreed cadence (e.g. nightly, or 30 min after a meeting ends), pulls only the user's own new recordings, evaluates them at full quality within the daily budget, and drops the results into the user's history. No per-meeting action.
+
+| Environment | Where recordings live | Agent target |
+|---|---|---|
+| Microsoft / Teams | OneDrive/SharePoint (synced locally) | watch the OneDrive recordings folder, or Graph API (read-only) |
+| Google / Meet | Google Drive (synced locally) | watch the Drive folder, or Drive API |
+| Zoom | local Zoom folder / Zoom Cloud | watch the Zoom folder, or Zoom API + webhook |
+| Anything / personal device | a chosen local folder | folder watcher |
+
+The agent ships **prebuilt** and is "resurrected" into the user's profile during setup — the user never writes config; the setup wizard detects the environment and asks at most one thing: *"where are your recordings saved?"* (with smart defaults per platform), then read-only authorisation and a cadence.
+
+### Manual upload (always available)
+A friction-free **drag-and-drop area** for one-off recordings from the person's own device — video, audio, or transcript — for anything not covered by auto-capture (a phone recording, a webinar, a practice run).
+
+### UX friction map (what stops sign-up, and the fix)
+| Friction | Fix |
+|---|---|
+| "Set up an API/account" wall before any value | **Try first, sign up later.** Let a new user run one real recording (or a sample) and see a full insight *before* any account/keys. |
+| Per-meeting uploading | Native auto-capture agent (above); upload is the exception. |
+| "Where do I even start?" | Guided first-run: role → goals → one recording → first insight, in <5 minutes. |
+| Privacy fear (recording colleagues) | Lead with **"we coach you, not the room"**, self-only, read-only, your data on your terms; show it prominently at capture setup. |
+| Overwhelm (too many modules/metrics) | Always surface **one focus**; progressive disclosure of the rest. |
+| Cost anxiety | Quota + pre-run estimate; auto-capture runs within a visible budget. |
+
+### The funnel (optional but recommended)
+**Land → first free insight (one real recording, no account) → "see your trend / automate this" → sign up.** People are hooked by seeing themselves on the tape with something specific to fix; the upgrade ask comes *after* that aha, when they want ongoing/auto-captured insight and trends — not before.
+
+---
+
 ## 10. Configurable assessment — user-controlled selection & weighting
 
 Configurability is not an advanced setting; it is a necessary expression of customer reality. Three modes:
