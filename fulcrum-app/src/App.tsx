@@ -9,6 +9,7 @@ import Report from './pages/Report';
 import Coach from './pages/Coach';
 import Progress from './pages/Progress';
 import Settings from './pages/Settings';
+import Admin from './pages/Admin';
 
 export default function App() {
   return (
@@ -27,6 +28,7 @@ export default function App() {
               <Route path="/coach" element={<Coach />} />
               <Route path="/progress" element={<Progress />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/admin" element={<Admin />} />
             </Routes>
           </Shell>
         }

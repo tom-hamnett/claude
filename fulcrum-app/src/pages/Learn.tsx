@@ -1,18 +1,21 @@
 import { Link } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db';
-import { MODULES, TRACKS, TRACK_ORDER, totalReadMinutes } from '../content/curriculum';
+import { TRACKS, TRACK_ORDER, mergeModules } from '../content/curriculum';
 import { Page } from '../components/Shell';
 import { ACCENT } from '../components/ui';
 
 export default function Learn() {
   const progress = useLiveQuery(() => db.progress.toArray(), []);
+  const overrides = useLiveQuery(() => db.curriculum.toArray(), []) || [];
+  const MODULES = mergeModules(overrides);
+  const totalRead = MODULES.reduce((s, m) => s + m.estReadMin, 0);
   const doneByModule = new Map((progress || []).map((p) => [p.moduleNumber, p]));
 
   return (
     <Page
       title="The curriculum"
-      subtitle={`Ten modules, four tracks, ~${Math.round(totalReadMinutes() / 5) * 5} minutes of teaching. Non-linear — start anywhere. Read and learn before you decide to evaluate yourself against any theme.`}
+      subtitle={`${MODULES.length} modules, four tracks, ~${Math.round(totalRead / 5) * 5} minutes of teaching. Non-linear — start anywhere. Read and learn before you decide to evaluate yourself against any theme.`}
     >
       <div className="space-y-8">
         {TRACK_ORDER.map((tid) => {

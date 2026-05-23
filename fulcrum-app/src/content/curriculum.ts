@@ -15,6 +15,13 @@ export const MODULES: Module[] = [m1, m2, m3, m4, m5, m6, m7, m8, m9, m10];
 
 export { TRACKS };
 
+/** Merge admin overrides/new modules over the base curriculum. */
+export function mergeModules(overrides: Module[]): Module[] {
+  const map = new Map<number, Module>(MODULES.map((m) => [m.number, m]));
+  for (const o of overrides) map.set(o.number, o);
+  return [...map.values()].sort((a, b) => a.number - b.number);
+}
+
 export const moduleByNumber = (n: number): Module | undefined =>
   MODULES.find((m) => m.number === n);
 

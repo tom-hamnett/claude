@@ -32,6 +32,8 @@ export interface Lesson {
   title: string;
   estMin: number;
   blocks: Block[];
+  /** admin-authored lessons store plain markdown instead of rich blocks */
+  markdown?: string;
 }
 
 export type PracticeKind = 'observe' | 'experiment' | 'record' | 'reflect';

@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { Profile, Settings, Evaluation, Progress, CoachMessage, UsageDay } from './types';
+import type { Profile, Settings, Evaluation, Progress, CoachMessage, UsageDay, Module } from './types';
 
 class FulcrumDB extends Dexie {
   settings!: Table<Settings, string>;
@@ -9,6 +9,7 @@ class FulcrumDB extends Dexie {
   coach!: Table<CoachMessage, string>;
   usage!: Table<UsageDay, string>;
   media!: Table<{ id: string; blob: Blob }, string>;
+  curriculum!: Table<Module, number>;
 
   constructor() {
     super('fulcrum');
@@ -35,6 +36,16 @@ class FulcrumDB extends Dexie {
       coach: 'id, threadId, createdAt',
       usage: 'date',
       media: 'id',
+    });
+    this.version(4).stores({
+      settings: 'id',
+      profile: 'id',
+      evaluations: 'id, createdAt',
+      progress: 'moduleNumber',
+      coach: 'id, threadId, createdAt',
+      usage: 'date',
+      media: 'id',
+      curriculum: 'number',
     });
   }
 }

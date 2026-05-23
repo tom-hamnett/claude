@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { getSettings, saveSettings, wipeAllData, getTodayUsage } from '../db';
 import { Page } from '../components/Shell';
 import type { Settings as S, UsageDay } from '../types';
@@ -155,6 +155,14 @@ GEMINI_API_KEY=… ANTHROPIC_API_KEY=… DEEPGRAM_API_KEY=… node server.mjs</p
           >
             Delete all my data
           </button>
+        </section>
+
+        <section className="card p-5 flex items-center justify-between">
+          <div>
+            <h2 className="font-display text-lg text-ink-900 mb-1">Curriculum admin</h2>
+            <p className="text-ink-500 text-sm">Add, tweak and evolve the training modules and lessons without code.</p>
+          </div>
+          <Link to="/admin" className="btn-secondary">Open editor →</Link>
         </section>
 
         <p className="text-xs text-ink-400">FULCRUM · part of the Quantum Tools house. Curriculum grounded in Bates ExPI, Hewlett/CTI, Spitzberg–Cupach, Sofer, Crucial Conversations, Getting to Yes, Voss, and SPIN.</p>

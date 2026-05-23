@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db';
-import { moduleBySlug, trackById } from '../content/curriculum';
+import { trackById, mergeModules } from '../content/curriculum';
 import { competenciesForModule } from '../content/rubric';
 import { Blocks } from '../components/Blocks';
+import { Markdown } from '../lib/markdown';
 import { ACCENT, Empty } from '../components/ui';
 import type { PracticeKind } from '../types';
 
@@ -17,7 +18,8 @@ const PRACTICE_META: Record<PracticeKind, { icon: string; label: string }> = {
 
 export default function ModulePage() {
   const { slug } = useParams();
-  const mod = slug ? moduleBySlug(slug) : undefined;
+  const overrides = useLiveQuery(() => db.curriculum.toArray(), []) || [];
+  const mod = slug ? mergeModules(overrides).find((m) => m.slug === slug) : undefined;
   const progress = useLiveQuery(() => (mod ? db.progress.get(mod.number) : undefined), [mod?.number]);
   const [open, setOpen] = useState<string | null>(null);
 
@@ -111,7 +113,7 @@ export default function ModulePage() {
               </button>
               {isOpen && (
                 <div className="px-5 pb-5 border-t border-ink-100 pt-4">
-                  <Blocks blocks={lesson.blocks} />
+                  {lesson.blocks?.length ? <Blocks blocks={lesson.blocks} /> : lesson.markdown ? <Markdown text={lesson.markdown} className="prose-learn" /> : null}
                   <button
                     onClick={() => toggleLesson(lesson.id)}
                     className={isDone ? 'btn-secondary btn-sm mt-2' : 'btn-primary btn-sm mt-2'}
