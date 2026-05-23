@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { Profile, Settings, Evaluation, Progress, CoachMessage } from './types';
+import type { Profile, Settings, Evaluation, Progress, CoachMessage, UsageDay } from './types';
 
 class FulcrumDB extends Dexie {
   settings!: Table<Settings, string>;
@@ -7,6 +7,7 @@ class FulcrumDB extends Dexie {
   evaluations!: Table<Evaluation, string>;
   progress!: Table<Progress, number>;
   coach!: Table<CoachMessage, string>;
+  usage!: Table<UsageDay, string>;
 
   constructor() {
     super('fulcrum');
@@ -16,6 +17,14 @@ class FulcrumDB extends Dexie {
       evaluations: 'id, createdAt',
       progress: 'moduleNumber',
       coach: 'id, threadId, createdAt',
+    });
+    this.version(2).stores({
+      settings: 'id',
+      profile: 'id',
+      evaluations: 'id, createdAt',
+      progress: 'moduleNumber',
+      coach: 'id, threadId, createdAt',
+      usage: 'date',
     });
   }
 }
@@ -28,10 +37,29 @@ export const DEFAULT_SETTINGS: Settings = {
   model: 'claude-opus-4-7',
   coachModel: 'claude-opus-4-7',
   asrKey: '',
+  geminiKey: '',
   passiveAgent: false,
   retentionDays: 0,
   effort: 'high',
+  dailyVideoMinutes: 60,
 };
+
+export async function recordUsage(patch: { videoSec?: number; audioSec?: number; transcripts?: number; estUsd?: number }) {
+  const date = new Date().toISOString().slice(0, 10);
+  const cur = (await db.usage.get(date)) ?? { date, videoSec: 0, audioSec: 0, transcripts: 0, estUsd: 0 };
+  await db.usage.put({
+    date,
+    videoSec: cur.videoSec + (patch.videoSec ?? 0),
+    audioSec: cur.audioSec + (patch.audioSec ?? 0),
+    transcripts: cur.transcripts + (patch.transcripts ?? 0),
+    estUsd: cur.estUsd + (patch.estUsd ?? 0),
+  });
+}
+
+export async function getTodayUsage() {
+  const date = new Date().toISOString().slice(0, 10);
+  return (await db.usage.get(date)) ?? { date, videoSec: 0, audioSec: 0, transcripts: 0, estUsd: 0 };
+}
 
 export async function getSettings(): Promise<Settings> {
   // Read-only: must be safe to call inside a Dexie liveQuery (no writes here).

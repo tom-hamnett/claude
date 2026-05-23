@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { db, getProfile, getSettings } from '../db';
+import { db, getProfile, getSettings, recordUsage, getTodayUsage } from '../db';
 import { MODULES } from '../content/curriculum';
 import { analyze } from '../lib/analysis';
 import { describeApiError } from '../lib/ai';
+import { analyzeVideoWithGemini, estimateVideoCost, getMediaDuration, type VideoCost } from '../lib/video';
 import {
   transcribeWithDeepgram, buildDiarizedTranscript, computeFlow, sampleLines, buildDeliveryContext,
   type Transcription, type FlowMetrics, type Prosody,
@@ -38,8 +39,13 @@ export default function Evaluate() {
   const [weights, setWeights] = useState<Record<number, number>>({});
   const [hasKey, setHasKey] = useState(false);
   const [hasAsr, setHasAsr] = useState(false);
+  const [hasGemini, setHasGemini] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [isVideo, setIsVideo] = useState(false);
+  const [videoDuration, setVideoDuration] = useState(0);
+  const [videoCost, setVideoCost] = useState<VideoCost | null>(null);
+  const [whoAmI, setWhoAmI] = useState('');
 
   // media
   const [mediaFile, setMediaFile] = useState<File | null>(null);
@@ -58,6 +64,7 @@ export default function Evaluate() {
       const s = await getSettings();
       setHasKey(!!s.apiKey?.trim());
       setHasAsr(!!s.asrKey?.trim());
+      setHasGemini(!!s.geminiKey?.trim());
       const base: Record<number, number> = {};
       for (const m of MODULES) base[m.number] = p?.weights?.[m.number] ?? 1;
       const focus = params.get('modules');
@@ -81,7 +88,41 @@ export default function Evaluate() {
 
   function onMediaFile(f: File | null) {
     setMediaFile(f); setTranscription(null); setUserSpeaker(null); setFlow(null); setProsody(null);
+    setVideoDuration(0); setVideoCost(null);
+    const vid = !!f && f.type.startsWith('video/');
+    setIsVideo(vid);
     if (f && !title) setTitle(f.name.replace(/\.[^.]+$/, ''));
+    if (vid && f) getMediaDuration(f).then((d) => { setVideoDuration(d); setVideoCost(estimateVideoCost(d)); });
+  }
+
+  async function runVideo() {
+    if (!mediaFile) return;
+    const s = await getSettings();
+    if (!s.geminiKey?.trim()) { setError('Add a Gemini key in Settings to analyse video.'); return; }
+    if (activeModules.length === 0) { setError('Select at least one module to score against.'); return; }
+    const today = await getTodayUsage();
+    const mins = (videoDuration || 0) / 60;
+    if (s.dailyVideoMinutes > 0 && today.videoSec / 60 + mins > s.dailyVideoMinutes) {
+      if (!confirm(`This will exceed your daily video budget (${s.dailyVideoMinutes} min). Continue anyway?`)) return;
+    }
+    setBusy(true); setError('');
+    try {
+      const result = await analyzeVideoWithGemini({ geminiKey: s.geminiKey, file: mediaFile, profile: profile.current, activeModules, interaction, whoAmI });
+      const cost = estimateVideoCost(videoDuration || 0);
+      await recordUsage({ videoSec: videoDuration || 0, estUsd: cost.usd });
+      const id = crypto.randomUUID();
+      await db.evaluations.put({
+        id, createdAt: Date.now(),
+        title: title.trim() || 'Video evaluation',
+        interactionType: interaction, source: 'media',
+        transcriptPreview: '(native video analysis — visual presence, tone & words)',
+        weightsUsed: weights, result, demo: false,
+        mediaSeconds: videoDuration, delivery: true,
+      });
+      nav(`/evaluate/${id}`);
+    } catch (e) {
+      setError(describeApiError(e));
+    } finally { setBusy(false); }
   }
 
   async function transcribe() {
@@ -135,6 +176,7 @@ export default function Evaluate() {
       const deliveryContext = flow && transcription && userSpeaker != null
         ? buildDeliveryContext(flow, prosody, transcription.durationSec) : undefined;
       const { result, demo } = await analyze({ transcript, profile: profile.current, activeModules, interaction, deliveryContext });
+      await recordUsage(transcription ? { audioSec: transcription.durationSec } : { transcripts: 1 });
       const id = crypto.randomUUID();
       await db.evaluations.put({
         id, createdAt: Date.now(),
@@ -179,13 +221,30 @@ export default function Evaluate() {
             {mediaFile && (
               <div className="rounded-xl border border-ink-100 p-3">
                 <div className="flex items-center justify-between gap-2 mb-2">
-                  <span className="text-sm text-ink-700 truncate">📎 {mediaFile.name}</span>
-                  {!transcription && (
+                  <span className="text-sm text-ink-700 truncate">📎 {mediaFile.name}{isVideo ? ' · video' : ''}</span>
+                </div>
+                {isVideo && hasGemini && !transcription && (
+                  <div className="rounded-xl border border-brand-200 bg-brand-50/50 p-3 mb-2">
+                    <div className="label mb-1">🎥 Deep video evaluation (Gemini Pro)</div>
+                    <p className="text-xs text-ink-500 mb-2">
+                      Watches your eye contact, posture, gesture, expression and tone as motion — highest quality.
+                      Est. cost <strong>${videoCost ? videoCost.usd.toFixed(2) : '…'}</strong> for {videoDuration ? Math.max(1, Math.round(videoDuration / 60)) : '…'} min.
+                    </p>
+                    <input className="input mb-2 text-sm" placeholder="Which person are you? (e.g. host, person on the left)" value={whoAmI} onChange={(e) => setWhoAmI(e.target.value)} />
+                    <button onClick={runVideo} disabled={busy || activeModules.length === 0} className="btn-primary btn-sm w-full">
+                      {busy ? 'Analysing video…' : 'Run video evaluation →'}
+                    </button>
+                    {hasAsr && <button onClick={transcribe} disabled={transcribing} className="btn-ghost btn-sm w-full mt-1">or analyse audio only</button>}
+                  </div>
+                )}
+                {(!isVideo || !hasGemini) && !transcription && (
+                  <div className="mb-2">
+                    {isVideo && !hasGemini && <p className="text-xs text-gold-700 mb-1">Add a Gemini key in Settings for full video (visual presence). For now, analysing the audio only:</p>}
                     <button onClick={transcribe} disabled={transcribing || !hasAsr} className="btn-primary btn-sm whitespace-nowrap">
                       {transcribing ? 'Transcribing…' : 'Transcribe & measure delivery'}
                     </button>
-                  )}
-                </div>
+                  </div>
+                )}
                 {transcription && (
                   <div>
                     <span className="label block mb-1.5">Which voice is you?</span>

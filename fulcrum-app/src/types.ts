@@ -110,11 +110,23 @@ export interface Settings {
   apiKey: string;
   model: string;
   coachModel: string;
-  /** Deepgram (or compatible) speech-to-text key — enables audio/video analysis. */
+  /** Deepgram (or compatible) speech-to-text key — enables audio analysis. */
   asrKey: string;
+  /** Gemini key — enables native video (visual presence) analysis on Gemini Pro. */
+  geminiKey: string;
   passiveAgent: boolean;
   retentionDays: number; // 0 = keep forever
   effort: 'low' | 'medium' | 'high';
+  /** spend control: soft daily budget for video minutes (0 = unlimited). */
+  dailyVideoMinutes: number;
+}
+
+export interface UsageDay {
+  date: string; // YYYY-MM-DD
+  videoSec: number;
+  audioSec: number;
+  transcripts: number;
+  estUsd: number;
 }
 
 // ---- Evaluations ----------------------------------------------------------
