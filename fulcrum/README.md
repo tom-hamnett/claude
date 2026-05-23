@@ -5,6 +5,8 @@ A taught **curriculum of training modules** for gravitas and leadership communic
 > Working name **FULCRUM** (the point of leverage). Alternatives: Cadence, Resonance, Attune, Poise.
 
 ## Repo contents
+- `opportunity-brief.md` — **the master synthesis** (investor-grade): problem, why-now, benchmark landscape, white space, the 10-module capability model with sub-area hierarchy, the evaluation engine, configurable scoring, the AI coach, evidence capture/passive agent, outputs, differentiation, defensibility, foundations, privacy/anti-bias, segments, roadmap, risks, and the full product diagram. Reconciles the 10-module model (canonical) with our 14 modules / Bates facets / OFNR as the scored sub-areas.
+- `briefing.md` — the shorter stakeholder briefing (superseded in detail by `opportunity-brief.md`).
 - `README.md` — this concept doc (canonical plan).
 - `curriculum/` — module teaching + practice content. Drafted so far:
   - `module-01-grounded-presence.md`
