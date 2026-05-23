@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="880" viewBox="0 0 860 880" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="860" height="880" fill="#ffffff"/>
+  <text x="430" y="34" text-anchor="middle" font-size="22" font-weight="bold" fill="#0f172a">FULCRUM — how it fits together</text>
+
+  <!-- Inputs -->
+  <rect x="20" y="70" width="255" height="100" rx="10" fill="#eef2f7" stroke="#94a3b8"/>
+  <text x="147" y="98" text-anchor="middle" font-size="13" font-weight="bold" fill="#1f2937"><tspan x="147" dy="0">Best-in-class training</tspan><tspan x="147" dy="16" font-weight="normal" font-size="11.5">(benchmarked)</tspan><tspan x="147" dy="16" font-weight="normal" font-size="11.5">EP · Leadership · Comms</tspan><tspan x="147" dy="15" font-weight="normal" font-size="11.5">Sales · Negotiation · Interpersonal</tspan></text>
+
+  <rect x="285" y="70" width="255" height="100" rx="10" fill="#eef2f7" stroke="#94a3b8"/>
+  <text x="412" y="98" text-anchor="middle" font-size="13" font-weight="bold" fill="#1f2937"><tspan x="412" dy="0">Academic assessment science</tspan><tspan x="412" dy="16" font-weight="normal" font-size="11.5">Bates ExPI · Spitzberg–Cupach</tspan><tspan x="412" dy="15" font-weight="normal" font-size="11.5">BARS · Kirkpatrick</tspan></text>
+
+  <rect x="550" y="70" width="255" height="100" rx="10" fill="#eef2f7" stroke="#94a3b8"/>
+  <text x="677" y="105" text-anchor="middle" font-size="13" font-weight="bold" fill="#1f2937"><tspan x="677" dy="0">Say What You Mean database</tspan><tspan x="677" dy="16" font-weight="normal" font-size="11.5">Sofer / NVC</tspan><tspan x="677" dy="15" font-weight="normal" font-size="11.5">internal spine</tspan></text>
+
+  <!-- arrows inputs -> framework -->
+  <line x1="147" y1="170" x2="320" y2="238" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="412" y1="170" x2="430" y2="238" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="677" y1="170" x2="540" y2="238" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Framework -->
+  <rect x="180" y="240" width="500" height="100" rx="12" fill="#1e3a5f" stroke="#15293f"/>
+  <text x="430" y="280" text-anchor="middle" fill="#ffffff"><tspan x="430" dy="0" font-size="17" font-weight="bold">THE FRAMEWORK</tspan><tspan x="430" dy="20" font-size="13">Competency model + detailed BARS rubric</tspan><tspan x="430" dy="17" font-size="12">(verbal + non-verbal)</tspan></text>
+
+  <!-- arrows framework -> learn / evaluate -->
+  <line x1="340" y1="340" x2="210" y2="428" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="520" y1="340" x2="650" y2="428" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Learn -->
+  <rect x="30" y="430" width="340" height="180" rx="12" fill="#e3f3e8" stroke="#2e9e5b"/>
+  <text x="200" y="468" text-anchor="middle" fill="#14532d"><tspan x="200" dy="0" font-size="16" font-weight="bold">LEARN — the curriculum</tspan><tspan x="200" dy="22" font-size="12.5">14 modules across 4 tracks</tspan><tspan x="200" dy="17" font-size="12.5">theory · principles · techniques</tspan><tspan x="200" dy="17" font-size="12.5">actionable real-world practice</tspan><tspan x="200" dy="20" font-size="11.5" font-style="italic">Presence · Listening · Clarity · Influence</tspan></text>
+
+  <!-- Evaluate -->
+  <rect x="490" y="430" width="340" height="210" rx="12" fill="#fdf0d9" stroke="#e0a52a"/>
+  <text x="660" y="466" text-anchor="middle" fill="#7c2d12"><tspan x="660" dy="0" font-size="16" font-weight="bold">EVALUATE — the engine  ★</tspan><tspan x="660" dy="18" font-size="12" font-style="italic">the unique invention</tspan><tspan x="660" dy="22" font-size="12.5">Upload a real conversation</tspan><tspan x="660" dy="17" font-size="12.5">→ verbal + non-verbal analysis</tspan><tspan x="660" dy="17" font-size="12.5">→ holistic, self-only feedback</tspan><tspan x="660" dy="17" font-size="12.5">scored vs. the framework</tspan><tspan x="660" dy="20" font-size="11.5" font-style="italic">a dashboard, not a number</tspan></text>
+
+  <!-- loop arrows between learn & evaluate -->
+  <text x="430" y="492" text-anchor="middle" font-size="11" fill="#334155">routes you to</text>
+  <line x1="488" y1="505" x2="372" y2="505" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="430" y="520" text-anchor="middle" font-size="11" fill="#334155">the right modules</text>
+  <line x1="372" y1="558" x2="488" y2="558" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="430" y="575" text-anchor="middle" font-size="11" fill="#334155">practise, re-upload</text>
+
+  <!-- evaluate -> ongoing -->
+  <line x1="640" y1="640" x2="500" y2="718" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Ongoing -->
+  <rect x="180" y="720" width="500" height="110" rx="12" fill="#ece4f7" stroke="#8b5cf6"/>
+  <text x="430" y="762" text-anchor="middle" fill="#4c1d95"><tspan x="430" dy="0" font-size="16" font-weight="bold">ONGOING IMPROVEMENT</tspan><tspan x="430" dy="22" font-size="12.5">specific feedback after real meetings</tspan><tspan x="430" dy="17" font-size="12.5">progress visible over time — the transfer problem, solved</tspan></text>
+
+  <!-- repeat loop ongoing -> evaluate (dashed) -->
+  <path d="M680,755 C780,740 800,690 790,642" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+  <text x="812" y="700" text-anchor="middle" font-size="11" fill="#6d28d9" transform="rotate(90 812 700)">repeat</text>
+</svg>
