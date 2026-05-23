@@ -1,0 +1,153 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  -webkit-tap-highlight-color: transparent;
+  --brand-500: #6c63ff;
+  --brand-600: #5448e6;
+  --brand-100: #e6e3ff;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-feature-settings: 'cv11', 'ss01';
+  text-rendering: optimizeLegibility;
+  background: #fafafe;
+  color: #262a37;
+}
+
+button,
+.no-select {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd2e0 transparent;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-brand-500 text-white hover:bg-brand-600 shadow-soft;
+  }
+  .btn-secondary {
+    @apply btn bg-white text-ink-700 border border-ink-200 hover:bg-ink-50 shadow-soft;
+  }
+  .btn-ghost {
+    @apply btn bg-transparent text-ink-600 hover:bg-ink-100;
+  }
+  .btn-danger {
+    @apply btn bg-hot-500 text-white hover:bg-hot-600 shadow-soft;
+  }
+  .btn-gold {
+    @apply btn bg-gold-300 text-ink-800 hover:bg-gold-400 shadow-soft;
+  }
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs rounded-lg;
+  }
+  .input {
+    @apply w-full px-4 py-2.5 rounded-xl border border-ink-200 bg-white text-ink-800 placeholder-ink-400 focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 transition;
+  }
+  .card {
+    @apply bg-white rounded-2xl shadow-soft border border-ink-100;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-ink-100 text-ink-700;
+  }
+  .chip-brand {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-100 text-brand-700;
+  }
+  .chip-gold {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-gold-100 text-gold-700;
+  }
+  .chip-teal {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-100 text-teal-700;
+  }
+  .label {
+    @apply text-[11px] font-semibold uppercase tracking-wide text-ink-500;
+  }
+  .h-screen-safe {
+    height: 100dvh;
+  }
+  .min-h-screen-safe {
+    min-height: 100dvh;
+  }
+  .ai-grad {
+    background: linear-gradient(135deg, #6c63ff 0%, #a89eff 60%, #ffd166 130%);
+  }
+  .ai-grad-text {
+    background: linear-gradient(135deg, #6c63ff 0%, #8a7dff 55%, #d99a18 130%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .ai-card {
+    @apply rounded-2xl p-4 border border-brand-100 bg-gradient-to-br from-brand-50 via-white to-gold-50/40;
+  }
+  .nav-link {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-ink-500 hover:bg-ink-100 hover:text-ink-800 transition;
+  }
+  .nav-link-active {
+    @apply bg-brand-50 text-brand-700 hover:bg-brand-100 hover:text-brand-700;
+  }
+}
+
+/* ---- Learning content typography ---- */
+.prose-learn {
+  @apply text-ink-700 leading-relaxed;
+}
+.prose-learn p {
+  @apply mb-4;
+}
+.prose-learn h3 {
+  @apply font-display text-xl text-ink-900 mt-7 mb-3;
+}
+.prose-learn h4 {
+  @apply font-semibold text-ink-900 mt-5 mb-2;
+}
+.prose-learn ul {
+  @apply list-disc pl-5 mb-4 space-y-1.5;
+}
+.prose-learn ol {
+  @apply list-decimal pl-5 mb-4 space-y-1.5;
+}
+.prose-learn strong {
+  @apply text-ink-900 font-semibold;
+}
+.prose-learn em {
+  @apply text-ink-800;
+}
+.prose-learn blockquote {
+  @apply border-l-4 border-brand-200 pl-4 italic text-ink-600 my-4;
+}
+.prose-learn code {
+  @apply bg-ink-100 text-ink-800 rounded px-1.5 py-0.5 text-[0.85em];
+}
+
+/* score meter */
+.meter {
+  @apply h-2 rounded-full bg-ink-100 overflow-hidden;
+}
+.meter > span {
+  @apply block h-full rounded-full;
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* skeleton */
+.skeleton {
+  background: linear-gradient(90deg, #eef0f5 25%, #f7f8fb 37%, #eef0f5 63%);
+  background-size: 800px 100%;
+  @apply animate-shimmer rounded-lg;
+}
