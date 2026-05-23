@@ -5,6 +5,11 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1" />
     <meta name="theme-color" content="#6c63ff" />
+    <!-- Browser shims for libraries that expect Node globals (e.g. SDKs). Must run before any module. -->
+    <script>
+      window.global = window.global || window;
+      window.process = window.process || { env: {} };
+    </script>
     <meta name="description" content="FULCRUM — learn the leadership-communication modules, then get holistic, self-only AI feedback on your real conversations." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

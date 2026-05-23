@@ -1,10 +1,13 @@
-import Anthropic from '@anthropic-ai/sdk';
 import type { EvaluationResult, Profile, InteractionType, CoachMessage } from '../types';
 import { analysisSystem, analysisUserMessage, EVAL_SCHEMA, coachSystem } from './prompts';
 
 const ANTHROPIC_VERSION = '2023-06-01';
 
-function makeClient(apiKey: string) {
+// Lazy-load the SDK so nothing Node-ish runs at app boot. Only loaded when the
+// user actually runs an evaluation or chats with the coach.
+async function makeClient(apiKey: string) {
+  const mod = await import('@anthropic-ai/sdk');
+  const Anthropic = mod.default;
   return new Anthropic({
     apiKey,
     dangerouslyAllowBrowser: true,
@@ -26,14 +29,12 @@ export interface AnalysisArgs {
 }
 
 export async function runAnalysis(args: AnalysisArgs): Promise<EvaluationResult> {
-  const client = makeClient(args.apiKey);
+  const client = await makeClient(args.apiKey);
   const params: any = {
     model: args.model || 'claude-opus-4-7',
     max_tokens: 8000,
     thinking: { type: 'adaptive' },
-    system: [
-      { type: 'text', text: analysisSystem(), cache_control: { type: 'ephemeral' } },
-    ],
+    system: [{ type: 'text', text: analysisSystem(), cache_control: { type: 'ephemeral' } }],
     output_config: {
       effort: args.effort,
       format: { type: 'json_schema', schema: EVAL_SCHEMA },
@@ -51,7 +52,11 @@ export async function runAnalysis(args: AnalysisArgs): Promise<EvaluationResult>
     .map((b: any) => b.text)
     .join('')
     .trim();
-  return JSON.parse(text) as EvaluationResult;
+  return JSON.parse(stripFences(text)) as EvaluationResult;
+}
+
+function stripFences(s: string): string {
+  return s.replace(/^```json?\s*/i, '').replace(/```$/i, '').trim();
 }
 
 export interface CoachArgs {
@@ -60,13 +65,12 @@ export interface CoachArgs {
   effort: 'low' | 'medium' | 'high';
   profile?: Profile;
   history: CoachMessage[];
-  /** optional extra context block, e.g. an evaluation summary or module text */
   context?: string;
   onText: (full: string) => void;
 }
 
 export async function streamCoach(args: CoachArgs): Promise<string> {
-  const client = makeClient(args.apiKey);
+  const client = await makeClient(args.apiKey);
   const sys = args.context
     ? `${coachSystem(args.profile)}\n\nCURRENT CONTEXT:\n${args.context}`
     : coachSystem(args.profile);
@@ -91,12 +95,14 @@ export async function streamCoach(args: CoachArgs): Promise<string> {
   return full;
 }
 
-export function describeApiError(e: unknown): string {
-  if (e instanceof Anthropic.AuthenticationError) return 'Your API key was rejected. Check it in Settings.';
-  if (e instanceof Anthropic.PermissionDeniedError) return 'This API key lacks permission for the requested model.';
-  if (e instanceof Anthropic.RateLimitError) return 'Rate limited by the API — wait a moment and try again.';
-  if (e instanceof Anthropic.APIConnectionError) return 'Network error reaching the Claude API. Check your connection.';
-  if (e instanceof Anthropic.APIError) return `API error: ${e.message}`;
-  if (e instanceof Error) return e.message;
-  return 'Something went wrong.';
+/** Duck-typed error description — no SDK import needed at call time. */
+export function describeApiError(e: any): string {
+  const status = e?.status ?? e?.statusCode;
+  const type = e?.error?.type || e?.type;
+  if (status === 401 || type === 'authentication_error') return 'Your API key was rejected. Check it in Settings.';
+  if (status === 403 || type === 'permission_error') return 'This API key lacks permission for the requested model.';
+  if (status === 429 || type === 'rate_limit_error') return 'Rate limited by the API — wait a moment and try again.';
+  if (status === 400) return `Bad request to the API: ${e?.error?.message || e?.message || 'check the model and inputs.'}`;
+  if (e?.name === 'APIConnectionError' || /fetch|network/i.test(String(e?.message))) return 'Network error reaching the Claude API. Check your connection.';
+  return e?.error?.message || e?.message || 'Something went wrong calling the API.';
 }
