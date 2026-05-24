@@ -1,27 +1,3 @@
-# FULCRUM — Perplexity master prompt (end-to-end book build)
-
-*This file contains (1) a short SETUP section for you, Tom — do this once before running; and (2) THE MASTER PROMPT — paste everything between the `=== BEGIN ===` and `=== END ===` markers into Perplexity and let it run. The prompt is self-contained: it takes Perplexity from your raw knowledge base, back to first-principles needs, through title and guiding principles, a stress-tested structure, chapter-by-chapter drafting as Perplexity Pages, final assembly into a book, and a built-in end-to-end quality check — all within a 250–300 page target (≤400) and without asking you for anything.*
-
----
-
-## SETUP (do this once)
-
-1. **Create a Perplexity Space** (Spaces let you attach files and pin instructions that persist across the whole thread). Name it e.g. *"FULCRUM — The Book."*
-2. **Upload your knowledge base into the Space.** At minimum:
-   - the Minto-structured source databases (the *Say What You Mean* CSV and every other indexed text you've built — Bates, Hewlett, Spitzberg-Cupach, Fisher & Ury, Voss, Rackham, Crucial Conversations, Minto, Kirkpatrick, etc.);
-   - `opportunity-brief.md` (it carries the customer-needs framework §2.4, the design principles §5, the 10-module capability model §7–§8, the intellectual/reference foundations §16, and the anti-bias stance §17);
-   - `bars-rubric.md` (the competencies, signals and anchors);
-   - the two worked curriculum modules in `fulcrum/curriculum/` (the in-product "house style");
-   - your brand voice (`brand_standards.json` / the voice section of `MASTER_CONTEXT.md`).
-3. **Set the Space's AI model to the strongest reasoning model available**, and turn web search **on** (it is used only to enrich/verify — your files are the authority).
-4. **Paste THE MASTER PROMPT below as the Space's instructions** (or as the first message). Then send **"Begin Stage 0."** When a turn ends because of length, reply **"continue"** — it will resume exactly where it stopped.
-5. **Production note (important):** Perplexity Pages currently has weak export. The prompt therefore makes Perplexity emit each chapter **both** as a Page **and** as clean manuscript markdown in chat, and keep a pinned **master style sheet**, so you can assemble the finished book outside Pages.
-
----
-
-## THE MASTER PROMPT
-
-```
 === BEGIN ===
 
 # ROLE
@@ -419,4 +395,3 @@ assumptions and proceed. When a turn is cut off by length, resume exactly where 
 "continue".
 
 === END ===
-```
