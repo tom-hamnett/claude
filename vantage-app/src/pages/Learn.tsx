@@ -15,7 +15,7 @@ export default function Learn() {
   return (
     <Page
       title="The curriculum"
-      subtitle={`${MODULES.length} modules, four tracks, ~${Math.round(totalRead / 5) * 5} minutes of teaching. Non-linear — start anywhere. Read and learn before you decide to evaluate yourself against any theme.`}
+      subtitle={`${MODULES.length} modules across the five parts of "The Same Conversation", ~${Math.round(totalRead / 5) * 5} minutes of teaching. Non-linear — start anywhere. Read and learn before you decide to evaluate yourself against any theme.`}
     >
       <div className="space-y-8">
         {TRACK_ORDER.map((tid) => {

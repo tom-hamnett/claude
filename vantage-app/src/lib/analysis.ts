@@ -124,21 +124,21 @@ function heuristic(req: AnalyzeRequest): EvaluationResult {
   const findings: Finding[] = [];
   const firstQ = sents.find((s) => /\?$/.test(s));
   if (firstQ && scores.inquiry >= 2.5)
-    findings.push({ type: 'strength', competencyId: 'inquiry', moduleNumber: 5, quote: firstQ, note: 'You asked a genuine question and opened space rather than just advocating.', timestampLabel: 'in the conversation' });
+    findings.push({ type: 'strength', competencyId: 'inquiry', moduleNumber: 2, quote: firstQ, note: 'You asked a genuine question and opened space rather than just advocating.', timestampLabel: 'in the conversation' });
   const absSent = sents.find((s) => /\b(always|never|everyone|nobody)\b/i.test(s));
   if (absSent)
     findings.push({ type: 'growth', competencyId: 'observation', moduleNumber: 6, quote: absSent, note: 'This uses an absolute/character framing. Swapping to a specific observation lowers defensiveness.', suggestion: 'Describe the specific thing that happened instead of "always/never".', timestampLabel: 'in the conversation' });
   const hedgeSent = sents.find((s) => /\b(maybe|i think|sort of|i guess|just)\b/i.test(s));
   if (hedgeSent && scores.gravitas < 3)
-    findings.push({ type: 'growth', competencyId: 'gravitas', moduleNumber: 1, quote: hedgeSent, note: 'Hedging language softens your authority here.', suggestion: 'State the position cleanly — drop "maybe/just/I think".', timestampLabel: 'in the conversation' });
+    findings.push({ type: 'growth', competencyId: 'gravitas', moduleNumber: 4, quote: hedgeSent, note: 'Hedging language softens your authority here.', suggestion: 'State the position cleanly — drop "maybe/just/I think".', timestampLabel: 'in the conversation' });
   if (reflectBacks > 0) {
     const rb = sents.find((s) => /\b(so the|it sounds like|what i'?m hearing|you said)\b/i.test(s));
-    if (rb) findings.push({ type: 'strength', competencyId: 'listening', moduleNumber: 5, quote: rb, note: 'You reflected back what you heard — strong listening that builds trust.', timestampLabel: 'in the conversation' });
+    if (rb) findings.push({ type: 'strength', competencyId: 'listening', moduleNumber: 2, quote: rb, note: 'You reflected back what you heard — strong listening that builds trust.', timestampLabel: 'in the conversation' });
   }
   if (talkRatio > 0.75 && total !== userWords)
-    findings.push({ type: 'growth', competencyId: 'listening', moduleNumber: 5, quote: '(you held most of the airtime)', note: `You spoke roughly ${Math.round(talkRatio * 100)}% of the words. More space invites more from others.`, suggestion: 'Ask one open question and let the silence sit.', timestampLabel: 'overall' });
+    findings.push({ type: 'growth', competencyId: 'listening', moduleNumber: 2, quote: '(you held most of the airtime)', note: `You spoke roughly ${Math.round(talkRatio * 100)}% of the words. More space invites more from others.`, suggestion: 'Ask one open question and let the silence sit.', timestampLabel: 'overall' });
   if (!findings.length)
-    findings.push({ type: 'growth', competencyId: 'self-awareness', moduleNumber: 10, quote: '(offline preview)', note: 'Add an API key in Settings for evidence-level, behaviour-by-behaviour analysis of this exact conversation.', timestampLabel: 'overall' });
+    findings.push({ type: 'growth', competencyId: 'self-awareness', moduleNumber: 12, quote: '(offline preview)', note: 'Add an API key in Settings for evidence-level, behaviour-by-behaviour analysis of this exact conversation.', timestampLabel: 'overall' });
 
   const priorities = buildPriorities(scores, activeSet);
 

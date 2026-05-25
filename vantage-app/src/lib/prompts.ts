@@ -27,7 +27,7 @@ export function frameworkNamesText(): string {
 /** Compact, cacheable description of the rubric for the judge. */
 export function rubricText(): string {
   const lines: string[] = [];
-  lines.push('VANTAGE COMPETENCY RUBRIC (score each 1=Emerging, 2=Developing, 3=Strong, 4=Exemplary):');
+  lines.push('VANTAGE COMPETENCY RUBRIC (score each 1=Novice, 2=Developing, 3=Proficient, 4=Advanced):');
   for (const c of COMPETENCIES) {
     lines.push(`\n[${c.id}] ${c.name}  (modules ${c.moduleNumbers.join(', ')})`);
     lines.push(`  Definition: ${c.definition}`);

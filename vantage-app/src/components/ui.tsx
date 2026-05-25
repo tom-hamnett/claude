@@ -15,7 +15,7 @@ export function Logo({ className = '' }: { className?: string }) {
 }
 
 const BAND = (v: number) =>
-  v >= 3.25 ? { c: 'bg-teal-500', t: 'text-teal-700', label: 'Strong' } : v >= 2.5 ? { c: 'bg-brand-500', t: 'text-brand-700', label: 'Developing' } : v >= 1.75 ? { c: 'bg-gold-400', t: 'text-gold-700', label: 'Emerging' } : { c: 'bg-hot-500', t: 'text-hot-700', label: 'Focus' };
+  v >= 3.25 ? { c: 'bg-teal-500', t: 'text-teal-700', label: 'Advanced' } : v >= 2.5 ? { c: 'bg-brand-500', t: 'text-brand-700', label: 'Proficient' } : v >= 1.75 ? { c: 'bg-gold-400', t: 'text-gold-700', label: 'Developing' } : { c: 'bg-hot-500', t: 'text-hot-700', label: 'Novice' };
 
 export function Meter({ value, max = 4 }: { value: number; max?: number }) {
   const band = BAND(value);

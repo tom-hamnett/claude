@@ -3,8 +3,9 @@ import type { Module } from '../../types';
 export const m8: Module = {
   number: 8,
   slug: 'negotiation',
-  title: 'Negotiation, Objection Handling & Value Protection',
+  title: 'Negotiation: Interests, BATNA & Calibrated Questions',
   track: 'influence',
+  book: { part: 4, partTitle: 'High-Stakes Application — Conversations, Feedback, Negotiation, and Sales', chapter: 9, chapterTitle: 'Negotiation — Interests, Not Positions' },
   oneLiner: 'Work from interests, trade instead of conceding, and protect value to a clean close.',
   estReadMin: 20,
   whyItMatters:
@@ -18,7 +19,7 @@ export const m8: Module = {
   keyTerms: [
     { term: 'BATNA', def: 'Best Alternative To a Negotiated Agreement — what you\'ll do if this deal fails. Your real source of power; the better it is, the calmer you are.' },
     { term: 'Interests vs. positions', def: 'The position is the demand ("20% off"); the interest is the why (budget certainty, internal fairness). Deals are unlocked at the interest level.' },
-    { term: 'Tactical empathy', def: 'Chris Voss\'s approach: using calibrated questions, mirroring, and labeling to understand and influence the other side\'s emotions and build trust.' },
+    { term: 'Calibrated questions', def: 'Open "how/what" questions that hand the other side a problem to solve ("how am I supposed to do that?") — surfacing interests without conceding.' },
     { term: 'Trade, don\'t concede', def: 'Never give a concession for free; exchange it for something you value ("if X, then Y").' },
   ],
   subAreas: ['Preparation & BATNA', 'Interests vs. positions', 'Opening / anchoring', 'Trading / trade-offs', 'Objection handling', 'Value framing & close'],
@@ -49,8 +50,8 @@ export const m8: Module = {
         { type: 'h', text: 'Trade, never concede' },
         { type: 'p', md: 'Every concession should buy something. The instant you give ground for free, you\'ve trained the other side to push for more. Use conditional language: *"If you can commit to a two-year term, then I can do that rate."* No "if," no "then."' },
         { type: 'h', text: 'Handle objections with tactical empathy' },
-        { type: 'p', md: 'Objections are not attacks to repel; they are interests showing themselves. Meet them with calibrated questions and labeling rather than counter-arguments.' },
-        { type: 'callout', tone: 'example', title: 'Tactical-empathy moves', md: '**Label:** "It sounds like the budget is the real sticking point." \n**Calibrated question:** "How am I supposed to make that work on our side?" \n**Mirror:** repeat their last few words back to draw out more. \nEach keeps them talking and hands you the information to solve it.' },
+        { type: 'p', md: 'Objections are not attacks to repel; they are interests showing themselves. Meet them with calibrated questions and labeling (Module 3) rather than counter-arguments.' },
+        { type: 'callout', tone: 'example', title: 'Tactical-empathy moves', md: '**Label:** "It sounds like the budget is the real sticking point." \n**Calibrated question:** "How am I supposed to make that work on our side?" \n**Accusation audit:** "You probably think this is going to be too expensive." \nEach keeps them talking and hands you the information to solve it.' },
         { type: 'h', text: 'Close to a next step' },
         { type: 'p', md: 'A negotiation without a concrete close drifts. End every important conversation with an explicit, agreed next step: who does what, by when. "So we\'re agreed on X; I\'ll send the revised terms today and you\'ll confirm by Thursday — yes?"' },
         {

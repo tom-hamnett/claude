@@ -44,11 +44,21 @@ export interface PracticeItem {
   body: string;
 }
 
+/** Where a module sits in the source book, "The Same Conversation". */
+export interface BookRef {
+  part: number;
+  partTitle: string;
+  chapter: number;
+  chapterTitle: string;
+}
+
 export interface Module {
-  number: number; // 1..10 — canonical capability model
+  number: number; // 1..12 — capability model, ordered to the book "The Same Conversation"
   slug: string;
   title: string;
   track: TrackId;
+  /** chapter/part in the source book, when the module maps to one */
+  book?: BookRef;
   oneLiner: string;
   estReadMin: number;
   /** WIIFM — why this matters for the learner / their career */

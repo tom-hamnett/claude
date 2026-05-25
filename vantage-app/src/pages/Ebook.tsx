@@ -8,16 +8,16 @@ import type { Lead } from '../types';
 
 // Progressive profiling: the user "builds their own case" before the email ask.
 const CHALLENGES: { id: string; label: string; modules: number[] }[] = [
-  { id: 'presence', label: 'Be taken more seriously — have real gravitas', modules: [1, 4] },
-  { id: 'concise', label: 'Stop rambling and land my point fast', modules: [2] },
-  { id: 'influence', label: 'Influence and persuade without authority', modules: [3] },
-  { id: 'pressure', label: 'Stay calm and composed under pressure', modules: [4] },
-  { id: 'listen', label: 'Listen better and build trust', modules: [5] },
-  { id: 'difficult', label: 'Handle difficult conversations & feedback', modules: [6] },
-  { id: 'assert', label: 'Ask for what I need / set boundaries', modules: [7] },
+  { id: 'presence', label: 'Be taken more seriously — have real gravitas', modules: [4, 1] },
+  { id: 'concise', label: 'Stop rambling and land my point fast', modules: [5] },
+  { id: 'influence', label: 'Influence and persuade without authority', modules: [9, 10] },
+  { id: 'pressure', label: 'Stay calm and composed under pressure', modules: [1] },
+  { id: 'listen', label: 'Listen better and build trust', modules: [2, 3] },
+  { id: 'difficult', label: 'Handle difficult conversations & feedback', modules: [6, 7] },
+  { id: 'assert', label: 'Ask for what I need / set boundaries', modules: [11] },
   { id: 'negotiate', label: 'Negotiate and protect value', modules: [8] },
   { id: 'sell', label: 'Sell and run sharper discovery calls', modules: [9] },
-  { id: 'habit', label: 'Actually change my habits, not just learn', modules: [10] },
+  { id: 'habit', label: 'Actually change my habits, not just learn', modules: [12] },
 ];
 const SENIORITY = ['IC / specialist', 'Manager', 'Senior leader', 'Exec / C-suite', 'Founder'];
 
@@ -80,7 +80,7 @@ export default function Ebook() {
               <div className="text-white">
                 <div className="font-display text-2xl">VANTAGE</div>
                 <div className="text-white/80 text-sm mt-1">The Executive Presence Playbook</div>
-                <div className="mt-4 text-white/90 text-xs">10 modules · {ALL_SOURCE_TITLES.length}+ canonical sources</div>
+                <div className="mt-4 text-white/90 text-xs">12 modules · {ALL_SOURCE_TITLES.length}+ canonical sources</div>
               </div>
             </div>
             <ul className="mt-5 space-y-2 text-sm text-ink-700">

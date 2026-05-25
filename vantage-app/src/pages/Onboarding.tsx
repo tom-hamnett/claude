@@ -10,21 +10,21 @@ import type { Profile } from '../types';
 const TOTAL = 6;
 
 const GOALS = [
-  { id: 'promotion', label: 'Get promoted / seen as senior', mods: [1, 2, 3] },
-  { id: 'lead', label: 'Lead a team well', mods: [5, 6, 7] },
+  { id: 'promotion', label: 'Get promoted / seen as senior', mods: [4, 5, 9] },
+  { id: 'lead', label: 'Lead a team well', mods: [6, 7, 10] },
   { id: 'deals', label: 'Win deals & negotiate', mods: [8, 9] },
-  { id: 'present', label: 'Present to executives', mods: [2, 1] },
-  { id: 'influence', label: 'Influence without authority', mods: [3, 5] },
+  { id: 'present', label: 'Present to executives', mods: [5, 4] },
+  { id: 'influence', label: 'Influence without authority', mods: [9, 10] },
   { id: 'conflict', label: 'Handle conflict & feedback', mods: [6, 7] },
 ];
 
 const PAINS = [
-  { id: 'gravitas', label: '"You lack gravitas / presence"', mods: [1] },
-  { id: 'ramble', label: 'I ramble / bury the point', mods: [2] },
-  { id: 'talk', label: 'I talk too much, listen too little', mods: [5] },
-  { id: 'defensive', label: 'I get defensive under pressure', mods: [4] },
+  { id: 'gravitas', label: '"You lack gravitas / presence"', mods: [4] },
+  { id: 'ramble', label: 'I ramble / bury the point', mods: [5] },
+  { id: 'talk', label: 'I talk too much, listen too little', mods: [2] },
+  { id: 'defensive', label: 'I get defensive under pressure', mods: [1] },
   { id: 'avoid', label: 'I avoid hard conversations', mods: [6] },
-  { id: 'ask', label: "I don't ask for what I need", mods: [7] },
+  { id: 'ask', label: "I don't ask for what I need", mods: [11] },
 ];
 
 export default function Onboarding() {

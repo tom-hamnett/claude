@@ -10,8 +10,10 @@ import { m7 } from './modules/m7';
 import { m8 } from './modules/m8';
 import { m9 } from './modules/m9';
 import { m10 } from './modules/m10';
+import { m11 } from './modules/m11';
+import { m12 } from './modules/m12';
 
-export const MODULES: Module[] = [m1, m2, m3, m4, m5, m6, m7, m8, m9, m10];
+export const MODULES: Module[] = [m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12];
 
 export { TRACKS };
 

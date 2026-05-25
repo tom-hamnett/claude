@@ -72,6 +72,11 @@ export default function ModulePage() {
         </div>
         <h1 className="font-display text-3xl text-ink-900 leading-tight">{mod.title}</h1>
         <p className="text-ink-500 mt-1 text-lg">{mod.oneLiner}</p>
+        {mod.book && (
+          <p className="text-xs text-ink-400 mt-2">
+            In <em>The Same Conversation</em> · Part {mod.book.part}, Chapter {mod.book.chapter} — {mod.book.chapterTitle}
+          </p>
+        )}
       </header>
 
       {/* Why it matters */}
