@@ -1,6 +1,28 @@
 import { COMPETENCIES } from '../content/rubric';
 import { MODULES } from '../content/curriculum';
+import { FRAMEWORKS } from '../content/library';
 import type { Profile, InteractionType } from '../types';
+
+/** The named-method lens: what good looks like per framework. Grounds the judge in
+ *  the wider executive canon, not just the base rubric. Stable => prompt-cached. */
+export function frameworksLensText(): string {
+  const lines: string[] = ['VANTAGE FRAMEWORK LENS — recognise and assess these named methods from the executive canon; name the method in a finding when it applies:'];
+  for (const m of MODULES) {
+    const fs = FRAMEWORKS.filter((f) => f.module === m.number);
+    if (!fs.length) continue;
+    lines.push(`\nM${m.number} ${m.title}:`);
+    for (const f of fs) lines.push(`  • ${f.name} (${f.author}) — good: ${f.signal}`);
+  }
+  return lines.join('\n');
+}
+
+/** Compact framework names by module — for the coach prompt. */
+export function frameworkNamesText(): string {
+  return MODULES.map((m) => {
+    const names = FRAMEWORKS.filter((f) => f.module === m.number).map((f) => f.name);
+    return names.length ? `M${m.number}: ${names.join('; ')}` : '';
+  }).filter(Boolean).join('\n');
+}
 
 /** Compact, cacheable description of the rubric for the judge. */
 export function rubricText(): string {
@@ -33,6 +55,7 @@ export function analysisSystem(): string {
     '4. PRIORITISE. The user must not be overwhelmed. Surface at most THREE priority changes, ranked by likely impact.',
     '5. BE SPECIFIC AND KIND. Concrete, warm, actionable. Point to the exact module(s) that will help.',
     '6. TONE, EMOTION & FLOW. When a "DELIVERY & DYNAMICS" block is provided (measured from audio/video), use it to assess the user\'s vocal tone, pace, interruptions, emotional steadiness, and how the conversation evolved — not just the words. Reflect these in composure, listening, regulation and expressiveness. Read the whole interaction\'s flow, but still report only on the user.',
+    '7. HOLISTIC EXECUTIVE LENS. Assess the full range of executive capability — presence, communication, influence, regulation, listening/trust, difficult conversations, assertiveness, negotiation, consultative selling, and self-development — not just communication. Use the FRAMEWORK LENS below: when the user uses (or misses) a named method, name it.',
     '',
     'Score on this rubric. Use one decimal where helpful (e.g. 2.5).',
     '',
@@ -40,6 +63,8 @@ export function analysisSystem(): string {
     '',
     'MODULE MAP (use module numbers in findings/priorities so the app can link to lessons):',
     moduleMapText(),
+    '',
+    frameworksLensText(),
     '',
     'When you identify a behaviour, set competencyId to the rubric id and moduleNumber to the most relevant module. timestampLabel is an approximate location ("early", "mid", "around the budget question") if no timestamps exist.',
     'overall and moduleScores are 1..4. headline is one encouraging sentence. situation is a short, self-focused narrative of how the user handled the key moments (2-4 sentences). Provide a balanced mix of strengths and growth findings.',
@@ -155,5 +180,8 @@ export function coachSystem(profile: Profile | undefined): string {
     '',
     'The VANTAGE curriculum (reference by number):',
     moduleMapText(),
+    '',
+    'Named methods you can teach and reference (from the executive canon):',
+    frameworkNamesText(),
   ].join('\n');
 }

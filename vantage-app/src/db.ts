@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { Profile, Settings, Evaluation, Progress, CoachMessage, UsageDay, Module } from './types';
+import type { Profile, Settings, Evaluation, Progress, CoachMessage, UsageDay, Module, Lead } from './types';
 import { DEFAULT_PERMISSIONS } from './content/permissions';
 
 class VantageDB extends Dexie {
@@ -11,6 +11,7 @@ class VantageDB extends Dexie {
   usage!: Table<UsageDay, string>;
   media!: Table<{ id: string; blob: Blob }, string>;
   curriculum!: Table<Module, number>;
+  leads!: Table<Lead, string>;
 
   constructor() {
     super('vantage');
@@ -47,6 +48,17 @@ class VantageDB extends Dexie {
       usage: 'date',
       media: 'id',
       curriculum: 'number',
+    });
+    this.version(5).stores({
+      settings: 'id',
+      profile: 'id',
+      evaluations: 'id, createdAt',
+      progress: 'moduleNumber',
+      coach: 'id, threadId, createdAt',
+      usage: 'date',
+      media: 'id',
+      curriculum: 'number',
+      leads: 'id, createdAt',
     });
   }
 }
@@ -100,6 +112,14 @@ export async function saveSettings(patch: Partial<Settings>): Promise<void> {
 
 export async function getProfile(): Promise<Profile | undefined> {
   return db.profile.get('me');
+}
+
+export async function saveLead(lead: Lead): Promise<void> {
+  await db.leads.put(lead);
+  // best-effort hand-off to the managed endpoint (CRM/email); never blocks the user.
+  try {
+    await fetch('/api/lead', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(lead) });
+  } catch { /* offline / local-only: the lead is still stored on-device */ }
 }
 
 export async function saveProfile(p: Profile): Promise<void> {

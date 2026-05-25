@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db';
 import { trackById, mergeModules } from '../content/curriculum';
 import { competenciesForModule } from '../content/rubric';
+import { frameworksForModule, sourcesForModule } from '../content/library';
 import { Blocks } from '../components/Blocks';
 import { Markdown } from '../lib/markdown';
 import { ACCENT, Empty } from '../components/ui';
@@ -127,6 +128,28 @@ export default function ModulePage() {
         })}
       </div>
 
+      {/* Frameworks & methods from the literature */}
+      {frameworksForModule(mod.number).length > 0 && (
+        <Section title="Frameworks & methods from the literature">
+          <p className="text-ink-500 text-sm mb-3 -mt-1">Named, battle-tested methods from the executive canon — the same lens the evaluation engine uses to read your real conversations.</p>
+          <div className="space-y-3">
+            {frameworksForModule(mod.number).map((f, i) => (
+              <div key={i} className="rounded-2xl border border-ink-100 p-4">
+                <div className="flex items-baseline justify-between gap-3 flex-wrap">
+                  <span className="font-semibold text-ink-900">{f.name}</span>
+                  <span className="text-xs text-ink-400 italic">{f.source} · {f.author}</span>
+                </div>
+                <p className="text-ink-600 text-sm mt-1 leading-relaxed">{f.gist}</p>
+                <ol className="mt-2 ml-4 list-decimal text-sm text-ink-700 space-y-0.5">
+                  {f.steps.map((s, j) => <li key={j}>{s}</li>)}
+                </ol>
+                <p className="text-xs text-teal-700 mt-2"><span className="label text-teal-700">On the tape</span> {f.signal}</p>
+              </div>
+            ))}
+          </div>
+        </Section>
+      )}
+
       {/* Principles */}
       <Section title="Principles to remember">
         <ul className="space-y-2">
@@ -189,12 +212,21 @@ export default function ModulePage() {
             </ul>
           </Section>
           <Section title="Grounded in">
-            <div className="flex flex-wrap gap-1.5">
-              {mod.grounding.map((g, i) => (
-                <span key={i} className="chip">{g}</span>
-              ))}
-            </div>
-            <p className="text-xs text-ink-400 mt-3">
+            {sourcesForModule(mod.number).length > 0 ? (
+              <ul className="space-y-1.5 mb-3">
+                {sourcesForModule(mod.number).map((s, i) => (
+                  <li key={i} className="text-ink-600 text-sm flex gap-2">
+                    <span className="text-brand-300">📖</span>
+                    <span><span className="text-ink-800 font-medium">{s.title}</span>{s.author ? <span className="text-ink-400"> — {s.author}</span> : null}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {mod.grounding.map((g, i) => <span key={i} className="chip">{g}</span>)}
+              </div>
+            )}
+            <p className="text-xs text-ink-400 mt-1">
               Scored against: {competenciesForModule(mod.number).map((c) => c.name).join(', ')}.
             </p>
           </Section>

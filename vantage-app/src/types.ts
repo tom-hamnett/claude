@@ -223,3 +223,20 @@ export interface CoachMessage {
   content: string;
   createdAt: number;
 }
+
+// ---- Lead capture (ebook / playbook marketing) ---------------------------
+
+export interface Lead {
+  id: string;
+  email: string;
+  company?: string;
+  role?: string;
+  seniority?: string;
+  /** selected challenge ids — the user "builds their own case" */
+  challenges: string[];
+  /** modules recommended from their challenges */
+  recommendedModules: number[];
+  source: string; // e.g. 'playbook'
+  createdAt: number;
+  downloaded: boolean;
+}

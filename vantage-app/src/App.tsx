@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import { Shell } from './components/Shell';
 import Home from './pages/Home';
 import Onboarding from './pages/Onboarding';
+import Ebook from './pages/Ebook';
 import Learn from './pages/Learn';
 import ModulePage from './pages/Module';
 import Evaluate from './pages/Evaluate';
@@ -16,6 +17,8 @@ export default function App() {
   return (
     <Routes>
       <Route path="/onboarding" element={<Onboarding />} />
+      <Route path="/playbook" element={<Ebook />} />
+      <Route path="/ebook" element={<Ebook />} />
       <Route
         path="*"
         element={

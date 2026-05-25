@@ -268,6 +268,8 @@ The detail below is the scored skeleton. It also reconciles our earlier 14-modul
 
 The curriculum is table stakes; **the engine is what is new and defensible.** It gives real, realistic, fully-formed feedback on how the user actually performed — across the full range of the models and principles taught — against the detailed capability framework.
 
+**Grounded in a proprietary knowledge base.** The 10-module taxonomy and the engine are distilled from the *FULCRUM Master Knowledge Base* — ~24,000 deduped items extracted from 17 core training titles plus a wider library (Cialdini, Voss, Hewlett, Goyder, Brown, Patterson et al., Keenan, Carnegie, Minto, Fisher & Ury, and more), spanning leadership, presence, influence, difficult conversations, negotiation and consultative selling. From this we encode a **framework lens**: named, canonical methods (in our own words, attributed to source) each carrying a *signal* — what "good" looks like on the tape. The lens is what makes VANTAGE a **holistic executive curriculum**, not a comms tool, and it is the same lens the judge applies, so teaching and measurement are one system.
+
 ### 9.1 What makes it distinctive
 
 - **Real interactions, not role-play.** It works from the user's actual meetings, calls, pitches, and conversations — solving the transfer problem directly.
@@ -415,7 +417,9 @@ A friction-free **drag-and-drop area** for one-off recordings from the person's 
 | Cost anxiety | Quota + pre-run estimate; auto-capture runs within a visible budget. |
 
 ### The funnel (optional but recommended)
-**Land → first free insight (one real recording, no account) → "see your trend / automate this" → sign up.** People are hooked by seeing themselves on the tape with something specific to fix; the upgrade ask comes *after* that aha, when they want ongoing/auto-captured insight and trends — not before.
+**Top of funnel — the playbook lead magnet.** A free, downloadable *Executive Presence Playbook* (the 10-module framework, distilled from the canon) captures intent with **progressive profiling**: the visitor first picks the challenge they want to solve ("builds their own case"), then role/seniority, and only then email — and the unlock is a *tailored* result (their recommended modules) that bridges straight into the product. Highly shareable; doubles as proof of depth.
+
+**Then: Land → first free insight (one real recording, no account) → "see your trend / automate this" → sign up.** People are hooked by seeing themselves on the tape with something specific to fix; the upgrade ask comes *after* that aha, when they want ongoing/auto-captured insight and trends — not before.
 
 ---
 

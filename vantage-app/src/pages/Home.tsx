@@ -17,7 +17,7 @@ export default function Home() {
   return (
     <Page
       title={profile?.displayName ? `Welcome back, ${profile.displayName.split(' ')[0]}` : 'Welcome to VANTAGE'}
-      subtitle="Learn the leadership-communication modules, then get holistic, self-only AI feedback on your real conversations."
+      subtitle="Master the full range of executive presence — gravitas and influence through difficult conversations, negotiation and consultative selling — then get holistic, self-only AI feedback on your real conversations."
     >
       {!profile?.onboarded && (
         <div className="ai-card mb-6 flex flex-col sm:flex-row sm:items-center gap-4">
@@ -31,12 +31,21 @@ export default function Home() {
         </div>
       )}
 
+      <Link to="/playbook" className="ai-card mb-6 flex items-center gap-4 hover:shadow-lift transition group">
+        <div className="text-3xl">📕</div>
+        <div className="flex-1">
+          <div className="label mb-0.5">Free playbook</div>
+          <p className="text-ink-700"><span className="font-semibold">The Executive Presence Playbook</span> — the 10-module framework, distilled from the executive canon. Great to share.</p>
+        </div>
+        <span className="text-brand-600 font-semibold text-sm group-hover:underline whitespace-nowrap">Get it →</span>
+      </Link>
+
       <div className="grid sm:grid-cols-2 gap-4 mb-8">
         <Link to="/learn" className="card p-5 hover:shadow-lift transition group">
           <div className="text-2xl mb-2">📚</div>
           <h3 className="font-display text-xl text-ink-900 mb-1">1 · Learn the modules</h3>
           <p className="text-ink-500 text-sm mb-3">
-            Ten deeply-taught modules across presence, listening, clarity and influence — theory, principles, and real-world practice. Read and learn first.
+            Ten deeply-taught modules — presence, communication, influence, listening, difficult conversations, negotiation and sales — with named frameworks from the executive canon and real-world practice.
           </p>
           <span className="text-brand-600 font-semibold text-sm group-hover:underline">
             Browse the curriculum ({done}/{MODULES.length} completed) →
