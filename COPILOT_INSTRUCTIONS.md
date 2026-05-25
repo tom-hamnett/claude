@@ -172,6 +172,23 @@ const [view, setView] = useState("bar");
 
 ---
 
+## Tableau Integration
+
+APEX exposes data for Tableau via these endpoints:
+
+| Endpoint | Purpose |
+|----------|---------|
+| `GET /api/programmes/:id/tableau` | All data tables, denormalised with domain/panel metadata |
+| `GET /api/programmes/:id/tableau/:domain` | Single domain feed (hotel, corporate, function) |
+| `GET /api/programmes/:id/tableau?format=csv` | CSV export for direct Tableau import |
+| `GET /api/programmes/:id/tableau/:domain?format=csv` | Per-domain CSV |
+| `GET /api/tableau-wdc` | Tableau Web Data Connector page (load this URL in Tableau Desktop) |
+| `GET /api/programmes/:id/gaps` | Data gap analysis — missing periods, stale data, null values |
+
+Each row in the Tableau feed includes `_domain`, `_panel`, `_source_table`, `_metric` metadata columns that Tableau can use as filters.
+
+---
+
 ## Common Tasks for Copilot
 
 - "Add a new metric panel for [X]" → Follow the Adding a New Metric section above
@@ -180,3 +197,5 @@ const [view, setView] = useState("bar");
 - "Change the color scheme" → Modify CSS variables in `src/apex/lib/theme.js`
 - "Add a new page" → Create in `src/apex/pages/`, add route in `src/apex/App.jsx`
 - "Add an API endpoint" → Add route in `server/index.js`, follow existing patterns
+- "Connect Tableau" → Use the WDC at `/api/tableau-wdc` or CSV export at `/api/programmes/:id/tableau?format=csv`
+- "Check data gaps" → `GET /api/programmes/:id/gaps` returns missing data by KPI, domain, severity

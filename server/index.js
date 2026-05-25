@@ -645,6 +645,274 @@ app.post("/api/ai", async (req, res) => {
   }
 });
 
+// ── Tableau Integration ────────────────────────────────────────────────────
+
+// Flat data export for Tableau — all data tables for a programme in a single
+// denormalised feed with domain/panel/metric metadata. Tableau connects to
+// this as a Web Data Connector or JSON data source.
+app.get("/api/programmes/:programmeId/tableau", (req, res) => {
+  const db = getDB();
+  const tables = db.prepare("SELECT * FROM data_tables WHERE programme_id = ? ORDER BY name").all(req.params.programmeId);
+  const kpis = db.prepare("SELECT * FROM kpi_definitions WHERE programme_id = ?").all(req.params.programmeId);
+
+  const allRows = [];
+
+  for (const table of tables) {
+    const rows = db.prepare("SELECT row_data FROM data_rows WHERE table_id = ?").all(table.id);
+    const columns = JSON.parse(table.columns_meta);
+    const linkedKpis = kpis.filter(k => k.source_table_id === table.id);
+
+    for (const row of rows) {
+      const data = JSON.parse(row.row_data);
+      allRows.push({
+        _source_table: table.name,
+        _source_version: table.version,
+        _domain: linkedKpis[0]?.domain || "",
+        _panel: linkedKpis[0]?.panel || "",
+        _updated: table.updated_at,
+        ...data,
+      });
+    }
+  }
+
+  // Return format based on query param
+  if (req.query.format === "csv") {
+    if (!allRows.length) return res.send("");
+    const allKeys = [...new Set(allRows.flatMap(r => Object.keys(r)))];
+    const header = allKeys.join(",");
+    const csvRows = allRows.map(r => allKeys.map(k => {
+      const v = r[k]; if (v == null) return "";
+      const s = String(v); return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s.replace(/"/g, '""')}"` : s;
+    }).join(","));
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", "attachment; filename=apex_tableau_export.csv");
+    res.send([header, ...csvRows].join("\n"));
+  } else {
+    res.json({ schema: getTableauSchema(allRows), data: allRows, totalRows: allRows.length, exportedAt: new Date().toISOString() });
+  }
+
+  db.close();
+});
+
+// Per-domain Tableau feeds — Hotel, Corporate, Function
+app.get("/api/programmes/:programmeId/tableau/:domain", (req, res) => {
+  const db = getDB();
+  const domain = req.params.domain;
+  const kpis = db.prepare("SELECT * FROM kpi_definitions WHERE programme_id = ? AND domain = ?").all(req.params.programmeId, domain);
+
+  const allRows = [];
+  const seenTables = new Set();
+
+  for (const kpi of kpis) {
+    if (!kpi.source_table_id || seenTables.has(kpi.source_table_id)) continue;
+    seenTables.add(kpi.source_table_id);
+
+    const table = db.prepare("SELECT * FROM data_tables WHERE id = ?").get(kpi.source_table_id);
+    if (!table) continue;
+    const rows = db.prepare("SELECT row_data FROM data_rows WHERE table_id = ?").all(table.id);
+
+    for (const row of rows) {
+      const data = JSON.parse(row.row_data);
+      allRows.push({
+        _metric: kpi.name,
+        _panel: kpi.panel,
+        _source_table: table.name,
+        _target: kpi.target,
+        _direction: kpi.direction,
+        _unit: kpi.unit,
+        ...data,
+      });
+    }
+  }
+
+  db.close();
+
+  if (req.query.format === "csv") {
+    if (!allRows.length) return res.send("");
+    const allKeys = [...new Set(allRows.flatMap(r => Object.keys(r)))];
+    const header = allKeys.join(",");
+    const csvRows = allRows.map(r => allKeys.map(k => {
+      const v = r[k]; if (v == null) return "";
+      const s = String(v); return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s.replace(/"/g, '""')}"` : s;
+    }).join(","));
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", `attachment; filename=apex_${domain}.csv`);
+    res.send([header, ...csvRows].join("\n"));
+  } else {
+    res.json({ domain, data: allRows, totalRows: allRows.length, exportedAt: new Date().toISOString() });
+  }
+});
+
+// Tableau Web Data Connector HTML page — Tableau Desktop loads this URL
+app.get("/api/tableau-wdc", (req, res) => {
+  const host = req.headers.host || `localhost:${PORT}`;
+  const proto = req.protocol || "http";
+  res.setHeader("Content-Type", "text/html");
+  res.send(`<!DOCTYPE html>
+<html>
+<head>
+  <title>APEX Tableau Connector</title>
+  <script src="https://connectors.tableau.com/libs/tableauwdc-2.3.latest/js/tableauwdc-2.3.latest.min.js"></script>
+  <script>
+  (function() {
+    var connector = tableau.makeConnector();
+
+    connector.getSchema = function(schemaCallback) {
+      var programmeId = tableau.connectionData ? JSON.parse(tableau.connectionData).programmeId : "";
+      fetch("${proto}://${host}/api/programmes/" + programmeId + "/tableau")
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var cols = data.schema.map(function(s) {
+            return { id: s.id, alias: s.alias, dataType: s.dataType };
+          });
+          schemaCallback([{ id: "apex_data", alias: "APEX Programme Data", columns: cols }]);
+        });
+    };
+
+    connector.getData = function(table, doneCallback) {
+      var programmeId = tableau.connectionData ? JSON.parse(tableau.connectionData).programmeId : "";
+      fetch("${proto}://${host}/api/programmes/" + programmeId + "/tableau")
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          table.appendRows(data.data);
+          doneCallback();
+        });
+    };
+
+    tableau.registerConnector(connector);
+
+    document.addEventListener("DOMContentLoaded", function() {
+      document.getElementById("submit").addEventListener("click", function() {
+        tableau.connectionData = JSON.stringify({ programmeId: document.getElementById("progId").value });
+        tableau.connectionName = "APEX Programme Data";
+        tableau.submit();
+      });
+    });
+  })();
+  </script>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background: #0B2A3C; color: #fff; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+    .card { background: #13445E; border: 1px solid #1A5572; border-radius: 12px; padding: 40px; max-width: 400px; text-align: center; }
+    h1 { font-size: 24px; margin: 0 0 8px; color: #2ABFBF; }
+    p { font-size: 14px; color: #B0CBE0; margin: 0 0 24px; }
+    input { width: 100%; padding: 12px; border: 1px solid #1E6080; background: #0F3A52; color: #fff; border-radius: 6px; font-size: 14px; margin-bottom: 16px; box-sizing: border-box; }
+    button { background: #2ABFBF; color: #000; font-weight: 700; padding: 12px 32px; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; }
+    button:hover { background: #35d4d4; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>APEX</h1>
+    <p>Connect Tableau to your programme data</p>
+    <input id="progId" type="text" placeholder="Programme ID (e.g. ihg-pe)" />
+    <button id="submit">Connect</button>
+  </div>
+</body>
+</html>`);
+});
+
+// Schema helper — infer Tableau column types from data
+function getTableauSchema(rows) {
+  if (!rows.length) return [];
+  const allKeys = [...new Set(rows.flatMap(r => Object.keys(r)))];
+  return allKeys.map(k => {
+    const sample = rows.find(r => r[k] != null)?.[k];
+    let dataType = "string";
+    if (typeof sample === "number") dataType = Number.isInteger(sample) ? "int" : "float";
+    else if (sample instanceof Date || /^\d{4}-\d{2}-\d{2}/.test(String(sample))) dataType = "date";
+    return { id: k.replace(/[^a-zA-Z0-9_]/g, "_"), alias: k, dataType: "tableau.dataTypeEnum." + dataType };
+  });
+}
+
+// ── Data Gap Detection ─────────────────────────────────────────────────────
+
+// Analyse what's missing across all KPIs for a programme
+app.get("/api/programmes/:programmeId/gaps", (req, res) => {
+  const db = getDB();
+  const kpis = db.prepare("SELECT * FROM kpi_definitions WHERE programme_id = ?").all(req.params.programmeId);
+
+  const gaps = [];
+
+  for (const kpi of kpis) {
+    if (!kpi.source_table_id) {
+      gaps.push({ kpi: kpi.name, domain: kpi.domain, panel: kpi.panel, type: "no_source", message: `No data source linked to "${kpi.name}"`, severity: "high" });
+      continue;
+    }
+
+    const rows = db.prepare("SELECT row_data FROM data_rows WHERE table_id = ?").all(kpi.source_table_id);
+    const data = rows.map(r => JSON.parse(r.row_data));
+
+    if (!data.length) {
+      gaps.push({ kpi: kpi.name, domain: kpi.domain, panel: kpi.panel, type: "empty_table", message: `Source table exists but has no data`, severity: "high" });
+      continue;
+    }
+
+    // Check for missing time periods
+    if (kpi.time_column) {
+      const timePeriods = [...new Set(data.map(r => r[kpi.time_column]).filter(Boolean))].sort();
+      const latestPeriod = timePeriods[timePeriods.length - 1];
+      const table = db.prepare("SELECT updated_at FROM data_tables WHERE id = ?").get(kpi.source_table_id);
+      const daysSinceUpdate = table ? Math.floor((Date.now() - new Date(table.updated_at).getTime()) / 86400000) : null;
+
+      if (daysSinceUpdate && daysSinceUpdate > 45) {
+        gaps.push({ kpi: kpi.name, domain: kpi.domain, panel: kpi.panel, type: "stale_data", message: `Last updated ${daysSinceUpdate} days ago (latest period: ${latestPeriod})`, severity: daysSinceUpdate > 90 ? "high" : "medium" });
+      }
+
+      // Check for dimension coverage gaps
+      const dims = JSON.parse(kpi.dimension_columns || "[]");
+      for (const dim of dims) {
+        if (dim === kpi.time_column) continue;
+        const dimValues = [...new Set(data.map(r => r[dim]).filter(Boolean))];
+        const lastPeriodData = data.filter(r => r[kpi.time_column] === latestPeriod);
+        const lastPeriodDims = [...new Set(lastPeriodData.map(r => r[dim]).filter(Boolean))];
+        const missingInLatest = dimValues.filter(v => !lastPeriodDims.includes(v));
+
+        if (missingInLatest.length) {
+          gaps.push({ kpi: kpi.name, domain: kpi.domain, panel: kpi.panel, type: "missing_dimension", message: `${dim} values missing in ${latestPeriod}: ${missingInLatest.join(", ")}`, severity: "medium", detail: { dimension: dim, period: latestPeriod, missing: missingInLatest } });
+        }
+      }
+    }
+
+    // Check for null values in the value column
+    if (kpi.value_column) {
+      const nullCount = data.filter(r => r[kpi.value_column] == null).length;
+      if (nullCount > 0) {
+        gaps.push({ kpi: kpi.name, domain: kpi.domain, panel: kpi.panel, type: "null_values", message: `${nullCount} of ${data.length} rows have null values for ${kpi.value_column}`, severity: nullCount / data.length > 0.2 ? "high" : "low" });
+      }
+    }
+  }
+
+  // Also check for KPIs defined in the metric domains but not in kpi_definitions
+  const programme = db.prepare("SELECT data FROM programmes WHERE id = ?").get(req.params.programmeId);
+  if (programme) {
+    const pData = JSON.parse(programme.data);
+    const domains = pData.metricDomains || {};
+    for (const [domId, dom] of Object.entries(domains)) {
+      for (const [panelId, panel] of Object.entries(dom.panels || {})) {
+        for (const tab of panel.tabs || []) {
+          if (tab.status === "gap") {
+            gaps.push({ kpi: tab.label, domain: domId, panel: panelId, type: "not_tracked", message: tab.description || "Not currently tracked", severity: "medium" });
+          }
+        }
+      }
+    }
+  }
+
+  db.close();
+
+  // Sort: high severity first
+  const order = { high: 0, medium: 1, low: 2 };
+  gaps.sort((a, b) => (order[a.severity] ?? 99) - (order[b.severity] ?? 99));
+
+  res.json({ gaps, totalGaps: gaps.length, byDomain: groupBy(gaps, "domain"), bySeverity: groupBy(gaps, "severity"), checkedAt: new Date().toISOString() });
+});
+
+function groupBy(arr, key) {
+  const out = {};
+  for (const item of arr) { const k = item[key] || "unknown"; if (!out[k]) out[k] = []; out[k].push(item); }
+  return out;
+}
+
 // ── Serve Vite frontend (production) ────────────────────────────────────────
 
 const distPath = path.join(__dirname, "..", "dist");
