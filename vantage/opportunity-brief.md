@@ -362,26 +362,25 @@ Asking consumers to create and fund their own Gemini/Anthropic accounts is too m
 
 ### 9A.4 Automatic capture — environment connectors
 
-To deliver "evaluate my real meetings without uploading each one," the agent pulls only the **user's own** recordings via read-only, OAuth-scoped connectors, each governed by the video budget and provider-abstracted (Gemini native video where available; Claude high-res frames as fallback):
+To deliver "evaluate my real meetings without uploading each one," capture is **assistant-native first**. People won't install software on a work machine or raise an IT ticket — but most already have a **sanctioned AI assistant** (Microsoft Copilot, Google Gemini, Claude) with governed access to their meetings and transcripts. So Vantage ships a **portable agent recipe** the user *regenerates inside their own assistant* and runs. It reads the transcript the meeting platform already produced, applies the self-only + redaction recipe in-tenant, and returns only the minimal result. **No install, no IT, no new OAuth app, and no ASR to run** (the transcript already exists).
 
-| Environment | Source of recordings | Connector |
+| Environment | Already-present assistant | What it reads |
 |---|---|---|
-| **Microsoft / Teams** | OneDrive / SharePoint (Stream) | Microsoft Graph API (user OAuth) or local OneDrive-folder watcher |
-| **Google / Meet** | Google Drive | Google Drive API + Gemini |
-| **Zoom** | Zoom Cloud Recording | Zoom API + `recording.completed` webhook |
-| **Local / anything** | files on disk (local recordings, Loom exports) | the local companion agent (folder watcher) |
+| **Microsoft / Teams / 365** | Microsoft Copilot (chat, or a Copilot Studio agent) | Teams transcript/recording in OneDrive/SharePoint |
+| **Google / Meet / Workspace** | Gemini (a user-created Gem) | Meet transcript/recording in Drive |
+| **Claude / anything** | Claude (a Project/Skill), or any assistant | pasted or uploaded transcript |
 
-Between Graph, Drive, Zoom and the local watcher, the large majority of real-world meeting capture is covered. All capture is strictly opt-in, read-only to the user's own content, cropped to the user, and budget-bounded.
+The recipe and the per-platform "regenerate and run" steps are built (`recipes/`). For users who *want* deeper, automatic, full-quality capture (including native video), two **optional** paths remain: read-only OAuth connectors (Graph / Drive / Zoom) and an installed folder-watching companion agent (§9B). Both are opt-in, self-only, and budget-bounded — but they are for power users and self-hosters, not the default.
 
-### 9A.5 Privacy-by-design: local-first processing (the default)
+### 9A.5 Privacy-by-design: in-boundary, local-first processing (the default)
 
-Work conversations contain personal data and confidential business content, so shipping raw recordings to third-party AI providers is unacceptable for most users and non-compliant under GDPR. The architecture therefore **processes on the user's own machine and minimises what leaves it**:
+Work conversations contain personal data and confidential business content, so shipping raw recordings to third-party AI providers is unacceptable for most users and non-compliant under GDPR. The architecture therefore **processes inside the user's own trusted boundary — their tenant's sanctioned assistant by default, or their own device — and minimises what leaves it**:
 
-- **The agent does the work locally.** Transcription/diarisation, voiceprint isolation of the user, prosodic and conversational-dynamics feature extraction, lexical/semantic signal detection, and **PII/sensitive-content redaction** all run on-device. Raw audio and video **never leave the perimeter** by default.
-- **Only a minimal evidence package egresses, with consent.** Redacted evidence spans (timestamp + short quote) and numeric signals — plus, *only if the user enables the visual layer*, a handful of **user-cropped, ~1 fps frames** (the user, not the room). This is the smallest set the frontier judge needs to score and cite.
+- **Processing stays in the user's boundary.** By default the user's **in-tenant assistant** (Copilot/Gemini/Claude) reads the transcript the meeting platform already produced and does the synthesis + **PII/sensitive-content redaction** inside the organisation's compliance perimeter (§9A.4). Where a device-local path is preferred, the optional installed agent does transcription, signal extraction and redaction on-device. Either way, raw audio/video **never leaves the perimeter** by default.
+- **Only a minimal package egresses, with consent.** A redacted, self-only result (or evidence spans + numeric signals) — plus, *only if the user enables the visual layer*, a handful of **user-cropped, ~1 fps frames** (the user, not the room). This is the smallest set needed to score and cite.
 - **Data minimisation & purpose limitation by construction.** Less data crosses the boundary than any cloud-first competitor; what crosses is scoped to the single purpose of coaching the user.
-- **Deployment ladder for stricter needs:** (1) *local-first + managed judge* (default — minimal egress); (2) *BYO-key* (the org's own provider boundary); (3) *fully on-prem / local model* (the judge runs locally too — **zero egress**) for regulated environments. Quality is preserved across the ladder; only the trust boundary moves.
-- **Reconciles with self-only.** Processing the user's own content locally and reporting only on the user is the same principle expressed in architecture: *we coach you, on your machine, not the room.*
+- **Deployment ladder for stricter needs:** (1) *assistant-native, in-tenant* (default — the user's own Copilot/Gemini/Claude processes; only the chosen result egresses); (2) *device-local agent + managed judge* (minimal egress); (3) *BYO-key* (the org's own provider boundary); (4) *fully on-prem / local model* (**zero egress**) for regulated environments. Quality is broadly preserved across the ladder; only the trust boundary moves.
+- **Reconciles with self-only.** Processing the user's own content in their boundary and reporting only on the user is the same principle expressed in architecture: *we coach you, in your environment, not the room.*
 
 ---
 
@@ -389,8 +388,11 @@ Work conversations contain personal data and confidential business content, so s
 
 **Principle: capture must be automatic. Manual upload is the fallback, not the product.** If a user has to find a file and upload it after every meeting, they will stop within a week. The default experience must be: *set it once, then insights appear on their own.*
 
-### The native capture agent (default)
-At install/onboarding, a small **per-user agent is provisioned in the user's own work profile** and pointed at wherever their organisation saves their recordings. It then runs on an agreed cadence (e.g. nightly, or 30 min after a meeting ends), pulls only the user's own new recordings, evaluates them at full quality within the daily budget, and drops the results into the user's history. No per-meeting action.
+### Assistant-native capture (default)
+The user **regenerates a prebuilt Vantage agent recipe inside the AI assistant their organisation already provides** — Microsoft Copilot, Google Gemini, or Claude — with **no install, no IT ticket, and no new permissions**. The meeting platform has already produced the transcript; the assistant runs the recipe *in-tenant*, applies the self-only + redaction rules, and returns a private result the user can act on immediately and (optionally) paste into Vantage for history and trends. The recipe is identical across platforms so results stay comparable; only the deployment wrapper differs (`recipes/`).
+
+### Optional: installed companion agent (power users / self-hosters)
+For people who *want* a device-local binary or automatic full-quality native-video capture, a prebuilt folder-watching agent watches wherever recordings sync, processes locally, and sends only the minimal package — opt-in, never required.
 
 | Environment | Where recordings live | Agent target |
 |---|---|---|
@@ -399,8 +401,6 @@ At install/onboarding, a small **per-user agent is provisioned in the user's own
 | Zoom | local Zoom folder / Zoom Cloud | watch the Zoom folder, or Zoom API + webhook |
 | Anything / personal device | a chosen local folder | folder watcher |
 
-The agent ships **prebuilt** and is "resurrected" into the user's profile during setup — the user never writes config; the setup wizard detects the environment and asks at most one thing: *"where are your recordings saved?"* (with smart defaults per platform), then read-only authorisation and a cadence.
-
 ### Manual upload (always available)
 A friction-free **drag-and-drop area** for one-off recordings from the person's own device — video, audio, or transcript — for anything not covered by auto-capture (a phone recording, a webinar, a practice run).
 
@@ -408,7 +408,7 @@ A friction-free **drag-and-drop area** for one-off recordings from the person's 
 | Friction | Fix |
 |---|---|
 | "Set up an API/account" wall before any value | **Try first, sign up later.** Let a new user run one real recording (or a sample) and see a full insight *before* any account/keys. |
-| Per-meeting uploading | Native auto-capture agent (above); upload is the exception. |
+| Per-meeting uploading | Assistant-native recipe in the tool they already have (above); upload is the exception. |
 | "Where do I even start?" | Guided first-run: role → goals → one recording → first insight, in <5 minutes. |
 | Privacy fear (recording colleagues) | Lead with **"we coach you, not the room"**, self-only, read-only, your data on your terms; show it prominently at capture setup. |
 | Overwhelm (too many modules/metrics) | Always surface **one focus**; progressive disclosure of the rest. |

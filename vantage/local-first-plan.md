@@ -13,10 +13,26 @@ CLOUD: Claude judges (user-only, evidence-cited) → result returns
 LOCAL: encrypted store, dashboard, trend
 ```
 
-## Where it runs: the agent first, the browser second
+## Where it runs (revised): assistant-native first
 
-- **The local agent (Node, on the user's machine)** is the natural home for local-first — it already lives on the device, watches folders, and can call `ffmpeg`/Whisper. This is where we build first.
-- **The browser app** is sandboxed and can't touch arbitrary files or run heavy native ASR well. Its honest local path is limited (Web-Audio prosody today; optional WASM/WebGPU Whisper for short clips later). For privacy-grade capture, steer users to the agent; keep the browser for manual one-offs.
+People won't install software on a work machine or involve IT. So the **primary** path
+is **assistant-native** — regenerate a Vantage recipe inside the AI assistant the org
+already sanctions (Copilot/Gemini/Claude), which already has governed access to the
+meetings and transcripts. Processing happens in-tenant; only the chosen result leaves.
+This also removes the need to build/run ASR, because the meeting platform already
+transcribed the meeting. Built: `vantage/recipes/` (canonical recipe + per-platform
+deploy guides).
+
+The order of preference is now:
+1. **Assistant-native recipe (default, zero-install)** — Copilot / Gemini Gem / Claude
+   Project run the recipe in-tenant; user pastes the result into Vantage.
+2. **Installed companion agent (optional, power users / self-hosters)** — the Node
+   agent below, for people who want a device-local binary or automatic native-video
+   capture.
+3. **Browser app** — manual one-off uploads; Web-Audio prosody only (sandboxed).
+
+The installed-agent work in Phase 1 (below) remains valid for path 2; it is no longer
+the default.
 
 ## Phases
 
