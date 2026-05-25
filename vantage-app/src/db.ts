@@ -1,5 +1,6 @@
 import Dexie, { type Table } from 'dexie';
 import type { Profile, Settings, Evaluation, Progress, CoachMessage, UsageDay, Module } from './types';
+import { DEFAULT_PERMISSIONS } from './content/permissions';
 
 class VantageDB extends Dexie {
   settings!: Table<Settings, string>;
@@ -65,6 +66,8 @@ export const DEFAULT_SETTINGS: Settings = {
   retentionDays: 0,
   effort: 'high',
   dailyVideoMinutes: 60,
+  permissions: DEFAULT_PERMISSIONS,
+  consentedAt: 0,
 };
 
 export async function recordUsage(patch: { videoSec?: number; audioSec?: number; transcripts?: number; estUsd?: number }) {

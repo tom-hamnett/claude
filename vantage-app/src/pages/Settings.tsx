@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { getSettings, saveSettings, wipeAllData, getTodayUsage } from '../db';
 import { Page } from '../components/Shell';
+import { PermissionsList } from '../components/Consent';
+import { DEFAULT_PERMISSIONS } from '../content/permissions';
 import type { Settings as S, UsageDay } from '../types';
 
 const MODELS = [
@@ -135,6 +137,15 @@ GEMINI_API_KEY=… ANTHROPIC_API_KEY=… DEEPGRAM_API_KEY=… node server.mjs</p
               <Mini label="Est. spend today" value={`$${usage.estUsd.toFixed(2)}`} />
             </div>
           )}
+        </section>
+
+        <section className="card p-5">
+          <h2 className="font-display text-lg text-ink-900 mb-1">What Vantage can see</h2>
+          <p className="text-ink-500 text-sm mb-4">Every permission, in plain terms — what you get, why it matters, how we do it, and exactly what’s safe. Start private; turn on more whenever you want more coaching.</p>
+          <PermissionsList
+            values={s.permissions ?? DEFAULT_PERMISSIONS}
+            onToggle={(id) => { const cur = s.permissions ?? DEFAULT_PERMISSIONS; patch({ permissions: { ...cur, [id]: !cur[id] } }); }}
+          />
         </section>
 
         <section className="card p-5">

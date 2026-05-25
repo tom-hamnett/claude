@@ -1,9 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { saveProfile } from '../db';
+import { saveProfile, saveSettings } from '../db';
 import { MODULES, moduleByNumber } from '../content/curriculum';
 import { Logo } from '../components/ui';
+import { PromiseScreen, PermissionsList } from '../components/Consent';
+import { DEFAULT_PERMISSIONS } from '../content/permissions';
 import type { Profile } from '../types';
+
+const TOTAL = 6;
 
 const GOALS = [
   { id: 'promotion', label: 'Get promoted / seen as senior', mods: [1, 2, 3] },
@@ -32,6 +36,8 @@ export default function Onboarding() {
   const [goals, setGoals] = useState<string[]>([]);
   const [pains, setPains] = useState<string[]>([]);
   const [style, setStyle] = useState('');
+  const [perms, setPerms] = useState<Record<string, boolean>>({ ...DEFAULT_PERMISSIONS });
+  const togglePerm = (id: string) => setPerms((p) => ({ ...p, [id]: !p[id] }));
 
   const toggle = (arr: string[], set: (a: string[]) => void, id: string) =>
     set(arr.includes(id) ? arr.filter((x) => x !== id) : [...arr, id]);
@@ -61,6 +67,7 @@ export default function Onboarding() {
       createdAt: Date.now(),
     };
     await saveProfile(profile);
+    await saveSettings({ permissions: perms, consentedAt: Date.now() });
     nav('/');
   }
 
@@ -80,9 +87,15 @@ export default function Onboarding() {
         </div>
 
         <div className="card p-6 animate-fade-up">
-          <Dots step={step} total={4} />
+          <Dots step={step} total={TOTAL} />
 
           {step === 0 && (
+            <Step title="How your privacy works" subtitle="Before we ask for anything — three promises, built into how Vantage is made.">
+              <PromiseScreen />
+            </Step>
+          )}
+
+          {step === 1 && (
             <Step title="Let's tailor your coach" subtitle="A couple of details so feedback fits your world.">
               <Field label="Your name"><input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Alex" /></Field>
               <Field label="Your role"><input className="input" value={role} onChange={(e) => setRole(e.target.value)} placeholder="Product lead, founder, sales director…" /></Field>
@@ -90,19 +103,19 @@ export default function Onboarding() {
             </Step>
           )}
 
-          {step === 1 && (
+          {step === 2 && (
             <Step title="What are you aiming for?" subtitle="Pick any that fit — this shapes which modules we weight.">
               <Chips items={GOALS} selected={goals} onToggle={(id) => toggle(goals, setGoals, id)} />
             </Step>
           )}
 
-          {step === 2 && (
+          {step === 3 && (
             <Step title="What feels hardest right now?" subtitle="Be honest — this is private and it sharpens your focus.">
               <Chips items={PAINS} selected={pains} onToggle={(id) => toggle(pains, setPains, id)} />
             </Step>
           )}
 
-          {step === 3 && (
+          {step === 4 && (
             <Step title="Your authentic style" subtitle='Optional "this is me" baseline. We score effectiveness toward your goals in your style — never penalising accent, introversion, or being soft-spoken.'>
               <textarea className="input min-h-[110px]" value={style} onChange={(e) => setStyle(e.target.value)} placeholder="e.g. I'm naturally quiet and thoughtful; I don't want to become loud, I want to be heard." />
               {top.length > 0 && (
@@ -117,9 +130,15 @@ export default function Onboarding() {
             </Step>
           )}
 
+          {step === 5 && (
+            <Step title="Choose what Vantage can see" subtitle="Start private; turn on more whenever you want more coaching. You can change any of this later in Settings.">
+              <PermissionsList values={perms} onToggle={togglePerm} />
+            </Step>
+          )}
+
           <div className="flex items-center justify-between mt-6">
             <button onClick={() => setStep((s) => Math.max(0, s - 1))} disabled={step === 0} className="btn-ghost">← Back</button>
-            {step < 3 ? (
+            {step < TOTAL - 1 ? (
               <button onClick={() => setStep((s) => s + 1)} className="btn-primary">Continue →</button>
             ) : (
               <button onClick={finish} className="btn-primary">Start coaching →</button>

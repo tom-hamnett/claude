@@ -125,6 +125,10 @@ export interface Settings {
   effort: 'low' | 'medium' | 'high';
   /** spend control: soft daily budget for video minutes (0 = unlimited). */
   dailyVideoMinutes: number;
+  /** granular, user-controlled data permissions (permission id -> granted). */
+  permissions: Record<string, boolean>;
+  /** when the user completed the up-front consent screen (0 = not yet). */
+  consentedAt: number;
 }
 
 export interface UsageDay {

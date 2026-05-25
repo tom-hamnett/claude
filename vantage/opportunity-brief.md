@@ -525,6 +525,18 @@ A consumer product that listens to real working life must lead on trust; for an 
 - **Data control.** Encryption in transit and at rest; user-set retention; one-tap delete; passive capture strictly opt-in with jurisdiction-aware guidance and a "tell your team" nudge; a later, explicitly-consented multi-party mode.
 - **Anti-bias as design principle and differentiator.** Score effectiveness toward the user's *own* stated goals and chosen style; never penalise accent, dialect, non-native phrasing, or introversion; never reward raw talk-time or extroversion for its own sake; let the user set a "this is me" baseline; keep feedback opt-in per competency; keep the rubric transparent. This directly addresses the coded-standard critique of "executive presence" and turns a reputational risk into a trust advantage.
 
+### Consent as product — transparent permissions
+
+In a category where the single biggest adoption blocker is *"I'm not letting a tool record my work conversations,"* the consent flow is not compliance paperwork — it is the **primary marketing surface**. It converts the top objection into the headline pitch, and it is honest because the architecture (§9.4, §9A.5) makes the promises literally true.
+
+- **An up-front privacy promise opens onboarding**, before any data is requested — three plain commitments: *your words never leave your company; we coach you, not the room; you control and can delete everything.*
+- **Each permission is a value story, not a checkbox.** Every ask uses the same four beats — **Benefit** (what you get), **Problem** (why it matters / what it avoids), **Advantage** (why ours is different), **Safety** (the exact technical guarantee) — defaulting to the most private option and letting the user *opt up* to richer analysis.
+- **The permission set maps to the stream architecture:** *read my words* (in-tenant; nothing leaves), *read my delivery* (voice → numbers only), *read my presence* (visual → numbers only), *send clips of just me* (opt-up; cropped to the user, muted, blurred), *auto-capture my meetings* (opt-up), *remember my progress* (on-device history).
+- **Progressive opt-up is the built-in upsell.** Because the privacy/insight trade-off is shown honestly, turning on more reads as *the user choosing more coaching* — not us taking more data.
+- **Settings mirror the cards.** The same Benefit/Problem/Advantage/Safety copy lives in Settings with one-tap toggles and revocation, so the value story reinforces continuously, not only at sign-up.
+
+This is the same play as anti-bias: a reputational/technical risk, deliberately designed into a **trust advantage and a point of differentiation**.
+
 ---
 
 ## 18. Audience & extensibility
