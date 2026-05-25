@@ -4,7 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db';
 import { trackById, mergeModules } from '../content/curriculum';
 import { competenciesForModule } from '../content/rubric';
-import { frameworksForModule, sourcesForModule } from '../content/library';
+import { frameworksForModule, sourcesForModule, drillsForModule } from '../content/library';
 import { Blocks } from '../components/Blocks';
 import { Markdown } from '../lib/markdown';
 import { ACCENT, Empty } from '../components/ui';
@@ -144,6 +144,21 @@ export default function ModulePage() {
                   {f.steps.map((s, j) => <li key={j}>{s}</li>)}
                 </ol>
                 <p className="text-xs text-teal-700 mt-2"><span className="label text-teal-700">On the tape</span> {f.signal}</p>
+              </div>
+            ))}
+          </div>
+        </Section>
+      )}
+
+      {/* Quick drills tied to the frameworks */}
+      {drillsForModule(mod.number).length > 0 && (
+        <Section title="Quick drills — one rep at a time">
+          <p className="text-ink-500 text-sm mb-3 -mt-1">Small reps done in real conversations (not role-play). Each is designed to show up in your next evaluation.</p>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {drillsForModule(mod.number).map((d, i) => (
+              <div key={i} className={`rounded-2xl border ${ac.ring} ${ac.soft} p-4`}>
+                <div className="font-semibold text-ink-900 text-sm mb-1">{d.title}</div>
+                <p className="text-ink-600 text-sm leading-relaxed">{d.body}</p>
               </div>
             ))}
           </div>

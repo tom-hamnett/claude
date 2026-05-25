@@ -227,3 +227,72 @@ export const sourcesForModule = (n: number): SourceBook[] => MODULE_SOURCES[n] ?
 
 /** Distinct source titles across the whole curriculum — for marketing/holistic copy. */
 export const ALL_SOURCE_TITLES: string[] = [...new Set(Object.values(MODULE_SOURCES).flat().map((s) => s.title))];
+
+export interface Drill { title: string; body: string; }
+
+// Bite-size "one rep at a time" drills tied to the module's frameworks — done in real
+// conversations, not role-play. Each is designed to produce a signal the engine reads.
+export const MODULE_DRILLS: Record<number, Drill[]> = {
+  1: [
+    { title: 'Gravitas reps', body: 'In your next high-stakes meeting, land the end of every sentence and let one deliberate two-second pause sit before you answer a hard question.' },
+    { title: 'The one-line story', body: 'Before a key update, write the single sentence that frames your decision inside the bigger goal — then open with it.' },
+    { title: 'Genuine credit', body: 'In one meeting, use three colleagues’ names and give one piece of specific, genuine credit.' },
+    { title: 'Lower and slower', body: 'Record a 60-second voice memo of your update; redo it slower and lower until it sounds like the person you’d follow.' },
+  ],
+  2: [
+    { title: 'Headline-first', body: 'In three emails and one meeting, put the recommendation or ask in sentence one. Support only if asked.' },
+    { title: 'Count it out', body: 'Deliver one complex point as "there are three things…" with audible signposting.' },
+    { title: 'Two-altitude rewrite', body: 'Take one message and write it for an exec (30,000 ft) and for your team (the mechanism). Send the right one.' },
+    { title: 'Time-to-point', body: 'Record an update and time how long until your main point lands. Cut it in half next time.' },
+  ],
+  3: [
+    { title: 'WIIFM open', body: 'Before asking for something, write the other person’s goal or worry in one line and open your ask from there.' },
+    { title: 'One ethical lever', body: 'Pick one influence principle (proof, authority, scarcity, reciprocity) and use it honestly in a real pitch.' },
+    { title: 'Reframe, don’t repeat', body: 'When you lose the room, change the frame instead of saying it louder.' },
+    { title: 'Stakeholder map', body: 'For an upcoming decision, list each stakeholder’s interest and find the overlap before the meeting.' },
+  ],
+  4: [
+    { title: 'Catch the choice-point', body: 'Notice your physical tell of being triggered once this week; exhale long, then respond to the goal, not the impulse.' },
+    { title: 'Fact vs story', body: 'After a charged moment, write the bare facts in one column and the story you added in another.' },
+    { title: 'Box breathing', body: 'Before a pressure moment, exhale longer than you inhale for four breaths; start your first sentence deliberately slowly.' },
+    { title: 'Stay curious', body: 'In a challenge, ask one genuine question before defending — replace armour with curiosity.' },
+  ],
+  5: [
+    { title: 'Label & wait', body: 'In one conversation, name the other person’s emotion ("sounds like this is frustrating"), then go quiet and let them expand.' },
+    { title: 'Open the questions', body: 'Swap your next three "why/closed" questions for "what" or "how" and notice what opens up.' },
+    { title: 'Reflect before solving', body: 'Before offering a fix, reflect back what mattered to them in one sentence.' },
+    { title: 'Talk-time check', body: 'In a 1:1, aim to talk less than half the time; count your follow-up questions.' },
+  ],
+  6: [
+    { title: 'Facts before verdict', body: 'Raise one hard thing by stating the observable facts first, then "I’m starting to wonder…", then ask for their view.' },
+    { title: 'Care + challenge', body: 'Give one piece of feedback that is both specific/direct and visibly caring — soon and in private.' },
+    { title: 'Make it safe', body: 'When someone goes quiet or defensive, pause the content and rebuild mutual purpose before continuing.' },
+    { title: 'Clear is kind', body: 'Find a place you’ve been vague to be "nice" and say the real thing once, plainly.' },
+  ],
+  7: [
+    { title: 'Make the ask', body: 'Identify one thing you’ve been hinting at and ask for it explicitly — then stay quiet.' },
+    { title: 'Observation, not label', body: 'Reframe a complaint as "when X happened…" (observable) instead of "you always…" (verdict).' },
+    { title: 'Hold one boundary', body: 'State one limit calmly and specifically this week, and hold it without over-explaining.' },
+    { title: 'Drop the softeners', body: 'In one important request, cut "just / maybe / sort of" and say it directly and kindly.' },
+  ],
+  8: [
+    { title: 'Know your BATNA', body: 'Before your next negotiation, write your walk-away and the other side’s likely interests behind their stated position.' },
+    { title: 'Trade, don’t give', body: 'Make every concession conditional this week: "if you…, then I…". Get something for each give.' },
+    { title: 'Accusation audit', body: 'Pre-name the objection out loud ("you probably think this is too expensive") before they raise it.' },
+    { title: 'Defend on value', body: 'When pushed on price, restate the quantified outcome before discussing the number.' },
+  ],
+  9: [
+    { title: 'Discover the gap', body: 'In a sales call, spend the first third only on their current state and its cost before mentioning your solution.' },
+    { title: 'Questions over claims', body: 'Make your questions outnumber your statements in the first ten minutes of a discovery call.' },
+    { title: 'Surface the risk', body: 'Ask what would make this feel risky to them, then remove that risk explicitly.' },
+    { title: 'Ask for the next step', body: 'End one conversation by clearly proposing the specific next step.' },
+  ],
+  10: [
+    { title: 'One focus', body: 'Pick a single behaviour from your last evaluation and practise only that in three real conversations this week.' },
+    { title: 'Close the loop', body: 'Learn one move, use it in a live conversation, then re-record and compare.' },
+    { title: 'Name your pattern', body: 'Catch one recurring reaction of yours in the moment and note what triggered it.' },
+    { title: 'Keystone habit', body: 'Attach one small presence habit (a pre-meeting breath) to an existing routine until it’s automatic.' },
+  ],
+};
+
+export const drillsForModule = (n: number): Drill[] => MODULE_DRILLS[n] ?? [];
