@@ -38,6 +38,12 @@ export interface Lesson {
 
 export type PracticeKind = 'observe' | 'experiment' | 'record' | 'reflect';
 
+/** A self-check quiz question (module end-of-content assessment). */
+export interface QuizQuestion {
+  q: string;
+  options: { text: string; correct?: boolean; why: string }[];
+}
+
 export interface PracticeItem {
   kind: PracticeKind;
   title: string;
@@ -222,6 +228,9 @@ export interface Progress {
   moduleNumber: number;
   lessonsDone: string[];
   practiceDone: string[];
+  /** fraction correct (0..1) on the module self-check quiz */
+  quizScore?: number;
+  quizDoneAt?: number;
   completedAt?: number;
   lastViewedAt: number;
 }

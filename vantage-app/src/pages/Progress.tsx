@@ -57,6 +57,27 @@ export default function Progress() {
             </div>
           </section>
 
+          {(progress || []).some((p) => p.quizScore != null) && (
+            <section className="mb-8">
+              <h2 className="font-display text-xl text-ink-900 mb-3">Module self-checks</h2>
+              <div className="card divide-y divide-ink-100">
+                {(progress || [])
+                  .filter((p) => p.quizScore != null)
+                  .sort((a, b) => (a.quizScore ?? 0) - (b.quizScore ?? 0))
+                  .map((p) => {
+                    const m = moduleByNumber(p.moduleNumber);
+                    const pct = Math.round((p.quizScore ?? 0) * 100);
+                    return (
+                      <Link key={p.moduleNumber} to={m ? `/learn/${m.slug}` : '#'} className="flex items-center gap-4 p-4 hover:bg-ink-50 transition">
+                        <span className="flex-1 text-sm font-semibold text-ink-900">M{p.moduleNumber} {m?.title}</span>
+                        <span className={`text-sm font-semibold ${pct >= 75 ? 'text-teal-700' : pct >= 50 ? 'text-gold-700' : 'text-hot-600'}`}>{pct}%</span>
+                      </Link>
+                    );
+                  })}
+              </div>
+            </section>
+          )}
+
           <section>
             <h2 className="font-display text-xl text-ink-900 mb-3">All evaluations</h2>
             <div className="space-y-2">

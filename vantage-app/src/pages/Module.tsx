@@ -4,8 +4,9 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db';
 import { trackById, mergeModules } from '../content/curriculum';
 import { competenciesForModule } from '../content/rubric';
-import { frameworksForModule, sourcesForModule, drillsForModule } from '../content/library';
+import { frameworksForModule, sourcesForModule, drillsForModule, quizForModule } from '../content/library';
 import { Blocks } from '../components/Blocks';
+import { ModuleQuiz } from '../components/ModuleQuiz';
 import { Markdown } from '../lib/markdown';
 import { ACCENT, Empty } from '../components/ui';
 import type { PracticeKind } from '../types';
@@ -56,6 +57,20 @@ export default function ModulePage() {
       lessonsDone: [...set],
       practiceDone: cur?.practiceDone ?? [],
       completedAt: all ? (cur?.completedAt ?? Date.now()) : undefined,
+      lastViewedAt: Date.now(),
+    });
+  }
+
+  async function saveQuizScore(fraction: number) {
+    if (!mod) return;
+    const cur = await db.progress.get(mod.number);
+    await db.progress.put({
+      moduleNumber: mod.number,
+      lessonsDone: cur?.lessonsDone ?? [],
+      practiceDone: cur?.practiceDone ?? [],
+      quizScore: fraction,
+      quizDoneAt: Date.now(),
+      completedAt: cur?.completedAt,
       lastViewedAt: Date.now(),
     });
   }
@@ -167,6 +182,18 @@ export default function ModulePage() {
               </div>
             ))}
           </div>
+        </Section>
+      )}
+
+      {/* Self-check quiz */}
+      {quizForModule(mod.number).length > 0 && (
+        <Section title="Check your understanding">
+          <p className="text-ink-500 text-sm mb-3 -mt-1">A quick self-check on the key ideas. Answer to see why — it’s for you, not a grade.</p>
+          <ModuleQuiz
+            questions={quizForModule(mod.number)}
+            prevScore={progress?.quizScore}
+            onScore={saveQuizScore}
+          />
         </Section>
       )}
 

@@ -7,6 +7,8 @@
 // Each framework carries a `signal`: what "good" looks like in a real recorded
 // conversation — this is the bridge between the teaching and the assessment engine.
 
+import type { QuizQuestion } from '../types';
+
 export interface Framework {
   module: number;
   name: string;
@@ -343,3 +345,274 @@ export const MODULE_DRILLS: Record<number, Drill[]> = {
 };
 
 export const drillsForModule = (n: number): Drill[] => MODULE_DRILLS[n] ?? [];
+
+// End-of-module self-check quizzes — author-written, grounded in each module's
+// frameworks and lessons. The Module page scores these and stores the result.
+export const MODULE_QUIZZES: Record<number, QuizQuestion[]> = {
+  1: [
+    { q: 'The "choice-point" is:', options: [
+      { text: 'The moment you decide to end a conversation.', why: 'It’s not about ending — it’s the gap before any response.' },
+      { text: 'The gap between a stimulus and your response, where you can choose.', correct: true, why: 'Exactly — regulation lives in widening that gap.' },
+      { text: 'The point in a meeting where a decision must be made.', why: 'It’s an internal gap, not a meeting milestone.' },
+    ] },
+    { q: 'You feel heat and the urge to snap. The most regulated first move is to:', options: [
+      { text: 'Suppress the feeling and show nothing.', why: 'Suppression leaks out and reads as brittle — not regulation.' },
+      { text: 'Treat the body signal as an early warning, exhale, then choose your response.', correct: true, why: 'Notice → down-regulate → choose. The body cue is your friend.' },
+      { text: 'Explain immediately why you’re right.', why: 'That’s the reaction driving behaviour — what regulation prevents.' },
+    ] },
+    { q: '"Mastering your stories" means:', options: [
+      { text: 'Telling better anecdotes.', why: 'It’s about your internal narrative, not storytelling craft.' },
+      { text: 'Separating the bare facts from the story you added, then choosing the accurate one.', correct: true, why: 'Emotion follows the story; check the story against the facts.' },
+      { text: 'Controlling the narrative others tell about you.', why: 'It’s about your own interpretations, not reputation management.' },
+    ] },
+    { q: 'The aim of emotional regulation is to:', options: [
+      { text: 'Stop feeling strong emotions.', why: 'Feeling is fine — feeling driving you is the problem.' },
+      { text: 'Feel the emotion and still choose your response.', correct: true, why: 'Settled and engaged, not numb.' },
+      { text: 'Always appear calm and neutral.', why: 'Going flat reads as checked-out, not grounded.' },
+    ] },
+  ],
+  2: [
+    { q: 'Listening at "Level 1" means:', options: [
+      { text: 'Listening to your own thoughts and rehearsing your reply.', correct: true, why: 'Level 1 is internal — most people live here and think they’re listening.' },
+      { text: 'Listening for tone and what’s underneath the words.', why: 'That’s Level 3 (global) listening.' },
+      { text: 'Listening at the lowest volume.', why: 'Levels describe attention, not volume.' },
+    ] },
+    { q: 'A "mirror" is:', options: [
+      { text: 'Repeating the last two or three significant words, then going silent.', correct: true, why: 'A near-effortless prompt that makes people expand.' },
+      { text: 'Copying the other person’s body language.', why: 'That’s physical mirroring — not the listening tool here.' },
+      { text: 'Summarising everything they just said.', why: 'That’s a full paraphrase; a mirror is just the last few words.' },
+    ] },
+    { q: 'The strongest reply to "this plan is never going to work" is:', options: [
+      { text: '"Yes it will, here’s why."', why: 'Advocacy meets resistance with resistance; you learn nothing.' },
+      { text: '"What would have to be true for it to work?" — then listen.', correct: true, why: 'A calibrated question surfaces the real objection.' },
+      { text: '"Why are you always so negative?"', why: '"Why" at the person triggers defence and ends the conversation.' },
+    ] },
+    { q: 'Right after asking a good question, you should:', options: [
+      { text: 'Offer your own answer so it doesn’t feel awkward.', why: 'That answers your own question and wastes the opening.' },
+      { text: 'Leave space — stop talking and let the answer come.', correct: true, why: 'A question is only as good as the silence you leave after it.' },
+      { text: 'Quickly ask three more questions.', why: 'Stacking questions stops them answering any of them.' },
+    ] },
+  ],
+  3: [
+    { q: 'Tactical empathy is:', options: [
+      { text: 'Agreeing with the other person to keep the peace.', why: 'That’s agreement, not understanding.' },
+      { text: 'Understanding their reality precisely, then demonstrating that understanding.', correct: true, why: 'Understanding as a discipline — and the demonstration is the key.' },
+      { text: 'Feeling the same emotion they feel.', why: 'That’s sympathy; empathy is understanding, not shared feeling.' },
+    ] },
+    { q: 'The "accusation audit" means:', options: [
+      { text: 'Listing your own past failures to seem humble.', why: 'That centres you; the audit names their perception.' },
+      { text: 'Naming the concern the other person holds about you — first, before they do.', correct: true, why: 'Naming it deflates it and drops their defensiveness.' },
+      { text: 'Working out who accused whom.', why: 'It’s a pre-emptive acknowledgment, not a blame inquiry.' },
+    ] },
+    { q: 'The rarest and most leveraged form of trust is:', options: [
+      { text: 'Competence trust ("they can do the job").', why: 'Necessary, but the most easily lost and not sufficient.' },
+      { text: 'Integrity trust ("they do what they say").', why: 'Powerful, but relational trust is the multiplier.' },
+      { text: 'Relational trust ("they understand and care about my interests").', correct: true, why: 'Rarest, most leveraged, and most accessible through tactical empathy.' },
+    ] },
+    { q: '"I know exactly how you feel" is an example of:', options: [
+      { text: 'Empathy that builds trust.', why: 'It actually centres your experience, not theirs.' },
+      { text: 'Sympathy that makes the moment about you, not them.', correct: true, why: 'Empathy reflects their reality ("it sounds like…") without claiming it.' },
+      { text: 'The strongest opening for a hard conversation.', why: 'It tends to land as self-focused, not understanding.' },
+    ] },
+  ],
+  4: [
+    { q: 'Executive presence is best understood as:', options: [
+      { text: 'An innate personality trait you’re born with.', why: 'That’s the myth the module dismantles.' },
+      { text: 'A set of observable behaviours — composure, substance, narrative.', correct: true, why: 'Behaviours can be learned, measured, and improved.' },
+      { text: 'The right voice and wardrobe.', why: 'Those are surface signals often mistaken for presence.' },
+    ] },
+    { q: 'The largest single component of gravitas is:', options: [
+      { text: 'Knowing your material cold (substance).', correct: true, why: 'Depth under follow-up is the core of gravitas.' },
+      { text: 'A deep, commanding voice.', why: 'A surface signal, not the substance of gravitas.' },
+      { text: 'Confident body language.', why: 'Helpful, but substance is the largest component.' },
+    ] },
+    { q: 'The reliable way to be "six questions deep" is to:', options: [
+      { text: 'Speak more confidently and avoid admitting uncertainty.', why: 'Bravado collapses under follow-up.' },
+      { text: 'Anticipate the ladder of follow-up questions in preparation.', correct: true, why: 'Depth is earned in prep, not performed in the room.' },
+      { text: 'Bring more slides.', why: 'Depth of knowledge beats volume of material.' },
+    ] },
+    { q: 'After a tough challenge, the composed move is to:', options: [
+      { text: 'Answer instantly so you look sharp.', why: 'Speed reads as reactivity, not command.' },
+      { text: 'Take one beat of silence, steady your tone, then respond.', correct: true, why: 'The pause signals control and confidence.' },
+      { text: 'Go flat and give nothing away.', why: 'Flat reads as checked-out or brittle, not grounded.' },
+    ] },
+  ],
+  5: [
+    { q: 'Recommendation-first (BLUF) means:', options: [
+      { text: 'Build the context, then reveal your conclusion at the end.', why: 'That’s bottom-up — the listener waits and tunes out.' },
+      { text: 'State the answer or ask in the first sentence, then support it.', correct: true, why: 'Signals seniority and respects the listener’s time.' },
+      { text: 'Keep your recommendation to yourself until asked.', why: 'Lead with it; offer detail on request.' },
+    ] },
+    { q: 'The pyramid principle structures a message as:', options: [
+      { text: 'A chronological account of what you did.', why: 'Chronology buries the point.' },
+      { text: 'One governing thought, a few grouped reasons, detail on demand.', correct: true, why: 'Top-down so the listener always knows where they are.' },
+      { text: 'As much detail as possible, up front.', why: 'Detail crowds out the point; hold it in reserve.' },
+    ] },
+    { q: 'An exec interrupts with "what’s the headline?" This signals:', options: [
+      { text: 'You should talk faster.', why: 'Faster bottom-up is still bottom-up.' },
+      { text: 'You buried the lede — lead with the governing thought.', correct: true, why: 'The interrupt is a structure signal.' },
+      { text: 'They don’t care about rigour.', why: 'They want it in the right order — answer first.' },
+    ] },
+    { q: '"Altitude" refers to:', options: [
+      { text: 'How loudly you speak.', why: 'Altitude is about abstraction, not volume.' },
+      { text: 'The level of detail/abstraction matched to the audience.', correct: true, why: '30,000 ft for execs, the mechanism for specialists.' },
+      { text: 'How senior you are.', why: 'It’s about pitching the content, not your rank.' },
+    ] },
+  ],
+  6: [
+    { q: 'A hard conversation should open with:', options: [
+      { text: 'The blunt verdict, to save time.', why: 'Blame triggers defence or attack in the first thirty seconds.' },
+      { text: 'Shared purpose and intent, then the facts.', correct: true, why: 'Lead with safety, then describe the observable.' },
+      { text: '"Everyone has noticed that…".', why: 'Unverifiable and ambush-like; safety collapses.' },
+    ] },
+    { q: 'In STATE, you tell your story:', options: [
+      { text: 'As certain fact ("it’s obvious that…").', why: 'Certainty invites defence.' },
+      { text: 'Tentatively ("I’m starting to wonder if…").', correct: true, why: 'Tentative language invites dialogue.' },
+      { text: 'Only after they’ve admitted fault.', why: 'You share your story to open dialogue, not after a confession.' },
+    ] },
+    { q: '"Silence and violence" describe:', options: [
+      { text: 'Two negotiation tactics.', why: 'No — they’re how people exit dialogue.' },
+      { text: 'The two ways people leave dialogue when safety drops.', correct: true, why: 'Silence = withdrawing; violence = sarcasm/attack.' },
+      { text: 'The beginning and end of a conflict.', why: 'They’re behaviours to watch for, not stages.' },
+    ] },
+    { q: 'When you cause a rupture (snap, dismiss), the best move is to:', options: [
+      { text: 'Wait and hope it blows over.', why: 'Unrepaired ruptures fester.' },
+      { text: 'Repair cleanly and soon — name it, own it, no long justification.', correct: true, why: 'Repair is a leadership behaviour.' },
+      { text: 'Over-explain why you were right to react.', why: 'Justification isn’t repair.' },
+    ] },
+  ],
+  7: [
+    { q: '"Ruinous empathy" is:', options: [
+      { text: 'High challenge, low care.', why: 'That’s obnoxious aggression.' },
+      { text: 'High care, low challenge — too kind to say the hard thing.', correct: true, why: 'The most common failure mode; a form of abandonment.' },
+      { text: 'Low care, low challenge.', why: 'That’s manipulative insincerity.' },
+    ] },
+    { q: 'SBI stands for:', options: [
+      { text: 'Situation, Behaviour, Impact.', correct: true, why: 'One moment, one observable behaviour, one concrete impact.' },
+      { text: 'Specific, Brief, Immediate.', why: 'Good qualities, but not the SBI model.' },
+      { text: 'Start, Build, Improve.', why: 'Not the model.' },
+    ] },
+    { q: 'The "feedback sandwich" (praise–critique–praise) is:', options: [
+      { text: 'The recommended structure.', why: 'It’s a consistently ineffective one.' },
+      { text: 'Ineffective — people brace through the praise and wait for the "but".', correct: true, why: 'State the feedback directly; the care is in the delivery.' },
+      { text: 'Only appropriate for senior people.', why: 'It’s ineffective regardless of level.' },
+    ] },
+    { q: 'Receiving vague feedback, the most useful response is:', options: [
+      { text: '"Okay, thanks" — then ignore it.', why: 'Dismissal closes the relationship.' },
+      { text: 'Defend your version of events.', why: 'Defending shuts learning down.' },
+      { text: '"Can you give me one specific example of what you’d prefer to see?"', correct: true, why: 'Makes vague feedback specific enough to use.' },
+    ] },
+  ],
+  8: [
+    { q: 'Your BATNA is:', options: [
+      { text: 'Your opening offer.', why: 'No — it’s your fallback, not your anchor.' },
+      { text: 'Your best alternative if there’s no deal — your real source of power.', correct: true, why: 'A strong BATNA lets you stay calm and not flinch.' },
+      { text: 'The other side’s bottom line.', why: 'That’s their reservation point, not your BATNA.' },
+    ] },
+    { q: '"Trade, don’t concede" means:', options: [
+      { text: 'Never give anything away.', why: 'You trade — every give buys something.' },
+      { text: 'Make every concession conditional ("if you…, then I…").', correct: true, why: 'Free concessions train the other side to push.' },
+      { text: 'Split the difference quickly to close.', why: 'Splitting gives away value with no trade.' },
+    ] },
+    { q: 'The unlock in most negotiations is found:', options: [
+      { text: 'By arguing your position harder.', why: 'Positional bargaining rarely unlocks anything.' },
+      { text: 'One layer down, in the interests beneath the positions.', correct: true, why: 'Behind "Friday" might be "my board meets Monday".' },
+      { text: 'By making the first and largest concession.', why: 'That just gives value away.' },
+    ] },
+    { q: 'The buyer says "your price is too high." The strongest response is:', options: [
+      { text: 'Immediately offer a discount to save the deal.', why: 'Conceding for free trains them to push harder.' },
+      { text: '"What’s driving the budget concern — and what would make the value worth it?"', correct: true, why: 'A calibrated question surfaces the interest behind the objection.' },
+      { text: '"It’s actually very competitively priced."', why: 'Counter-arguing meets resistance with resistance.' },
+    ] },
+  ],
+  9: [
+    { q: 'Framing to the "interest, not the position" means:', options: [
+      { text: 'Changing the facts for each audience.', why: 'That’s spin — the fact doesn’t change.' },
+      { text: 'Keeping the truth but matching the frame to what they value.', correct: true, why: 'Translation, not spin.' },
+      { text: 'Always leading with what excites you most.', why: 'Lead with their interest, not yours.' },
+    ] },
+    { q: '"Pre-wiring" a decision means:', options: [
+      { text: 'Preparing your slides carefully.', why: 'It’s about people, not decks.' },
+      { text: 'Aligning key stakeholders one-on-one before the group meeting.', correct: true, why: 'The meeting then ratifies a consensus instead of staging a fight.' },
+      { text: 'Deciding the outcome in advance and announcing it.', why: 'It’s alignment, not a fait accompli.' },
+    ] },
+    { q: 'In SPIN, the "need-payoff" question:', options: [
+      { text: 'Tells the buyer the price.', why: 'No — it draws out value, not cost.' },
+      { text: 'Gets the buyer to articulate the value of solving the problem.', correct: true, why: 'They sell themselves on the value.' },
+      { text: 'Asks for the order directly.', why: 'That’s the close, not need-payoff.' },
+    ] },
+    { q: 'A prospect mentions a problem in passing. The most consultative move is to:', options: [
+      { text: 'Jump in with the matching feature.', why: 'Solutioning too early skips implication and need-payoff.' },
+      { text: 'Ask what it costs them and what fixing it is worth, before proposing.', correct: true, why: 'Let the buyer build the value case.' },
+      { text: 'Note it and continue your pitch.', why: 'A stated problem is the opening for discovery.' },
+    ] },
+  ],
+  10: [
+    { q: 'Lateral leadership works primarily through:', options: [
+      { text: 'Authority and escalation.', why: 'Authority gets compliance, not commitment.' },
+      { text: 'Negotiation — shared interests, reciprocity, relational trust.', correct: true, why: 'Relationship produces commitment.' },
+      { text: 'Formal mandates.', why: 'Peers have no obligation to follow a mandate.' },
+    ] },
+    { q: 'On a coalition map, you approach actors in this order:', options: [
+      { text: 'Blockers first, to neutralise them.', why: 'Address blockers last, after building momentum.' },
+      { text: 'Sponsors and allies first; blockers last and directly.', correct: true, why: 'Use visible support as social proof to move the middle.' },
+      { text: 'Whoever is most senior, first.', why: 'Seniority isn’t the sequencing principle.' },
+    ] },
+    { q: 'The "informal influencer" is:', options: [
+      { text: 'Always the most senior person in the room.', why: 'Often not — they’re the most trusted, not the most senior.' },
+      { text: 'The person others look to before forming opinions, regardless of title.', correct: true, why: 'Often more important to win than the formal decision-maker.' },
+      { text: 'Someone with no real influence.', why: 'The opposite — they shape how peers think.' },
+    ] },
+    { q: 'A peer keeps deprioritising shared work. The best first move is:', options: [
+      { text: 'Escalate to senior leadership.', why: 'Wins the formal battle, loses the war.' },
+      { text: '"What would need to be different for this to move up your list?"', correct: true, why: 'Surfaces the real interest and opens a negotiated path.' },
+      { text: 'Send a more detailed business case.', why: 'A better argument rarely moves a conversation they aren’t having.' },
+    ] },
+  ],
+  11: [
+    { q: 'The conversion that makes a need actionable is:', options: [
+      { text: 'Feeling → complaint.', why: 'A complaint isn’t something the other person can act on.' },
+      { text: 'Feeling → need → concrete request.', correct: true, why: 'Only the request is actionable.' },
+      { text: 'Need → hint.', why: 'Hints make people guess.' },
+    ] },
+    { q: 'A genuine request (vs a demand):', options: [
+      { text: 'Punishes a "no" with coldness or guilt.', why: 'That’s a demand wearing a question mark.' },
+      { text: 'Leaves the other person genuinely free to decline.', correct: true, why: 'People feel the difference instantly.' },
+      { text: 'Is always vague, to be polite.', why: 'Vague asks can’t be acted on or declined.' },
+    ] },
+    { q: 'A clean "no" is:', options: [
+      { text: 'A paragraph of apology and justification.', why: 'Over-explaining signals you don’t feel entitled to it.' },
+      { text: 'Brief, warm, firm — usually one sentence of reason.', correct: true, why: 'Warm and firm, without the apology spiral.' },
+      { text: 'Silence and quiet resentment.', why: 'That’s avoidance, not a boundary.' },
+    ] },
+    { q: '"Could you maybe possibly look at the deck sometime?" fails because:', options: [
+      { text: 'It’s too direct.', why: 'It’s the opposite — far too vague.' },
+      { text: 'It has no clear who/what/when, so it can’t be acted on.', correct: true, why: 'A clear ask is specific and doable.' },
+      { text: 'It allows the other person to say no.', why: 'Allowing "no" is good — vagueness is the problem.' },
+    ] },
+  ],
+  12: [
+    { q: 'The "transfer problem" is:', options: [
+      { text: 'Moving between teams.', why: 'Not that — it’s about skills, not org charts.' },
+      { text: 'The gap between learning a skill and it showing up in real behaviour.', correct: true, why: 'Closed only by practising in real situations with feedback.' },
+      { text: 'Transferring data between tools.', why: 'Unrelated.' },
+    ] },
+    { q: 'A report flags six things to improve. The best response is to:', options: [
+      { text: 'Work on all six this week to improve fastest.', why: 'Diffusing effort is how none of them stick.' },
+      { text: 'Pick the single highest-leverage one and practise it for two weeks.', correct: true, why: 'One focus, made observable, then re-measured.' },
+      { text: 'Feel discouraged and put it off.', why: 'The report is a map, not a verdict.' },
+    ] },
+    { q: 'A good practice focus is:', options: [
+      { text: '"Listen better."', why: 'Too vague to practise or measure.' },
+      { text: '"Ask one open question before giving my view."', correct: true, why: 'Observable and trigger-linked.' },
+      { text: '"Be more strategic."', why: 'Not observable — you can’t practise it.' },
+    ] },
+    { q: 'The After-Action Review asks:', options: [
+      { text: 'Who was at fault.', why: 'It’s about learning, not blame.' },
+      { text: 'What did I intend, what happened, what will I change next time.', correct: true, why: 'The structured debrief that turns experience into skill.' },
+      { text: 'How everyone else performed.', why: 'It’s a self-focused review.' },
+    ] },
+  ],
+};
+
+export const quizForModule = (n: number): QuizQuestion[] => MODULE_QUIZZES[n] ?? [];
