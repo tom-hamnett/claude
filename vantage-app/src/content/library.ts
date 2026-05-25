@@ -1,7 +1,7 @@
 // The literature layer — what makes VANTAGE a holistic executive curriculum rather
 // than a comms tool. Named, canonical frameworks (in our own words, attributed to the
 // source) mapped to the 10-module taxonomy, plus the books that ground each module.
-// Distilled from the FULCRUM Master Knowledge Base (17 training titles + wider canon).
+// Distilled from the master knowledge base (17 core training titles + wider canon).
 //
 // Each framework carries a `signal`: what "good" looks like in a real recorded
 // conversation — this is the bridge between the teaching and the assessment engine.
