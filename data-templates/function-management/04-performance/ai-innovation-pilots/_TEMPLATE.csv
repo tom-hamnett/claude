@@ -1,0 +1,4 @@
+quarter,project_name,status,investment_usd,value_delivered_usd,roi_pct,learning_summary
+2026-Q1,AI Contract Clause Extraction,Pilot,75000,120000,60.0,Reduced legal review time by 40%; accuracy at 92% — needs training on IHG-specific clauses
+2026-Q1,Predictive Spend Analytics,Scaling,150000,380000,153.3,Category managers adopting forecasts; biggest value in seasonal F&B planning
+2026-Q1,Supplier Risk Auto-Screening,Incubation,30000,0,0.0,Early prototype; integrating Rapid Ratings API with internal risk taxonomy

@@ -1,0 +1,4 @@
+month,location,team,throughput_volume,capacity_hours,utilisation_pct,cost_per_output,geographic_balance_score
+2026-01,Denham (UK),Strategic Sourcing,42,2880,87.5,16071,0.82
+2026-01,Gurugram (India),Transactional Procurement,310,5600,94.2,1355,0.91
+2026-01,Atlanta (US),Category Management,28,1920,83.0,19286,0.75
