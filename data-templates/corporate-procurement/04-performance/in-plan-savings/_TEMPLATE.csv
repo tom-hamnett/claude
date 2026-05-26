@@ -1,0 +1,4 @@
+month,category,region,in_plan_savings_usd,target_usd,variance_pct,supplier_segment
+2026-01,IT Services,EMEAA,280000,250000,12.0,Strategic
+2026-01,Travel,Americas,95000,120000,-20.8,Preferred
+2026-01,Facilities,Greater China,42000,45000,-6.7,Tactical

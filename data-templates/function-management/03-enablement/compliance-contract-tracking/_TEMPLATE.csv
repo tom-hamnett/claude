@@ -1,0 +1,4 @@
+month,contract_ref,supplier,category,start_date,end_date,termination_cost_usd,status,renewal_flag
+2026-01,CTR-2024-0412,Ecolab Inc,Cleaning & Hygiene,2024-04-01,2027-03-31,125000,Active,Yes
+2026-01,CTR-2023-0187,Sealed Air Corporation,Packaging,2023-07-01,2026-06-30,85000,Expiring,Under Review
+2026-01,CTR-2025-0033,Oracle Hospitality,Technology,2025-01-15,2028-01-14,210000,Active,Yes

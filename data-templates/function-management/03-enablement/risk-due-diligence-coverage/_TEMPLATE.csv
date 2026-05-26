@@ -1,0 +1,4 @@
+month,tier,suppliers_covered,total_suppliers,spend_covered_usd,total_spend_usd,coverage_pct_by_spend,critical_supplier_coverage_pct
+2026-01,Tier 1 — Strategic,48,52,185000000,198000000,93.4,98.0
+2026-01,Tier 2 — Preferred,112,180,95000000,142000000,66.9,82.5
+2026-01,Tier 3 — Transactional,85,620,18000000,54000000,33.3,45.0

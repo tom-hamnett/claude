@@ -1,0 +1,4 @@
+month,cost_category,budget_usd,actual_usd,variance_usd,variance_pct,forecast_usd
+2026-01,Payroll & Benefits,850000,832000,-18000,-2.1,840000
+2026-01,Technology & Tools,125000,138000,13000,10.4,130000
+2026-01,Travel & Expenses,45000,39000,-6000,-13.3,42000
