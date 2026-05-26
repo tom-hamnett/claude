@@ -1,0 +1,4 @@
+month,supplier,rapid_rating_score,revenue_usd,risk_flag,sector,watch_status
+2026-01,Accenture,82,64500000000,Low,Professional Services,Normal
+2026-01,Tata Consultancy,78,29200000000,Low,IT Services,Normal
+2026-01,Regus/IWG,41,3800000000,High,Facilities,Active Watch

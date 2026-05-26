@@ -1,0 +1,4 @@
+month,brand,region,build_cost_usd,rooms_count,cost_per_room,benchmark,variance_pct
+2026-01,Holiday Inn Express,Americas,14200000,120,118333,115000,2.9
+2026-01,InterContinental,EMEAA,52800000,210,251429,245000,2.6
+2026-01,voco,Greater China,22500000,180,125000,130000,−3.8

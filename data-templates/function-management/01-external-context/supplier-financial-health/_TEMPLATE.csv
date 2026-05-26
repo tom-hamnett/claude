@@ -1,0 +1,4 @@
+month,supplier,rapid_rating_score,revenue_usd,risk_flag,sector,watch_status
+2026-01,Ecolab Inc,78,14200000000,None,Chemicals & Hygiene,Active
+2026-01,Sealed Air Corporation,52,5400000000,Elevated,Packaging,Watch
+2026-01,Diversey Holdings,34,2700000000,Critical,Cleaning & Hygiene,Escalated

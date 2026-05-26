@@ -1,0 +1,4 @@
+month,region,market,metric,value,unit,target,variance_pct
+2026-01,Americas,US Full Service,Cost Per Occupied Room,87.42,USD,85.00,2.8
+2026-01,EMEAA,UK,Cost Per Key Per Annum,4215,USD,4100,2.8
+2026-01,Greater China,Tier 1 Cities,F&B Cost Per Cover,6.82,USD,7.00,−2.6

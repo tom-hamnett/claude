@@ -1,0 +1,4 @@
+month,region,cut_dimension,cut_value,metric,value,unit
+2026-01,Americas,Owner Demographic,Multi-Unit Owner,Share of Wallet,72.4,pct
+2026-01,Greater China,City Tier,Tier 1,Cost Per Key,5840,USD
+2026-01,EMEAA,Ownership Model,Managed,GP Spend Utilisation,81.2,pct

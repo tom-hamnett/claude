@@ -1,0 +1,4 @@
+month,category,region,savings_usd,target_usd,variance_pct,contract_ref
+2026-01,IT Services,EMEAA,320000,300000,6.7,CTR-2026-IT-0041
+2026-01,Travel,Americas,185000,200000,-7.5,CTR-2026-TR-0018
+2026-01,Professional Services,Greater China,95000,110000,-13.6,CTR-2026-PS-0073
