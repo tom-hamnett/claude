@@ -103,20 +103,29 @@ function encodeShareUrl(url) {
   return "u!" + base64;
 }
 
-// SharePoint shared folder — uses the Graph /shares API with an anonymous sharing link
-// NO API keys, NO app registration, NO IT involvement. Just a sharing link to a folder.
+// SharePoint shared folder — uses the Graph /shares API with a sharing link.
+// Works with anonymous links OR authenticated via Microsoft OAuth (delegated).
+// If source._microsoftAccessToken is set, uses it for auth (allows org-internal links).
 async function fetchSharePointSharedFolder(source) {
   const config = typeof source.config === "string" ? JSON.parse(source.config) : source.config;
   const { shareLink, fileTypes, recursive } = config;
   if (!shareLink) throw new Error("shareLink required — copy a sharing link from SharePoint for the folder");
 
+  const headers = {};
+  if (source._microsoftAccessToken) {
+    headers.Authorization = `Bearer ${source._microsoftAccessToken}`;
+  }
+
   const encoded = encodeShareUrl(shareLink);
   const childrenUrl = `https://graph.microsoft.com/v1.0/shares/${encoded}/driveItem/children`;
-  const r = await fetch(childrenUrl);
+  const r = await fetch(childrenUrl, { headers });
   if (!r.ok) {
     const body = await r.text();
     if (r.status === 401 || r.status === 403) {
-      throw new Error("Access denied — make sure the folder sharing link is set to 'Anyone with the link can view'. In SharePoint: right-click folder → Share → People you choose → change to 'Anyone' → Apply → Copy link.");
+      if (source._microsoftAccessToken) {
+        throw new Error("Access denied — your Microsoft account may not have access to this folder, or your session has expired. Try reconnecting in Settings → Microsoft Connection.");
+      }
+      throw new Error("Access denied — make sure the folder sharing link is set to 'Anyone with the link can view'. In SharePoint: right-click folder → Share → People you choose → change to 'Anyone' → Apply → Copy link. Or connect your Microsoft account in Settings.");
     }
     throw new Error(`SharePoint folder listing failed ${r.status}: ${body}`);
   }
@@ -143,7 +152,7 @@ async function fetchSharePointSharedFolder(source) {
     for (const sub of subfolders) {
       const subUrl = `https://graph.microsoft.com/v1.0/shares/${encoded}/driveItem:/${encodeURIComponent(sub.name)}:/children`;
       try {
-        const sr = await fetch(subUrl);
+        const sr = await fetch(subUrl, { headers });
         if (sr.ok) {
           const subListing = await sr.json();
           const subFiles = (subListing.value || [])

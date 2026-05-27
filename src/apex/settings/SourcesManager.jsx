@@ -1,5 +1,5 @@
 // Data Sources management: add/edit/sync/delete live sources
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Spinner, Card } from "../components/ui.jsx";
 
 const FIELD_HINTS = {
@@ -104,6 +104,8 @@ export default function SourcesManager({ programmeId }) {
 
   return (
     <div>
+      <MicrosoftConnection programmeId={programmeId} />
+
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
         <div>
           <div style={{ fontSize: 15, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)", marginBottom: 4 }}>Live Data Sources ({sources.length})</div>
@@ -226,6 +228,139 @@ function Field({ label, value, onChange, type = "text", placeholder = "" }) {
     <div style={{ marginBottom: 12 }}>
       <Label>{label}</Label>
       <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={{ width: "100%", background: "var(--bg3)", border: "1px solid var(--border2)", borderRadius: 5, color: "var(--text)", fontFamily: "var(--font-b)", fontSize: 13, padding: "10px 12px" }} />
+    </div>
+  );
+}
+
+function MicrosoftConnection({ programmeId }) {
+  const [status, setStatus] = useState(null);
+  const [tenantId, setTenantId] = useState("");
+  const [clientId, setClientId] = useState("");
+  const [deviceInfo, setDeviceInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [connecting, setConnecting] = useState(false);
+  const pollRef = useRef(null);
+
+  useEffect(() => { checkStatus(); return () => clearInterval(pollRef.current); }, [programmeId]);
+
+  async function checkStatus() {
+    setLoading(true);
+    try {
+      const r = await fetch(`/api/programmes/${programmeId}/microsoft-auth`);
+      const data = await r.json();
+      setStatus(data);
+      if (data.tenantId) setTenantId(data.tenantId);
+      if (data.clientId) setClientId(data.clientId);
+    } catch (e) {
+      setStatus({ status: "disconnected" });
+    }
+    setLoading(false);
+  }
+
+  async function connect() {
+    if (!tenantId.trim() || !clientId.trim()) return;
+    setConnecting(true);
+    try {
+      const r = await fetch(`/api/programmes/${programmeId}/microsoft-auth/connect`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tenantId: tenantId.trim(), clientId: clientId.trim() }),
+      });
+      const data = await r.json();
+      if (data.error) { alert(data.error); setConnecting(false); return; }
+      setDeviceInfo(data);
+      setStatus({ status: "pending" });
+
+      pollRef.current = setInterval(async () => {
+        try {
+          const pr = await fetch(`/api/programmes/${programmeId}/microsoft-auth/poll`, { method: "POST" });
+          const pd = await pr.json();
+          if (pd.status === "connected") {
+            clearInterval(pollRef.current);
+            setDeviceInfo(null);
+            setStatus(pd);
+            setConnecting(false);
+          } else if (pd.status === "expired" || pd.status === "error") {
+            clearInterval(pollRef.current);
+            setDeviceInfo(null);
+            setStatus({ status: "disconnected" });
+            setConnecting(false);
+            alert("Sign-in expired or failed. Try again.");
+          }
+        } catch (_) {}
+      }, 5000);
+    } catch (e) {
+      alert(`Connection failed: ${e.message}`);
+      setConnecting(false);
+    }
+  }
+
+  async function disconnect() {
+    if (!confirm("Disconnect Microsoft account? SharePoint sources will stop syncing.")) return;
+    await fetch(`/api/programmes/${programmeId}/microsoft-auth`, { method: "DELETE" });
+    clearInterval(pollRef.current);
+    setStatus({ status: "disconnected" });
+    setDeviceInfo(null);
+    setTenantId("");
+    setClientId("");
+  }
+
+  if (loading) return null;
+
+  // Connected
+  if (status?.status === "connected") {
+    return (
+      <div style={{ background: "rgba(93,196,132,0.08)", border: "1px solid rgba(93,196,132,0.3)", borderRadius: 10, padding: "14px 18px", marginBottom: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: 13, fontFamily: "var(--font-d)", fontWeight: 700, color: "#5DC484", marginBottom: 3 }}>Microsoft Connected</div>
+            <div style={{ fontSize: 12, fontFamily: "var(--font-b)", color: "var(--text2)" }}>
+              Signed in as <strong style={{ color: "var(--text)" }}>{status.email}</strong> — SharePoint sources will use this account for access.
+            </div>
+          </div>
+          <button onClick={disconnect} style={btnSmall}>Disconnect</button>
+        </div>
+      </div>
+    );
+  }
+
+  // Pending (device code flow active)
+  if (status?.status === "pending" && deviceInfo) {
+    return (
+      <div style={{ background: "rgba(245,197,68,0.08)", border: "1px solid rgba(245,197,68,0.3)", borderRadius: 10, padding: "18px 22px", marginBottom: 20 }}>
+        <div style={{ fontSize: 14, fontFamily: "var(--font-d)", fontWeight: 700, color: "#F5C544", marginBottom: 8 }}>Sign in to Microsoft</div>
+        <div style={{ fontSize: 13, fontFamily: "var(--font-b)", color: "var(--text)", lineHeight: 1.7, marginBottom: 12 }}>
+          1. Open <a href={deviceInfo.verificationUri} target="_blank" rel="noopener" style={{ color: "var(--accent)", textDecoration: "underline" }}>{deviceInfo.verificationUri}</a> in your browser<br />
+          2. Enter code: <strong style={{ fontSize: 18, fontFamily: "var(--font-d)", color: "var(--accent)", letterSpacing: "0.15em", background: "var(--bg3)", padding: "4px 12px", borderRadius: 4, marginLeft: 4 }}>{deviceInfo.userCode}</strong><br />
+          3. Sign in with your IHG account
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, fontFamily: "var(--font-m)", color: "var(--text3)" }}>
+          <Spinner s={12} /> Waiting for sign-in...
+        </div>
+      </div>
+    );
+  }
+
+  // Disconnected — show setup form
+  return (
+    <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: 10, padding: "18px 22px", marginBottom: 20 }}>
+      <div style={{ fontSize: 14, fontFamily: "var(--font-d)", fontWeight: 700, color: "var(--text)", marginBottom: 4 }}>Connect to Microsoft SharePoint</div>
+      <div style={{ fontSize: 12, fontFamily: "var(--font-b)", color: "var(--text2)", lineHeight: 1.6, marginBottom: 14 }}>
+        Connect your Microsoft account so APEX can access SharePoint folders shared with you — no "Anyone" links needed.
+        You need an Azure AD app registration (ask IT or create one at portal.azure.com).
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+        <div>
+          <Label>Directory (Tenant) ID</Label>
+          <input value={tenantId} onChange={e => setTenantId(e.target.value)} placeholder="e.g. a1b2c3d4-e5f6-..." style={{ width: "100%", background: "var(--bg2)", border: "1px solid var(--border2)", borderRadius: 5, color: "var(--text)", fontFamily: "var(--font-b)", fontSize: 12, padding: "8px 10px" }} />
+        </div>
+        <div>
+          <Label>Application (Client) ID</Label>
+          <input value={clientId} onChange={e => setClientId(e.target.value)} placeholder="e.g. f1g2h3i4-j5k6-..." style={{ width: "100%", background: "var(--bg2)", border: "1px solid var(--border2)", borderRadius: 5, color: "var(--text)", fontFamily: "var(--font-b)", fontSize: 12, padding: "8px 10px" }} />
+        </div>
+      </div>
+      <button onClick={connect} disabled={connecting || !tenantId.trim() || !clientId.trim()} style={{ ...btnPrimary, opacity: (!tenantId.trim() || !clientId.trim()) ? 0.5 : 1 }}>
+        {connecting ? <Spinner s={12} /> : "Connect to Microsoft →"}
+      </button>
     </div>
   );
 }

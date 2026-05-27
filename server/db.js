@@ -168,6 +168,23 @@ export function initDB() {
 
     CREATE INDEX IF NOT EXISTS idx_document_texts_programme ON document_texts(programme_id);
 
+    -- Microsoft OAuth (delegated auth for SharePoint access)
+    CREATE TABLE IF NOT EXISTS microsoft_auth (
+      id TEXT PRIMARY KEY,
+      programme_id TEXT NOT NULL UNIQUE,
+      tenant_id TEXT NOT NULL,
+      client_id TEXT NOT NULL,
+      status TEXT DEFAULT 'pending',
+      device_code TEXT,
+      access_token TEXT,
+      refresh_token TEXT,
+      token_expires_at TEXT,
+      user_email TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (programme_id) REFERENCES programmes(id)
+    );
+
     -- KPI definitions (user-configured headline metrics)
     CREATE TABLE IF NOT EXISTS kpi_definitions (
       id TEXT PRIMARY KEY,

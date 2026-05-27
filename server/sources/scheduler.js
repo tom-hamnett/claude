@@ -1,12 +1,25 @@
 // Sync scheduler: runs every minute, polls due data sources, stores pending files
 import { getDB } from "../db.js";
 import { fetchSource } from "./fetchers.js";
+import { getValidToken } from "../auth/microsoft.js";
 
 let schedulerInterval = null;
+
+async function attachMicrosoftAuth(source, db) {
+  try {
+    const token = await getValidToken(db, source.programme_id);
+    if (token) source._microsoftAccessToken = token;
+  } catch (e) {
+    console.log(`[scheduler] Microsoft token refresh failed for ${source.name}: ${e.message}`);
+  }
+}
 
 async function pollSource(source) {
   const db = getDB();
   try {
+    if (source.type === "sharepoint-shared" || source.type === "sharepoint-folder") {
+      await attachMicrosoftAuth(source, db);
+    }
     const result = await fetchSource(source);
     const files = result.files || [];
 
@@ -55,6 +68,7 @@ export async function syncSource(sourceId) {
   const source = db.prepare("SELECT * FROM data_sources WHERE id = ?").get(sourceId);
   db.close();
   if (!source) throw new Error("Source not found");
+  // Microsoft auth is attached inside pollSource
   return pollSource(source);
 }
 

@@ -15,6 +15,7 @@ import { PROVIDERS, callEngine, testEngine } from "./ai/providers.js";
 import { syncSource, startScheduler } from "./sources/scheduler.js";
 import { FETCHERS, downloadFile } from "./sources/fetchers.js";
 import { extractText, isDocumentFile, isStructuredFile } from "./documentExtractor.js";
+import { requestDeviceCode, pollForToken, getUserProfile, getValidToken } from "./auth/microsoft.js";
 
 dotenv.config();
 
@@ -607,6 +608,97 @@ app.post("/api/pending-ingestions/:id/dismiss", (req, res) => {
 app.post("/api/pending-ingestions/:id/mark-ingested", (req, res) => {
   const db = getDB();
   db.prepare("UPDATE data_source_files SET status = 'ingested', last_ingested_at = datetime('now'), target_table_id = ? WHERE id = ?").run(req.body.tableId || null, req.params.id);
+  db.close();
+  res.json({ ok: true });
+});
+
+// ── Microsoft OAuth (device code flow) ──────────────────────────────────────
+
+// Check Microsoft connection status
+app.get("/api/programmes/:programmeId/microsoft-auth", (req, res) => {
+  const db = getDB();
+  const auth = db.prepare("SELECT id, tenant_id, client_id, status, user_email, updated_at FROM microsoft_auth WHERE programme_id = ?").get(req.params.programmeId);
+  db.close();
+  if (!auth) return res.json({ status: "disconnected" });
+  res.json({ status: auth.status, email: auth.user_email, tenantId: auth.tenant_id, clientId: auth.client_id, updatedAt: auth.updated_at });
+});
+
+// Start device code flow
+app.post("/api/programmes/:programmeId/microsoft-auth/connect", async (req, res) => {
+  const { tenantId, clientId } = req.body;
+  if (!tenantId || !clientId) return res.status(400).json({ error: "tenantId and clientId are required" });
+
+  try {
+    const deviceAuth = await requestDeviceCode(tenantId, clientId);
+    const db = getDB();
+    const id = `msauth-${Date.now()}`;
+
+    // Upsert: replace any existing auth for this programme
+    db.prepare("DELETE FROM microsoft_auth WHERE programme_id = ?").run(req.params.programmeId);
+    db.prepare("INSERT INTO microsoft_auth (id, programme_id, tenant_id, client_id, status, device_code) VALUES (?, ?, ?, ?, 'pending', ?)").run(
+      id, req.params.programmeId, tenantId, clientId, deviceAuth.device_code
+    );
+    db.close();
+
+    res.json({
+      userCode: deviceAuth.user_code,
+      verificationUri: deviceAuth.verification_uri,
+      expiresIn: deviceAuth.expires_in,
+      message: deviceAuth.message,
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Poll for device code completion
+app.post("/api/programmes/:programmeId/microsoft-auth/poll", async (req, res) => {
+  const db = getDB();
+  const auth = db.prepare("SELECT * FROM microsoft_auth WHERE programme_id = ? AND status = 'pending'").get(req.params.programmeId);
+  if (!auth) { db.close(); return res.json({ status: "no_pending" }); }
+
+  try {
+    const result = await pollForToken(auth.tenant_id, auth.client_id, auth.device_code);
+
+    if (result.error === "authorization_pending") {
+      db.close();
+      return res.json({ status: "pending" });
+    }
+
+    if (result.error === "expired_token") {
+      db.prepare("DELETE FROM microsoft_auth WHERE id = ?").run(auth.id);
+      db.close();
+      return res.json({ status: "expired" });
+    }
+
+    if (result.error) {
+      db.close();
+      return res.json({ status: "error", error: result.error_description || result.error });
+    }
+
+    // Success — store tokens and get user profile
+    let email = "unknown";
+    try {
+      const profile = await getUserProfile(result.access_token);
+      email = profile.mail || profile.userPrincipalName || "connected";
+    } catch (_) {}
+
+    const expiresAt = new Date(Date.now() + result.expires_in * 1000).toISOString();
+    db.prepare("UPDATE microsoft_auth SET status = 'connected', access_token = ?, refresh_token = ?, token_expires_at = ?, user_email = ?, device_code = NULL, updated_at = datetime('now') WHERE id = ?")
+      .run(result.access_token, result.refresh_token, expiresAt, email, auth.id);
+    db.close();
+
+    res.json({ status: "connected", email });
+  } catch (e) {
+    db.close();
+    res.json({ status: "error", error: e.message });
+  }
+});
+
+// Disconnect Microsoft account
+app.delete("/api/programmes/:programmeId/microsoft-auth", (req, res) => {
+  const db = getDB();
+  db.prepare("DELETE FROM microsoft_auth WHERE programme_id = ?").run(req.params.programmeId);
   db.close();
   res.json({ ok: true });
 });
