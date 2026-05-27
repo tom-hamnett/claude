@@ -50,6 +50,11 @@ export default function AIChat({ programmeId, contextId = "global", contextLabel
 
   const activeEngine = engines.find(e => e.id === selectedEngineId);
 
+  const [docCount, setDocCount] = useState(0);
+  useEffect(() => {
+    fetch(`/api/programmes/${programmeId}/document-texts`).then(r => r.json()).then(docs => setDocCount((docs || []).length)).catch(() => {});
+  }, [programmeId]);
+
   const gaps = gapSection ? gapsForSection(programmeId, gapSection) : [];
 
   // Load chat history async
@@ -190,6 +195,9 @@ Response format:
             </select>
           ) : (
             <span style={{ fontSize: 10, fontFamily: "var(--font-m)", color: "#E8734A", background: "rgba(232,115,74,0.12)", border: "1px solid rgba(232,115,74,0.3)", padding: "2px 7px", borderRadius: 3 }}>No engines — configure in ⚙ Settings</span>
+          )}
+          {docCount > 0 && (
+            <span style={{ fontSize: 10, fontFamily: "var(--font-m)", color: "#9B7FE6", background: "rgba(155,127,230,0.12)", border: "1px solid rgba(155,127,230,0.3)", padding: "2px 7px", borderRadius: 3 }}>{docCount} doc{docCount !== 1 ? "s" : ""} in library</span>
           )}
         </div>
         <button onClick={() => setCollapsed(true)} style={{ fontSize: 12, fontFamily: "var(--font-d)", color: "var(--text3)", padding: "4px 10px" }}>Collapse ▼</button>

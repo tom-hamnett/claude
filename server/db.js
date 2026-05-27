@@ -151,6 +151,23 @@ export function initDB() {
     CREATE INDEX IF NOT EXISTS idx_source_files_source ON data_source_files(source_id);
     CREATE INDEX IF NOT EXISTS idx_source_files_status ON data_source_files(status);
 
+    -- Document texts (extracted from non-Excel files for AI context)
+    CREATE TABLE IF NOT EXISTS document_texts (
+      id TEXT PRIMARY KEY,
+      programme_id TEXT NOT NULL,
+      source_file_id TEXT,
+      filename TEXT NOT NULL,
+      file_type TEXT,
+      extracted_text TEXT NOT NULL,
+      char_count INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (programme_id) REFERENCES programmes(id),
+      FOREIGN KEY (source_file_id) REFERENCES data_source_files(id) ON DELETE SET NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_document_texts_programme ON document_texts(programme_id);
+
     -- KPI definitions (user-configured headline metrics)
     CREATE TABLE IF NOT EXISTS kpi_definitions (
       id TEXT PRIMARY KEY,

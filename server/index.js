@@ -13,7 +13,8 @@ import { parseFile, diffTables, parseAllSheets } from "./dataParser.js";
 import { analyzeUpload } from "./smartIngest.js";
 import { PROVIDERS, callEngine, testEngine } from "./ai/providers.js";
 import { syncSource, startScheduler } from "./sources/scheduler.js";
-import { FETCHERS } from "./sources/fetchers.js";
+import { FETCHERS, downloadFile } from "./sources/fetchers.js";
+import { extractText, isDocumentFile, isStructuredFile } from "./documentExtractor.js";
 
 dotenv.config();
 
@@ -610,6 +611,82 @@ app.post("/api/pending-ingestions/:id/mark-ingested", (req, res) => {
   res.json({ ok: true });
 });
 
+// ── Document Text Extraction (non-Excel ingestion) ─────────────────────────
+
+// Ingest a pending file as a document (text extraction for .pptx, .pdf, .docx, etc.)
+app.post("/api/pending-ingestions/:id/ingest-document", async (req, res) => {
+  const db = getDB();
+  const dsf = db.prepare(`
+    SELECT dsf.*, ds.programme_id
+    FROM data_source_files dsf
+    JOIN data_sources ds ON ds.id = dsf.source_id
+    WHERE dsf.id = ?
+  `).get(req.params.id);
+  if (!dsf) { db.close(); return res.status(404).json({ error: "Pending file not found" }); }
+
+  const tempPath = path.join(UPLOADS_DIR, `temp-${Date.now()}-${dsf.filename.replace(/[^a-zA-Z0-9._-]/g, "_")}`);
+  try {
+    await downloadFile({ downloadUrl: dsf.download_url }, tempPath);
+    const result = await extractText(tempPath, dsf.filename);
+
+    const docId = `dtxt-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+
+    const existing = db.prepare("SELECT id FROM document_texts WHERE source_file_id = ?").get(dsf.id);
+    if (existing) {
+      db.prepare("UPDATE document_texts SET extracted_text = ?, char_count = ?, file_type = ?, updated_at = datetime('now') WHERE id = ?")
+        .run(result.text, result.charCount, result.fileType, existing.id);
+    } else {
+      db.prepare("INSERT INTO document_texts (id, programme_id, source_file_id, filename, file_type, extracted_text, char_count) VALUES (?, ?, ?, ?, ?, ?, ?)")
+        .run(docId, dsf.programme_id, dsf.id, dsf.filename, result.fileType, result.text, result.charCount);
+    }
+
+    db.prepare("UPDATE data_source_files SET status = 'ingested', last_ingested_at = datetime('now') WHERE id = ?").run(dsf.id);
+    db.close();
+    try { fs.unlinkSync(tempPath); } catch (_) {}
+
+    res.json({ id: existing?.id || docId, filename: dsf.filename, charCount: result.charCount, fileType: result.fileType });
+  } catch (e) {
+    db.close();
+    try { fs.unlinkSync(tempPath); } catch (_) {}
+    const message = e.message.includes("Download failed 403") || e.message.includes("Download failed 401")
+      ? 'Download URL expired. Click "Sync" on the data source to refresh, then try again.'
+      : `Document extraction failed: ${e.message}`;
+    res.status(500).json({ error: message });
+  }
+});
+
+// Upload + extract text from a document (direct upload, not from sync)
+app.post("/api/programmes/:programmeId/document-texts/upload", upload.single("file"), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: "No file" });
+  try {
+    const result = await extractText(req.file.path, req.file.originalname);
+    const db = getDB();
+    const docId = `dtxt-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    db.prepare("INSERT INTO document_texts (id, programme_id, source_file_id, filename, file_type, extracted_text, char_count) VALUES (?, ?, ?, ?, ?, ?, ?)")
+      .run(docId, req.params.programmeId, null, req.file.originalname, result.fileType, result.text, result.charCount);
+    db.close();
+    res.json({ id: docId, filename: req.file.originalname, charCount: result.charCount, fileType: result.fileType });
+  } catch (e) {
+    res.status(500).json({ error: `Document extraction failed: ${e.message}` });
+  }
+});
+
+// List document texts for a programme (metadata only)
+app.get("/api/programmes/:programmeId/document-texts", (req, res) => {
+  const db = getDB();
+  const rows = db.prepare("SELECT id, filename, file_type, char_count, created_at, updated_at FROM document_texts WHERE programme_id = ? ORDER BY updated_at DESC").all(req.params.programmeId);
+  db.close();
+  res.json(rows);
+});
+
+// Delete a document text
+app.delete("/api/document-texts/:id", (req, res) => {
+  const db = getDB();
+  db.prepare("DELETE FROM document_texts WHERE id = ?").run(req.params.id);
+  db.close();
+  res.json({ ok: true });
+});
+
 // ── AI proxy (multi-provider) ───────────────────────────────────────────────
 
 app.post("/api/ai", async (req, res) => {
@@ -624,6 +701,29 @@ app.post("/api/ai", async (req, res) => {
     engine = db.prepare("SELECT * FROM llm_engines WHERE programme_id = ? AND is_default = 1").get(programmeId);
     if (!engine) engine = db.prepare("SELECT * FROM llm_engines WHERE programme_id = ? ORDER BY created_at LIMIT 1").get(programmeId);
   }
+
+  // Inject document library into system prompt
+  const effectiveProgrammeId = programmeId || engine?.programme_id;
+  let documentContext = "";
+  if (effectiveProgrammeId) {
+    const docs = db.prepare("SELECT filename, file_type, extracted_text FROM document_texts WHERE programme_id = ? ORDER BY updated_at DESC").all(effectiveProgrammeId);
+    if (docs.length) {
+      let totalChars = 0;
+      const maxChars = 60000;
+      const parts = [];
+      for (const doc of docs) {
+        if (totalChars + doc.extracted_text.length > maxChars) {
+          const remaining = maxChars - totalChars;
+          if (remaining > 500) parts.push(`=== ${doc.filename} (${doc.file_type}, truncated) ===\n${doc.extracted_text.slice(0, remaining)}`);
+          break;
+        }
+        parts.push(`=== ${doc.filename} (${doc.file_type}) ===\n${doc.extracted_text}`);
+        totalChars += doc.extracted_text.length;
+      }
+      documentContext = `\n\n[DOCUMENT LIBRARY — ${docs.length} ingested document(s) from connected sources]\nUse these to answer questions. Cite the filename when referencing specific information.\n\n${parts.join("\n\n")}`;
+    }
+  }
+
   db.close();
 
   // Fallback: if no engine configured, try env var (old behaviour)
@@ -637,8 +737,7 @@ app.post("/api/ai", async (req, res) => {
 
   try {
     const { system, messages } = req.body;
-    const result = await callEngine(engine, system, messages);
-    // Return in Anthropic-compatible shape (frontend already parses this)
+    const result = await callEngine(engine, system + documentContext, messages);
     res.json({ content: [{ text: result.text }], _engine: { provider: engine.provider, name: engine.name } });
   } catch (e) {
     res.status(502).json({ error: "AI call failed: " + e.message });
