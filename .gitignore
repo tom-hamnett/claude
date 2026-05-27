@@ -25,4 +25,6 @@ dist-ssr
 *.sln
 *.sw?
 data/*.db
+data/*.db-shm
+data/*.db-wal
 uploads/
