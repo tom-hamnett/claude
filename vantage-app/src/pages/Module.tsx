@@ -11,6 +11,8 @@ import { Markdown } from '../lib/markdown';
 import { ACCENT, Empty } from '../components/ui';
 import type { PracticeKind } from '../types';
 
+const QUIZ_PASS = 0.75;
+
 const PRACTICE_META: Record<PracticeKind, { icon: string; label: string }> = {
   observe: { icon: '👁️', label: 'Observation drill' },
   experiment: { icon: '🧪', label: 'In-meeting experiment' },
@@ -46,6 +48,20 @@ export default function ModulePage() {
   const ac = ACCENT[track.accent];
   const lessonsDone = new Set(progress?.lessonsDone ?? []);
 
+  function deriveCompletedAt(
+    lessonsAll: boolean,
+    quizScoreNow: number | undefined,
+    prevCompletedAt: number | undefined,
+  ): number | undefined {
+    if (!mod) return undefined;
+    const hasQuiz = quizForModule(mod.number).length > 0;
+    const quizPassed = (quizScoreNow ?? 0) >= QUIZ_PASS;
+    // Preserve pre-existing completion (from before the quiz requirement existed)
+    // as long as the lessons are still all done.
+    const meetsCriteria = lessonsAll && (!hasQuiz || quizPassed || prevCompletedAt != null);
+    return meetsCriteria ? (prevCompletedAt ?? Date.now()) : undefined;
+  }
+
   async function toggleLesson(id: string) {
     if (!mod) return;
     const cur = await db.progress.get(mod.number);
@@ -56,7 +72,9 @@ export default function ModulePage() {
       moduleNumber: mod.number,
       lessonsDone: [...set],
       practiceDone: cur?.practiceDone ?? [],
-      completedAt: all ? (cur?.completedAt ?? Date.now()) : undefined,
+      quizScore: cur?.quizScore,
+      quizDoneAt: cur?.quizDoneAt,
+      completedAt: deriveCompletedAt(all, cur?.quizScore, cur?.completedAt),
       lastViewedAt: Date.now(),
     });
   }
@@ -64,13 +82,14 @@ export default function ModulePage() {
   async function saveQuizScore(fraction: number) {
     if (!mod) return;
     const cur = await db.progress.get(mod.number);
+    const lessonsAll = mod.lessons.every((l) => (cur?.lessonsDone ?? []).includes(l.id));
     await db.progress.put({
       moduleNumber: mod.number,
       lessonsDone: cur?.lessonsDone ?? [],
       practiceDone: cur?.practiceDone ?? [],
       quizScore: fraction,
       quizDoneAt: Date.now(),
-      completedAt: cur?.completedAt,
+      completedAt: deriveCompletedAt(lessonsAll, fraction, cur?.completedAt),
       lastViewedAt: Date.now(),
     });
   }
@@ -188,7 +207,9 @@ export default function ModulePage() {
       {/* Self-check quiz */}
       {quizForModule(mod.number).length > 0 && (
         <Section title="Check your understanding">
-          <p className="text-ink-500 text-sm mb-3 -mt-1">A quick self-check on the key ideas. Answer to see why — it’s for you, not a grade.</p>
+          <p className="text-ink-500 text-sm mb-3 -mt-1">
+            A quick self-check on the key ideas. Pass with <span className="font-semibold">{Math.round(QUIZ_PASS * 100)}%</span> or higher (and finish the lessons) to mark this module complete.
+          </p>
           <ModuleQuiz
             questions={quizForModule(mod.number)}
             prevScore={progress?.quizScore}
