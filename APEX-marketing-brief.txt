@@ -1,0 +1,260 @@
+## 1. POSITIONING CORE
+
+**One-sentence description:**
+APEX is a programme intelligence platform that connects to your existing SharePoint documents, automatically extracts structured data and text from every file type, and gives your AI assistant persistent, grounded access to your entire programme — so anyone from the CPO down can ask a question and get an answer backed by real source data.
+
+**Sharpest one-liner:**
+Your documents already contain the answers. APEX reads them.
+
+**Category (3–5 words):**
+Programme Intelligence Platform
+
+---
+
+## 2. HERO
+
+**Headline (≤10 words):**
+Your programme data, finally in one **brain**.
+
+**Sub-headline (2–3 sentences):**
+APEX connects to your SharePoint, reads every document — Excel trackers, PowerPoint status packs, PDF reports — and builds a persistent AI knowledge base from them. Ask a question in plain English, get an answer grounded in your actual programme data. No manual re-keying, no stale dashboards, no waiting for someone to compile a pack.
+
+---
+
+## 3. THE PROBLEM / "THE GAP"
+
+| What people do today | Rough cost/time | Core weakness |
+|---|---|---|
+| **Commission a consultancy** (McKinsey, Deloitte, Big 4 PMO advisory) | £150K–£500K per engagement, 8–16 weeks | Delivers a static PDF. Stale by the time it's presented. Doesn't integrate with your live data. You pay again next quarter. |
+| **Buy an enterprise PPM tool** (Planview, ServiceNow SPM, Clarity) | £50K–£250K/yr licence + 6–12 month implementation | Designed for portfolio-level governance, not programme-level intelligence. Requires dedicated admin team. Data entry is manual — your team ends up maintaining two systems. |
+| **Use project trackers** (Jira, Monday.com, Smartsheet, MS Project) | £10–£30/user/month, weeks to configure | Task-level, not programme-level. No document ingestion. No AI. Your status pack is still a manually compiled PowerPoint that nobody reads the same way twice. |
+| **Do it manually** (email, SharePoint folders, monthly compilation by a PMO analyst) | 2–5 days/month of senior analyst time | The analyst becomes a single point of failure. Context lives in their head. The CPO gets a pack 3 weeks after the reporting period. Questions require another round-trip. |
+
+**Closing line:**
+...or point APEX at your SharePoint folder and ask it a question.
+
+---
+
+## 4. HOW IT WORKS — 5 STEPS
+
+**1. Connect your sources**
+Paste a SharePoint sharing link, or sign in with your Microsoft account via a one-time device code flow. APEX also connects to Google Drive, OneDrive, GCS, or any HTTPS endpoint. No IT ticket required for the basic path. [The Microsoft OAuth flow was built and tested in this thread.]
+
+**2. APEX discovers and polls**
+A scheduler polls your sources on a configurable interval (default: hourly). It detects new and changed files via content hashing — only changed files trigger re-ingestion. You see a pending ingestions queue showing exactly what's new.
+
+**3. Dual-path ingestion**
+Excel and CSV files are parsed into structured data tables with auto-detected column types, dimension detection, and version diffing against previous uploads. PowerPoint, PDF, and Word documents are text-extracted and stored in a persistent document library. Both paths feed the AI. [Multimodal image-based parsing for PowerPoint slides is planned but not yet built — Workstream 3.]
+
+**4. AI knows your programme**
+Every question you ask in the chat is automatically enriched with your full document library (up to 60,000 characters of source text injected server-side) plus the structured data visible on your current page. The AI cites filenames. No drag-and-drop, no re-uploading — it just knows.
+
+**5. Structured outputs, not just answers**
+The AI proposes structured changes — executive summaries, risk register entries, programme updates — that you accept or reject with one click. KPIs are defined against your data tables with configurable RAG thresholds, and gaps are automatically detected (stale data, missing dimensions, null values).
+
+---
+
+## 5. THE 5 INTEGRATED LAYERS
+
+**Layer 1: CONNECT — Enterprise Source Integration**
+Connects to SharePoint (anonymous links, org-internal links via OAuth, or IT-managed app registrations), Google Drive, OneDrive, GCS, HTTP endpoints, and uploaded ZIPs. The Microsoft OAuth flow uses device code authentication — the user signs in with their corporate credentials, APEX stores a refresh token, and all subsequent access uses the user's identity. No service accounts, no IT provisioning. Tokens refresh automatically.
+
+**Layer 2: INGEST — Dual-Path Document Processing**
+Excel/CSV files are parsed into structured data tables: column type detection (number, date, string), dimension identification (categorical columns with ≤30% unique values), and automatic version diffing when a file is updated. Non-Excel files (.pptx, .pdf, .docx) are text-extracted via officeparser and stored in a persistent document library. Both paths are triggered from the same pending ingestions queue — the UI distinguishes "DATA" files (gold) from "DOC" files (purple). [PLANNED: Workstream 3 adds multimodal parsing via Gemini, processing PowerPoint slides as images to capture colour-coded RAG status that text extractors lose.]
+
+**Layer 3: STRUCTURE — Data Model & Gap Detection**
+Structured data lives in versioned tables with full column metadata. KPI definitions link to source tables with configurable value columns, time columns, dimension columns, aggregation methods (sum/count/avg), targets, and RAG thresholds (green/amber). Data templates define expected shapes for recurring uploads, with automatic template matching on ingestion (percentage match score). Gap detection runs across all KPIs: missing source tables, empty data, stale data (>45 days), missing dimension coverage in the latest period, and null values in metric columns.
+
+**Layer 4: INTELLIGENCE — AI Engine (Provider-Agnostic)**
+Multi-provider LLM support: Anthropic (Claude), OpenAI, Azure OpenAI, Google Gemini, GitHub Models, and custom endpoints. Users configure engines in Settings — multiple can coexist, with one marked as default. The AI chat's system prompt is enriched server-side with the full document library (up to 60K characters, most-recent-first). The AI operates as a senior PMO advisor: it answers questions grounded in source data, proposes structured changes (executive summaries, risk entries, programme updates), and respects an explicit confirmation workflow — it never commits changes silently.
+
+**Layer 5: PRESENT — Dashboard, Reporting & Integration**
+React dashboard with KPI visualisation (Recharts), metric panels organised by domain and panel, data table browser with row-level inspection and CSV export. Tableau integration via a built-in Web Data Connector (WDC) endpoint — Tableau Desktop connects directly to APEX's API and pulls denormalised programme data. Per-domain Tableau feeds with metric metadata (target, direction, unit). Full audit log of all programme changes with before/after state.
+
+---
+
+## 6. WHY US / USPs — 5 DIFFERENTIATORS
+
+**1. Zero data entry — reads your existing documents**
+APEX doesn't ask you to type anything into a new system. It reads the SharePoint folder your team already updates. The Excel trackers, the PowerPoint status packs, the PDF reports from vendors — they're already there. APEX polls, detects changes, and ingests. Your team's workflow doesn't change; APEX just starts listening.
+
+**2. AI that actually knows your programme**
+Generic AI (ChatGPT, Copilot) can answer general questions. APEX's AI has your programme data in context — every ingested document, every structured data table. When the CPO asks "what's our CRF eligible spend trend by region?", the answer comes from your actual CRF Analysis spreadsheet, not a hallucination. The AI cites the source filename.
+
+**3. Works with any enterprise AI policy**
+Six LLM providers supported out of the box: Anthropic Claude, OpenAI, Azure OpenAI, Google Gemini, GitHub Models, and custom endpoints. If your enterprise mandates Azure-hosted models only, APEX works. If your team has a Gemini Enterprise licence, APEX works. If policy changes next quarter, swap the engine in Settings — no code change, no migration. [INFERRED: this is a significant enterprise selling point given the current volatility in AI policy across large corporates.]
+
+**4. Programme-level, not task-level**
+Jira tracks tickets. Monday tracks tasks. APEX tracks the programme — the cross-workstream view that the CPO, the board, and the SteerCo actually need. It understands status packs, risk registers, budget trackers, and initiative portfolios. It detects data gaps across KPIs and flags when metrics are stale or dimensions are missing.
+
+**5. Deployed in minutes, not months**
+APEX runs in a GitHub Codespace or on any Node.js host. No procurement cycle, no enterprise deployment project, no dedicated admin. Tom Hamnett configured SharePoint OAuth, connected a live IHG folder, and tested document ingestion in a single working session. [This is documented in this thread.] Compare to Planview (6–12 month implementation) or ServiceNow SPM (enterprise deployment + consultancy).
+
+---
+
+## 7. COMPETITIVE COMPARISON
+
+| Dimension | APEX | Jira / Monday.com | Planview / ServiceNow SPM | Power BI / Tableau | Copilot (M365) |
+|---|---|---|---|---|---|
+| **Document ingestion from SharePoint** | Auto-polls, dual-path (data + text) | No | No | Manual data prep | Can search files, no structured ingestion |
+| **AI Q&A grounded in programme data** | Yes — full document library in context | No | No | No (visualisation only) | Yes, but no structured data tables or KPIs |
+| **Structured KPIs with RAG thresholds** | Yes — defined against source tables | Limited (custom fields) | Yes (but manual config) | Yes (manual setup) | No |
+| **Data gap detection** | Automatic (stale data, missing dims, nulls) | No | Partial | No | No |
+| **LLM provider choice** | 6 providers, user-configurable | N/A | N/A | N/A | Microsoft-only |
+| **Setup time** | Minutes (paste a link, connect) | Days–weeks | Months | Weeks | Instant (but limited) |
+| **Version diffing on data updates** | Automatic (row-level diff) | No | No | No | No |
+| **Cost** | [NOT ESTABLISHED — flag for Tom] | £10–30/user/mo | £50K–250K/yr | £10–70/user/mo | Included in M365 E3/E5 |
+
+**Where APEX does NOT yet win (honest):**
+- **Task management / work breakdown** — Jira and Monday are purpose-built for this. APEX doesn't track individual tasks or assignments.
+- **Resource management** — Planview has deep resource capacity planning. APEX doesn't.
+- **Gantt charts / scheduling** — MS Project and Smartsheet are better for timeline visualisation. APEX has no Gantt.
+- **Enterprise SSO / governance** — Currently running in a Codespace with no SSO. Production deployment with Azure AD SSO is planned but not built.
+- **Multi-programme scale** — Currently optimised for a single programme. Multi-programme portfolio view is not yet built.
+- **Multimodal document understanding** — PowerPoint RAG colours (red/amber/green conveyed via formatting) are lost in text extraction. Workstream 3 (Gemini multimodal) is planned but not shipped.
+
+---
+
+## 8. BUYER SEGMENTS
+
+**Segment 1: The CPO / Programme Sponsor**
+**Who:** Senior executive (C-suite or VP) who owns the programme outcome but doesn't compile the data.
+**Pain:** Gets a monthly pack that's 3 weeks old. Can't ask follow-up questions without round-tripping through the PMO. Doesn't trust the numbers because they can't see the source.
+**What APEX gives them:** Ask any question in the chat, get an answer grounded in the latest source documents. See KPIs with automated RAG status. Review AI-proposed executive summaries and accept with one click.
+
+**Segment 2: The PMO Lead / Programme Director**
+**Who:** The person responsible for programme reporting, risk management, and status compilation. Tom Hamnett's role.
+**Pain:** Spends days compiling status from scattered SharePoint files, trackers, and emails. Maintains a PowerPoint pack that takes hours to update. Gets asked "where did this number come from?" and has to trace it manually.
+**What APEX gives them:** Automatic ingestion from the same SharePoint folders they already maintain. Version-tracked data tables with diff visibility. AI that can draft the status update, the risk entry, or the exec summary — they review and approve. Gap detection flags what's missing before the CPO asks.
+
+**Segment 3: The Data / Analytics Lead**
+**Who:** The person who builds reports, maintains Tableau/Power BI dashboards, and handles data quality.
+**Pain:** Spends time cleaning and reformatting Excel exports. Manually maintains ETL pipelines from SharePoint to BI tools. Gets different answers from different dashboards because source data is inconsistent.
+**What APEX gives them:** Structured data tables with type detection and template matching. Built-in Tableau WDC connector. CSV export. Version history. A single source of parsed truth that both the dashboard and the AI reference.
+
+---
+
+## 9. THE OUTPUT / DELIVERABLE
+
+What the user actually receives after connecting APEX to their sources:
+
+- **Pending Ingestions Queue** — every new/changed file from connected sources, categorised as DATA (Excel) or DOC (Office/PDF), with one-click ingest
+- **Structured Data Tables** — parsed Excel data with auto-detected column types, dimension flags, row counts, and version history with row-level diffs
+- **Document Library** — extracted text from all non-Excel documents, persistently stored and automatically available to the AI
+- **KPI Definitions** — user-configured metrics linked to source tables, with aggregation, targets, RAG thresholds, and time-series grouping
+- **Gap Detection Report** — automatic identification of missing data sources, stale data (>45 days), missing dimension coverage, and null values across all KPIs
+- **AI Chat with Programme Context** — conversational Q&A grounded in the full document library + current page data, with structured proposals (executive summaries, risk entries, updates) that can be accepted with one click
+- **Tableau Integration** — live WDC endpoint for direct connection from Tableau Desktop, with per-domain feeds and full metadata
+- **Audit Log** — complete history of all programme changes with before/after state, change source, and timestamp
+- **CSV Exports** — any data table exportable as CSV at any time
+
+---
+
+## 10. ONE-CLICK STATUS REPORT
+
+**Honest assessment:** There is no dedicated "generate status report" button on the dashboard today. What exists: the AI chat can generate an executive summary, risk entries, or programme updates when asked, and proposes them as structured objects that the user accepts with one click (`Accept & Apply`). The accepted summary is written directly into the programme state.
+
+**[INFERRED] The "8 seconds, board-ready" claim:** I cannot verify this specific timing. The AI response time depends on the LLM provider and the size of the document library context. With Claude Sonnet and a moderate document library (~30K characters), a response typically takes 3–8 seconds. The output is a structured executive summary in PMO-appropriate language. Calling it "board-ready" is defensible if the user has ingested current source documents — the AI cites real data, not hallucinations. But it's a draft for review, not a final deliverable. **Recommend: "Ask a question, get a board-ready draft in seconds" rather than claiming a specific number.**
+
+---
+
+## 11. AI ENGINE AGNOSTICISM — WHY IT MATTERS
+
+APEX supports six LLM providers: **Anthropic Claude, OpenAI, Azure OpenAI, Google Gemini, GitHub Models, and custom API endpoints.** Users configure engines in Settings with their own API keys — multiple engines can coexist, with one marked as default.
+
+**Why this matters for enterprise buyers:**
+
+1. **AI policy is volatile.** Large enterprises are changing their approved AI vendors quarterly. If you build on ChatGPT and the CISO mandates Azure-only, your tool breaks. APEX doesn't — swap the engine in Settings, keep working.
+
+2. **Different engines for different tasks.** [PLANNED for Workstream 2] Tom's architecture uses Claude for conversational chat (better at nuanced PMO reasoning) and Gemini Enterprise for multimodal document parsing (better at reading slide images). APEX supports this natively.
+
+3. **Data residency.** Enterprise AI policies often mandate that data stays in-region. Azure OpenAI lets you choose deployment region. APEX passes through to whatever endpoint you configure — it doesn't route your data through a third-party proxy.
+
+4. **No vendor lock-in.** If Anthropic raises prices or OpenAI changes terms, switch. Your data, your KPIs, your document library — all stay in APEX. Only the inference endpoint changes.
+
+---
+
+## 12. COMPETITIVE MATRIX vs JIRA / MONDAY / PLANVIEW
+
+| Dimension | APEX | Jira | Monday.com | Planview |
+|---|---|---|---|---|
+| Reads your existing SharePoint docs | Yes (auto-poll + OAuth) | No | No | No |
+| AI Q&A on programme data | Yes (multi-provider) | Atlassian Intelligence (limited) | Monday AI (limited) | No |
+| Structured KPI engine | Yes (linked to source tables) | No (custom fields only) | No (dashboards are visual) | Yes (manual) |
+| Setup to first insight | ~15 minutes | Days–weeks | Days | 6–12 months |
+| Document version tracking | Yes (content-hash diff) | No | No | No |
+| Works with enterprise AI policy | 6 providers, user choice | Atlassian-hosted only | Monday-hosted only | N/A |
+| Data gap detection | Automatic | No | No | Partial |
+| Price point | [NOT ESTABLISHED] | £10–30/user/mo | £10–24/user/mo | £50K–250K+/yr |
+| Task-level tracking | **No** | **Yes (core strength)** | **Yes (core strength)** | Yes |
+| Resource management | **No** | Partial (plugins) | Partial | **Yes (core strength)** |
+| Gantt / scheduling | **No** | Yes (Roadmaps) | Yes (Timeline) | **Yes (core strength)** |
+| Enterprise SSO | **Not yet** | Yes | Yes | Yes |
+
+**Positioning note:** APEX is not competing with Jira/Monday at the task level. It competes at the programme intelligence level — the layer above, where the CPO asks "how is the programme doing?" and today gets a manually compiled PowerPoint 3 weeks late.
+
+---
+
+## 13. PROOF & HONESTY
+
+**What's genuinely built and working (verified in this thread):**
+- Full React + Express + SQLite application running in a GitHub Codespace
+- 8 source connector types including SharePoint with OAuth device code flow
+- Auto-polling scheduler with content-hash change detection
+- Excel/CSV parser with column type detection, dimension identification, version diffing
+- Document text extraction for .pptx, .pdf, .docx via officeparser
+- AI chat with server-side document library injection (up to 60K chars)
+- Multi-provider LLM support (6 providers configured)
+- KPI engine with RAG thresholds and gap detection
+- Tableau WDC integration
+- Audit logging with before/after state
+
+**What's planned but not yet built:**
+- Gemini Enterprise as a second LLM provider for multimodal parsing (Workstream 2)
+- Multimodal PowerPoint parsing — processing slides as images to capture RAG colour coding (Workstream 3)
+- Production deployment on Azure App Service (currently Codespace-only)
+- Enterprise SSO / RBAC
+- Multi-programme portfolio view
+- Deep recursive subfolder scanning (currently one level deep)
+- Vector search / semantic retrieval (currently brute-force context injection)
+
+**Honest limitations:**
+- PowerPoint RAG colours (red/amber/green conveyed via cell/shape formatting) are **lost** during text extraction. The text content is captured but the visual status indicators are not. This is the primary gap that Workstream 3 addresses.
+- The document library context window (60K chars) means very large document libraries will be truncated — most-recent-first. No semantic search to select the most relevant documents.
+- Download URLs from SharePoint sharing links expire after ~1 hour. If a file is discovered but not ingested promptly, the user needs to re-sync.
+- Currently single-tenant, single-user. No authentication on the APEX application itself.
+
+---
+
+## 14. CTA & STATUS
+
+**Recommended CTA:** "Request Early Access"
+
+**What happens when someone clicks it:** [NOT ESTABLISHED — Tom needs to decide. Options: email form, Calendly link for a demo, waitlist signup. Based on the EDGE page pattern Tom referenced, likely a form that captures name/email/company/role.]
+
+**Status label:** Beta — active pilot with IHG Procurement Excellence.
+
+---
+
+## 15. HARD CONSTRAINTS
+
+**Claims we must NOT make:**
+- No accuracy guarantees on AI outputs — the AI proposes, the human approves. Never claim "automated reporting" without the human-in-the-loop qualifier.
+- No GDPR compliance claim unless a DPA/privacy assessment has been completed. APEX stores document text in SQLite on the Codespace — no data residency guarantee yet.
+- Do not claim "real-time" — the scheduler polls on intervals (default 60 min), not via webhooks.
+- Do not claim the AI "understands" PowerPoint visual formatting — it extracts text only. The colour-coded RAG gap should be stated honestly.
+- Do not claim enterprise-grade security — no SSO, no encryption at rest, no SOC2. Codespace-hosted.
+
+**Terms to handle carefully:**
+- "Copilot" — avoid confusion with Microsoft 365 Copilot. APEX is not a Copilot extension.
+- Specific competitor names in the comparison table are fine for internal positioning but consider softening to categories ("enterprise PPM tools", "task trackers") on the public page if legal is cautious.
+- "IHG" — confirm with Tom whether the pilot customer can be named publicly or should be anonymised ("a Fortune 500 hospitality group").
+
+---
+
+**[FLAGS FOR TOM]**
+- Pricing/business model not discussed — needed for the page or explicitly omitted per "no prices" constraint?
+- CTA destination not defined — what happens after "Request Early Access"?
+- Can IHG be named as the pilot customer?
+- The "8 seconds, board-ready" claim needs either a real benchmark or softer language.
+- The 5 layer names I've used (Connect, Ingest, Structure, Intelligence, Present) are my synthesis — confirm or rename.
