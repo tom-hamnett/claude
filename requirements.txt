@@ -5,7 +5,8 @@ pydantic>=2.9.0
 python-dotenv>=1.0.0
 
 # Database
-supabase>=2.9.0
+libsql-experimental>=0.0.40   # Turso cloud DB (free tier, SQLite-compatible)
+supabase>=2.9.0               # Alternative cloud DB (not currently used)
 
 # Scheduling
 APScheduler>=3.10.0

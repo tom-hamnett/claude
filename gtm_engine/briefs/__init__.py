@@ -88,8 +88,13 @@ class BriefQueue:
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_schema()
 
+    def _get_conn(self):
+        """Get a DB connection — Turso if configured, local SQLite otherwise."""
+        from gtm_engine.db.connection import get_connection
+        return get_connection(self.db_path)
+
     def _connect(self) -> sqlite3.Connection:
-        conn = sqlite3.connect(str(self.db_path))
+        conn = self._get_conn()
         conn.row_factory = sqlite3.Row
         return conn
 

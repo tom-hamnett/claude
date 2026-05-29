@@ -46,6 +46,11 @@ def main():
     st.set_page_config(page_title="Quantum Tools GTM", layout="wide",
                        initial_sidebar_state="collapsed")
     _apply_theme()
+
+    # Password gate (only active if APP_PASSWORD is set)
+    if not _check_auth():
+        return
+
     _init_db()
 
     # First-time? Show onboarding
@@ -113,6 +118,36 @@ def _apply_theme():
     }}
     .stProgress>div>div>div {{ background:{C['primary']}!important; }}
     </style>""", unsafe_allow_html=True)
+
+
+def _check_auth() -> bool:
+    """Simple password gate. Only active if APP_PASSWORD is set in .env or Streamlit secrets."""
+    from gtm_engine.config import APP_PASSWORD
+
+    # Also check Streamlit secrets (for Streamlit Cloud deployment)
+    password = APP_PASSWORD
+    if not password:
+        try:
+            password = st.secrets.get("APP_PASSWORD", "")
+        except Exception:
+            pass
+
+    if not password:
+        return True  # No password set — open access (local dev)
+
+    if st.session_state.get("authenticated"):
+        return True
+
+    st.markdown("### Quantum Tools GTM")
+    st.caption("Enter your password to continue.")
+    entered = st.text_input("Password", type="password")
+    if st.button("Enter"):
+        if entered == password:
+            st.session_state["authenticated"] = True
+            st.rerun()
+        else:
+            st.error("Incorrect password.")
+    return False
 
 
 # ═══════════════════════════════════════════════════════════════════════════

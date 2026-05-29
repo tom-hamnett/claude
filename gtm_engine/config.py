@@ -1,5 +1,6 @@
 """Centralised configuration loaded from environment variables.
 
+Reads from .env (local dev) or Streamlit secrets (cloud deployment).
 Every module imports config values from here. No hardcoded keys anywhere.
 """
 
@@ -9,6 +10,18 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv()
+
+
+def _get(key: str, default: str = "") -> str:
+    """Get a config value from env vars first, then Streamlit secrets as fallback."""
+    val = os.getenv(key, "")
+    if val:
+        return val
+    try:
+        import streamlit as st
+        return st.secrets.get(key, default)
+    except Exception:
+        return default
 
 # Paths
 ROOT_DIR = Path(__file__).resolve().parent.parent
@@ -21,16 +34,23 @@ LOGS_DIR = ROOT_DIR / "logs"
 for d in [DATA_DIR, OUTPUT_DIR, CONTENT_QUEUE_DIR, LOGS_DIR]:
     d.mkdir(exist_ok=True)
 
-# AI providers
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
-DEFAULT_AI_MODEL = os.getenv("DEFAULT_AI_MODEL", "claude-sonnet-4-20250514")
+# AI providers (reads .env first, then Streamlit secrets)
+ANTHROPIC_API_KEY = _get("ANTHROPIC_API_KEY")
+OPENAI_API_KEY = _get("OPENAI_API_KEY")
+GOOGLE_API_KEY = _get("GOOGLE_API_KEY")
+DEFAULT_AI_MODEL = _get("DEFAULT_AI_MODEL", "claude-sonnet-4-20250514")
 
 # Database
-SUPABASE_URL = os.getenv("SUPABASE_URL", "")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
+# Local: uses SQLite file in data/
+# Cloud: uses Turso (libsql) — set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN
+SUPABASE_URL = _get("SUPABASE_URL")
+SUPABASE_KEY = _get("SUPABASE_KEY")
+TURSO_DATABASE_URL = _get("TURSO_DATABASE_URL")
+TURSO_AUTH_TOKEN = _get("TURSO_AUTH_TOKEN")
 SQLITE_PATH = DATA_DIR / "gtm_engine.db"
+
+# App password (simple gate for Streamlit Cloud deployment)
+APP_PASSWORD = _get("APP_PASSWORD")
 
 # Deployment channels
 REDDIT_CLIENT_ID = os.getenv("REDDIT_CLIENT_ID", "")
