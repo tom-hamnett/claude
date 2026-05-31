@@ -1,30 +1,20 @@
-# Core
+# Core AI
 anthropic>=0.40.0
-google-genai>=1.0.0          # New SDK — covers Gemini text, Veo video, Imagen images
+google-genai>=1.0.0
 pydantic>=2.9.0
 python-dotenv>=1.0.0
-
-# Database
-libsql-experimental>=0.0.40   # Turso cloud DB (free tier, SQLite-compatible)
-supabase>=2.9.0               # Alternative cloud DB (not currently used)
-
-# Scheduling
-APScheduler>=3.10.0
 
 # Web UI
 streamlit>=1.39.0
 
-# Deployment channels
-praw>=7.7.0          # Reddit
-tweepy>=4.14.0       # X/Twitter
-sendgrid>=6.11.0     # Email
-
-# Testing
-pytest>=8.3.0
-pytest-asyncio>=0.24.0
-
 # Utilities
 httpx>=0.27.0
-tenacity>=9.0.0      # Retry logic
-rich>=13.9.0         # CLI formatting
-Pillow>=10.0.0       # Image loading for reference image support
+tenacity>=9.0.0
+rich>=13.9.0
+Pillow>=10.0.0
+
+# These are only needed for CLI deployment features (not the UI):
+# praw>=7.7.0          # Reddit
+# tweepy>=4.14.0       # X/Twitter
+# sendgrid>=6.11.0     # Email
+# APScheduler>=3.10.0  # Scheduling
