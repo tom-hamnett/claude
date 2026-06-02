@@ -2,6 +2,7 @@
 import { useState } from "react";
 import EnginesManager from "./EnginesManager.jsx";
 import SourcesManager from "./SourcesManager.jsx";
+import PendingIngestions from "../metrics/PendingIngestions.jsx";
 
 const TABS = [
   { id: "engines", label: "🧠 AI Engines" },
@@ -30,7 +31,14 @@ export default function Settings({ programmeId, onClose }) {
 
         <div style={{ flex: 1, overflowY: "auto", padding: 20 }}>
           {tab === "engines" && <EnginesManager programmeId={programmeId} />}
-          {tab === "sources" && <SourcesManager programmeId={programmeId} />}
+          {tab === "sources" && (
+            <>
+              <SourcesManager programmeId={programmeId} />
+              <div style={{ marginTop: 24 }}>
+                <PendingIngestions programmeId={programmeId} onIngestFile={() => {}} />
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
