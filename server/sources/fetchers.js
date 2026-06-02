@@ -177,9 +177,13 @@ async function fetchSharePointSharedFolder(source) {
       for (const sub of folders) {
         if (totalFiles >= maxFiles || foldersScanned >= maxFolders || Date.now() - startTime > timeoutMs) break;
         const subPath = prefix ? `${prefix}/${sub.name}` : sub.name;
-        const subUrl = prefix
-          ? `https://graph.microsoft.com/v1.0/shares/${encoded}/driveItem:/${encodeURIComponent(prefix)}/${encodeURIComponent(sub.name)}:/children`
-          : `https://graph.microsoft.com/v1.0/shares/${encoded}/driveItem:/${encodeURIComponent(sub.name)}:/children`;
+        // Use driveId/itemId navigation (reliable) instead of path-based URLs (fragile with encoded paths)
+        const driveId = sub.parentReference?.driveId;
+        const subUrl = driveId
+          ? `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${sub.id}/children`
+          : (prefix
+            ? `https://graph.microsoft.com/v1.0/shares/${encoded}/driveItem:/${encodeURIComponent(prefix)}/${encodeURIComponent(sub.name)}:/children`
+            : `https://graph.microsoft.com/v1.0/shares/${encoded}/driveItem:/${encodeURIComponent(sub.name)}:/children`);
         try {
           const subFiles = await listFolder(subUrl, subPath, depth + 1);
           files = files.concat(subFiles);
