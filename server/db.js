@@ -160,6 +160,10 @@ export function initDB() {
       file_type TEXT,
       extracted_text TEXT NOT NULL,
       char_count INTEGER DEFAULT 0,
+      doc_type TEXT DEFAULT 'other',
+      doc_date TEXT,
+      is_latest INTEGER DEFAULT 0,
+      audience_level TEXT DEFAULT 'operational',
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now')),
       FOREIGN KEY (programme_id) REFERENCES programmes(id),
@@ -212,6 +216,19 @@ export function initDB() {
       FOREIGN KEY (source_table_id) REFERENCES data_tables(id)
     );
   `);
+
+  // Migrations for existing databases
+  const migrations = [
+    "ALTER TABLE document_texts ADD COLUMN doc_type TEXT DEFAULT 'other'",
+    "ALTER TABLE document_texts ADD COLUMN doc_date TEXT",
+    "ALTER TABLE document_texts ADD COLUMN is_latest INTEGER DEFAULT 0",
+    "ALTER TABLE document_texts ADD COLUMN audience_level TEXT DEFAULT 'operational'",
+  ];
+  for (const sql of migrations) {
+    try { db.exec(sql); } catch (_) {}
+  }
+
+  try { db.exec("CREATE INDEX IF NOT EXISTS idx_document_texts_type ON document_texts(programme_id, doc_type, is_latest)"); } catch (_) {}
 
   return db;
 }

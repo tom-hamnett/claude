@@ -16,6 +16,7 @@ import { syncSource, startScheduler } from "./sources/scheduler.js";
 import { FETCHERS, downloadFile } from "./sources/fetchers.js";
 import { extractText, isDocumentFile, isStructuredFile } from "./documentExtractor.js";
 import { requestDeviceCode, pollForToken, getUserProfile, getValidToken } from "./auth/microsoft.js";
+import { classifyDocument, refreshIsLatest } from "./documentClassifier.js";
 
 dotenv.config();
 
@@ -732,11 +733,17 @@ app.post("/api/pending-ingestions/:id/ingest-document", async (req, res) => {
         .run(docId, dsf.programme_id, dsf.id, dsf.filename, result.fileType, result.text, result.charCount);
     }
 
+    // Classify document
+    const cls = classifyDocument(dsf.filename);
+    db.prepare("UPDATE document_texts SET doc_type = ?, doc_date = ?, audience_level = ? WHERE id = ?")
+      .run(cls.doc_type, cls.doc_date, cls.audience_level, existing?.id || docId);
+    refreshIsLatest(db, dsf.programme_id);
+
     db.prepare("UPDATE data_source_files SET status = 'ingested', last_ingested_at = datetime('now') WHERE id = ?").run(dsf.id);
     db.close();
     try { fs.unlinkSync(tempPath); } catch (_) {}
 
-    res.json({ id: existing?.id || docId, filename: dsf.filename, charCount: result.charCount, fileType: result.fileType });
+    res.json({ id: existing?.id || docId, filename: dsf.filename, charCount: result.charCount, fileType: result.fileType, classification: cls });
   } catch (e) {
     db.close();
     try { fs.unlinkSync(tempPath); } catch (_) {}
@@ -766,9 +773,25 @@ app.post("/api/programmes/:programmeId/document-texts/upload", upload.single("fi
 // List document texts for a programme (metadata only)
 app.get("/api/programmes/:programmeId/document-texts", (req, res) => {
   const db = getDB();
-  const rows = db.prepare("SELECT id, filename, file_type, char_count, created_at, updated_at FROM document_texts WHERE programme_id = ? ORDER BY updated_at DESC").all(req.params.programmeId);
+  const rows = db.prepare("SELECT id, filename, file_type, char_count, doc_type, doc_date, is_latest, audience_level, created_at, updated_at FROM document_texts WHERE programme_id = ? ORDER BY is_latest DESC, doc_date DESC, updated_at DESC").all(req.params.programmeId);
   db.close();
   res.json(rows);
+});
+
+// Reclassify all existing documents (one-time backfill)
+app.post("/api/programmes/:programmeId/document-texts/reclassify", (req, res) => {
+  const db = getDB();
+  const docs = db.prepare("SELECT id, filename FROM document_texts WHERE programme_id = ?").all(req.params.programmeId);
+  let updated = 0;
+  for (const doc of docs) {
+    const c = classifyDocument(doc.filename);
+    db.prepare("UPDATE document_texts SET doc_type = ?, doc_date = ?, audience_level = ? WHERE id = ?")
+      .run(c.doc_type, c.doc_date, c.audience_level, doc.id);
+    updated++;
+  }
+  refreshIsLatest(db, req.params.programmeId);
+  db.close();
+  res.json({ ok: true, reclassified: updated });
 });
 
 // Delete a document text
@@ -794,25 +817,47 @@ app.post("/api/ai", async (req, res) => {
     if (!engine) engine = db.prepare("SELECT * FROM llm_engines WHERE programme_id = ? ORDER BY created_at LIMIT 1").get(programmeId);
   }
 
-  // Inject document library into system prompt
+  // Inject document library into system prompt with metadata-aware prioritization
   const effectiveProgrammeId = programmeId || engine?.programme_id;
   let documentContext = "";
   if (effectiveProgrammeId) {
-    const docs = db.prepare("SELECT filename, file_type, extracted_text FROM document_texts WHERE programme_id = ? ORDER BY updated_at DESC").all(effectiveProgrammeId);
+    const docs = db.prepare("SELECT filename, file_type, extracted_text, doc_type, doc_date, is_latest, audience_level, char_count FROM document_texts WHERE programme_id = ? ORDER BY is_latest DESC, doc_date DESC, updated_at DESC").all(effectiveProgrammeId);
     if (docs.length) {
+      const audienceOrder = { board: 0, management: 1, operational: 2 };
+      const latest = docs.filter(d => d.is_latest).sort((a, b) => (audienceOrder[a.audience_level] ?? 3) - (audienceOrder[b.audience_level] ?? 3));
+      const historical = docs.filter(d => !d.is_latest);
+      const ordered = [...latest, ...historical];
+
+      const typeLabels = { weekly: "WEEKLY UPDATE", monthly: "MONTHLY PACK", steerco: "STEERCO DECK", qbr: "QBR", audit: "AUDIT REPORT", metrics: "METRICS DATA", draft: "WORKING DRAFT", source: "SOURCE DATA", other: "DOCUMENT" };
+
       let totalChars = 0;
-      const maxChars = 60000;
+      const maxChars = 80000;
       const parts = [];
-      for (const doc of docs) {
-        if (totalChars + doc.extracted_text.length > maxChars) {
+      for (const doc of ordered) {
+        const label = typeLabels[doc.doc_type] || "DOCUMENT";
+        const latestTag = doc.is_latest ? "LATEST " : "";
+        const dateStr = doc.doc_date || "";
+        const header = `=== [${latestTag}${label}${dateStr ? " — " + dateStr : ""} | ${doc.audience_level || "operational"}] ${doc.filename} ===`;
+        const textLen = header.length + doc.extracted_text.length + 4;
+        if (totalChars + textLen > maxChars) {
           const remaining = maxChars - totalChars;
-          if (remaining > 500) parts.push(`=== ${doc.filename} (${doc.file_type}, truncated) ===\n${doc.extracted_text.slice(0, remaining)}`);
+          if (remaining > 500) parts.push(`${header}\n${doc.extracted_text.slice(0, remaining - header.length)}\n[...TRUNCATED]`);
           break;
         }
-        parts.push(`=== ${doc.filename} (${doc.file_type}) ===\n${doc.extracted_text}`);
-        totalChars += doc.extracted_text.length;
+        parts.push(`${header}\n${doc.extracted_text}`);
+        totalChars += textLen;
       }
-      documentContext = `\n\n[DOCUMENT LIBRARY — ${docs.length} ingested document(s) from connected sources]\nUse these to answer questions. Cite the filename when referencing specific information.\n\n${parts.join("\n\n")}`;
+
+      const typeSummary = [...new Set(docs.map(d => d.doc_type))].join(", ");
+      documentContext = `\n\n[DOCUMENT LIBRARY — ${docs.length} document(s), types: ${typeSummary}]
+
+DOCUMENT RULES:
+- Documents marked [LATEST] are the most current version of that type. Always prefer these.
+- Board-level docs (SteerCo, QBR) have strategic framing. Management (Monthly) has detail. Operational (Weekly) has the most granular data.
+- If documents conflict, prefer: (1) most recent date, (2) highest audience level.
+- Always cite the document name and date when referencing information.
+
+${parts.join("\n\n")}`;
     }
   }
 
