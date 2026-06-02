@@ -139,8 +139,10 @@ async function fetchSharePointSharedFolder(source) {
     while (nextUrl) {
       const r = await fetch(nextUrl, { headers });
       if (!r.ok) {
+        const body = await r.text();
+        console.log(`[sharepoint] FAILED ${prefix || "/"} (depth ${depth}): ${r.status} — ${body.slice(0, 200)}`);
+        console.log(`[sharepoint] URL was: ${nextUrl.slice(0, 150)}`);
         if (depth === 0) {
-          const body = await r.text();
           if (r.status === 401 || r.status === 403) {
             if (source._microsoftAccessToken) {
               throw new Error("Access denied — your Microsoft account may not have access to this folder, or your session has expired. Try reconnecting in Settings → Microsoft Connection.");
