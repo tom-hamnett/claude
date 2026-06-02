@@ -1,0 +1,85 @@
+APEX PMO — IT Briefing Notes
+Tom Hamnett | Procurement Excellence
+=======================================
+
+WHAT HAVE I BUILT?
+------------------
+- A programme intelligence dashboard called APEX PMO
+- It reads documents from our existing SharePoint folders (Excel trackers, PowerPoint status packs, PDFs)
+- It turns those documents into structured data, KPIs, and an AI-powered Q&A capability
+- Built with React (frontend) + Node.js (backend) + SQLite (database)
+- Currently hosted in a GitHub Codespace (Microsoft-owned infrastructure)
+- Production deployment planned for Azure App Service (stays on Microsoft stack)
+
+
+WHAT IS THE BUSINESS NEED?
+--------------------------
+- Sopan Shah (CPO) has a clear directive: improve management information across the PE portfolio so he can make data-driven decisions and brief senior stakeholders — capability he currently does not have
+- Today, programme status is compiled manually from scattered SharePoint files into a PowerPoint pack that takes days to produce and is stale by the time it's presented
+- The CPO cannot ask a follow-up question without a round-trip through the PMO team
+- APEX solves this: it reads the same SharePoint files the team already maintains, structures the data, and lets anyone ask questions in plain English — grounded in actual source documents
+- This directly supports the wider IHG push toward automation and AI adoption within Global Procurement
+
+
+HOW DOES IT WORK?
+-----------------
+1. APEX connects to a SharePoint folder via Microsoft Graph API using delegated permissions (OAuth device code flow — the user signs in with their own IHG credentials)
+2. It polls the folder on a schedule and detects new or changed files via content hashing
+3. Excel/CSV files are parsed into structured data tables with auto-detected types and KPI definitions
+4. PowerPoint, PDF, and Word files have their text content extracted and stored
+5. An AI chat interface lets users ask questions — the AI's answers are grounded in the actual ingested documents
+6. The AI proposes changes (e.g. executive summaries, risk entries) but NEVER commits them without explicit user approval
+
+
+WHY IS IT SAFE FOR IHG?
+-----------------------
+- SHAREPOINT ACCESS IS READ-ONLY: The app requests only delegated, read-only permissions (Files.Read.All, Sites.Read.All). It cannot modify, delete, or share any IHG files.
+
+- DELEGATED AUTH ONLY: APEX authenticates as the signed-in user (me). It can only see what I already have access to in SharePoint. No service account, no elevated privileges.
+
+- NO DATA LEAVES THE IHG ENVIRONMENT BY DEFAULT: The app itself runs on Microsoft infrastructure (GitHub Codespaces, planned move to Azure App Service). SharePoint data stays within the Microsoft ecosystem.
+
+- AI ENGINE IS USER-CONFIGURED: APEX supports multiple LLM providers. The choice of AI engine is entirely in IHG's hands:
+    * If IHG mandates Azure OpenAI only → we use Azure OpenAI (data stays in IHG's Azure tenant)
+    * If IHG approves Gemini Enterprise via Google Workspace → we can use that
+    * No data is sent to any AI provider that IHG hasn't explicitly configured and approved
+    * There is no hardcoded external AI endpoint — the user configures which engine to use in Settings
+
+- NO ANONYMOUS ACCESS: The app has no public-facing authentication bypass. SharePoint access requires the user's own Microsoft sign-in.
+
+- NO DATA STORED EXTERNALLY: All parsed data, extracted text, and KPIs are stored in a SQLite database within the hosting environment (Codespace/Azure). Nothing is sent to third-party storage.
+
+- AUDIT TRAIL: Every change to programme data is logged with before/after state, timestamp, and source.
+
+
+IS THE APP REGISTRATION INTEGRATING WITH NON-MICROSOFT APPS?
+-------------------------------------------------------------
+- YES — APEX is a custom-built web application, not a Microsoft first-party app. The Entra app registration allows APEX to call the Microsoft Graph API on behalf of the signed-in user.
+
+- However:
+    * The app registration is SINGLE-TENANT (IHG only — "My organization only")
+    * It uses DELEGATED permissions only (acts as the user, not as itself)
+    * It requests READ-ONLY access (Files.Read.All, Sites.Read.All)
+    * The device code flow means the user explicitly authenticates via Microsoft's own login page — APEX never sees or stores the user's password
+    * The app stores a refresh token to maintain access without repeated sign-ins — this is standard OAuth2 behaviour, same as any Microsoft-integrated app
+
+- In terms of data flow:
+    SharePoint → Microsoft Graph API → APEX (reads file contents) → stored locally in the app's database
+    No data flows back to SharePoint or to any external system unless the user explicitly configures an AI engine (which would be an IHG-approved provider)
+
+- The permissions requested are the MINIMUM needed:
+    * Files.Read.All — read files the user can already access
+    * Sites.Read.All — list SharePoint site contents
+    * offline_access — keep the session alive (refresh tokens)
+    * User.Read — display the signed-in user's name/email
+
+
+WHAT I NEED FROM YOU
+--------------------
+- Grant admin consent for the APEX PMO app registration
+- Location: Entra admin center → App registrations → APEX PMO → API permissions → "Grant admin consent for Six Continents Hotels, Inc."
+- It's one click — all four permissions are already configured
+- Application (client) ID: 7a33aa4f-fd98-4635-80f5-32445756ffd1
+- Directory (tenant) ID: 2762c43f-29c1-448a-89f6-7ac903cf8316
+
+Happy to answer any questions or walk through the architecture in more detail.
