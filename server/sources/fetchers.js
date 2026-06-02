@@ -397,7 +397,7 @@ export async function downloadFile(file, destPath) {
   if (file._graphToken && file.downloadUrl.includes("graph.microsoft.com")) {
     headers.Authorization = `Bearer ${file._graphToken}`;
   }
-  const r = await fetch(file.downloadUrl, { headers });
+  const r = await fetch(file.downloadUrl, { headers, signal: AbortSignal.timeout(30000) });
   if (!r.ok) throw new Error(`Download failed ${r.status}`);
   const buf = Buffer.from(await r.arrayBuffer());
   fs.writeFileSync(destPath, buf);

@@ -2,7 +2,7 @@
   "name": "APEX PMO",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
   "postCreateCommand": "npm install && npm run build",
-  "postStartCommand": "node server/index.js &",
+  "postStartCommand": "bash start.sh &",
   "forwardPorts": [3001],
   "portsAttributes": {
     "3001": {
