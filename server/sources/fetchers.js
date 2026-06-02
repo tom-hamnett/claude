@@ -117,62 +117,80 @@ async function fetchSharePointSharedFolder(source) {
   }
 
   const encoded = encodeShareUrl(shareLink);
-  const childrenUrl = `https://graph.microsoft.com/v1.0/shares/${encoded}/driveItem/children`;
-  const r = await fetch(childrenUrl, { headers });
-  if (!r.ok) {
-    const body = await r.text();
-    if (r.status === 401 || r.status === 403) {
-      if (source._microsoftAccessToken) {
-        throw new Error("Access denied — your Microsoft account may not have access to this folder, or your session has expired. Try reconnecting in Settings → Microsoft Connection.");
-      }
-      throw new Error("Access denied — make sure the folder sharing link is set to 'Anyone with the link can view'. In SharePoint: right-click folder → Share → People you choose → change to 'Anyone' → Apply → Copy link. Or connect your Microsoft account in Settings.");
-    }
-    throw new Error(`SharePoint folder listing failed ${r.status}: ${body}`);
-  }
-  const listing = await r.json();
-
   const allowedTypes = fileTypes ? fileTypes.split(",").map(t => t.trim().toLowerCase()) : null;
+  const maxDepth = 10;
 
-  let files = (listing.value || [])
-    .filter(f => !f.folder)
-    .filter(f => !allowedTypes || allowedTypes.some(ext => f.name.toLowerCase().endsWith(ext)))
-    .map(f => ({
-      id: f.id,
-      name: f.name,
-      lastModified: f.lastModifiedDateTime,
-      contentHash: f.file?.hashes?.sha256Hash || f.eTag || f.lastModifiedDateTime,
-      downloadUrl: f["@microsoft.graph.downloadUrl"],
-      sizeBytes: f.size || 0,
-      mimeType: f.file?.mimeType || "application/octet-stream",
-    }));
+  async function listFolder(url, prefix, depth) {
+    if (depth > maxDepth) return [];
+    let allItems = [];
+    let nextUrl = url;
 
-  // Optionally recurse into subfolders
-  if (recursive) {
-    const subfolders = (listing.value || []).filter(f => f.folder);
-    for (const sub of subfolders) {
-      const subUrl = `https://graph.microsoft.com/v1.0/shares/${encoded}/driveItem:/${encodeURIComponent(sub.name)}:/children`;
-      try {
-        const sr = await fetch(subUrl, { headers });
-        if (sr.ok) {
-          const subListing = await sr.json();
-          const subFiles = (subListing.value || [])
-            .filter(f => !f.folder)
-            .filter(f => !allowedTypes || allowedTypes.some(ext => f.name.toLowerCase().endsWith(ext)))
-            .map(f => ({
-              id: f.id,
-              name: `${sub.name}/${f.name}`,
-              lastModified: f.lastModifiedDateTime,
-              contentHash: f.file?.hashes?.sha256Hash || f.eTag || f.lastModifiedDateTime,
-              downloadUrl: f["@microsoft.graph.downloadUrl"],
-              sizeBytes: f.size || 0,
-              mimeType: f.file?.mimeType || "application/octet-stream",
-            }));
-          files = files.concat(subFiles);
+    while (nextUrl) {
+      const r = await fetch(nextUrl, { headers });
+      if (!r.ok) {
+        if (depth === 0) {
+          const body = await r.text();
+          if (r.status === 401 || r.status === 403) {
+            if (source._microsoftAccessToken) {
+              throw new Error("Access denied — your Microsoft account may not have access to this folder, or your session has expired. Try reconnecting in Settings → Microsoft Connection.");
+            }
+            throw new Error("Access denied — make sure the folder sharing link is set to 'Anyone with the link can view'. In SharePoint: right-click folder → Share → People you choose → change to 'Anyone' → Apply → Copy link. Or connect your Microsoft account in Settings.");
+          }
+          throw new Error(`SharePoint folder listing failed ${r.status}: ${body}`);
         }
-      } catch (e) { /* skip inaccessible subfolders */ }
+        return [];
+      }
+      const listing = await r.json();
+      allItems = allItems.concat(listing.value || []);
+      nextUrl = listing["@odata.nextLink"] || null;
     }
+
+    let files = allItems
+      .filter(f => !f.folder && !f.remoteItem?.folder)
+      .filter(f => !allowedTypes || allowedTypes.some(ext => f.name.toLowerCase().endsWith(ext)))
+      .map(f => ({
+        id: f.id,
+        name: prefix ? `${prefix}/${f.name}` : f.name,
+        lastModified: f.lastModifiedDateTime,
+        contentHash: f.file?.hashes?.sha256Hash || f.eTag || f.lastModifiedDateTime,
+        downloadUrl: f["@microsoft.graph.downloadUrl"],
+        sizeBytes: f.size || 0,
+        mimeType: f.file?.mimeType || "application/octet-stream",
+      }));
+
+    if (recursive) {
+      const folders = allItems.filter(f => f.folder);
+      for (const sub of folders) {
+        const subPath = prefix ? `${prefix}/${sub.name}` : sub.name;
+        const subUrl = prefix
+          ? `https://graph.microsoft.com/v1.0/shares/${encoded}/driveItem:/${encodeURIComponent(prefix)}/${encodeURIComponent(sub.name)}:/children`
+          : `https://graph.microsoft.com/v1.0/shares/${encoded}/driveItem:/${encodeURIComponent(sub.name)}:/children`;
+        try {
+          const subFiles = await listFolder(subUrl, subPath, depth + 1);
+          files = files.concat(subFiles);
+        } catch (e) { /* skip inaccessible subfolders */ }
+      }
+
+      // Follow SharePoint shortcuts (remoteItem references)
+      const shortcuts = allItems.filter(f => f.remoteItem?.folder);
+      for (const shortcut of shortcuts) {
+        const remoteDriveId = shortcut.remoteItem.parentReference?.driveId;
+        const remoteItemId = shortcut.remoteItem.id;
+        if (!remoteDriveId || !remoteItemId) continue;
+        const shortcutPath = prefix ? `${prefix}/${shortcut.name}` : shortcut.name;
+        const remoteUrl = `https://graph.microsoft.com/v1.0/drives/${remoteDriveId}/items/${remoteItemId}/children`;
+        try {
+          const subFiles = await listFolder(remoteUrl, shortcutPath, depth + 1);
+          files = files.concat(subFiles);
+        } catch (e) { /* skip inaccessible shortcuts */ }
+      }
+    }
+
+    return files;
   }
 
+  const rootUrl = `https://graph.microsoft.com/v1.0/shares/${encoded}/driveItem/children`;
+  const files = await listFolder(rootUrl, "", 0);
   return { files };
 }
 
