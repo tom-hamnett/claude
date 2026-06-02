@@ -44,6 +44,8 @@ async function pollSource(source) {
         );
         stats.changed++;
       } else {
+        // Unchanged file — still refresh the download URL (they expire after ~1 hour)
+        db.prepare("UPDATE data_source_files SET download_url = ? WHERE id = ?").run(f.downloadUrl, prev.id);
         stats.unchanged++;
       }
     }
