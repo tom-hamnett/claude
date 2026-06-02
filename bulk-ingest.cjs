@@ -55,7 +55,10 @@ function extractSlideXml(filePath) {
           e.entryName.match(/word\/document\.xml/) ||
           e.entryName.match(/word\/header/) ||
           e.entryName.match(/word\/footer/)) {
-        slides.push({ name: e.entryName, text: e.getData().toString("utf-8") });
+        // Strip XML tags, keep only text content
+        var raw = e.getData().toString("utf-8");
+        var text = raw.replace(/<[^>]+>/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#xD;/g, "\n").replace(/\s+/g, " ").trim();
+        if (text.length > 10) slides.push({ name: e.entryName, text: text });
       }
     });
     return slides.map(function(s) { return "--- " + s.name + " ---\n" + s.text; }).join("\n\n");
@@ -125,15 +128,15 @@ async function processFile(f) {
           db.prepare("UPDATE data_source_files SET status = 'skipped' WHERE id = ?").run(f.id);
           return;
         }
-        console.log("  (using raw XML extraction, " + rawText.length + " chars of XML)");
+        console.log("  (extracted " + rawText.length + " chars of clean text from XML)");
         text = await callClaude([{
           role: "user",
-          content: 'Below is raw XML extracted from "' + f.filename + '" (' + ext + ' file). Extract ALL human-readable text content, organized by slide/section using markdown. Include every heading, bullet, number, date, name, RAG status, and table entry. Ignore XML tags.\n\nRaw XML:\n\n' + rawText.slice(0, 30000)
+          content: 'Below is text extracted from "' + f.filename + '" (' + ext + '). Organize by slide/section using markdown. Preserve ALL data, numbers, names, dates, RAG statuses, project names, and table entries.\n\n' + rawText.slice(0, 80000)
         }]);
       } else {
         text = await callClaude([{
           role: "user",
-          content: 'This is raw text from "' + f.filename + '" (' + ext + ' file). Organize using markdown. Preserve ALL data, numbers, names, dates, RAG statuses. If a presentation, organize by slide.\n\nRaw text:\n\n' + rawText.slice(0, 30000)
+          content: 'Text from "' + f.filename + '" (' + ext + '). Organize using markdown. Preserve ALL data, numbers, names, dates, RAG statuses.\n\n' + rawText.slice(0, 80000)
         }]);
       }
     }
@@ -176,10 +179,74 @@ async function run() {
     }
   }
 
+  // Now auto-ingest Excel files as structured data tables
+  if (excel.length > 0) {
+    console.log("\n--- Processing " + excel.length + " Excel files ---\n");
+    var XLSX = require("xlsx");
+    for (var j = 0; j < excel.length; j++) {
+      var ef = excel[j];
+      var ePath = path.join(tmpDir, ef.filename.replace(/[^a-zA-Z0-9._-]/g, "_"));
+      try {
+        console.log("[" + (j + 1) + "/" + excel.length + "]");
+        var er = await fetch(ef.download_url);
+        if (!er.ok) throw new Error("Download failed: " + er.status);
+        var eBuf = Buffer.from(await er.arrayBuffer());
+        fs.writeFileSync(ePath, eBuf);
+
+        var eExt = path.extname(ef.filename).toLowerCase();
+        var workbook;
+        if (eExt === ".csv") {
+          workbook = XLSX.read(eBuf.toString("utf-8"), { type: "string" });
+        } else {
+          workbook = XLSX.read(eBuf, { type: "buffer" });
+        }
+
+        var sheetName = workbook.SheetNames[0];
+        var sheet = workbook.Sheets[sheetName];
+        var raw = XLSX.utils.sheet_to_json(sheet, { defval: null });
+
+        if (!raw.length) {
+          console.log("  SKIP: " + ef.filename + " (empty sheet)");
+          db.prepare("UPDATE data_source_files SET status = 'skipped' WHERE id = ?").run(ef.id);
+          continue;
+        }
+
+        var colNames = Object.keys(raw[0]);
+        var columns = colNames.map(function(name) {
+          var values = raw.map(function(r) { return r[name]; }).filter(function(v) { return v != null; });
+          var nums = 0; values.slice(0, 100).forEach(function(v) { if (typeof v === "number" || !isNaN(Number(v))) nums++; });
+          var type = nums > values.length * 0.5 ? "number" : "string";
+          var uniq = new Set(values.map(String)).size;
+          var isDim = type === "string" && uniq <= Math.min(50, values.length * 0.3);
+          return { name: name, type: type, isDimension: isDim, label: name };
+        });
+
+        var tableId = "dt-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7);
+        var tableName = ef.filename.replace(/\.[^.]+$/, "").split("/").pop();
+
+        db.prepare("INSERT INTO data_tables (id, programme_id, name, description, columns_meta, row_count, version) VALUES (?, ?, ?, ?, ?, ?, 1)").run(
+          tableId, ef.programme_id, tableName, "Auto-ingested from " + ef.filename, JSON.stringify(columns), raw.length
+        );
+
+        var insertRow = db.prepare("INSERT INTO data_rows (table_id, row_data) VALUES (?, ?)");
+        var insertMany = db.transaction(function(rows) { rows.forEach(function(row) { insertRow.run(tableId, JSON.stringify(row)); }); });
+        insertMany(raw);
+
+        db.prepare("UPDATE data_source_files SET status = 'ingested', last_ingested_at = datetime('now'), target_table_id = ? WHERE id = ?").run(tableId, ef.id);
+        console.log("  OK: " + ef.filename + " (" + raw.length + " rows, " + colNames.length + " columns, sheet: " + sheetName + ")");
+      } catch (e) {
+        console.log("  FAIL: " + ef.filename + " — " + e.message.slice(0, 200));
+      } finally {
+        try { fs.unlinkSync(ePath); } catch (_) {}
+      }
+    }
+  }
+
   var ingested = db.prepare("SELECT COUNT(*) as c FROM document_texts").get();
+  var tables = db.prepare("SELECT COUNT(*) as c FROM data_tables").get();
   console.log("\n--- Done ---");
   console.log("Documents in AI library:", ingested ? ingested.c : 0);
-  console.log("Excel files still pending:", excel.length);
+  console.log("Data tables:", tables ? tables.c : 0);
 
   try { fs.rmdirSync(tmpDir); } catch (_) {}
   db.close();
