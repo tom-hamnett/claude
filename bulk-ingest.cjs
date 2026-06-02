@@ -128,12 +128,12 @@ async function processFile(f) {
         console.log("  (using raw XML extraction, " + rawText.length + " chars of XML)");
         text = await callClaude([{
           role: "user",
-          content: 'Below is raw XML extracted from "' + f.filename + '" (' + ext + ' file). This is the internal XML from the Office document. Extract ALL human-readable text content, organized by slide/section using markdown. Include every heading, bullet point, number, date, name, RAG status, and table entry. Ignore XML tags and formatting markup — just extract the content.\n\nRaw XML:\n\n' + rawText.slice(0, 100000)
+          content: 'Below is raw XML extracted from "' + f.filename + '" (' + ext + ' file). Extract ALL human-readable text content, organized by slide/section using markdown. Include every heading, bullet, number, date, name, RAG status, and table entry. Ignore XML tags.\n\nRaw XML:\n\n' + rawText.slice(0, 30000)
         }]);
       } else {
         text = await callClaude([{
           role: "user",
-          content: 'This is raw text extracted from "' + f.filename + '" (' + ext + ' file). Organize and structure this content using markdown. Preserve ALL data, numbers, names, dates, RAG statuses, and details. If it\'s a presentation, organize by slide.\n\nRaw text:\n\n' + rawText.slice(0, 100000)
+          content: 'This is raw text from "' + f.filename + '" (' + ext + ' file). Organize using markdown. Preserve ALL data, numbers, names, dates, RAG statuses. If a presentation, organize by slide.\n\nRaw text:\n\n' + rawText.slice(0, 30000)
         }]);
       }
     }
@@ -169,8 +169,11 @@ async function run() {
   for (var i = 0; i < docs.length; i++) {
     console.log("[" + (i + 1) + "/" + docs.length + "]");
     await processFile(docs[i]);
-    // Small delay to avoid rate limits
-    if (i < docs.length - 1) await new Promise(function(r) { setTimeout(r, 500); });
+    // Wait 20 seconds between requests to stay under rate limits
+    if (i < docs.length - 1) {
+      process.stdout.write("  waiting 20s for rate limit...\r");
+      await new Promise(function(r) { setTimeout(r, 20000); });
+    }
   }
 
   var ingested = db.prepare("SELECT COUNT(*) as c FROM document_texts").get();
