@@ -172,7 +172,15 @@ async function fetchSharePointSharedFolder(source) {
       }));
 
     totalFiles += files.length;
-    console.log(`[sharepoint] ${prefix || "/"} → ${files.length} files (${totalFiles} total, ${foldersScanned} folders scanned)`);
+    const regularFolders = allItems.filter(f => f.folder);
+    const shortcuts = allItems.filter(f => f.remoteItem?.folder);
+    const otherItems = allItems.filter(f => !f.folder && !f.remoteItem?.folder && !f.file);
+    console.log(`[sharepoint] ${prefix || "/"} → ${files.length} files, ${regularFolders.length} folders, ${shortcuts.length} shortcuts, ${otherItems.length} other (${totalFiles} total files, ${foldersScanned} scanned)`);
+    if (depth === 0) {
+      for (const item of allItems) {
+        console.log(`[sharepoint]   item: "${item.name}" | folder:${!!item.folder} | file:${!!item.file} | remote:${!!item.remoteItem} | size:${item.size || 0}`);
+      }
+    }
 
     if (recursive && totalFiles < maxFiles && foldersScanned < maxFolders) {
       const folders = allItems.filter(f => f.folder);
