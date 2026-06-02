@@ -186,7 +186,7 @@ async function fetchSharePointSharedFolder(source) {
         } catch (e) { console.log(`[sharepoint] Skipped ${subPath}: ${e.message}`); }
       }
 
-      // Follow SharePoint shortcuts (remoteItem references)
+      // Follow SharePoint shortcuts (remoteItem references) — but only 1 level deep
       const shortcuts = allItems.filter(f => f.remoteItem?.folder);
       for (const shortcut of shortcuts) {
         if (totalFiles >= maxFiles || foldersScanned >= maxFolders || Date.now() - startTime > timeoutMs) break;
@@ -194,11 +194,30 @@ async function fetchSharePointSharedFolder(source) {
         const remoteItemId = shortcut.remoteItem.id;
         if (!remoteDriveId || !remoteItemId) continue;
         const shortcutPath = prefix ? `${prefix}/${shortcut.name}` : shortcut.name;
-        console.log(`[sharepoint] Following shortcut: ${shortcutPath}`);
+        console.log(`[sharepoint] Following shortcut: ${shortcutPath} (1 level only)`);
         const remoteUrl = `https://graph.microsoft.com/v1.0/drives/${remoteDriveId}/items/${remoteItemId}/children`;
         try {
-          const subFiles = await listFolder(remoteUrl, shortcutPath, depth + 1);
-          files = files.concat(subFiles);
+          // Fetch only the immediate children of the shortcut target — no further recursion
+          foldersScanned++;
+          const sr = await fetch(remoteUrl, { headers });
+          if (sr.ok) {
+            const shortcutListing = await sr.json();
+            const shortcutFiles = (shortcutListing.value || [])
+              .filter(f => !f.folder && !f.remoteItem?.folder)
+              .filter(f => !allowedTypes || allowedTypes.some(ext => f.name.toLowerCase().endsWith(ext)))
+              .map(f => ({
+                id: f.id,
+                name: `${shortcutPath}/${f.name}`,
+                lastModified: f.lastModifiedDateTime,
+                contentHash: f.file?.hashes?.sha256Hash || f.eTag || f.lastModifiedDateTime,
+                downloadUrl: f["@microsoft.graph.downloadUrl"],
+                sizeBytes: f.size || 0,
+                mimeType: f.file?.mimeType || "application/octet-stream",
+              }));
+            totalFiles += shortcutFiles.length;
+            files = files.concat(shortcutFiles);
+            console.log(`[sharepoint] Shortcut ${shortcutPath} → ${shortcutFiles.length} files`);
+          }
         } catch (e) { console.log(`[sharepoint] Skipped shortcut ${shortcutPath}: ${e.message}`); }
       }
     }
