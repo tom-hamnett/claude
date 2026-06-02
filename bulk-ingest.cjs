@@ -32,6 +32,7 @@ if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
 // Basic text extraction fallback
 var officeParserMod;
 try { officeParserMod = require("officeparser"); } catch (e) {}
+var AdmZip = require("adm-zip");
 
 function extractRawText(filePath) {
   if (!officeParserMod) return Promise.resolve("");
@@ -41,6 +42,26 @@ function extractRawText(filePath) {
       else resolve(typeof data === "string" ? data : data ? String(data) : "");
     });
   });
+}
+
+function extractSlideXml(filePath) {
+  try {
+    var zip = new AdmZip(filePath);
+    var entries = zip.getEntries();
+    var slides = [];
+    entries.forEach(function(e) {
+      if (e.entryName.match(/ppt\/slides\/slide\d+\.xml/) ||
+          e.entryName.match(/ppt\/notesSlides\//) ||
+          e.entryName.match(/word\/document\.xml/) ||
+          e.entryName.match(/word\/header/) ||
+          e.entryName.match(/word\/footer/)) {
+        slides.push({ name: e.entryName, text: e.getData().toString("utf-8") });
+      }
+    });
+    return slides.map(function(s) { return "--- " + s.name + " ---\n" + s.text; }).join("\n\n");
+  } catch (e) {
+    return "";
+  }
 }
 
 async function callClaude(messages) {
@@ -94,17 +115,27 @@ async function processFile(f) {
         ]
       }]);
     } else {
-      // PPTX/DOCX: extract raw text, then have Claude structure it
+      // PPTX/DOCX: try officeparser first, fall back to raw XML extraction
       var rawText = await extractRawText(tempPath);
       if (!rawText || rawText.trim().length < 50) {
-        console.log("  SKIP: " + f.filename + " (no extractable text)");
-        db.prepare("UPDATE data_source_files SET status = 'skipped' WHERE id = ?").run(f.id);
-        return;
+        // officeparser failed — extract raw XML from the ZIP and let Claude parse it
+        rawText = extractSlideXml(tempPath);
+        if (!rawText || rawText.trim().length < 100) {
+          console.log("  SKIP: " + f.filename + " (no extractable content)");
+          db.prepare("UPDATE data_source_files SET status = 'skipped' WHERE id = ?").run(f.id);
+          return;
+        }
+        console.log("  (using raw XML extraction, " + rawText.length + " chars of XML)");
+        text = await callClaude([{
+          role: "user",
+          content: 'Below is raw XML extracted from "' + f.filename + '" (' + ext + ' file). This is the internal XML from the Office document. Extract ALL human-readable text content, organized by slide/section using markdown. Include every heading, bullet point, number, date, name, RAG status, and table entry. Ignore XML tags and formatting markup — just extract the content.\n\nRaw XML:\n\n' + rawText.slice(0, 100000)
+        }]);
+      } else {
+        text = await callClaude([{
+          role: "user",
+          content: 'This is raw text extracted from "' + f.filename + '" (' + ext + ' file). Organize and structure this content using markdown. Preserve ALL data, numbers, names, dates, RAG statuses, and details. If it\'s a presentation, organize by slide.\n\nRaw text:\n\n' + rawText.slice(0, 100000)
+        }]);
       }
-      text = await callClaude([{
-        role: "user",
-        content: 'This is raw text extracted from "' + f.filename + '" (' + ext + ' file). Organize and structure this content using markdown. Preserve ALL data, numbers, names, dates, RAG statuses, and details. If it\'s a presentation, organize by slide.\n\nRaw text:\n\n' + rawText.slice(0, 100000)
-      }]);
     }
 
     if (!text || text.trim().length === 0) {
