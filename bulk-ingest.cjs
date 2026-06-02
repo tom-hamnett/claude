@@ -2,10 +2,11 @@ const Database = require("better-sqlite3");
 const fs = require("fs");
 const path = require("path");
 const officeParserMod = require("officeparser");
-const parseOffice = officeParserMod.parseOfficeAsync || officeParserMod.default?.parseOfficeAsync || function(fp) {
+const parseOffice = function(fp) {
   return new Promise(function(resolve, reject) {
     officeParserMod.parseOffice(fp, function(data, err) {
-      if (err) reject(err); else resolve(data);
+      if (err) return reject(err);
+      resolve(typeof data === "string" ? data : data ? String(data) : "");
     });
   });
 };
@@ -44,7 +45,8 @@ async function ingestDoc(f) {
 
     // Extract text
     var text = await parseOffice(tempPath);
-    if (!text || text.trim().length === 0) {
+    var textStr = typeof text === "string" ? text : text ? String(text) : "";
+    if (!textStr || textStr.trim().length === 0) {
       console.log("  EMPTY: " + f.filename + " (no text extracted)");
       db.prepare("UPDATE data_source_files SET status = 'skipped' WHERE id = ?").run(f.id);
       return;
@@ -56,14 +58,14 @@ async function ingestDoc(f) {
     var existing = db.prepare("SELECT id FROM document_texts WHERE source_file_id = ?").get(f.id);
     if (existing) {
       db.prepare("UPDATE document_texts SET extracted_text = ?, char_count = ?, file_type = ?, updated_at = datetime('now') WHERE id = ?")
-        .run(text, text.length, ext, existing.id);
+        .run(textStr, textStr.length, ext, existing.id);
     } else {
       db.prepare("INSERT INTO document_texts (id, programme_id, source_file_id, filename, file_type, extracted_text, char_count) VALUES (?, ?, ?, ?, ?, ?, ?)")
-        .run(docId, f.programme_id, f.id, f.filename, ext, text, text.length);
+        .run(docId, f.programme_id, f.id, f.filename, ext, textStr, textStr.length);
     }
 
     db.prepare("UPDATE data_source_files SET status = 'ingested', last_ingested_at = datetime('now') WHERE id = ?").run(f.id);
-    console.log("  OK: " + f.filename + " (" + text.length + " chars)");
+    console.log("  OK: " + f.filename + " (" + textStr.length + " chars)");
   } catch (e) {
     console.log("  FAIL: " + f.filename + " — " + e.message);
   } finally {
