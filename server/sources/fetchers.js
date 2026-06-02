@@ -118,10 +118,21 @@ async function fetchSharePointSharedFolder(source) {
 
   const encoded = encodeShareUrl(shareLink);
   const allowedTypes = fileTypes ? fileTypes.split(",").map(t => t.trim().toLowerCase()) : null;
-  const maxDepth = 10;
+  const maxDepth = parseInt(config.maxDepth) || 5;
+  const maxFiles = parseInt(config.maxFiles) || 500;
+  const maxFolders = 200;
+  const startTime = Date.now();
+  const timeoutMs = 120000;
+  let totalFiles = 0;
+  let foldersScanned = 0;
 
   async function listFolder(url, prefix, depth) {
     if (depth > maxDepth) return [];
+    if (totalFiles >= maxFiles) return [];
+    if (foldersScanned >= maxFolders) return [];
+    if (Date.now() - startTime > timeoutMs) return [];
+    foldersScanned++;
+
     let allItems = [];
     let nextUrl = url;
 
@@ -158,9 +169,13 @@ async function fetchSharePointSharedFolder(source) {
         mimeType: f.file?.mimeType || "application/octet-stream",
       }));
 
-    if (recursive) {
+    totalFiles += files.length;
+    console.log(`[sharepoint] ${prefix || "/"} → ${files.length} files (${totalFiles} total, ${foldersScanned} folders scanned)`);
+
+    if (recursive && totalFiles < maxFiles && foldersScanned < maxFolders) {
       const folders = allItems.filter(f => f.folder);
       for (const sub of folders) {
+        if (totalFiles >= maxFiles || foldersScanned >= maxFolders || Date.now() - startTime > timeoutMs) break;
         const subPath = prefix ? `${prefix}/${sub.name}` : sub.name;
         const subUrl = prefix
           ? `https://graph.microsoft.com/v1.0/shares/${encoded}/driveItem:/${encodeURIComponent(prefix)}/${encodeURIComponent(sub.name)}:/children`
@@ -168,21 +183,23 @@ async function fetchSharePointSharedFolder(source) {
         try {
           const subFiles = await listFolder(subUrl, subPath, depth + 1);
           files = files.concat(subFiles);
-        } catch (e) { /* skip inaccessible subfolders */ }
+        } catch (e) { console.log(`[sharepoint] Skipped ${subPath}: ${e.message}`); }
       }
 
       // Follow SharePoint shortcuts (remoteItem references)
       const shortcuts = allItems.filter(f => f.remoteItem?.folder);
       for (const shortcut of shortcuts) {
+        if (totalFiles >= maxFiles || foldersScanned >= maxFolders || Date.now() - startTime > timeoutMs) break;
         const remoteDriveId = shortcut.remoteItem.parentReference?.driveId;
         const remoteItemId = shortcut.remoteItem.id;
         if (!remoteDriveId || !remoteItemId) continue;
         const shortcutPath = prefix ? `${prefix}/${shortcut.name}` : shortcut.name;
+        console.log(`[sharepoint] Following shortcut: ${shortcutPath}`);
         const remoteUrl = `https://graph.microsoft.com/v1.0/drives/${remoteDriveId}/items/${remoteItemId}/children`;
         try {
           const subFiles = await listFolder(remoteUrl, shortcutPath, depth + 1);
           files = files.concat(subFiles);
-        } catch (e) { /* skip inaccessible shortcuts */ }
+        } catch (e) { console.log(`[sharepoint] Skipped shortcut ${shortcutPath}: ${e.message}`); }
       }
     }
 
@@ -191,6 +208,8 @@ async function fetchSharePointSharedFolder(source) {
 
   const rootUrl = `https://graph.microsoft.com/v1.0/shares/${encoded}/driveItem/children`;
   const files = await listFolder(rootUrl, "", 0);
+  const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+  console.log(`[sharepoint] Scan complete: ${files.length} files, ${foldersScanned} folders, ${elapsed}s`);
   return { files };
 }
 
