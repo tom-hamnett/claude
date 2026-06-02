@@ -1,6 +1,14 @@
 const Database = require("better-sqlite3");
 const fs = require("fs");
 const path = require("path");
+const officeParserMod = require("officeparser");
+const parseOffice = officeParserMod.parseOfficeAsync || officeParserMod.default?.parseOfficeAsync || function(fp) {
+  return new Promise(function(resolve, reject) {
+    officeParserMod.parseOffice(fp, function(data, err) {
+      if (err) reject(err); else resolve(data);
+    });
+  });
+};
 const db = new Database("/workspaces/claude/data/apex.db");
 
 const pending = db.prepare(
@@ -35,8 +43,7 @@ async function ingestDoc(f) {
     fs.writeFileSync(tempPath, buf);
 
     // Extract text
-    var officeParser = require("officeparser");
-    var text = await officeParser.parseOfficeAsync(tempPath);
+    var text = await parseOffice(tempPath);
     if (!text || text.trim().length === 0) {
       console.log("  EMPTY: " + f.filename + " (no text extracted)");
       db.prepare("UPDATE data_source_files SET status = 'skipped' WHERE id = ?").run(f.id);
