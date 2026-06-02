@@ -46,6 +46,35 @@ async function callGemini(engine, system, messages) {
   return { text, raw: data };
 }
 
+async function callGeminiVertex(engine, system, messages) {
+  const key = engine.api_key;
+  const endpoint = engine.endpoint_url;
+  if (!key || !endpoint) throw new Error("Vertex AI requires api_key (service account key or access token) and endpoint_url (e.g. https://europe-west1-aiplatform.googleapis.com/v1/projects/PROJECT_ID/locations/REGION/publishers/google/models/gemini-1.5-pro:generateContent)");
+  const model = engine.model_name || "gemini-1.5-pro";
+
+  const contents = messages.map(m => ({
+    role: m.role === "assistant" ? "model" : "user",
+    parts: [{ text: m.content }],
+  }));
+  if (system) contents.unshift({ role: "user", parts: [{ text: `System: ${system}` }] });
+
+  // Vertex AI endpoint — either full URL provided or constructed from parts
+  let url = endpoint;
+  if (!url.includes(":generateContent")) {
+    url = `${url.replace(/\/$/, "")}/publishers/google/models/${model}:generateContent`;
+  }
+
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${key}` },
+    body: JSON.stringify({ contents, generationConfig: { maxOutputTokens: 4000 } }),
+  });
+  if (!r.ok) throw new Error(`Vertex AI ${r.status}: ${await r.text()}`);
+  const data = await r.json();
+  const text = data.candidates?.[0]?.content?.parts?.map(p => p.text).join("") || "";
+  return { text, raw: data };
+}
+
 async function callAzureOpenAI(engine, system, messages) {
   const key = engine.api_key;
   const endpoint = engine.endpoint_url;
@@ -118,7 +147,8 @@ async function callGitHubModels(engine, system, messages) {
 export const PROVIDERS = {
   "github-copilot": { label: "GitHub Copilot (easiest — uses your GitHub account)", call: callGitHubModels, fields: ["api_key", "model_name"] },
   anthropic: { label: "Anthropic Claude", call: callAnthropic, fields: ["api_key", "model_name"] },
-  gemini:    { label: "Google Gemini",    call: callGemini,    fields: ["api_key", "model_name"] },
+  gemini:    { label: "Google Gemini (AI Studio)",  call: callGemini,       fields: ["api_key", "model_name"] },
+  "gemini-vertex": { label: "Google Gemini (Vertex AI / Enterprise)", call: callGeminiVertex, fields: ["api_key", "endpoint_url", "model_name"] },
   copilot:   { label: "Microsoft Azure OpenAI / Copilot", call: callAzureOpenAI, fields: ["api_key", "endpoint_url", "deployment_name"] },
   openai:    { label: "OpenAI",           call: callOpenAI,    fields: ["api_key", "model_name"] },
   custom:    { label: "Custom endpoint",  call: callCustom,    fields: ["endpoint_url", "api_key", "model_name"] },
