@@ -1,0 +1,10 @@
+[build]
+  base = "flux"
+  command = "npm install && npm run build"
+  publish = "flux/dist"
+
+# SPA fallback — HashRouter means this is belt-and-braces, but keeps deep links safe.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

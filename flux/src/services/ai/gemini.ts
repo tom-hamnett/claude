@@ -1,0 +1,77 @@
+import type { AICompleteRequest, AICompleteResult, AIProvider } from './types';
+import { AIError, friendlyMessage, safeJson, tryParseJson } from './types';
+
+export const geminiProvider: AIProvider = {
+  id: 'gemini',
+  label: 'Google Gemini',
+  defaultModel: 'gemini-2.5-flash',
+  models: [
+    { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', notes: 'Default. Fast, cheap.' },
+    { id: 'gemini-3-pro-preview', label: 'Gemini 3 Pro', notes: 'Highest quality.' },
+    { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash', notes: 'Stable fallback.' },
+  ],
+  validateKey(key) {
+    if (!key) return { ok: false, reason: 'Key is empty.' };
+    if (!key.startsWith('AIza')) return { ok: false, reason: 'Google API keys start with AIza' };
+    if (key.length < 30) return { ok: false, reason: 'Key looks too short.' };
+    return { ok: true };
+  },
+  async complete(req: AICompleteRequest, opts) {
+    const contents = req.messages.map((m) => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }],
+    }));
+
+    const generationConfig: Record<string, unknown> = {
+      temperature: req.temperature ?? 0.4,
+      maxOutputTokens: req.maxTokens ?? 1024,
+    };
+    if (req.jsonSchema) {
+      generationConfig.responseMimeType = 'application/json';
+      generationConfig.responseSchema = req.jsonSchema;
+    }
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(opts.model)}:generateContent?key=${encodeURIComponent(opts.apiKey)}`;
+    const body: Record<string, unknown> = { contents, generationConfig };
+    if (req.system) body.systemInstruction = { parts: [{ text: req.system }] };
+
+    let resp: Response;
+    try {
+      resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: req.signal,
+      });
+    } catch (err) {
+      throw new AIError(err instanceof Error ? err.message : 'Network error contacting Gemini.', {
+        provider: 'gemini',
+      });
+    }
+    if (!resp.ok) {
+      const raw = await safeJson(resp);
+      throw new AIError(`Gemini ${resp.status}: ${friendlyMessage(raw) || resp.statusText}`, {
+        provider: 'gemini',
+        status: resp.status,
+        raw,
+      });
+    }
+    const data = (await resp.json()) as {
+      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+      usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
+    };
+    let text = '';
+    for (const part of data.candidates?.[0]?.content?.parts ?? []) {
+      if (typeof part.text === 'string') text += part.text;
+    }
+    const json = req.jsonSchema ? tryParseJson(text) : undefined;
+    return {
+      text,
+      json,
+      inputTokens: data.usageMetadata?.promptTokenCount,
+      outputTokens: data.usageMetadata?.candidatesTokenCount,
+      provider: 'gemini',
+      model: opts.model,
+    } satisfies AICompleteResult;
+  },
+};
