@@ -49,6 +49,15 @@ npm run preview
 
 A fully-worked demo engagement (Northwind Manufacturing — Invoice Approval) is seeded on first run, so you can explore the whole pipeline **before** adding an AI key.
 
+### Two ways to run
+
+FLUX runs in one of two modes, decided automatically by whether Supabase env vars are present:
+
+- **Local mode (default)** — no setup; all data lives in that browser (IndexedDB). Great for a solo trial.
+- **Cloud / team mode** — set `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` and FLUX becomes a shared web app: **email sign-in**, and a workspace **keyed to your email domain** so everyone on `@yourcompany.com` shares the same engagements and maps, syncing live across devices and phones. AI keys still stay on each person's device.
+
+**To put it live for your team, follow [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)** — ~15 minutes, all point-and-click (Supabase + Vercel, both free tier). The paste-ready database setup is in [`supabase/schema.sql`](supabase/schema.sql).
+
 ### Unlocking AI
 
 FLUX runs entirely client-side and is **BYO key**. In **Settings**, choose a provider (Anthropic / OpenAI / Google) and paste your key. The key is stored in your browser's IndexedDB and sent only to that provider. Optionally encrypt it with a passphrase (WebCrypto AES-GCM). Default model: Claude Sonnet 4.6.
@@ -60,7 +69,8 @@ FLUX runs entirely client-side and is **BYO key**. In **Settings**, choose a pro
 ## Architecture
 
 - **React + Vite + TypeScript + Tailwind** — single-page app, HashRouter.
-- **Dexie / IndexedDB** — all engagements, processes, opportunities and knowledge live locally.
+- **Pluggable store** (`src/store/`) — one set of hooks/mutations over two backends: **Dexie/IndexedDB** (local mode) or **Supabase/Postgres** (cloud mode). Pages never know which is active.
+- **Supabase** (`src/services/`, `supabase/schema.sql`) — email OTP auth, domain-scoped workspaces, row-level security, realtime sync.
 - **`src/types.ts`** — the standardized, versioned FLUX schema (the source of comparability).
 - **`src/lib/frameworks.ts`** — the encoded taxonomy (value classes, BPMN steps, TIMWOODS, value drivers, automation ladder, maturity).
 - **`src/lib/metrics.ts`** — pure VSM/costing/scoring functions.
@@ -69,7 +79,7 @@ FLUX runs entirely client-side and is **BYO key**. In **Settings**, choose a pro
 
 ### Deploy
 
-`netlify.toml` and `vercel.json` are included. It's a static SPA — host it anywhere.
+`netlify.toml` and `vercel.json` are included. It's a static SPA, so it hosts anywhere — but for the shared team experience follow [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) (Supabase + Vercel).
 
 ---
 

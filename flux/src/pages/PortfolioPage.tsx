@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '../db';
+import { useAllOpportunities, useAllProcesses, useProjects } from '../store';
 import Icon from '../components/Icon';
 import { computeMetrics, opportunityValue } from '../lib/metrics';
 import { fmtDuration, fmtMoney, fmtPct } from '../lib/format';
@@ -33,9 +32,9 @@ const COLS: { key: keyof Row | 'name'; label: string }[] = [
 
 export default function PortfolioPage() {
   const nav = useNavigate();
-  const processes = useLiveQuery(() => db.processes.toArray(), []);
-  const projects = useLiveQuery(() => db.projects.toArray(), []);
-  const opps = useLiveQuery(() => db.opportunities.toArray(), []);
+  const processes = useAllProcesses();
+  const projects = useProjects();
+  const opps = useAllOpportunities();
   const [sort, setSort] = useState<{ key: keyof Row | 'name'; dir: 1 | -1 }>({ key: 'oppValue', dir: -1 });
 
   const rows: Row[] = useMemo(() => {

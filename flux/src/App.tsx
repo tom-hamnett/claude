@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
+import AuthGate from './components/AuthGate';
+import { AuthProvider } from './services/auth';
+import { isCloud } from './services/supabase';
 import { seedIfEmpty } from './lib/seed';
 import HomePage from './pages/HomePage';
 import ProjectsPage from './pages/ProjectsPage';
@@ -17,7 +20,9 @@ export default function App() {
   useEffect(() => {
     (async () => {
       try {
-        await seedIfEmpty();
+        // Auto-seed the worked demo only in local mode. In cloud mode, data is
+        // shared across the team, so demo loading is an explicit, opt-in action.
+        if (!isCloud) await seedIfEmpty();
       } catch (err) {
         console.error('Seed failed', err);
       } finally {
@@ -35,17 +40,21 @@ export default function App() {
   }
 
   return (
-    <Routes>
-      <Route path="/" element={<Layout />}>
-        <Route index element={<HomePage />} />
-        <Route path="projects" element={<ProjectsPage />} />
-        <Route path="projects/:id" element={<ProjectPage />} />
-        <Route path="processes/:id" element={<ProcessPage />} />
-        <Route path="portfolio" element={<PortfolioPage />} />
-        <Route path="knowledge" element={<KnowledgePage />} />
-        <Route path="methodology" element={<MethodologyPage />} />
-        <Route path="settings" element={<SettingsPage />} />
-      </Route>
-    </Routes>
+    <AuthProvider>
+      <AuthGate>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<HomePage />} />
+            <Route path="projects" element={<ProjectsPage />} />
+            <Route path="projects/:id" element={<ProjectPage />} />
+            <Route path="processes/:id" element={<ProcessPage />} />
+            <Route path="portfolio" element={<PortfolioPage />} />
+            <Route path="knowledge" element={<KnowledgePage />} />
+            <Route path="methodology" element={<MethodologyPage />} />
+            <Route path="settings" element={<SettingsPage />} />
+          </Route>
+        </Routes>
+      </AuthGate>
+    </AuthProvider>
   );
 }

@@ -9,7 +9,16 @@ import type { Opportunity, Process, ProcessStep, Project } from '../types';
 export async function seedIfEmpty(): Promise<void> {
   const count = await db.projects.count();
   if (count > 0) return;
+  const { project, process, opportunities } = buildDemo();
+  await db.transaction('rw', db.projects, db.processes, db.opportunities, async () => {
+    await db.projects.put(project);
+    await db.processes.put(process);
+    await db.opportunities.bulkPut(opportunities);
+  });
+}
 
+/** Builds the worked demo engagement as plain objects (no persistence). */
+export function buildDemo(): { project: Project; process: Process; opportunities: Opportunity[] } {
   const projectId = uid();
   const project: Project = {
     id: projectId,
@@ -189,9 +198,5 @@ export async function seedIfEmpty(): Promise<void> {
     }),
   ];
 
-  await db.transaction('rw', db.projects, db.processes, db.opportunities, async () => {
-    await db.projects.put(project);
-    await db.processes.put(process);
-    await db.opportunities.bulkPut(opportunities);
-  });
+  return { project, process, opportunities };
 }

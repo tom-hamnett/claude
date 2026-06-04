@@ -1,6 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '../db';
+import { useAllOpportunities, useAllProcesses, useProjects } from '../store';
 import Icon from '../components/Icon';
 import { fmtMoney, relativeTime } from '../lib/format';
 import { opportunityValue } from '../lib/metrics';
@@ -14,9 +13,9 @@ const STAGES = [
 
 export default function HomePage() {
   const nav = useNavigate();
-  const projects = useLiveQuery(() => db.projects.orderBy('updatedAt').reverse().toArray(), []);
-  const processes = useLiveQuery(() => db.processes.toArray(), []);
-  const opps = useLiveQuery(() => db.opportunities.toArray(), []);
+  const projects = useProjects();
+  const processes = useAllProcesses();
+  const opps = useAllOpportunities();
 
   const totalValue = opps ? opportunityValue(opps).total : 0;
   const quickWins = opps ? opps.filter((o) => o.quickWin).length : 0;

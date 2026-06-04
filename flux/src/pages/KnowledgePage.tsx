@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db, now, uid } from '../db';
+import { now, uid } from '../db';
+import { deleteKnowledge, putKnowledge, useKnowledge } from '../store';
 import Icon from '../components/Icon';
 import Modal from '../components/Modal';
 import type { KnowledgeCard, KnowledgeKind } from '../types';
@@ -22,7 +22,7 @@ const KIND_CHIP: Record<KnowledgeKind, string> = {
 };
 
 export default function KnowledgePage() {
-  const cards = useLiveQuery(() => db.knowledge.orderBy('createdAt').reverse().toArray(), []);
+  const cards = useKnowledge();
   const [filter, setFilter] = useState<'all' | KnowledgeKind>('all');
   const [add, setAdd] = useState(false);
 
@@ -30,10 +30,10 @@ export default function KnowledgePage() {
   const unvalidated = (cards ?? []).filter((c) => c.source === 'ai-research' && !c.validated).length;
 
   async function validate(c: KnowledgeCard) {
-    await db.knowledge.put({ ...c, validated: true });
+    await putKnowledge({ ...c, validated: true });
   }
   async function remove(id: string) {
-    await db.knowledge.delete(id);
+    await deleteKnowledge(id);
   }
 
   return (
@@ -126,7 +126,7 @@ function AddCardModal({ open, onClose }: { open: boolean; onClose: () => void })
       validated: true,
       createdAt: now(),
     };
-    await db.knowledge.put(card);
+    await putKnowledge(card);
     setF({ kind: 'best-practice', title: '', domain: '', body: '', tags: '' });
     onClose();
   }

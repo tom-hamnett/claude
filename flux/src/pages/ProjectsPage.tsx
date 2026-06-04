@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db, now, uid } from '../db';
+import { now, uid } from '../db';
+import { putProject, useAllProcesses, useProjects } from '../store';
 import Icon from '../components/Icon';
 import Modal from '../components/Modal';
 import { relativeTime } from '../lib/format';
@@ -9,8 +9,8 @@ import type { Project } from '../types';
 
 export default function ProjectsPage() {
   const nav = useNavigate();
-  const projects = useLiveQuery(() => db.projects.orderBy('updatedAt').reverse().toArray(), []);
-  const processes = useLiveQuery(() => db.processes.toArray(), []);
+  const projects = useProjects();
+  const processes = useAllProcesses();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     name: '',
@@ -41,7 +41,7 @@ export default function ProjectsPage() {
       createdAt: now(),
       updatedAt: now(),
     };
-    await db.projects.put(p);
+    await putProject(p);
     setOpen(false);
     nav(`/projects/${p.id}`);
   }

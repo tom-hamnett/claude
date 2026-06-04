@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db, now, uid } from '../db';
+import { now, uid } from '../db';
+import { getKnowledgeForProject, putKnowledgeMany, putProcess, putProject, useProcessesByProject, useProject } from '../store';
 import Icon from '../components/Icon';
 import Modal from '../components/Modal';
 import { AIError_, AIThinking, Spinner, useAIRun } from '../components/AIRun';
@@ -15,8 +15,8 @@ import type { DiagnosticSignal, Process, Project } from '../types';
 export default function ProjectPage() {
   const { id = '' } = useParams();
   const nav = useNavigate();
-  const project = useLiveQuery(() => db.projects.get(id), [id]);
-  const processes = useLiveQuery(() => db.processes.where('projectId').equals(id).toArray(), [id]);
+  const project = useProject(id);
+  const processes = useProcessesByProject(id);
 
   if (project === undefined) return <div className="text-ink-400">Loading…</div>;
   if (!project) return <div className="card p-8 text-center text-ink-400">Engagement not found.</div>;
@@ -50,7 +50,7 @@ function DiagnosticPanel({ project }: { project: Project }) {
   const [draft, setDraft] = useState({ role: '', symptom: '', severity: 3, frequency: 3 });
 
   async function patch(p: Partial<Project>) {
-    await db.projects.put({ ...project, ...p, updatedAt: now() });
+    await putProject({ ...project, ...p, updatedAt: now() });
   }
 
   async function addSignal() {
@@ -219,7 +219,7 @@ function NewProcessModal({ project, open, onClose, onCreated }: { project: Proje
     try {
       const name = desc.split('\n')[0]?.slice(0, 80) || project.scope || 'Process';
       const cards = await researchBenchmarks({ project, processName: name });
-      await db.knowledge.bulkPut(cards);
+      await putKnowledgeMany(cards);
       setResearched(cards.length);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Research failed.');
@@ -230,12 +230,12 @@ function NewProcessModal({ project, open, onClose, onCreated }: { project: Proje
 
   async function doMap() {
     if (!desc.trim()) return;
-    const knowledge = await db.knowledge.where('projectId').equals(project.id).toArray();
+    const knowledge = await getKnowledgeForProject(project.id);
     await run(
       () => mapProcessFromText({ project, description: desc, knowledge }),
       async ({ map }) => {
         const proc = buildProcess(project.id, map, FLUX_SCHEMA_VERSION);
-        await db.processes.put(proc);
+        await putProcess(proc);
         setDesc('');
         setResearched(null);
         onClose();
@@ -255,7 +255,7 @@ function NewProcessModal({ project, open, onClose, onCreated }: { project: Proje
       createdAt: now(),
       updatedAt: now(),
     };
-    await db.processes.put(proc);
+    await putProcess(proc);
     onClose();
     onCreated(proc);
   }

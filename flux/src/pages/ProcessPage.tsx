@@ -1,7 +1,15 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db, deleteProcessCascade, saveProcess, uid } from '../db';
+import { uid } from '../db';
+import {
+  deleteProcessCascade,
+  getKnowledgeForProject,
+  putProcess,
+  replaceAiOpportunities,
+  useOpportunitiesByProcess,
+  useProcess,
+  useProject,
+} from '../store';
 import Icon from '../components/Icon';
 import Modal from '../components/Modal';
 import Markdown from '../components/Markdown';
@@ -22,9 +30,9 @@ type Tab = 'map' | 'diagnose' | 'design' | 'report';
 export default function ProcessPage() {
   const { id = '' } = useParams();
   const nav = useNavigate();
-  const process = useLiveQuery(() => db.processes.get(id), [id]);
-  const project = useLiveQuery(() => (process ? db.projects.get(process.projectId) : undefined), [process?.projectId]);
-  const opportunities = useLiveQuery(() => db.opportunities.where('processId').equals(id).toArray(), [id]) ?? [];
+  const process = useProcess(id);
+  const project = useProject(process?.projectId ?? '');
+  const opportunities = useOpportunitiesByProcess(id) ?? [];
   const [tab, setTab] = useState<Tab>('map');
 
   if (process === undefined) return <div className="text-ink-400">Loading…</div>;
@@ -97,7 +105,7 @@ function MapTab({ process, project }: { process: Process; project: Project }) {
   const [details, setDetails] = useState(false);
 
   async function updateSteps(steps: ProcessStep[]) {
-    await saveProcess({ ...process, steps: renumber(steps) });
+    await putProcess({ ...process, steps: renumber(steps) });
   }
 
   async function saveStep(s: ProcessStep) {
@@ -224,7 +232,7 @@ function ProcessDetails({ process }: { process: Process }) {
   });
 
   async function save() {
-    await saveProcess({
+    await putProcess({
       ...process,
       name: f.name.trim() || process.name,
       trigger: f.trigger.trim() || undefined,
@@ -315,13 +323,12 @@ function DiagnoseTab({ process, project, opportunities }: { process: Process; pr
   const opps = useMemo(() => prioritize(opportunities), [opportunities]);
 
   async function scan() {
-    const knowledge = await db.knowledge.where('projectId').equals(project.id).toArray();
+    const knowledge = await getKnowledgeForProject(project.id);
     await run(
       () => scanOpportunities({ project, process, knowledge, org: project.org }),
       async (newOpps) => {
-        await db.opportunities.where('processId').equals(process.id).filter((o) => o.source === 'ai').delete();
-        await db.opportunities.bulkPut(newOpps);
-        await saveProcess({ ...process, status: 'diagnosed' });
+        await replaceAiOpportunities(process.id, newOpps);
+        await putProcess({ ...process, status: 'diagnosed' });
       },
     );
   }
@@ -415,7 +422,7 @@ function DesignTab({ process, project, opportunities }: { process: Process; proj
     await run(
       () => designFutureState({ project, process, opportunities: opps, org: project.org }),
       async (fs) => {
-        await saveProcess({ ...process, futureState: fs, status: 'designed' });
+        await putProcess({ ...process, futureState: fs, status: 'designed' });
       },
     );
   }

@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, getSettings, patchSettings } from '../db';
+import { getSettings, patchSettings } from '../db';
+import { clearAllData, loadDemo } from '../store';
 import { getProvider, providerList } from '../services/ai';
 import { clearAIKey, setAIKey } from '../services/aiKey';
+import { useAuth } from '../services/auth';
+import { isCloud } from '../services/supabase';
 import Icon from '../components/Icon';
 import { Spinner } from '../components/AIRun';
 import type { AIProviderId } from '../types';
@@ -63,15 +66,33 @@ export default function SettingsPage() {
     await patchSettings({ org: { ...cur, ...patch } });
   }
 
-  async function resetDemo() {
-    if (!confirm('Clear ALL local FLUX data (engagements, processes, knowledge)? This cannot be undone.')) return;
-    await db.delete();
+  const auth = useAuth();
+
+  async function resetData() {
+    const scope = isCloud ? "your team's entire workspace (shared!)" : 'all local';
+    if (!confirm(`Clear ${scope} FLUX data — engagements, processes, opportunities, knowledge? This cannot be undone.`)) return;
+    await clearAllData();
     location.reload();
+  }
+
+  async function addDemo() {
+    await loadDemo();
+    setStatus({ kind: 'ok', msg: 'Demo engagement loaded.' });
   }
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <h1 className="font-display text-2xl font-bold text-ink-900">Settings</h1>
+
+      {isCloud && (
+        <section className="card p-5">
+          <h2 className="mb-1 font-semibold text-ink-800">Account</h2>
+          <p className="mb-3 text-sm text-ink-500">
+            Signed in as <strong>{auth.userEmail ?? '—'}</strong>. Your workspace is shared with everyone on your email domain.
+          </p>
+          <button className="btn-outline" onClick={() => auth.signOut()}>Sign out</button>
+        </section>
+      )}
 
       {/* AI provider */}
       <section className="card p-5">
@@ -144,10 +165,20 @@ export default function SettingsPage() {
       {/* Data */}
       <section className="card p-5">
         <h2 className="mb-1 font-semibold text-ink-800">Data</h2>
-        <p className="mb-3 text-sm text-ink-500">All data lives in this browser (IndexedDB). Export reports per process from the Report tab.</p>
-        <button className="btn-ghost text-nva-600" onClick={resetDemo}>
-          <Icon name="trash" className="h-4 w-4" /> Clear all local data
-        </button>
+        <p className="mb-3 text-sm text-ink-500">
+          {isCloud
+            ? 'Data is stored in your shared cloud workspace and syncs across devices and teammates.'
+            : 'All data lives in this browser (IndexedDB).'}{' '}
+          Export reports per process from the Report tab.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <button className="btn-outline" onClick={addDemo}>
+            <Icon name="plus" className="h-4 w-4" /> Load demo engagement
+          </button>
+          <button className="btn-ghost text-nva-600" onClick={resetData}>
+            <Icon name="trash" className="h-4 w-4" /> Clear {isCloud ? 'workspace' : 'local'} data
+          </button>
+        </div>
       </section>
     </div>
   );
