@@ -12,9 +12,10 @@ export const geminiProvider: AIProvider = {
   ],
   supports: ['image', 'document', 'audio', 'video'],
   validateKey(key) {
+    // Google has multiple key formats (classic AIza…, and newer prefixes), so
+    // don't gate on prefix — let the API be the source of truth.
     if (!key) return { ok: false, reason: 'Key is empty.' };
-    if (!key.startsWith('AIza')) return { ok: false, reason: 'Google API keys start with AIza' };
-    if (key.length < 30) return { ok: false, reason: 'Key looks too short.' };
+    if (key.trim().length < 20) return { ok: false, reason: 'Key looks too short.' };
     return { ok: true };
   },
   async complete(req: AICompleteRequest, opts) {

@@ -172,7 +172,7 @@ function ProviderKeyRow({
   const [keyInput, setKeyInput] = useState('');
   const [saving, setSaving] = useState(false);
   const has = !!entry?.cipher;
-  const placeholder = providerId === 'anthropic' ? 'sk-ant-…' : providerId === 'openai' ? 'sk-…' : 'AIza…';
+  const placeholder = providerId === 'anthropic' ? 'sk-ant-…' : providerId === 'openai' ? 'sk-…' : 'AIza… / AQ…';
 
   async function save() {
     const v = provider.validateKey(keyInput.trim());
