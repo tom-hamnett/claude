@@ -3,6 +3,9 @@ import type { SourceKind } from '../types';
 /** Inline attachment ceiling — provider request limits sit around ~20MB. */
 export const MAX_INLINE_BYTES = 18 * 1024 * 1024;
 
+/** Sanity ceiling for browser-side handling; large media uploads to Gemini Files API. */
+export const MAX_FILE_BYTES = 200 * 1024 * 1024;
+
 /** Read a File into base64 (no data: prefix). */
 export function readFileAsBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {

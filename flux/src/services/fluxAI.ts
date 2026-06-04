@@ -7,7 +7,7 @@
  * the same Lean/VSM/TIMWOODS language → comparable output.
  */
 import { getSettings, now, uid } from '../db';
-import { getProvider, providerList } from './ai';
+import { getProvider, providerList, uploadFileToGemini } from './ai';
 import type { AIMessage, Attachment, AttachmentKind } from './ai';
 import { AIError } from './ai';
 import { configuredProviders, getAIKey } from './aiKey';
@@ -601,9 +601,23 @@ Be faithful — do not invent. Capture exactly what the source says (and flag wh
 
   if (attachKind && opts.dataB64 && opts.mime) {
     const resolved = await resolveForAttachment(attachKind);
+    const bytes = approxBytes(opts.dataB64);
+    let attachment: Attachment;
+    if (resolved.providerId === 'gemini' && bytes > GEMINI_INLINE_LIMIT) {
+      // Large media → resumable Files API, then reference by URI.
+      const up = await uploadFileToGemini({ apiKey: resolved.apiKey, dataB64: opts.dataB64, mime: opts.mime, name: opts.name, signal: opts.signal });
+      attachment = { kind: attachKind, mime: up.mimeType, fileUri: up.fileUri, name: opts.name };
+    } else if (resolved.providerId !== 'gemini' && bytes > NON_GEMINI_INLINE_LIMIT) {
+      throw new AIError(
+        `${opts.name} is ~${Math.round(bytes / 1024 / 1024)}MB — over ${getProvider(resolved.providerId).label}'s inline limit. Add a Google Gemini key in Settings to ingest large ${attachKind} files.`,
+        { provider: resolved.providerId },
+      );
+    } else {
+      attachment = { kind: attachKind, mime: opts.mime, dataB64: opts.dataB64, name: opts.name };
+    }
     const { result, model, provider } = await callJSON<IngestResult>(system, `${baseUser}\n\n(The file is attached.)`, INGEST_SCHEMA, {
       resolved,
-      attachments: [{ kind: attachKind, mime: opts.mime, dataB64: opts.dataB64, name: opts.name }],
+      attachments: [attachment],
       maxTokens: 4000,
       temperature: 0.2,
       signal: opts.signal,
@@ -764,6 +778,16 @@ function rawToClarifications(raw: RawClarification[]): Clarification[] {
 // ============================================================================
 // helpers
 // ============================================================================
+
+/** Above this, Gemini media goes via the resumable Files API instead of inline. */
+const GEMINI_INLINE_LIMIT = 15 * 1024 * 1024;
+/** Hard inline ceiling for providers without a Files API (Claude/OpenAI). */
+const NON_GEMINI_INLINE_LIMIT = 18 * 1024 * 1024;
+
+/** Approximate decoded byte length of a base64 string. */
+function approxBytes(b64: string): number {
+  return Math.floor((b64.length * 3) / 4);
+}
 
 function clampScale(n: number): 1 | 2 | 3 | 4 | 5 {
   const v = Math.round(n);

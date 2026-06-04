@@ -27,7 +27,11 @@ export const geminiProvider: AIProvider = {
       const lastUser = [...contents].reverse().find((c) => c.role === 'user');
       if (lastUser) {
         for (const a of req.attachments) {
-          lastUser.parts.push({ inlineData: { mimeType: a.mime, data: a.dataB64 } });
+          if (a.fileUri) {
+            lastUser.parts.push({ fileData: { mimeType: a.mime, fileUri: a.fileUri } });
+          } else if (a.dataB64) {
+            lastUser.parts.push({ inlineData: { mimeType: a.mime, data: a.dataB64 } });
+          }
         }
       }
     }

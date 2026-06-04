@@ -40,7 +40,7 @@ FLUX is multimodal-in. On any process, the **Ingest** tab lets you drop in the r
 - **Documents & screenshots** (PDF, images, SOPs) → read via vision (Claude or Gemini).
 - **Event-log / CSV exports** and **pasted notes** → parsed for the real flow.
 
-It **auto-routes each file to the best model** from the API keys you've added (Settings → API keys), and shows what each source contributed. Hitting **Synthesise** reconciles every source into one map.
+It **auto-routes each file to the best model** from the API keys you've added (Settings → API keys), and shows what each source contributed. Small files are sent inline; **large media (long recordings, big PDFs) upload automatically via Gemini's resumable Files API**, so you're not capped at the inline limit. Hitting **Synthesise** reconciles every source into one map.
 
 Crucially, synthesis also produces a **Clarifications & follow-ups** register on the Map tab — the open questions, gaps, assumptions and source conflicts FLUX needs resolved. **Answer them inline and FLUX re-runs to refine the map and metrics**, so the assumptions become a tracked, closeable checklist instead of invisible guesses.
 

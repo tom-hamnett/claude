@@ -13,8 +13,10 @@ export interface Attachment {
   kind: AttachmentKind;
   /** MIME type, e.g. image/png, application/pdf, audio/mpeg, video/mp4. */
   mime: string;
-  /** Base64-encoded file contents (no data: prefix). */
-  dataB64: string;
+  /** Base64-encoded file contents (no data: prefix) — for inline (small) files. */
+  dataB64?: string;
+  /** A provider file reference (e.g. Gemini Files API URI) — for large files. */
+  fileUri?: string;
   name?: string;
 }
 
