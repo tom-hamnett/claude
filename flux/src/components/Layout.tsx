@@ -1,7 +1,7 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Icon, { type IconName } from './Icon';
-import { hasAIKey } from '../services/aiKey';
+import { hasAnyAIKey } from '../services/aiKey';
 
 const NAV: { to: string; label: string; icon: IconName; end?: boolean }[] = [
   { to: '/', label: 'Dashboard', icon: 'home', end: true },
@@ -18,7 +18,7 @@ export default function Layout() {
   const loc = useLocation();
 
   useEffect(() => {
-    hasAIKey().then(setKeySet);
+    hasAnyAIKey().then(setKeySet);
   }, [loc.pathname]);
 
   useEffect(() => setMobileOpen(false), [loc.pathname]);

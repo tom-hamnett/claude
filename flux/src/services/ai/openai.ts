@@ -10,6 +10,7 @@ export const openaiProvider: AIProvider = {
     { id: 'gpt-5', label: 'GPT-5', notes: 'Highest quality.' },
     { id: 'gpt-4.1-mini', label: 'GPT-4.1 mini', notes: 'Stable fallback.' },
   ],
+  supports: ['image'],
   validateKey(key) {
     if (!key) return { ok: false, reason: 'Key is empty.' };
     if (!key.startsWith('sk-')) return { ok: false, reason: 'OpenAI keys start with sk-' };
@@ -17,9 +18,23 @@ export const openaiProvider: AIProvider = {
     return { ok: true };
   },
   async complete(req: AICompleteRequest, opts) {
-    const messages: { role: string; content: string }[] = [];
+    const messages: { role: string; content: unknown }[] = [];
     if (req.system) messages.push({ role: 'system', content: req.system });
     for (const m of req.messages) messages.push({ role: m.role, content: m.content });
+    if (req.attachments?.length) {
+      const parts: unknown[] = [];
+      for (const a of req.attachments) {
+        if (a.kind === 'image') {
+          parts.push({ type: 'image_url', image_url: { url: `data:${a.mime};base64,${a.dataB64}` } });
+        } else {
+          throw new AIError(`OpenAI chat can't read ${a.kind} files here. Use Google Gemini for audio/video/PDF.`, {
+            provider: 'openai',
+          });
+        }
+      }
+      const lastUser = [...messages].reverse().find((m) => m.role === 'user');
+      if (lastUser) lastUser.content = [{ type: 'text', text: String(lastUser.content) }, ...parts];
+    }
 
     const body: Record<string, unknown> = {
       model: opts.model,

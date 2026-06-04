@@ -15,6 +15,7 @@ export const anthropicProvider: AIProvider = {
     { id: 'claude-opus-4-8', label: 'Claude Opus 4.8', notes: 'Highest reasoning quality for deep diagnostics. Pricier, slower.' },
     { id: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5', notes: 'Fast and cheap; good for in-flow assists.' },
   ],
+  supports: ['image', 'document'],
   validateKey(key) {
     if (!key) return { ok: false, reason: 'Key is empty.' };
     if (!key.startsWith('sk-ant-')) return { ok: false, reason: 'Anthropic keys start with sk-ant-' };
@@ -22,11 +23,32 @@ export const anthropicProvider: AIProvider = {
     return { ok: true };
   },
   async complete(req: AICompleteRequest, opts) {
+    const messages: Array<{ role: string; content: unknown }> = req.messages.map((m) => ({
+      role: m.role === 'system' ? 'user' : m.role,
+      content: m.content as unknown,
+    }));
+    // Attach files to the final user message as content blocks.
+    if (req.attachments?.length) {
+      const blocks: unknown[] = [];
+      for (const a of req.attachments) {
+        if (a.kind === 'image') {
+          blocks.push({ type: 'image', source: { type: 'base64', media_type: a.mime, data: a.dataB64 } });
+        } else if (a.kind === 'document') {
+          blocks.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: a.dataB64 } });
+        } else {
+          throw new AIError(`Claude can't read ${a.kind} files. Switch to Google Gemini in Settings for audio/video.`, {
+            provider: 'anthropic',
+          });
+        }
+      }
+      const lastUser = [...messages].reverse().find((m) => m.role === 'user');
+      if (lastUser) lastUser.content = [{ type: 'text', text: String(lastUser.content) }, ...blocks];
+    }
     const body: Record<string, unknown> = {
       model: opts.model,
       max_tokens: req.maxTokens ?? 1024,
       temperature: req.temperature ?? 0.4,
-      messages: req.messages.map((m) => ({ role: m.role === 'system' ? 'user' : m.role, content: m.content })),
+      messages,
     };
     if (req.system) body.system = req.system;
     if (req.jsonSchema) {

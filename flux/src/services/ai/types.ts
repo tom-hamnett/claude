@@ -7,10 +7,23 @@ export interface AIMessage {
   content: string;
 }
 
+export type AttachmentKind = 'image' | 'document' | 'audio' | 'video';
+
+export interface Attachment {
+  kind: AttachmentKind;
+  /** MIME type, e.g. image/png, application/pdf, audio/mpeg, video/mp4. */
+  mime: string;
+  /** Base64-encoded file contents (no data: prefix). */
+  dataB64: string;
+  name?: string;
+}
+
 export interface AICompleteRequest {
   /** Optional system prompt. */
   system?: string;
   messages: AIMessage[];
+  /** Files attached to the final user message (multimodal). */
+  attachments?: Attachment[];
   maxTokens?: number;
   /** 0..1. Lower = more deterministic. */
   temperature?: number;
@@ -33,6 +46,8 @@ export interface AIProvider {
   label: string;
   defaultModel: string;
   models: { id: string; label: string; notes?: string }[];
+  /** Attachment kinds this provider can ingest. */
+  supports: AttachmentKind[];
   validateKey(key: string): { ok: boolean; reason?: string };
   complete(req: AICompleteRequest, opts: { apiKey: string; model: string }): Promise<AICompleteResult>;
 }

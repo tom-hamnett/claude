@@ -14,11 +14,10 @@ export default function SettingsPage() {
   const settings = useLiveQuery(() => getSettings(), []);
   const [providerId, setProviderId] = useState<AIProviderId>('anthropic');
   const [model, setModel] = useState('');
-  const [keyInput, setKeyInput] = useState('');
-  const [passphrase, setPassphrase] = useState('');
   const [usePass, setUsePass] = useState(false);
+  const [passphrase, setPassphrase] = useState('');
   const [status, setStatus] = useState<{ kind: 'ok' | 'err'; msg: string } | null>(null);
-  const [saving, setSaving] = useState(false);
+  const auth = useAuth();
 
   useEffect(() => {
     if (settings) {
@@ -28,45 +27,17 @@ export default function SettingsPage() {
   }, [settings?.aiProvider, settings?.aiModel]);
 
   const provider = getProvider(providerId);
-  const hasKey = !!settings?.aiKeyCipher;
 
   async function saveProviderModel(pid: AIProviderId, m: string) {
     setProviderId(pid);
     setModel(m);
-    await patchSettings({ aiProvider: pid, aiModel: m });
-  }
-
-  async function saveKey() {
-    const v = provider.validateKey(keyInput.trim());
-    if (!v.ok) {
-      setStatus({ kind: 'err', msg: v.reason ?? 'Invalid key.' });
-      return;
-    }
-    setSaving(true);
-    try {
-      await setAIKey(keyInput.trim(), usePass && passphrase ? passphrase : undefined);
-      await patchSettings({ aiProvider: providerId, aiModel: model, onboarded: true });
-      setKeyInput('');
-      setPassphrase('');
-      setStatus({ kind: 'ok', msg: 'Key saved. FLUX intelligence is unlocked.' });
-    } catch (e) {
-      setStatus({ kind: 'err', msg: e instanceof Error ? e.message : 'Could not save key.' });
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function removeKey() {
-    await clearAIKey();
-    setStatus({ kind: 'ok', msg: 'Key removed.' });
+    await patchSettings({ aiProvider: pid, aiModel: m, onboarded: true });
   }
 
   async function saveOrg(patch: Partial<NonNullable<typeof settings>['org']>) {
     const cur = (await getSettings()).org ?? {};
     await patchSettings({ org: { ...cur, ...patch } });
   }
-
-  const auth = useAuth();
 
   async function resetData() {
     const scope = isCloud ? "your team's entire workspace (shared!)" : 'all local';
@@ -94,11 +65,12 @@ export default function SettingsPage() {
         </section>
       )}
 
-      {/* AI provider */}
+      {/* Primary reasoning model */}
       <section className="card p-5">
-        <h2 className="mb-1 font-semibold text-ink-800">AI provider</h2>
-        <p className="mb-4 text-sm text-ink-500">FLUX runs entirely in your browser. Your key is stored locally (optionally encrypted) and sent only to the provider you choose.</p>
-
+        <h2 className="mb-1 font-semibold text-ink-800">Primary model</h2>
+        <p className="mb-4 text-sm text-ink-500">
+          Used for the reasoning stages (map, diagnose, design). FLUX automatically routes ingestion to the best model for each file type from the keys you've added below.
+        </p>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="label">Provider</label>
@@ -114,32 +86,33 @@ export default function SettingsPage() {
           </div>
         </div>
         <p className="mt-1 text-xs text-ink-400">{provider.models.find((m) => m.id === model)?.notes}</p>
+      </section>
 
-        <div className="mt-4 border-t border-ink-100 pt-4">
-          <div className="mb-2 flex items-center gap-2">
-            <span className={`chip ${hasKey ? 'bg-va-100 text-va-700' : 'bg-bva-100 text-bva-700'}`}>
-              <Icon name="key" className="h-3.5 w-3.5" /> {hasKey ? `Key set${settings?.aiKeyPlaintext ? ' (plaintext)' : ' (encrypted)'}` : 'No key'}
-            </span>
-          </div>
-          <label className="label">{provider.label} API key</label>
-          <input className="input" type="password" placeholder={providerId === 'anthropic' ? 'sk-ant-…' : providerId === 'openai' ? 'sk-…' : 'AIza…'} value={keyInput} onChange={(e) => setKeyInput(e.target.value)} />
-          <label className="mt-3 flex items-center gap-2 text-sm text-ink-600">
-            <input type="checkbox" checked={usePass} onChange={(e) => setUsePass(e.target.checked)} />
-            Encrypt with a passphrase (recommended on shared machines)
-          </label>
-          {usePass && (
-            <input className="input mt-2" type="password" placeholder="Passphrase" value={passphrase} onChange={(e) => setPassphrase(e.target.value)} />
-          )}
-          <div className="mt-3 flex items-center gap-2">
-            <button className="btn-primary" onClick={saveKey} disabled={saving || !keyInput.trim()}>
-              {saving ? <Spinner label="Saving…" /> : 'Save key'}
-            </button>
-            {hasKey && <button className="btn-ghost text-nva-600" onClick={removeKey}>Remove key</button>}
-          </div>
-          {status && (
-            <div className={`mt-3 text-sm ${status.kind === 'ok' ? 'text-va-600' : 'text-nva-600'}`}>{status.msg}</div>
-          )}
+      {/* API keys (per provider) */}
+      <section className="card p-5">
+        <h2 className="mb-1 font-semibold text-ink-800">API keys</h2>
+        <p className="mb-3 text-sm text-ink-500">
+          Add a key for each provider you want to use. Keys are stored on this device only (never in the cloud). Add a <strong>Google Gemini</strong> key to ingest audio &amp; video.
+        </p>
+        <label className="mb-3 flex items-center gap-2 text-sm text-ink-600">
+          <input type="checkbox" checked={usePass} onChange={(e) => setUsePass(e.target.checked)} />
+          Encrypt keys with a passphrase (recommended on shared machines)
+        </label>
+        {usePass && (
+          <input className="input mb-3" type="password" placeholder="Passphrase" value={passphrase} onChange={(e) => setPassphrase(e.target.value)} />
+        )}
+        <div className="space-y-3">
+          {providerList.map((p) => (
+            <ProviderKeyRow
+              key={p.id}
+              providerId={p.id}
+              entry={settings?.aiKeys?.[p.id]}
+              passphrase={usePass ? passphrase : undefined}
+              onStatus={setStatus}
+            />
+          ))}
         </div>
+        {status && <div className={`mt-3 text-sm ${status.kind === 'ok' ? 'text-va-600' : 'text-nva-600'}`}>{status.msg}</div>}
       </section>
 
       {/* Org defaults */}
@@ -180,6 +153,66 @@ export default function SettingsPage() {
           </button>
         </div>
       </section>
+    </div>
+  );
+}
+
+function ProviderKeyRow({
+  providerId,
+  entry,
+  passphrase,
+  onStatus,
+}: {
+  providerId: AIProviderId;
+  entry?: { cipher: string; plaintext?: boolean };
+  passphrase?: string;
+  onStatus: (s: { kind: 'ok' | 'err'; msg: string }) => void;
+}) {
+  const provider = getProvider(providerId);
+  const [keyInput, setKeyInput] = useState('');
+  const [saving, setSaving] = useState(false);
+  const has = !!entry?.cipher;
+  const placeholder = providerId === 'anthropic' ? 'sk-ant-…' : providerId === 'openai' ? 'sk-…' : 'AIza…';
+
+  async function save() {
+    const v = provider.validateKey(keyInput.trim());
+    if (!v.ok) {
+      onStatus({ kind: 'err', msg: `${provider.label}: ${v.reason}` });
+      return;
+    }
+    setSaving(true);
+    try {
+      await setAIKey(providerId, keyInput.trim(), passphrase);
+      setKeyInput('');
+      onStatus({ kind: 'ok', msg: `${provider.label} key saved.` });
+    } catch (e) {
+      onStatus({ kind: 'err', msg: e instanceof Error ? e.message : 'Could not save key.' });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function remove() {
+    await clearAIKey(providerId);
+    onStatus({ kind: 'ok', msg: `${provider.label} key removed.` });
+  }
+
+  return (
+    <div className="rounded-lg border border-ink-100 p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <span className="font-medium text-ink-800">{provider.label}</span>
+        <span className={`chip ${has ? 'bg-va-100 text-va-700' : 'bg-ink-100 text-ink-400'}`}>
+          <Icon name="key" className="h-3.5 w-3.5" /> {has ? (entry?.plaintext ? 'set (plaintext)' : 'set (encrypted)') : 'no key'}
+        </span>
+      </div>
+      <div className="flex gap-2">
+        <input className="input" type="password" placeholder={placeholder} value={keyInput} onChange={(e) => setKeyInput(e.target.value)} />
+        <button className="btn-primary shrink-0" onClick={save} disabled={saving || !keyInput.trim()}>
+          {saving ? <Spinner /> : 'Save'}
+        </button>
+        {has && <button className="btn-ghost shrink-0 text-nva-600" onClick={remove}>Remove</button>}
+      </div>
+      <p className="mt-1 text-[11px] text-ink-400">Handles: {provider.supports.join(', ') || 'text only'}.</p>
     </div>
   );
 }

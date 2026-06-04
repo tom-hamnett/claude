@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { now, uid } from '../db';
-import { getKnowledgeForProject, putKnowledgeMany, putProcess, putProject, useProcessesByProject, useProject } from '../store';
+import { putProcess, putProject, useProcessesByProject, useProject } from '../store';
 import Icon from '../components/Icon';
 import Modal from '../components/Modal';
 import { AIError_, AIThinking, Spinner, useAIRun } from '../components/AIRun';
 import { DRIVER } from '../lib/frameworks';
 import { FLUX_SCHEMA_VERSION } from '../types';
-import { buildProcess, mapProcessFromText, researchBenchmarks, runDiagnostic } from '../services/fluxAI';
+import { runDiagnostic } from '../services/fluxAI';
 import { computeMetrics } from '../lib/metrics';
 import { fmtPct } from '../lib/format';
 import type { DiagnosticSignal, Process, Project } from '../types';
@@ -208,87 +208,45 @@ function ProcessPanel({ project, processes, onOpen }: { project: Project; proces
 }
 
 function NewProcessModal({ project, open, onClose, onCreated }: { project: Project; open: boolean; onClose: () => void; onCreated: (p: Process) => void }) {
-  const { loading, error, run, setError } = useAIRun();
-  const [desc, setDesc] = useState('');
-  const [researching, setResearching] = useState(false);
-  const [researched, setResearched] = useState<number | null>(null);
+  const [name, setName] = useState('');
 
-  async function doResearch() {
-    setResearching(true);
-    setError(null);
-    try {
-      const name = desc.split('\n')[0]?.slice(0, 80) || project.scope || 'Process';
-      const cards = await researchBenchmarks({ project, processName: name });
-      await putKnowledgeMany(cards);
-      setResearched(cards.length);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Research failed.');
-    } finally {
-      setResearching(false);
-    }
-  }
-
-  async function doMap() {
-    if (!desc.trim()) return;
-    const knowledge = await getKnowledgeForProject(project.id);
-    await run(
-      () => mapProcessFromText({ project, description: desc, knowledge }),
-      async ({ map }) => {
-        const proc = buildProcess(project.id, map, FLUX_SCHEMA_VERSION);
-        await putProcess(proc);
-        setDesc('');
-        setResearched(null);
-        onClose();
-        onCreated(proc);
-      },
-    );
-  }
-
-  async function blank() {
+  async function create() {
     const proc: Process = {
       id: uid(),
       projectId: project.id,
       schemaVersion: FLUX_SCHEMA_VERSION,
-      name: 'New process',
+      name: name.trim() || 'New process',
       steps: [],
+      sources: [],
       status: 'draft',
       createdAt: now(),
       updatedAt: now(),
     };
     await putProcess(proc);
+    setName('');
     onClose();
     onCreated(proc);
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Map a new process" wide>
+    <Modal open={open} onClose={onClose} title="New process">
       <p className="mb-3 text-sm text-ink-500">
-        Describe the process in plain English — how it really works, including the messy bits. FLUX maps it to the standard: SIPOC, BPMN steps, value classification and VSM timing.
+        Name the process, then you'll land in the <strong>Ingest Studio</strong> — drop in interviews, recordings, documents or notes and FLUX synthesises the standardized map and flags what to follow up.
       </p>
-      <textarea
-        className="input min-h-[160px]"
-        placeholder={'e.g. When a supplier invoice arrives by email, the AP clerk logs it in a spreadsheet, matches it to the PO in the ERP, chases the requester if it doesn’t match, emails it for approval, re-keys it into the ERP, then runs payment…'}
-        value={desc}
-        onChange={(e) => setDesc(e.target.value)}
+      <label className="label">Process name</label>
+      <input
+        className="input"
+        autoFocus
+        placeholder="e.g. Invoice Approval (P2P)"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && create()}
       />
-
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <button className="btn-outline" onClick={doResearch} disabled={researching || !desc.trim()}>
-          {researching ? <Spinner label="Researching…" /> : <><Icon name="knowledge" className="h-4 w-4" /> Research benchmarks first</>}
+      <div className="mt-5 flex justify-end gap-2">
+        <button className="btn-ghost" onClick={onClose}>Cancel</button>
+        <button className="btn-primary" onClick={create}>
+          <Icon name="plus" className="h-4 w-4" /> Create &amp; ingest
         </button>
-        {researched !== null && <span className="chip bg-va-100 text-va-700"><Icon name="check" className="h-3.5 w-3.5" /> {researched} knowledge cards added</span>}
-      </div>
-
-      <AIError_ message={error} />
-
-      <div className="mt-5 flex items-center justify-between">
-        <button className="btn-ghost" onClick={blank}>Start blank instead</button>
-        <div className="flex gap-2">
-          <button className="btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="btn-primary" onClick={doMap} disabled={loading || !desc.trim()}>
-            {loading ? <Spinner label="Mapping…" /> : <><Icon name="map" className="h-4 w-4" /> Map with AI</>}
-          </button>
-        </div>
       </div>
     </Modal>
   );
