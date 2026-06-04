@@ -10,6 +10,7 @@ export const geminiProvider: AIProvider = {
     { id: 'gemini-3-pro-preview', label: 'Gemini 3 Pro', notes: 'Highest quality.' },
     { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash', notes: 'Stable fallback.' },
   ],
+  supports: ['image', 'document', 'audio', 'video'],
   validateKey(key) {
     if (!key) return { ok: false, reason: 'Key is empty.' };
     if (!key.startsWith('AIza')) return { ok: false, reason: 'Google API keys start with AIza' };
@@ -19,8 +20,17 @@ export const geminiProvider: AIProvider = {
   async complete(req: AICompleteRequest, opts) {
     const contents = req.messages.map((m) => ({
       role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }],
+      parts: [{ text: m.content }] as Array<Record<string, unknown>>,
     }));
+    // Attach files to the last user turn.
+    if (req.attachments?.length) {
+      const lastUser = [...contents].reverse().find((c) => c.role === 'user');
+      if (lastUser) {
+        for (const a of req.attachments) {
+          lastUser.parts.push({ inlineData: { mimeType: a.mime, data: a.dataB64 } });
+        }
+      }
+    }
 
     const generationConfig: Record<string, unknown> = {
       temperature: req.temperature ?? 0.4,

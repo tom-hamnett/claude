@@ -32,6 +32,18 @@ See [`docs/COMPETITIVE-TEARDOWN.md`](docs/COMPETITIVE-TEARDOWN.md) for the full 
 
 ---
 
+## Inputs: the Ingestion Studio + clarification loop
+
+FLUX is multimodal-in. On any process, the **Ingest** tab lets you drop in the raw material and FLUX synthesises the standardized map from it:
+
+- **Audio interviews / voice notes** and **video walkthroughs** → transcribed and mined (routed to Google Gemini).
+- **Documents & screenshots** (PDF, images, SOPs) → read via vision (Claude or Gemini).
+- **Event-log / CSV exports** and **pasted notes** → parsed for the real flow.
+
+It **auto-routes each file to the best model** from the API keys you've added (Settings → API keys), and shows what each source contributed. Hitting **Synthesise** reconciles every source into one map.
+
+Crucially, synthesis also produces a **Clarifications & follow-ups** register on the Map tab — the open questions, gaps, assumptions and source conflicts FLUX needs resolved. **Answer them inline and FLUX re-runs to refine the map and metrics**, so the assumptions become a tracked, closeable checklist instead of invisible guesses.
+
 ## Running it
 
 ```bash

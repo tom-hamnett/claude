@@ -29,11 +29,14 @@ export interface OrgDefaults {
 export interface AppSettings {
   id: 'singleton';
   onboarded: boolean;
+  /** Primary provider/model used for reasoning (map, diagnose, design). */
   aiProvider?: AIProviderId;
   aiModel?: string;
-  /** BYOK: encrypted blob OR plaintext key (see aiKey.ts). */
+  /** Legacy single-key fields (migrated into aiKeys on read). */
   aiKeyCipher?: string;
   aiKeyPlaintext?: boolean;
+  /** BYOK keys per provider, so FLUX can route each task to the best model. */
+  aiKeys?: Partial<Record<AIProviderId, { cipher: string; plaintext?: boolean }>>;
   org?: OrgDefaults;
   updatedAt: number;
 }
@@ -205,6 +208,10 @@ export interface Process {
   futureState?: FutureState;
   /** Maturity 1-5 self/AI-rated against the FLUX standard. */
   maturity?: number;
+  /** Ingested raw material (interviews, docs, logs…) the map was synthesised from. */
+  sources?: Source[];
+  /** Open questions / gaps / assumptions surfaced during ingestion. */
+  clarifications?: Clarification[];
   status: 'draft' | 'mapped' | 'diagnosed' | 'designed';
   createdAt: number;
   updatedAt: number;
@@ -276,6 +283,56 @@ export interface FutureState {
 // ============================================================================
 
 export type KnowledgeKind = 'benchmark' | 'reference-model' | 'best-practice' | 'risk' | 'note';
+
+// ============================================================================
+// Ingestion — multimodal sources + the clarification loop
+// ============================================================================
+
+export type SourceKind = 'text' | 'document' | 'image' | 'audio' | 'video' | 'eventlog';
+
+/** What the AI pulled out of one source, in the FLUX vocabulary. */
+export interface SourceObservation {
+  steps?: string[];
+  actors?: string[];
+  systems?: string[];
+  pains?: string[];
+  timings?: string[];
+  metrics?: string[];
+}
+
+export interface Source {
+  id: string;
+  kind: SourceKind;
+  /** File name or a short label for pasted text. */
+  name: string;
+  mime?: string;
+  sizeBytes?: number;
+  status: 'processing' | 'ready' | 'error';
+  /** One-line summary of what this source contributes. */
+  summary?: string;
+  /** Full transcript / extracted text. */
+  extraction?: string;
+  observations?: SourceObservation;
+  error?: string;
+  /** Which provider/model processed it. */
+  providerUsed?: string;
+  createdAt: number;
+}
+
+export type ClarificationCategory = 'gap' | 'assumption' | 'conflict' | 'suggestion';
+
+export interface Clarification {
+  id: string;
+  question: string;
+  category: ClarificationCategory;
+  /** Why it matters / what it would change. */
+  rationale?: string;
+  /** 1-5 how much it affects the result. */
+  severity?: number;
+  status: 'open' | 'answered' | 'dismissed';
+  answer?: string;
+  createdAt: number;
+}
 
 export interface KnowledgeCard {
   id: string;

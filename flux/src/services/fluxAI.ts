@@ -7,13 +7,15 @@
  * the same Lean/VSM/TIMWOODS language → comparable output.
  */
 import { getSettings, now, uid } from '../db';
-import { getProvider } from './ai';
-import type { AIMessage } from './ai';
+import { getProvider, providerList } from './ai';
+import type { AIMessage, Attachment, AttachmentKind } from './ai';
 import { AIError } from './ai';
-import { getAIKey } from './aiKey';
+import { configuredProviders, getAIKey } from './aiKey';
 import { computeMetrics } from '../lib/metrics';
 import type {
   AIProviderId,
+  Clarification,
+  ClarificationCategory,
   Diagnostic,
   DiagnosticArea,
   DiagnosticSignal,
@@ -24,6 +26,9 @@ import type {
   Process,
   ProcessStep,
   Project,
+  Source,
+  SourceKind,
+  SourceObservation,
 } from '../types';
 
 // ============================================================================
@@ -51,29 +56,55 @@ interface ResolvedAI {
   apiKey: string;
 }
 
-async function resolveAI(): Promise<ResolvedAI> {
+/** Resolve the primary reasoning provider (map/diagnose/design). */
+async function resolveAI(provider?: AIProviderId): Promise<ResolvedAI> {
   const settings = await getSettings();
-  const providerId = settings.aiProvider ?? 'anthropic';
-  const provider = getProvider(providerId);
-  const model = settings.aiModel ?? provider.defaultModel;
-  const apiKey = await getAIKey();
-  if (!apiKey) throw new AIError('No AI key set. Add one in Settings to use FLUX intelligence.', { provider: providerId });
+  const providerId = provider ?? settings.aiProvider ?? 'anthropic';
+  const p = getProvider(providerId);
+  // Use the configured model only when it belongs to the chosen provider.
+  const model = !provider && settings.aiModel ? settings.aiModel : p.defaultModel;
+  const apiKey = await getAIKey(providerId);
+  if (!apiKey) {
+    throw new AIError(`No ${p.label} key set. Add one in Settings to use FLUX intelligence.`, { provider: providerId });
+  }
   return { providerId, model, apiKey };
+}
+
+/**
+ * Pick the optimal provider for a given attachment kind from the keys the user
+ * has configured. Preference order favours the strongest reader for each type.
+ */
+async function resolveForAttachment(kind: AttachmentKind): Promise<ResolvedAI> {
+  const available = await configuredProviders();
+  const prefs: Record<AttachmentKind, AIProviderId[]> = {
+    image: ['anthropic', 'gemini', 'openai'],
+    document: ['anthropic', 'gemini'],
+    audio: ['gemini'],
+    video: ['gemini'],
+  };
+  for (const pid of prefs[kind]) {
+    if (available.includes(pid) && getProvider(pid).supports.includes(kind)) {
+      return resolveAI(pid);
+    }
+  }
+  const need = providerList.filter((p) => p.supports.includes(kind)).map((p) => p.label).join(' or ');
+  throw new AIError(`To ingest ${kind} files, add a ${need} key in Settings.`, { provider: 'gemini' });
 }
 
 async function callJSON<T>(
   system: string,
   user: string,
   jsonSchema: object,
-  opts: { maxTokens?: number; temperature?: number; signal?: AbortSignal } = {},
+  opts: { maxTokens?: number; temperature?: number; signal?: AbortSignal; resolved?: ResolvedAI; attachments?: Attachment[] } = {},
 ): Promise<{ result: T; provider: AIProviderId; model: string }> {
-  const { providerId, model, apiKey } = await resolveAI();
+  const { providerId, model, apiKey } = opts.resolved ?? (await resolveAI());
   const provider = getProvider(providerId);
   const messages: AIMessage[] = [{ role: 'user', content: user }];
   const r = await provider.complete(
     {
       system: `${FLUX_PERSONA}\n\n${system}`,
       messages,
+      attachments: opts.attachments,
       jsonSchema,
       maxTokens: opts.maxTokens ?? 3000,
       temperature: opts.temperature ?? 0.4,
@@ -294,9 +325,9 @@ export async function mapProcessFromText(
   return { map: result, assumptions: result.assumptions };
 }
 
-/** Assemble a Process domain object from an AI map result. */
-export function buildProcess(projectId: string, map: MapResult, schemaVersion: number): Process {
-  const steps: ProcessStep[] = (map.steps ?? []).map((s, i) => ({
+/** Turn raw AI steps into domain steps with stable ids + 1-based order. */
+export function rawToSteps(raw: Array<Omit<ProcessStep, 'id' | 'order'>>): ProcessStep[] {
+  return (raw ?? []).map((s, i) => ({
     ...s,
     id: uid(),
     order: i + 1,
@@ -305,6 +336,11 @@ export function buildProcess(projectId: string, map: MapResult, schemaVersion: n
     type: s.type ?? 'task',
     actor: s.actor ?? '',
   }));
+}
+
+/** Assemble a Process domain object from an AI map result. */
+export function buildProcess(projectId: string, map: MapResult, schemaVersion: number): Process {
+  const steps = rawToSteps(map.steps ?? []);
   return {
     id: uid(),
     projectId,
@@ -496,6 +532,231 @@ IMPORTANT: This is drawn from your training knowledge, not live data. Give reali
     projectId: opts.project.id,
     source: 'ai-research',
     validated: false,
+    createdAt: now(),
+  }));
+}
+
+// ============================================================================
+// INGESTION — multimodal source processing
+// ============================================================================
+
+const OBSERVATION_PROPS = {
+  steps: { type: 'array', items: { type: 'string' }, description: 'Process steps/activities observed, in order if discernible.' },
+  actors: { type: 'array', items: { type: 'string' }, description: 'Roles/people/teams involved.' },
+  systems: { type: 'array', items: { type: 'string' }, description: 'Systems, tools or documents used.' },
+  pains: { type: 'array', items: { type: 'string' }, description: 'Pain points, frustrations, rework, delays mentioned.' },
+  timings: { type: 'array', items: { type: 'string' }, description: 'Any durations, frequencies, volumes or wait times stated.' },
+  metrics: { type: 'array', items: { type: 'string' }, description: 'Any numbers/KPIs/costs mentioned.' },
+};
+
+const INGEST_SCHEMA = {
+  type: 'object',
+  required: ['extraction', 'summary', 'observations'],
+  properties: {
+    extraction: { type: 'string', description: 'Faithful transcript / full extracted text of the source. For audio/video, transcribe verbatim with speaker labels where possible.' },
+    summary: { type: 'string', description: 'One or two sentences on what this source tells us about the process.' },
+    observations: { type: 'object', properties: OBSERVATION_PROPS },
+  },
+};
+
+const ATTACH_KIND: Record<SourceKind, AttachmentKind | null> = {
+  text: null,
+  eventlog: null,
+  document: 'document',
+  image: 'image',
+  audio: 'audio',
+  video: 'video',
+};
+
+export interface IngestResult {
+  extraction: string;
+  summary: string;
+  observations: SourceObservation;
+  providerUsed: string;
+}
+
+export async function ingestSource(opts: {
+  project: Project;
+  kind: SourceKind;
+  name: string;
+  mime?: string;
+  /** Base64 for binary sources (document/image/audio/video). */
+  dataB64?: string;
+  /** Raw text for text/eventlog/pasted sources. */
+  text?: string;
+  signal?: AbortSignal;
+}): Promise<IngestResult> {
+  const attachKind = ATTACH_KIND[opts.kind];
+  const guidance =
+    opts.kind === 'audio' || opts.kind === 'video'
+      ? 'Transcribe the recording in full, then extract the process observations.'
+      : opts.kind === 'eventlog'
+        ? 'This is a system/event-log export. Infer the real end-to-end flow, case variants, rework loops and bottlenecks from the data.'
+        : opts.kind === 'document' || opts.kind === 'image'
+          ? 'Read the document/image carefully and extract everything relevant to how the process works.'
+          : 'Extract everything relevant to how the process works.';
+  const system = `SOURCE INGESTION. You are processing one raw source for a process-mapping engagement. ${guidance}
+Be faithful — do not invent. Capture exactly what the source says (and flag where it is unclear). Use the FLUX vocabulary (steps, actors, systems, pains, timings).`;
+  const baseUser = `ENGAGEMENT\n${projectContext(opts.project)}\n\nSOURCE: ${opts.name} (${opts.kind})`;
+
+  if (attachKind && opts.dataB64 && opts.mime) {
+    const resolved = await resolveForAttachment(attachKind);
+    const { result, model, provider } = await callJSON<IngestResult>(system, `${baseUser}\n\n(The file is attached.)`, INGEST_SCHEMA, {
+      resolved,
+      attachments: [{ kind: attachKind, mime: opts.mime, dataB64: opts.dataB64, name: opts.name }],
+      maxTokens: 4000,
+      temperature: 0.2,
+      signal: opts.signal,
+    });
+    return { ...result, providerUsed: `${provider}/${model}` };
+  }
+
+  // Text / event-log: send the content inline.
+  const { result, model, provider } = await callJSON<IngestResult>(
+    system,
+    `${baseUser}\n\nCONTENT:\n${opts.text ?? ''}`,
+    INGEST_SCHEMA,
+    { maxTokens: 3000, temperature: 0.2, signal: opts.signal },
+  );
+  return { ...result, providerUsed: `${provider}/${model}` };
+}
+
+// ============================================================================
+// SYNTHESIS — sources → standardized map + clarifications
+// ============================================================================
+
+const CLARIFICATION_PROPS = {
+  question: { type: 'string', description: 'The specific question or gap to resolve with the client.' },
+  category: { type: 'string', enum: ['gap', 'assumption', 'conflict', 'suggestion'], description: 'gap = missing info; assumption = something inferred; conflict = sources disagree; suggestion = recommended extra input.' },
+  rationale: { type: 'string', description: 'Why it matters / what it would change in the map or numbers.' },
+  severity: { type: 'integer', description: '1-5 how much this affects the result.' },
+};
+
+const SYNTH_SCHEMA = {
+  type: 'object',
+  required: ['name', 'sipoc', 'steps', 'clarifications'],
+  properties: {
+    name: { type: 'string' },
+    trigger: { type: 'string' },
+    owner: { type: 'string' },
+    annualVolume: { type: 'number' },
+    sipoc: {
+      type: 'object',
+      required: ['suppliers', 'inputs', 'outputs', 'customers'],
+      properties: {
+        suppliers: { type: 'array', items: { type: 'string' } },
+        inputs: { type: 'array', items: { type: 'string' } },
+        outputs: { type: 'array', items: { type: 'string' } },
+        customers: { type: 'array', items: { type: 'string' } },
+      },
+    },
+    steps: {
+      type: 'array',
+      description: 'Ordered current-state steps synthesised from ALL sources. Make handoffs, waits and controls explicit.',
+      items: { type: 'object', required: ['name', 'type', 'actor', 'valueClass', 'automation'], properties: STEP_PROPS },
+    },
+    clarifications: {
+      type: 'array',
+      description: '4-10 open questions, gaps, assumptions and conflicts that, once resolved, would tighten the map and numbers. Be specific.',
+      items: { type: 'object', required: ['question', 'category'], properties: CLARIFICATION_PROPS },
+    },
+  },
+};
+
+interface RawClarification {
+  question: string;
+  category: ClarificationCategory;
+  rationale?: string;
+  severity?: number;
+}
+
+function sourcesToText(sources: Source[]): string {
+  const ready = sources.filter((s) => s.status === 'ready');
+  if (!ready.length) return '(no processed sources)';
+  return ready
+    .map((s, i) => {
+      const obs = s.observations
+        ? `\n  observed — steps: ${(s.observations.steps ?? []).join('; ') || '—'}; actors: ${(s.observations.actors ?? []).join(', ') || '—'}; systems: ${(s.observations.systems ?? []).join(', ') || '—'}; pains: ${(s.observations.pains ?? []).join('; ') || '—'}; timings: ${(s.observations.timings ?? []).join('; ') || '—'}`
+        : '';
+      return `SOURCE ${i + 1} [${s.kind}] "${s.name}"${obs}\n  extract: ${(s.extraction ?? '').slice(0, 4000)}`;
+    })
+    .join('\n\n');
+}
+
+export async function synthesizeProcess(opts: {
+  project: Project;
+  sources: Source[];
+  extraNotes?: string;
+  knowledge?: KnowledgeCard[];
+  signal?: AbortSignal;
+}): Promise<{ map: MapResult; clarifications: Clarification[] }> {
+  const system = `STAGE 2 — CURRENT-STATE MAPPING (multi-source synthesis). Synthesise ALL the ingested sources into ONE standardized FLUX current-state map. Map how work ACTUALLY flows, reconciling what different sources say. Rules:
+- Make handoffs, waits and controls into their own explicit steps.
+- Classify every step VA/BVA/NVA honestly; estimate process/wait/%C&A realistically.
+- Where you infer or estimate, raise it as a clarification (category 'assumption').
+- Where sources disagree, raise a 'conflict'. Where key data is missing, raise a 'gap'.
+- Suggest additional inputs that would sharpen the map as 'suggestion'.`;
+  const user = `ENGAGEMENT\n${projectContext(opts.project)}\n\nINGESTED SOURCES\n${sourcesToText(opts.sources)}${opts.extraNotes ? `\n\nANALYST NOTES\n${opts.extraNotes}` : ''}${knowledgeContext(opts.knowledge ?? [])}`;
+  const { result } = await callJSON<MapResult & { clarifications: RawClarification[] }>(system, user, SYNTH_SCHEMA, {
+    maxTokens: 4000,
+    temperature: 0.3,
+    signal: opts.signal,
+  });
+  return { map: result, clarifications: rawToClarifications(result.clarifications ?? []) };
+}
+
+// ============================================================================
+// REFINE — answered clarifications → revised map
+// ============================================================================
+
+const REFINE_SCHEMA = {
+  type: 'object',
+  required: ['steps', 'clarifications', 'changeSummary'],
+  properties: {
+    changeSummary: { type: 'string', description: 'One short paragraph on what changed and why.' },
+    steps: {
+      type: 'array',
+      description: 'The FULL revised ordered step list (not a diff).',
+      items: { type: 'object', required: ['name', 'type', 'actor', 'valueClass', 'automation'], properties: STEP_PROPS },
+    },
+    clarifications: {
+      type: 'array',
+      description: 'Remaining open clarifications after applying the answers, plus any NEW ones the answers surfaced.',
+      items: { type: 'object', required: ['question', 'category'], properties: CLARIFICATION_PROPS },
+    },
+  },
+};
+
+export async function refineProcess(opts: {
+  project: Project;
+  process: Process;
+  answers: { question: string; answer: string }[];
+  signal?: AbortSignal;
+}): Promise<{ steps: ProcessStep[]; clarifications: Clarification[]; changeSummary: string }> {
+  const system = `REFINEMENT. The analyst has answered some open clarifications. Revise the current-state map to incorporate the answers. Return the FULL revised step list, the remaining open clarifications (drop the resolved ones; add any new ones the answers reveal), and a short change summary. Keep step ids implicit (re-output all steps).`;
+  const qa = opts.answers.map((a) => `Q: ${a.question}\nA: ${a.answer}`).join('\n\n');
+  const user = `ENGAGEMENT\n${projectContext(opts.project)}\n\nCURRENT MAP\n${processToText(opts.process)}\n\nANSWERED CLARIFICATIONS\n${qa}`;
+  const { result } = await callJSON<{ steps: Array<Omit<ProcessStep, 'id' | 'order'>>; clarifications: RawClarification[]; changeSummary: string }>(
+    system,
+    user,
+    REFINE_SCHEMA,
+    { maxTokens: 4000, temperature: 0.3, signal: opts.signal },
+  );
+  return {
+    steps: rawToSteps(result.steps ?? opts.process.steps),
+    clarifications: rawToClarifications(result.clarifications ?? []),
+    changeSummary: result.changeSummary ?? '',
+  };
+}
+
+function rawToClarifications(raw: RawClarification[]): Clarification[] {
+  return (raw ?? []).map((c) => ({
+    id: uid(),
+    question: c.question,
+    category: c.category ?? 'gap',
+    rationale: c.rationale,
+    severity: c.severity,
+    status: 'open' as const,
     createdAt: now(),
   }));
 }

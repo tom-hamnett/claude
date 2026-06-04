@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { uid } from '../db';
 import {
@@ -16,6 +16,8 @@ import Markdown from '../components/Markdown';
 import Scorecard from '../components/Scorecard';
 import ProcessMap from '../components/ProcessMap';
 import OpportunityMatrix from '../components/OpportunityMatrix';
+import IngestStudio from '../components/IngestStudio';
+import Clarifications from '../components/Clarifications';
 import { AIError_, AIThinking, Spinner, useAIRun } from '../components/AIRun';
 import { AUTOMATION, DRIVER, DRIVER_ORDER, STEP_TYPE, STEP_TYPE_ORDER, VALUE_CLASS, WASTE } from '../lib/frameworks';
 import { computeMetrics, prioritize, renumber } from '../lib/metrics';
@@ -25,7 +27,7 @@ import { designFutureState, scanOpportunities } from '../services/fluxAI';
 import { StatusChip } from './ProjectPage';
 import type { Opportunity, Process, ProcessStep, Project } from '../types';
 
-type Tab = 'map' | 'diagnose' | 'design' | 'report';
+type Tab = 'ingest' | 'map' | 'diagnose' | 'design' | 'report';
 
 export default function ProcessPage() {
   const { id = '' } = useParams();
@@ -34,13 +36,24 @@ export default function ProcessPage() {
   const project = useProject(process?.projectId ?? '');
   const opportunities = useOpportunitiesByProcess(id) ?? [];
   const [tab, setTab] = useState<Tab>('map');
+  const [tabInit, setTabInit] = useState(false);
+
+  // First time the process loads, land drafts on Ingest, mapped ones on Map.
+  useEffect(() => {
+    if (!tabInit && process) {
+      setTab((process.steps?.length ?? 0) === 0 ? 'ingest' : 'map');
+      setTabInit(true);
+    }
+  }, [process, tabInit]);
 
   if (process === undefined) return <div className="text-ink-400">Loading…</div>;
   if (!process) return <div className="card p-8 text-center text-ink-400">Process not found.</div>;
   if (!project) return <div className="text-ink-400">Loading engagement…</div>;
 
-  const TABS: { id: Tab; label: string; icon: 'map' | 'spark' | 'design' | 'download' }[] = [
-    { id: 'map', label: 'Map', icon: 'map' },
+  const openClar = (process.clarifications ?? []).filter((c) => c.status === 'open').length;
+  const TABS: { id: Tab; label: string; icon: 'map' | 'spark' | 'design' | 'download' | 'flow'; badge?: number }[] = [
+    { id: 'ingest', label: 'Ingest', icon: 'flow', badge: process.sources?.length || undefined },
+    { id: 'map', label: 'Map', icon: 'map', badge: openClar || undefined },
     { id: 'diagnose', label: 'Diagnose', icon: 'spark' },
     { id: 'design', label: 'Design', icon: 'design' },
     { id: 'report', label: 'Report', icon: 'download' },
@@ -83,10 +96,12 @@ export default function ProcessPage() {
             }`}
           >
             <Icon name={t.icon} className="h-4 w-4" /> {t.label}
+            {t.badge ? <span className="ml-1 rounded-full bg-flux-100 px-1.5 text-[11px] font-semibold text-flux-700">{t.badge}</span> : null}
           </button>
         ))}
       </div>
 
+      {tab === 'ingest' && <IngestStudio process={process} project={project} onSynthesized={() => setTab('map')} />}
       {tab === 'map' && <MapTab process={process} project={project} />}
       {tab === 'diagnose' && <DiagnoseTab process={process} project={project} opportunities={opportunities} />}
       {tab === 'design' && <DesignTab process={process} project={project} opportunities={opportunities} />}
@@ -143,6 +158,7 @@ function MapTab({ process, project }: { process: Process; project: Project }) {
 
   return (
     <div className="space-y-5">
+      <Clarifications process={process} project={project} />
       <Scorecard m={metrics} currency={project.org?.currency} />
 
       <div className="flex items-center justify-between">
