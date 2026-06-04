@@ -16,4 +16,5 @@ export function getProvider(id: AIProviderId): AIProvider {
   return providers[id];
 }
 
+export { uploadFileToGemini } from './geminiFiles';
 export * from './types';

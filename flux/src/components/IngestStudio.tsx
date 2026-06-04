@@ -3,7 +3,7 @@ import { now, uid } from '../db';
 import { getKnowledgeForProject, putKnowledgeMany, putProcess } from '../store';
 import { ingestSource, rawToSteps, researchBenchmarks, synthesizeProcess } from '../services/fluxAI';
 import { AIError } from '../services/ai';
-import { humanSize, isBinaryKind, MAX_INLINE_BYTES, readFileAsBase64, readFileAsText, sourceKindFor } from '../lib/files';
+import { humanSize, isBinaryKind, MAX_FILE_BYTES, readFileAsBase64, readFileAsText, sourceKindFor } from '../lib/files';
 import Icon, { type IconName } from './Icon';
 import { AIError_, Spinner } from './AIRun';
 import type { Process, Project, Source, SourceKind } from '../types';
@@ -62,8 +62,8 @@ export default function IngestStudio({
       setBusy(true);
       try {
         if (isBinaryKind(kind)) {
-          if (file.size > MAX_INLINE_BYTES) {
-            throw new AIError(`${file.name} is ${humanSize(file.size)} — over the ${humanSize(MAX_INLINE_BYTES)} inline limit. Trim it or paste a transcript.`);
+          if (file.size > MAX_FILE_BYTES) {
+            throw new AIError(`${file.name} is ${humanSize(file.size)} — over the ${humanSize(MAX_FILE_BYTES)} limit.`);
           }
           const dataB64 = await readFileAsBase64(file);
           const r = await ingestSource({ project, kind, name: file.name, mime: file.type || 'application/octet-stream', dataB64 });
@@ -168,7 +168,7 @@ export default function IngestStudio({
       >
         <Icon name="download" className="h-8 w-8 rotate-180 text-flux-500" />
         <p className="mt-2 font-medium text-ink-700">Drop interviews, recordings, documents, screenshots or event logs</p>
-        <p className="text-sm text-ink-400">Audio / video / PDF / images / CSV — FLUX picks the right model for each.</p>
+        <p className="text-sm text-ink-400">Audio / video / PDF / images / CSV — FLUX picks the right model for each. Large media uploads to Gemini automatically.</p>
         <button className="btn-outline mt-3" onClick={() => fileInput.current?.click()} disabled={busy}>
           <Icon name="plus" className="h-4 w-4" /> Choose files
         </button>
