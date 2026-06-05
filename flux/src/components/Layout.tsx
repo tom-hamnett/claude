@@ -27,7 +27,7 @@ export default function Layout() {
     <div className="flex h-full min-h-screen bg-ink-50">
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-60 transform bg-ink-900 text-ink-100 transition-transform md:static md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 w-60 transform bg-ink-900 text-ink-100 transition-transform md:static md:translate-x-0 print:hidden ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -69,7 +69,7 @@ export default function Layout() {
 
       {/* Main */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-16 items-center justify-between border-b border-ink-200 bg-white px-4 md:px-8">
+        <header className="flex h-16 items-center justify-between border-b border-ink-200 bg-white px-4 md:px-8 print:hidden">
           <button className="rounded-lg p-2 text-ink-500 hover:bg-ink-100 md:hidden" onClick={() => setMobileOpen(true)}>
             <Icon name="grip" />
           </button>

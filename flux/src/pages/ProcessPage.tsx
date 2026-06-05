@@ -19,6 +19,7 @@ import OpportunityMatrix from '../components/OpportunityMatrix';
 import IngestStudio from '../components/IngestStudio';
 import Clarifications from '../components/Clarifications';
 import TidyTools from '../components/TidyTools';
+import CostBasis from '../components/CostBasis';
 import { AIError_, AIThinking, Spinner, useAIRun } from '../components/AIRun';
 import { AUTOMATION, DRIVER, DRIVER_ORDER, STEP_TYPE, STEP_TYPE_ORDER, VALUE_CLASS, WASTE } from '../lib/frameworks';
 import { computeMetrics, prioritize, renumber } from '../lib/metrics';
@@ -161,13 +162,14 @@ function MapTab({ process, project }: { process: Process; project: Project }) {
     <div className="space-y-5">
       <Clarifications process={process} project={project} />
       <Scorecard m={metrics} currency={project.org?.currency} />
+      <CostBasis process={process} project={project} />
 
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold uppercase tracking-wide text-ink-400">Swimlane map</h3>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           <TidyTools process={process} project={project} />
-          <button className="btn-ghost text-sm" onClick={() => setDetails((d) => !d)}>
-            {details ? 'Hide' : 'Edit'} details &amp; SIPOC
+          <button className="btn-tint-brand text-sm" onClick={() => setDetails((d) => !d)}>
+            <Icon name="edit" className="h-4 w-4" /> {details ? 'Hide' : 'Edit'} details &amp; SIPOC
           </button>
         </div>
       </div>
@@ -191,8 +193,8 @@ function MapTab({ process, project }: { process: Process; project: Project }) {
               <th className="px-3 py-2">Type</th>
               <th className="px-3 py-2">Actor</th>
               <th className="px-3 py-2">Value</th>
-              <th className="px-3 py-2">Touch</th>
-              <th className="px-3 py-2">Wait</th>
+              <th className="px-3 py-2">Touch (min)</th>
+              <th className="px-3 py-2">Wait (min)</th>
               <th className="px-3 py-2">%C&A</th>
               <th className="px-3 py-2">Auto</th>
               <th className="px-3 py-2"></th>
@@ -495,6 +497,10 @@ function ReportTab({ process, project, opportunities }: { process: Process; proj
             <Icon name="download" className="h-4 w-4" /> Print / PDF
           </button>
         </div>
+      </div>
+      <div className="card p-4">
+        <h2 className="mb-3 font-display text-lg font-bold text-ink-800">Current-State Map</h2>
+        <ProcessMap process={process} />
       </div>
       <div className="card p-6">
         <Markdown source={md} />

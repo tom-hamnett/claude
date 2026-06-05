@@ -17,7 +17,7 @@ export default function TidyTools({ process, project }: { process: Process; proj
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button className="btn-ghost text-sm" onClick={() => setOpen(true)}>
+      <button className="btn-tint-flux text-sm" onClick={() => setOpen(true)}>
         <Icon name="edit" className="h-4 w-4" /> Tidy up
       </button>
       {open && <TidyModal process={process} project={project} onClose={() => setOpen(false)} />}
