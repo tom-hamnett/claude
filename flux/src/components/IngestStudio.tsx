@@ -138,6 +138,7 @@ export default function IngestStudio({
         sipoc: map.sipoc ?? process.sipoc,
         steps,
         clarifications: [...keptDismissed, ...clarifications],
+        reviewed: false,
         status: 'mapped',
       });
       onSynthesized();

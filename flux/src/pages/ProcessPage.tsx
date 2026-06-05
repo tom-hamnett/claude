@@ -160,6 +160,22 @@ function MapTab({ process, project }: { process: Process; project: Project }) {
 
   return (
     <div className="space-y-5">
+      {process.steps.length > 0 && !process.reviewed && (
+        <div className="card flex flex-wrap items-center justify-between gap-3 border-l-4 border-brand-500 p-4">
+          <div className="flex items-start gap-2">
+            <Icon name="spark" className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" />
+            <div>
+              <div className="font-semibold text-ink-800">Freshly mapped — give it a once-over</div>
+              <p className="text-sm text-ink-500">
+                This map was drafted by AI. Check the swimlanes, step order and timings (confirm the units look right — they're estimates in minutes), then use <strong>Tidy up</strong> to fix anything.
+              </p>
+            </div>
+          </div>
+          <button className="btn-primary shrink-0" onClick={() => putProcess({ ...process, reviewed: true })}>
+            <Icon name="check" className="h-4 w-4" /> Mark as reviewed
+          </button>
+        </div>
+      )}
       <Clarifications process={process} project={project} />
       <Scorecard m={metrics} currency={project.org?.currency} />
       <CostBasis process={process} project={project} />
