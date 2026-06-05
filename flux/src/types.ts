@@ -212,6 +212,8 @@ export interface Process {
   sources?: Source[];
   /** Open questions / gaps / assumptions surfaced during ingestion. */
   clarifications?: Clarification[];
+  /** Has a human checked/tidied the AI-generated map? Drives the review prompt. */
+  reviewed?: boolean;
   status: 'draft' | 'mapped' | 'diagnosed' | 'designed';
   createdAt: number;
   updatedAt: number;

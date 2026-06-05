@@ -106,11 +106,11 @@ function TidyModal({ process, project, onClose }: { process: Process; project: P
       <section>
         <h3 className="font-semibold text-ink-800">Tidy with AI</h3>
         <p className="mb-3 text-sm text-ink-500">
-          FLUX consolidates duplicate roles, standardises naming and fixes obvious issues — without inventing steps. Add guidance if you like.
+          Describe <strong>any</strong> correction in plain English — roles, step names, ordering, types, value class, systems, or timings &amp; their units. FLUX rewrites the map accordingly (without inventing new activity).
         </p>
         <textarea
-          className="input min-h-[70px]"
-          placeholder={"e.g. 'Invoice Processor', 'Invoice Processing Team' and 'Designated Member' are all the same person — merge into 'Invoice Processor'."}
+          className="input min-h-[80px]"
+          placeholder={"e.g. The touch times are in seconds, not minutes — rescale them all. Also merge 'Designated Member' into 'Invoice Processor', and step 3 happens before step 2."}
           value={guidance}
           onChange={(e) => setGuidance(e.target.value)}
         />

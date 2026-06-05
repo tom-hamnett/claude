@@ -797,12 +797,13 @@ export async function tidyProcess(opts: {
   instructions?: string;
   signal?: AbortSignal;
 }): Promise<{ steps: ProcessStep[]; changeSummary: string }> {
-  const system = `MAP TIDY-UP. Clean and consolidate this current-state map WITHOUT inventing activity. Specifically:
-- CONSOLIDATE near-duplicate actors/swimlanes into a single canonical role where they clearly refer to the same person/team (e.g. "Invoice Processor", "Invoice Processing Team", "Designated Member" → one role) — unless they are genuinely distinct roles.
-- Standardise the naming of roles and systems (consistent terms and casing).
-- Fix obvious ordering, duplication, or mislabelled step types / value classes.
-- Keep every real step. Do NOT fabricate steps, timings or numbers. Re-output ALL steps in order.
-Apply the analyst's guidance below if provided.`;
+  const system = `MAP TIDY-UP. Clean, correct and consolidate this current-state map. You may edit ANY element of the map:
+- CONSOLIDATE near-duplicate actors/swimlanes into a single canonical role where they clearly refer to the same person/team (e.g. "Invoice Processor", "Invoice Processing Team", "Designated Member" → one role) — unless genuinely distinct.
+- Standardise naming of roles and systems (consistent terms/casing).
+- Fix ordering, duplication, mislabelled step types or value classes, and merge/split steps where the flow is clearly wrong.
+- Correct TIMINGS and their UNITS when the analyst says they're off — e.g. if values are really seconds rather than minutes, rescale every step's touch/wait time accordingly (FLUX stores time in MINUTES, so 30 seconds = 0.5). Apply such rescaling consistently across all steps.
+- Do NOT invent brand-new activity the map doesn't support — but DO fully apply the analyst's corrections below.
+Re-output ALL steps in order.${opts.instructions ? '' : ' If no guidance is given, focus on role consolidation and naming/labelling clean-up only (leave timings as they are).'}`;
   const user = `ENGAGEMENT\n${projectContext(opts.project)}\n\nCURRENT MAP\n${processToText(opts.process)}${opts.instructions ? `\n\nANALYST GUIDANCE\n${opts.instructions}` : ''}`;
   const { result } = await callJSON<{ steps: Array<Omit<ProcessStep, 'id' | 'order'>>; changeSummary: string }>(
     system,
