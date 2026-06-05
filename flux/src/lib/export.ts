@@ -83,7 +83,10 @@ export function buildProcessReport(
     lines.push('### Recommendations');
     lines.push('');
     for (const o of opps) {
-      lines.push(`- **${o.title}** — ${o.recommendation}`);
+      const basis = o.estAnnualValue
+        ? ` _(${fmtMoney(o.estAnnualValue, currency)}/yr — ${o.valueBasis || 'AI estimate, basis not stated'})_`
+        : '';
+      lines.push(`- **${o.title}** — ${o.recommendation}${basis}`);
     }
   }
   lines.push('');

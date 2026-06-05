@@ -419,6 +419,12 @@ function OpportunityCard({ o, process, currency, selected, onSelect }: { o: Oppo
       </div>
       <p className="mt-2 text-sm text-ink-600">{o.description}</p>
       <p className="mt-2 text-sm text-ink-700"><span className="font-medium text-ink-800">Recommendation:</span> {o.recommendation}</p>
+      {o.estAnnualValue ? (
+        <div className="mt-2 rounded-lg bg-va-100/40 px-3 py-1.5 text-xs text-ink-600">
+          <span className="font-semibold text-va-700">Value basis ({fmtMoney(o.estAnnualValue, currency)}/yr):</span>{' '}
+          {o.valueBasis || 'AI estimate — no calculation provided. Re-run Diagnose or edit to add the working.'}
+        </div>
+      ) : null}
       <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
         <span className={`chip ${DRIVER[o.driver].chip}`}>{DRIVER[o.driver].label}</span>
         {o.waste && <span className="chip bg-nva-100 text-nva-700">{WASTE[o.waste].label}</span>}
