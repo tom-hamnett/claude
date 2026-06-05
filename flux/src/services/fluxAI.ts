@@ -12,6 +12,7 @@ import type { AIMessage, Attachment, AttachmentKind } from './ai';
 import { AIError } from './ai';
 import { configuredProviders, getAIKey } from './aiKey';
 import { computeMetrics } from '../lib/metrics';
+import { readFileAsBase64 } from '../lib/files';
 import type {
   AIProviderId,
   Clarification,
@@ -580,8 +581,8 @@ export async function ingestSource(opts: {
   kind: SourceKind;
   name: string;
   mime?: string;
-  /** Base64 for binary sources (document/image/audio/video). */
-  dataB64?: string;
+  /** Raw file/blob for binary sources (document/image/audio/video). Streamed; never fully base64'd unless inlined. */
+  file?: Blob;
   /** Raw text for text/eventlog/pasted sources. */
   text?: string;
   signal?: AbortSignal;
@@ -599,13 +600,14 @@ export async function ingestSource(opts: {
 Be faithful — do not invent. Capture exactly what the source says (and flag where it is unclear). Use the FLUX vocabulary (steps, actors, systems, pains, timings).`;
   const baseUser = `ENGAGEMENT\n${projectContext(opts.project)}\n\nSOURCE: ${opts.name} (${opts.kind})`;
 
-  if (attachKind && opts.dataB64 && opts.mime) {
+  if (attachKind && opts.file) {
     const resolved = await resolveForAttachment(attachKind);
-    const bytes = approxBytes(opts.dataB64);
+    const mime = opts.mime || opts.file.type || 'application/octet-stream';
+    const bytes = opts.file.size;
     let attachment: Attachment;
     if (resolved.providerId === 'gemini' && bytes > GEMINI_INLINE_LIMIT) {
-      // Large media → resumable Files API, then reference by URI.
-      const up = await uploadFileToGemini({ apiKey: resolved.apiKey, dataB64: opts.dataB64, mime: opts.mime, name: opts.name, signal: opts.signal });
+      // Large media → resumable Files API (streamed), then reference by URI.
+      const up = await uploadFileToGemini({ apiKey: resolved.apiKey, blob: opts.file, mime, name: opts.name, signal: opts.signal });
       attachment = { kind: attachKind, mime: up.mimeType, fileUri: up.fileUri, name: opts.name };
     } else if (resolved.providerId !== 'gemini' && bytes > NON_GEMINI_INLINE_LIMIT) {
       throw new AIError(
@@ -613,7 +615,9 @@ Be faithful — do not invent. Capture exactly what the source says (and flag wh
         { provider: resolved.providerId },
       );
     } else {
-      attachment = { kind: attachKind, mime: opts.mime, dataB64: opts.dataB64, name: opts.name };
+      // Small enough to inline — read base64 only now.
+      const dataB64 = await readFileAsBase64(opts.file);
+      attachment = { kind: attachKind, mime, dataB64, name: opts.name };
     }
     const { result, model, provider } = await callJSON<IngestResult>(system, `${baseUser}\n\n(The file is attached.)`, INGEST_SCHEMA, {
       resolved,
@@ -783,11 +787,6 @@ function rawToClarifications(raw: RawClarification[]): Clarification[] {
 const GEMINI_INLINE_LIMIT = 15 * 1024 * 1024;
 /** Hard inline ceiling for providers without a Files API (Claude/OpenAI). */
 const NON_GEMINI_INLINE_LIMIT = 18 * 1024 * 1024;
-
-/** Approximate decoded byte length of a base64 string. */
-function approxBytes(b64: string): number {
-  return Math.floor((b64.length * 3) / 4);
-}
 
 function clampScale(n: number): 1 | 2 | 3 | 4 | 5 {
   const v = Math.round(n);
