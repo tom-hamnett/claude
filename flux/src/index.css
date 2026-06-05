@@ -37,6 +37,12 @@ body {
   .btn-outline {
     @apply btn border border-ink-200 bg-white text-ink-700 hover:bg-ink-50;
   }
+  .btn-tint-brand {
+    @apply btn border border-brand-200 bg-brand-50 text-brand-700 hover:bg-brand-100;
+  }
+  .btn-tint-flux {
+    @apply btn border border-flux-200 bg-flux-50 text-flux-700 hover:bg-flux-100;
+  }
   .card {
     @apply rounded-xl border border-ink-200 bg-white shadow-soft;
   }
@@ -67,6 +73,13 @@ body {
 /* Hide scrollbars on the nav rail but keep scrollability */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Clean Print / PDF: drop app chrome, show only the content. */
+@media print {
+  .no-print { display: none !important; }
+  main { overflow: visible !important; padding: 0 !important; }
+  .card { box-shadow: none !important; border-color: #e5e7eb !important; break-inside: avoid; }
+}
 
 @keyframes shimmer {
   0% { background-position: -400px 0; }

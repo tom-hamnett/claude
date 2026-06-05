@@ -56,7 +56,7 @@ export function buildProcessReport(
   // --- Map table
   lines.push('## 3. Current-State Map');
   lines.push('');
-  lines.push('| # | Step | Type | Actor | System | Value | Touch | Wait | %C&A | Auto |');
+  lines.push('| # | Step | Type | Actor | System | Value | Touch (min) | Wait (min) | %C&A | Auto |');
   lines.push('| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |');
   for (const s of process.steps) {
     lines.push(
