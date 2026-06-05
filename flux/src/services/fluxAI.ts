@@ -554,11 +554,14 @@ const INGEST_SCHEMA = {
   type: 'object',
   required: ['extraction', 'summary', 'observations'],
   properties: {
-    extraction: { type: 'string', description: 'Faithful transcript / full extracted text of the source. For audio/video, transcribe verbatim with speaker labels where possible.' },
+    extraction: { type: 'string', description: 'A thorough, well-structured DIGEST of the process-relevant content — what happens step by step, who does it, in which systems, with any timings, volumes, costs and pain points mentioned. Paraphrase freely; a verbatim transcript is NOT required and should be avoided for long recordings. Aim for completeness of process detail, not length.' },
     summary: { type: 'string', description: 'One or two sentences on what this source tells us about the process.' },
     observations: { type: 'object', properties: OBSERVATION_PROPS },
   },
 };
+
+/** Generous output budget — long recordings need room for a full digest. */
+const INGEST_MAX_TOKENS = 8192;
 
 const ATTACH_KIND: Record<SourceKind, AttachmentKind | null> = {
   text: null,
@@ -590,7 +593,7 @@ export async function ingestSource(opts: {
   const attachKind = ATTACH_KIND[opts.kind];
   const guidance =
     opts.kind === 'audio' || opts.kind === 'video'
-      ? 'Transcribe the recording in full, then extract the process observations.'
+      ? 'Watch/listen to the WHOLE recording and produce detailed, structured notes on the process discussed (you do NOT need a verbatim transcript — capture the process content, decisions, systems, roles, timings and pain points).'
       : opts.kind === 'eventlog'
         ? 'This is a system/event-log export. Infer the real end-to-end flow, case variants, rework loops and bottlenecks from the data.'
         : opts.kind === 'document' || opts.kind === 'image'
@@ -622,7 +625,7 @@ Be faithful — do not invent. Capture exactly what the source says (and flag wh
     const { result, model, provider } = await callJSON<IngestResult>(system, `${baseUser}\n\n(The file is attached.)`, INGEST_SCHEMA, {
       resolved,
       attachments: [attachment],
-      maxTokens: 4000,
+      maxTokens: INGEST_MAX_TOKENS,
       temperature: 0.2,
       signal: opts.signal,
     });
@@ -634,7 +637,7 @@ Be faithful — do not invent. Capture exactly what the source says (and flag wh
     system,
     `${baseUser}\n\nCONTENT:\n${opts.text ?? ''}`,
     INGEST_SCHEMA,
-    { maxTokens: 3000, temperature: 0.2, signal: opts.signal },
+    { maxTokens: INGEST_MAX_TOKENS, temperature: 0.2, signal: opts.signal },
   );
   return { ...result, providerUsed: `${provider}/${model}` };
 }
