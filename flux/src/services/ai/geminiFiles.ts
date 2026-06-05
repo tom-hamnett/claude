@@ -12,27 +12,17 @@ import { AIError } from './types';
  */
 const BASE = 'https://generativelanguage.googleapis.com';
 
-function b64ToBytes(b64: string): Uint8Array {
-  const s = atob(b64);
-  const out = new Uint8Array(s.length);
-  for (let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i);
-  return out;
-}
-
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export async function uploadFileToGemini(opts: {
   apiKey: string;
-  dataB64: string;
+  /** The raw file/blob — streamed directly (no in-memory base64). */
+  blob: Blob;
   mime: string;
   name?: string;
   signal?: AbortSignal;
 }): Promise<{ fileUri: string; mimeType: string }> {
-  const bytes = b64ToBytes(opts.dataB64);
-  const numBytes = bytes.byteLength;
-  // Copy into a plain ArrayBuffer so it satisfies BodyInit/BufferSource (TS 5.7+).
-  const body = new ArrayBuffer(numBytes);
-  new Uint8Array(body).set(bytes);
+  const numBytes = opts.blob.size;
 
   // 1) Start resumable session.
   let startResp: Response;
@@ -67,7 +57,7 @@ export async function uploadFileToGemini(opts: {
     upResp = await fetch(uploadUrl, {
       method: 'POST',
       headers: { 'X-Goog-Upload-Offset': '0', 'X-Goog-Upload-Command': 'upload, finalize' },
-      body,
+      body: opts.blob,
       signal: opts.signal,
     });
   } catch (err) {
