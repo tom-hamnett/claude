@@ -391,6 +391,7 @@ const OPP_SCHEMA = {
           effort: { type: 'integer', description: '1-5' },
           confidence: { type: 'number', description: '0-1' },
           estAnnualValue: { type: 'number', description: 'Estimated annual value in the project currency, if quantifiable.' },
+          valueBasis: { type: 'string', description: 'REQUIRED when estAnnualValue is set: show your working as a short calculation with explicit assumptions, e.g. "~6 min rework removed × 24,000 invoices/yr ÷ 60 × £35/hr ≈ £84k". State the driver (time saved / error rate / FTE / penalty avoided), the volume and the rate.' },
           quickWin: { type: 'boolean', description: 'Low-effort, high-impact Kaizen just-do-it?' },
         },
       },
@@ -410,6 +411,7 @@ interface RawOpp {
   effort: number;
   confidence: number;
   estAnnualValue?: number;
+  valueBasis?: string;
   quickWin: boolean;
 }
 
@@ -427,6 +429,7 @@ export async function scanOpportunities(opts: {
 - Anchor every opportunity to specific step order numbers as evidence.
 - Use the computed metrics: low PCE = flow problem; rework loops = defects; many handoffs = coordination drag; manual + high-volume = automation candidates.
 - Rate impact and effort 1-5. Mark genuine quick wins (Kaizen). Estimate annual value only where the data supports it, and keep estimates conservative.
+- Whenever you give an estAnnualValue, you MUST fill valueBasis with the explicit calculation and assumptions (driver × volume × rate). Use the engagement's volume and loaded hourly cost where given. No unexplained numbers.
 - Map automation honestly: RPA for structured/rule-based, AI/agentic for judgement-heavy, full for straight-through.`;
   const user = `ENGAGEMENT\n${projectContext(opts.project)}\n\nMAPPED PROCESS\n${processToText(opts.process)}\n\nCOMPUTED METRICS\n- Lead time ${metrics.totalLeadTimeMin}m, touch time ${metrics.totalProcessTimeMin}m, wait ${metrics.totalWaitTimeMin}m\n- Process Cycle Efficiency (PCE): ${(metrics.pce * 100).toFixed(1)}%\n- Rolled %C&A: ${(metrics.rolledCompleteAccurate * 100).toFixed(1)}%\n- Steps ${metrics.stepCount} (VA ${metrics.vaCount} / BVA ${metrics.bvaCount} / NVA ${metrics.nvaCount}); handoffs ${metrics.handoffCount}; decisions ${metrics.decisionCount}; rework loops ${metrics.reworkLoopCount}\n- Automation index ${metrics.automationIndex}/100${metrics.annualCost ? `; est. annual run-cost ${Math.round(metrics.annualCost)}; est. annual waste ${Math.round(metrics.annualWasteCost ?? 0)}` : ''}${knowledgeContext(opts.knowledge ?? [])}`;
 
@@ -451,6 +454,7 @@ export async function scanOpportunities(opts: {
     effort: clampScale(o.effort),
     confidence: clamp01(o.confidence ?? 0.6),
     estAnnualValue: o.estAnnualValue,
+    valueBasis: o.valueBasis,
     quickWin: !!o.quickWin,
     source: 'ai',
     createdAt: now(),

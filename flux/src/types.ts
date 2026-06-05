@@ -252,6 +252,8 @@ export interface Opportunity {
   confidence: number;
   /** Estimated annualised value (currency), if quantifiable. */
   estAnnualValue?: number;
+  /** The working behind estAnnualValue — drivers, volume, rate, assumptions. */
+  valueBasis?: string;
   /** Kaizen "just-do-it" quick win? */
   quickWin: boolean;
   /** Computed priority score (see metrics.ts). */
