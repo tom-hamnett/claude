@@ -18,6 +18,7 @@ import ProcessMap from '../components/ProcessMap';
 import OpportunityMatrix from '../components/OpportunityMatrix';
 import IngestStudio from '../components/IngestStudio';
 import Clarifications from '../components/Clarifications';
+import TidyTools from '../components/TidyTools';
 import { AIError_, AIThinking, Spinner, useAIRun } from '../components/AIRun';
 import { AUTOMATION, DRIVER, DRIVER_ORDER, STEP_TYPE, STEP_TYPE_ORDER, VALUE_CLASS, WASTE } from '../lib/frameworks';
 import { computeMetrics, prioritize, renumber } from '../lib/metrics';
@@ -163,9 +164,12 @@ function MapTab({ process, project }: { process: Process; project: Project }) {
 
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold uppercase tracking-wide text-ink-400">Swimlane map</h3>
-        <button className="btn-ghost text-sm" onClick={() => setDetails((d) => !d)}>
-          {details ? 'Hide' : 'Edit'} details &amp; SIPOC
-        </button>
+        <div className="flex items-center gap-1">
+          <TidyTools process={process} project={project} />
+          <button className="btn-ghost text-sm" onClick={() => setDetails((d) => !d)}>
+            {details ? 'Hide' : 'Edit'} details &amp; SIPOC
+          </button>
+        </div>
       </div>
       <ProcessMap process={process} selectedId={editing?.id} onSelect={(s) => setEditing(s)} />
 

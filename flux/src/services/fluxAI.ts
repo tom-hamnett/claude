@@ -770,6 +770,45 @@ export async function refineProcess(opts: {
   };
 }
 
+// ============================================================================
+// TIDY — consolidate roles / clean the map (no fabrication)
+// ============================================================================
+
+const TIDY_SCHEMA = {
+  type: 'object',
+  required: ['steps', 'changeSummary'],
+  properties: {
+    changeSummary: { type: 'string', description: 'Short paragraph on what you consolidated/cleaned — especially which roles you merged.' },
+    steps: {
+      type: 'array',
+      description: 'The FULL cleaned step list, in order.',
+      items: { type: 'object', required: ['name', 'type', 'actor', 'valueClass', 'automation'], properties: STEP_PROPS },
+    },
+  },
+};
+
+export async function tidyProcess(opts: {
+  project: Project;
+  process: Process;
+  instructions?: string;
+  signal?: AbortSignal;
+}): Promise<{ steps: ProcessStep[]; changeSummary: string }> {
+  const system = `MAP TIDY-UP. Clean and consolidate this current-state map WITHOUT inventing activity. Specifically:
+- CONSOLIDATE near-duplicate actors/swimlanes into a single canonical role where they clearly refer to the same person/team (e.g. "Invoice Processor", "Invoice Processing Team", "Designated Member" → one role) — unless they are genuinely distinct roles.
+- Standardise the naming of roles and systems (consistent terms and casing).
+- Fix obvious ordering, duplication, or mislabelled step types / value classes.
+- Keep every real step. Do NOT fabricate steps, timings or numbers. Re-output ALL steps in order.
+Apply the analyst's guidance below if provided.`;
+  const user = `ENGAGEMENT\n${projectContext(opts.project)}\n\nCURRENT MAP\n${processToText(opts.process)}${opts.instructions ? `\n\nANALYST GUIDANCE\n${opts.instructions}` : ''}`;
+  const { result } = await callJSON<{ steps: Array<Omit<ProcessStep, 'id' | 'order'>>; changeSummary: string }>(
+    system,
+    user,
+    TIDY_SCHEMA,
+    { maxTokens: 4000, temperature: 0.2, signal: opts.signal },
+  );
+  return { steps: rawToSteps(result.steps ?? opts.process.steps), changeSummary: result.changeSummary ?? '' };
+}
+
 function rawToClarifications(raw: RawClarification[]): Clarification[] {
   return (raw ?? []).map((c) => ({
     id: uid(),
