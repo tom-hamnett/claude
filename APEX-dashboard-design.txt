@@ -1,0 +1,315 @@
+APEX PMO — Data Visualisation & Dashboard Design
+=================================================
+Prepared for: Tom Hamnett / Sopan Shah (CPO)
+Design approach: Senior strategy consulting / data storytelling
+Framework: Embedded in APEX (React + Recharts), not external Power BI
+
+
+THE PRINCIPLE
+-------------
+
+A CPO doesn't want a dashboard. He wants answers.
+
+"How is the programme doing?" → one glance.
+"Why is it doing that?" → one click.
+"What do I do about it?" → one more click.
+
+Everything below follows the Pyramid Principle: answer first, evidence second, detail third. Every visualisation earns its place by answering a specific question a senior stakeholder would ask. If it doesn't answer a question, it doesn't exist.
+
+
+THE DATA WE HAVE (from 20 ingested Excel files)
+------------------------------------------------
+
+Source: SharePoint → APEX auto-ingest → data_tables
+
+1. CRF Analysis 2023-2026
+   609 rows, 33 columns. Capital Request Form analysis.
+   Likely contains: project names, regions, spend categories, CRF eligible amounts, approval status, years.
+   Key questions it answers: "What's our CRF eligible spend?" "How does it break by region?" "What's the trend?"
+
+2. P2P Roll-out Tracker - Monthly Input Sheet
+   109 rows, 28 columns. Purchase-to-Pay rollout progress.
+   Likely contains: hotel/property, region, P2P status, rollout date, completion %, blockers.
+   Key questions: "How many hotels are on P2P?" "What's the rollout velocity?" "Which regions are lagging?"
+
+3. Supplier Metrics Input Sheet
+   108 rows, 25 columns. Supplier performance and risk.
+   Likely contains: supplier name, category, performance score, risk rating, contract value, compliance.
+   Key questions: "Which suppliers are underperforming?" "What's our supplier risk exposure?" "Category coverage?"
+
+4. TH-Essbase Pulls
+   126 rows, 5 columns. Financial data (Essbase = Oracle Hyperion).
+   Likely contains: cost centres, accounts, periods, amounts.
+   Key questions: "What are the actuals vs budget?" "Cost trends?"
+
+5. Monthly Metrics files (4 files in Metrics folder)
+   Likely contains: monthly KPI snapshots, RAG statuses, period comparisons.
+
+6. Monthly Risk Logs (2 files)
+   Likely contains: risk ID, description, owner, likelihood, impact, RAG, mitigation.
+
+7. APRIL SNAPSHOT files (7 files)
+   Latest monthly data cut for QBR reporting.
+
+
+THE DASHBOARD ARCHITECTURE
+--------------------------
+
+Three levels, each one click from the last.
+
+
+LEVEL 1: THE CPO VIEW (the "So What?")
+---------------------------------------
+
+This is the landing page after selecting the programme. Sopan sees this first.
+
+Layout: Full width, 5 sections stacked vertically.
+
+┌─────────────────────────────────────────────────────────────────┐
+│  PROGRAMME HEALTH BANNER                                        │
+│  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐                 │
+│  │ G    │ │ A    │ │ G    │ │ R    │ │ G    │                 │
+│  │ Cost │ │ Time │ │Scope │ │ Risk │ │ P2P  │                 │
+│  │ ↑2%  │ │ →    │ │ →    │ │ ↓    │ │ ↑4%  │                 │
+│  └──────┘ └──────┘ └──────┘ └──────┘ └──────┘                 │
+│  "Programme on track. Risk exposure increased — 3 new risks."   │
+└─────────────────────────────────────────────────────────────────┘
+
+Each RAG indicator is a KPI card:
+- Large RAG circle (colour)
+- Metric name
+- Trend arrow + delta vs last period
+- Click to drill into that metric
+
+Below the banner:
+
+┌──────────────────────┐  ┌──────────────────────┐
+│  CRF ELIGIBLE SPEND  │  │  P2P ROLLOUT          │
+│                      │  │                       │
+│  ████████░░  78%     │  │  ▓▓▓▓▓▓░░░  62%      │
+│  $142M of $182M      │  │  68 of 109 hotels     │
+│  target              │  │                       │
+│                      │  │  Velocity: 4/month    │
+│  ┌─────────────┐     │  │  ETA: Mar 2027        │
+│  │ Area chart  │     │  │                       │
+│  │ by quarter  │     │  │  ┌─────────────┐      │
+│  │ 2023→2026   │     │  │  │ Stacked bar │      │
+│  └─────────────┘     │  │  │ by region   │      │
+│                      │  │  └─────────────┘      │
+└──────────────────────┘  └───────────────────────┘
+
+┌──────────────────────┐  ┌──────────────────────┐
+│  SUPPLIER HEALTH     │  │  TOP RISKS            │
+│                      │  │                       │
+│  108 suppliers       │  │  1. ● Vendor X delay  │
+│  12 underperforming  │  │     Impact: High      │
+│  3 critical          │  │     Owner: [name]     │
+│                      │  │                       │
+│  ┌─────────────┐     │  │  2. ● Budget overrun  │
+│  │ Scatter     │     │  │     Impact: Medium    │
+│  │ risk vs     │     │  │     Owner: [name]     │
+│  │ performance │     │  │                       │
+│  └─────────────┘     │  │  3. ● P2P adoption    │
+│                      │  │     Impact: Medium    │
+└──────────────────────┘  └───────────────────────┘
+
+Visualisation choices and WHY:
+
+- KPI cards with RAG: instant status at a glance. No cognitive load.
+- Progress bars (not pie charts): humans read linear progress better. Shows actual/target.
+- Area charts for spend: shows trend AND magnitude. Fill conveys volume.
+- Stacked bars for P2P: shows composition (which regions contribute) AND total.
+- Scatter plot for suppliers: two dimensions (risk × performance) in one view. Quadrant analysis.
+- Ranked list for risks: not a chart — risks are best as a prioritised list with RAG dots.
+
+
+LEVEL 2: DOMAIN VIEWS (the "Why?")
+-----------------------------------
+
+Three domains, selected via tabs or cards from Level 1:
+
+A. Hotel Procurement Performance
+B. Corporate Procurement Service Delivery
+C. Function Management (How Effectively We Run GP)
+
+Each domain follows the same template:
+
+┌─────────────────────────────────────────────────────────────┐
+│  DOMAIN HEADER: Hotel Procurement Performance               │
+│  4 headline KPIs with sparklines                            │
+│  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐              │
+│  │ Spend  │ │ Savings│ │Coverage│ │ Compl. │              │
+│  │ $86M   │ │ $12M   │ │ 74%    │ │ 91%    │              │
+│  │ ╱╲╱──  │ │ ──╱╱   │ │ ──╱╱   │ │ ╲╱──── │              │
+│  └────────┘ └────────┘ └────────┘ └────────┘              │
+├─────────────────────────────────────────────────────────────┤
+│  FILTER BAR                                                 │
+│  [Region ▼] [Category ▼] [Period ▼] [Chain Scale ▼]       │
+├─────────────────────────────────────────────────────────────┤
+│  PRIMARY CHART (responds to filters)                        │
+│  ┌─────────────────────────────────────────────────┐       │
+│  │                                                  │       │
+│  │   Multi-series area or grouped bar chart          │       │
+│  │   Shows the primary metric over time              │       │
+│  │   Broken by the selected dimension                │       │
+│  │                                                  │       │
+│  └─────────────────────────────────────────────────┘       │
+├─────────────────────────────────────────────────────────────┤
+│  SUPPORTING CHARTS (2-3 smaller charts)                     │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐          │
+│  │ Waterfall   │ │ Heat map    │ │ Bullet chart │          │
+│  │ YoY change  │ │ by region × │ │ actual vs    │          │
+│  │ drivers     │ │ category    │ │ target       │          │
+│  └─────────────┘ └─────────────┘ └─────────────┘          │
+└─────────────────────────────────────────────────────────────┘
+
+Filter bar is KEY. The CPO asks "show me AMER only" or "just Q1 2026" — one click.
+
+Visualisation choices:
+
+- Sparklines in KPI cards: show trend without taking space. The number is the answer, the sparkline is the context.
+- Multi-series area chart: shows how multiple dimensions (regions, categories) contribute to the total over time.
+- Waterfall chart: explains WHY a number changed. "Spend went up $8M because AMER +$12M, EMEA -$4M." This is the chart consultants use to tell the story.
+- Heat map: shows coverage/completeness across two dimensions. Instantly reveals gaps. "We have no supplier data for APAC food & beverage."
+- Bullet chart: actual vs target with qualitative ranges (good/ok/poor). More information-dense than a simple bar.
+
+
+LEVEL 3: DETAIL VIEWS (the "How?")
+-----------------------------------
+
+Accessible by clicking any KPI, chart segment, or "View Detail" button.
+
+This is the data table view with:
+- Full sortable/filterable table
+- Export to CSV/Excel
+- Row-level inspection
+- Version history (if the data has been updated)
+
+Already exists in APEX (SourceTables component). No design changes needed.
+
+
+THE BUTTONS / NAVIGATION
+-------------------------
+
+Top-level navigation (always visible):
+
+  [Programme Overview]  [Hotel]  [Corporate]  [Function]  [Risks]  [Data Explorer]
+
+Within each domain view, a secondary bar:
+
+  [Spend & Savings]  [Coverage & Compliance]  [Suppliers]  [P2P Progress]
+
+Each button shows a different "cut" of the same data, with the filter bar persistent across views.
+
+
+CHART TYPE DECISIONS
+--------------------
+
+Rule: the chart type is chosen by the QUESTION, not the data.
+
+| Question pattern                        | Chart type          | Why                                    |
+|-----------------------------------------|---------------------|----------------------------------------|
+| "What's the number?"                    | KPI card            | Just show the number. Big. With RAG.   |
+| "What's the trend?"                     | Sparkline or area   | Time on X, value on Y. Simple.         |
+| "How does it break down?"              | Stacked bar / donut | Composition. Parts of a whole.         |
+| "How do two dimensions relate?"        | Scatter / bubble    | Correlation. Outlier detection.        |
+| "Why did it change?"                   | Waterfall           | Attribution. Bridge from A to B.       |
+| "Where are the gaps?"                  | Heat map            | Coverage matrix. Spot the blanks.      |
+| "Are we on target?"                    | Bullet chart        | Actual vs target vs ranges.            |
+| "What's the distribution?"             | Histogram / box     | Shape of the data. Outliers.           |
+| "What are the priorities?"             | Ranked list         | Not everything needs a chart.          |
+
+NEVER use:
+- 3D charts (distort perception)
+- Pie charts with >5 slices (unreadable)
+- Dual-axis charts (confusing, always misleading)
+- Gauges/speedometers (waste of space, low information density)
+
+
+COLOUR SYSTEM
+-------------
+
+Use APEX's existing dark theme palette:
+
+- Primary metric: var(--accent) (#2ABFBF) — teal
+- Positive/on-track: #5DC484 — green
+- Caution/at-risk: #F5C544 — amber
+- Critical/off-track: #E8734A — red/orange
+- Neutral/reference: var(--text3) — muted grey
+- Dimension series: 5-colour qualitative palette
+  - #2ABFBF (teal)
+  - #9B7FE6 (purple)
+  - #F5C544 (gold)
+  - #E8734A (coral)
+  - #6BB8E0 (sky blue)
+
+Sequential data (e.g. spend magnitude): single-hue gradient from light to dark teal.
+Diverging data (e.g. above/below target): green ← grey → red.
+
+
+POWER BI VS EMBEDDED RECHARTS
+------------------------------
+
+Recommendation: BUILD IN APEX using Recharts. Do NOT use Power BI Embedded.
+
+Reasons:
+1. Power BI Embedded requires a Power BI Pro licence ($10/user/month) AND a dedicated capacity ($700+/month for A1 SKU). Free tier doesn't support embedding.
+2. Recharts is already in the stack. No new dependencies.
+3. Embedded charts share the same auth, theme, and state as the rest of APEX.
+4. Filter interactions can directly update the AI chat context — "I'm looking at AMER Q1 spend" feeds into the AI's awareness.
+5. No iframe/embedding lag. Native React rendering.
+
+The only reason to use Power BI would be if Sopan's team already uses Power BI and wants to see APEX data alongside other reports. In that case, APEX already exposes a REST API and Tableau WDC endpoint that Power BI can consume as a web data source. Both paths are available.
+
+For the CPO demo: build it in APEX. It's faster, cheaper, and more impressive.
+
+
+IMPLEMENTATION PLAN
+-------------------
+
+Phase 1: CPO View (Level 1)
+- Build 5 KPI cards with RAG from kpi_definitions
+- Build CRF spend area chart from CRF Analysis data table
+- Build P2P progress bar from P2P Roll-out Tracker
+- Build risk list from risk log data
+- Estimated effort: 1 session
+
+Phase 2: Domain Views (Level 2)
+- Build filter bar component (reusable across domains)
+- Build Hotel Procurement domain with 4 KPI sparklines + primary chart
+- Build Corporate Procurement domain
+- Build Function Management domain
+- Estimated effort: 2 sessions
+
+Phase 3: Interactive Features
+- Click-through from Level 1 → Level 2 → Level 3
+- Filter persistence across views
+- AI chat context awareness ("you're viewing AMER Q1 Hotel Procurement")
+- Export to PDF / PowerPoint (one-click board pack generation)
+- Estimated effort: 1 session
+
+
+WHAT DATA DO WE NEED TO CONFIRM?
+---------------------------------
+
+Before building, I need to see the actual column names and sample data from:
+1. CRF Analysis 2023-2026 (what are the 33 columns?)
+2. P2P Roll-out Tracker (what dimensions are available?)
+3. Supplier Metrics Input Sheet (what's the performance scoring model?)
+4. TH-Essbase Pulls (what financial data is in here?)
+
+Once APEX is accessible on Azure, I can query the data tables API to see the actual schemas and sample rows. Then map them to specific chart configurations.
+
+
+THE DELIVERABLE FOR SOPAN
+--------------------------
+
+When Sopan opens APEX, he sees:
+
+1. Programme health in 5 seconds (RAG cards)
+2. The answer to "how's spend tracking?" in one click (CRF chart)
+3. The answer to "where are we on P2P?" in one click (rollout progress)
+4. The answer to "what should I worry about?" in one click (risk list)
+5. Any follow-up question answered by AI in the chat ("why is AMER behind on P2P?")
+
+The dashboard doesn't replace the monthly pack. It makes the monthly pack unnecessary.
