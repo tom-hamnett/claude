@@ -247,6 +247,16 @@ export function initDB() {
 
   try { db.exec("CREATE INDEX IF NOT EXISTS idx_document_texts_type ON document_texts(programme_id, doc_type, is_latest)"); } catch (_) {}
 
+  // Startup diagnostic — confirms which database is active and what survived
+  try {
+    const engines = db.prepare("SELECT COUNT(*) c FROM llm_engines").get().c;
+    const docs = db.prepare("SELECT COUNT(*) c FROM document_texts").get().c;
+    const tables = db.prepare("SELECT COUNT(*) c FROM data_tables").get().c;
+    const sources = db.prepare("SELECT COUNT(*) c FROM data_sources").get().c;
+    console.log(`[db] Path: ${DB_PATH}`);
+    console.log(`[db] Persisted state — engines: ${engines}, documents: ${docs}, data tables: ${tables}, sources: ${sources}`);
+  } catch (_) {}
+
   return db;
 }
 
