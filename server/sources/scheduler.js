@@ -98,10 +98,19 @@ async function autoIngestPending() {
   if (!docFiles.length && !excelFiles.length) { db.close(); return; }
 
   console.log(`[auto-ingest] ${docFiles.length} documents, ${excelFiles.length} spreadsheets pending`);
+
+  // Throttle: only process a few files per cycle to avoid overloading
+  const maxDocsPerCycle = 3;
+  const maxExcelPerCycle = 2;
+  const docsToProcess = docFiles.slice(0, maxDocsPerCycle);
+  const excelToProcess = excelFiles.slice(0, maxExcelPerCycle);
+  if (docFiles.length > maxDocsPerCycle || excelFiles.length > maxExcelPerCycle) {
+    console.log(`[auto-ingest] Throttled: processing ${docsToProcess.length} docs + ${excelToProcess.length} spreadsheets this cycle (rest next cycle)`);
+  }
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
   const programmesToRefresh = new Set();
 
-  for (const f of docFiles) {
+  for (const f of docsToProcess) {
     const tempPath = path.join(UPLOADS_DIR, `auto-${Date.now()}-${f.filename.replace(/[^a-zA-Z0-9._-]/g, "_")}`);
     try {
       await downloadFile({ downloadUrl: f.download_url }, tempPath);
@@ -135,7 +144,7 @@ async function autoIngestPending() {
     }
   }
 
-  for (const f of excelFiles) {
+  for (const f of excelToProcess) {
     const tempPath = path.join(UPLOADS_DIR, `auto-${Date.now()}-${f.filename.replace(/[^a-zA-Z0-9._-]/g, "_")}`);
     try {
       await downloadFile({ downloadUrl: f.download_url }, tempPath);
