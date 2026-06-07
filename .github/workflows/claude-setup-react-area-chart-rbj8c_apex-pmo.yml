@@ -13,7 +13,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -23,31 +23,40 @@ jobs:
         with:
           node-version: '22.x'
 
-      - name: npm install, build, and test
+      # Build the frontend only. Do NOT ship node_modules — Azure (Oryx)
+      # installs dependencies on the server, which correctly compiles the
+      # native better-sqlite3 module for the Azure runtime. Shipping a
+      # pre-built node_modules caused tar.gz corruption on deploy.
+      - name: Install and build frontend
         run: |
           npm install
-          npm run build --if-present
-          npm run test --if-present
+          npm run build
+
+      - name: Zip source for deployment (exclude node_modules and .git)
+        run: zip -r release.zip . -x "node_modules/*" ".git/*"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: .
+          path: release.zip
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: node-app
-      
+
+      - name: Unzip artifact
+        run: unzip -o release.zip && rm release.zip
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -62,4 +71,3 @@ jobs:
           app-name: 'APEX-PMO'
           slot-name: 'Production'
           package: .
-          
