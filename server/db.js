@@ -23,9 +23,13 @@ const DB_DIR = resolveDbDir();
 fs.mkdirSync(DB_DIR, { recursive: true });
 const DB_PATH = process.env.DB_PATH || path.join(DB_DIR, "apex.db");
 
+// Azure App Service /home is a network share (SMB) where SQLite WAL mode
+// fails — WAL needs local shared memory. Use DELETE journal mode there.
+const ON_NETWORK_STORAGE = !!process.env.WEBSITE_INSTANCE_ID;
+
 export function initDB() {
   const db = new Database(DB_PATH);
-  db.pragma("journal_mode = WAL");
+  db.pragma(ON_NETWORK_STORAGE ? "journal_mode = DELETE" : "journal_mode = WAL");
   db.pragma("foreign_keys = ON");
 
   db.exec(`
@@ -261,5 +265,7 @@ export function initDB() {
 }
 
 export function getDB() {
-  return new Database(DB_PATH);
+  const db = new Database(DB_PATH);
+  db.pragma("busy_timeout = 5000");
+  return db;
 }
