@@ -1,10 +1,27 @@
 // SQLite database schema + seed with IHG PE reference data
 import Database from "better-sqlite3";
+import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DB_PATH = path.join(__dirname, "..", "data", "apex.db");
+
+// Database location resolution (in priority order):
+// 1. DB_PATH env var (explicit override)
+// 2. /home/data on Azure App Service — persists across deploys (wwwroot gets wiped)
+// 3. local ../data for development
+function resolveDbDir() {
+  if (process.env.DB_PATH) return path.dirname(process.env.DB_PATH);
+  // Azure App Service Linux sets HOME=/home which is persistent storage
+  if (process.env.WEBSITE_INSTANCE_ID && fs.existsSync("/home")) {
+    return "/home/data";
+  }
+  return path.join(__dirname, "..", "data");
+}
+
+const DB_DIR = resolveDbDir();
+fs.mkdirSync(DB_DIR, { recursive: true });
+const DB_PATH = process.env.DB_PATH || path.join(DB_DIR, "apex.db");
 
 export function initDB() {
   const db = new Database(DB_PATH);
