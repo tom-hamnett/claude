@@ -1,0 +1,12 @@
+node_modules
+.git
+.github
+data/*.db
+data/*.db-wal
+data/*.db-shm
+uploads/*
+*.cjs
+diagnostic.*
+APEX-*.txt
+WHERE-WE-ARE.md
+STATE_OF_PLAY*.md
