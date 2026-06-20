@@ -59,6 +59,8 @@ export interface Project {
   org?: OrgDefaults;
   /** Stage 1 SPOT diagnostic (signals + AI-surfaced high-drag areas). */
   diagnostic?: Diagnostic;
+  /** Project-level repository: org charts, budgets, dashboards, briefs — context for every process. */
+  sources?: Source[];
   createdAt: number;
   updatedAt: number;
 }
