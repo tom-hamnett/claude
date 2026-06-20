@@ -25,9 +25,14 @@ interface AuthApi extends AuthState {
 }
 
 let currentWorkspaceId: string | null = null;
+let currentUserEmail: string | null = null;
 /** Read by cloudStore when stamping writes. */
 export function getWorkspaceId(): string | null {
   return currentWorkspaceId;
+}
+/** The signed-in user's (lower-cased) email — used for project membership. */
+export function getUserEmail(): string | null {
+  return currentUserEmail;
 }
 
 const Ctx = createContext<AuthApi | null>(null);
@@ -50,6 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data } = await supabase.from('profiles').select('workspace_id').eq('id', userId).maybeSingle();
       if (data?.workspace_id) {
         currentWorkspaceId = data.workspace_id;
+        currentUserEmail = (email ?? '').toLowerCase() || null;
         setState({ ready: true, userEmail: email ?? null, workspaceId: data.workspace_id });
         return;
       }
@@ -70,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (session?.user) loadProfile(session.user.id, session.user.email ?? undefined);
       else {
         currentWorkspaceId = null;
+        currentUserEmail = null;
         setState({ ready: true, userEmail: null, workspaceId: null });
       }
     });
