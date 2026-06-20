@@ -5,6 +5,7 @@ import { putProcess, putProject, useAllOpportunities, useProcessesByProject, use
 import Icon from '../components/Icon';
 import Modal from '../components/Modal';
 import ProjectRepository from '../components/ProjectRepository';
+import ProjectMembers from '../components/ProjectMembers';
 import { AIError_, AIThinking, Spinner, useAIRun } from '../components/AIRun';
 import { DRIVER } from '../lib/frameworks';
 import { FLUX_SCHEMA_VERSION } from '../types';
@@ -24,15 +25,18 @@ export default function ProjectPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
-      <div>
-        <Link to="/projects" className="mb-2 inline-flex items-center gap-1 text-sm text-ink-400 hover:text-ink-600">
-          <Icon name="back" className="h-4 w-4" /> Engagements
-        </Link>
-        <h1 className="font-display text-2xl font-bold text-ink-900">{project.name}</h1>
-        <p className="text-ink-500">
-          {project.client} · {project.industry || '—'} · {project.scope || '—'}
-        </p>
-        {project.objective && <p className="mt-1 text-sm text-ink-500"><span className="font-medium">Objective:</span> {project.objective}</p>}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <Link to="/projects" className="mb-2 inline-flex items-center gap-1 text-sm text-ink-400 hover:text-ink-600">
+            <Icon name="back" className="h-4 w-4" /> Engagements
+          </Link>
+          <h1 className="font-display text-2xl font-bold text-ink-900">{project.name}</h1>
+          <p className="text-ink-500">
+            {project.client} · {project.industry || '—'} · {project.scope || '—'}
+          </p>
+          {project.objective && <p className="mt-1 text-sm text-ink-500"><span className="font-medium">Objective:</span> {project.objective}</p>}
+        </div>
+        <ProjectMembers project={project} />
       </div>
 
       <ProjectOverview project={project} processes={processes ?? []} />

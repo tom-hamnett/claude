@@ -14,7 +14,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db, now } from '../db';
 import { buildDemo } from '../lib/seed';
 import { isCloud, supabase, type CloudTable } from '../services/supabase';
-import { getWorkspaceId } from '../services/auth';
+import { getUserEmail, getWorkspaceId } from '../services/auth';
 import { bumpSync, useSyncVersion } from './signal';
 import type { KnowledgeCard, Opportunity, Process, Project } from '../types';
 
@@ -170,6 +170,65 @@ export async function putProject(p: Project): Promise<void> {
   await db.projects.put(p);
 }
 
+/** Create a project and make the current user its owner (cloud mode). */
+export async function createProject(p: Project): Promise<void> {
+  if (isCloud) {
+    await cloudUpsert('projects', p);
+    const email = getUserEmail();
+    if (supabase && email) {
+      await supabase.from('project_members').upsert({ project_id: p.id, email, role: 'owner' });
+    }
+    bumpSync();
+    return;
+  }
+  await db.projects.put(p);
+}
+
+// --- Project membership (cloud only) ----------------------------------------
+
+export interface ProjectMember {
+  project_id: string;
+  email: string;
+  role: string;
+}
+
+export function useProjectMembers(projectId: string): ProjectMember[] | undefined {
+  const v = useSyncVersion();
+  const [val, setVal] = useState<ProjectMember[] | undefined>(isCloud ? undefined : []);
+  useEffect(() => {
+    if (!isCloud || !supabase) {
+      setVal([]);
+      return;
+    }
+    let alive = true;
+    supabase
+      .from('project_members')
+      .select('project_id, email, role')
+      .eq('project_id', projectId)
+      .then(({ data }) => alive && setVal((data as ProjectMember[]) ?? []));
+    return () => {
+      alive = false;
+    };
+  }, [projectId, v]);
+  return val;
+}
+
+export async function inviteMember(projectId: string, email: string, role = 'member'): Promise<void> {
+  if (!isCloud || !supabase) return;
+  const clean = email.trim().toLowerCase();
+  if (!clean) return;
+  const { error } = await supabase.from('project_members').upsert({ project_id: projectId, email: clean, role });
+  if (error) throw new Error(error.message);
+  bumpSync();
+}
+
+export async function removeMember(projectId: string, email: string): Promise<void> {
+  if (!isCloud || !supabase) return;
+  const { error } = await supabase.from('project_members').delete().eq('project_id', projectId).eq('email', email.toLowerCase());
+  if (error) throw new Error(error.message);
+  bumpSync();
+}
+
 export async function deleteProjectCascade(projectId: string): Promise<void> {
   if (isCloud) {
     const procs = (await cloudListAll<Process>('processes')).filter((p) => p.projectId === projectId);
@@ -257,7 +316,7 @@ export async function deleteKnowledge(id: string): Promise<void> {
 export async function loadDemo(): Promise<Project> {
   const { project, process, opportunities } = buildDemo();
   if (isCloud) {
-    await cloudUpsert('projects', project);
+    await createProject(project); // registers owner membership before child rows
     await cloudUpsert('processes', process);
     await cloudUpsertMany('opportunities', opportunities);
   } else {

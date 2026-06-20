@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { now, uid } from '../db';
-import { putProject, useAllProcesses, useProjects } from '../store';
+import { createProject, useAllProcesses, useProjects } from '../store';
 import Icon from '../components/Icon';
 import Modal from '../components/Modal';
 import { relativeTime } from '../lib/format';
@@ -41,7 +41,7 @@ export default function ProjectsPage() {
       createdAt: now(),
       updatedAt: now(),
     };
-    await putProject(p);
+    await createProject(p);
     setOpen(false);
     nav(`/projects/${p.id}`);
   }

@@ -39,13 +39,21 @@ By default Supabase sends sign-in codes via its own mailer (fine for a small tea
 
 ---
 
-## Step 3 — Sign in and invite the team · ~2 min
+## Step 3 — Sign in, then VERIFY ISOLATION · ~5 min
 
 1. Open the URL. You'll see the FLUX sign-in screen.
 2. Enter your work email (e.g. `you@v2ogroup.com`). Click **Send code**, check your inbox, enter the 6-digit code.
-3. You're in. Everyone who signs in with an **@v2ogroup.com** email automatically lands in the **same shared workspace** and sees the same engagements and maps. No invites to manage.
-4. Each person adds their **own AI key** in **Settings** (it stays on their device).
-5. Want the demo back? **Settings → Load demo engagement**.
+3. Each person adds their **own AI key** in **Settings** (it stays on their device).
+
+**Projects are private.** A project is visible only to its creator and the people they invite (**Share** button on the project), all within your email domain. Others can create their own separate projects. Everyone on a project sees its sub-processes and the aggregate findings.
+
+> ⚠️ **Before you trust real client data to it, verify the isolation** (the security lives in database row-level-security that must be confirmed in your environment):
+> 1. As **user A**, create a project "Isolation test".
+> 2. As **user B** (same domain, *not* invited), confirm B **cannot** see it.
+> 3. As A, **Share** it to B; confirm B can now see it; remove B and confirm it disappears.
+> If anything leaks, stop and tell me — don't load real data until this passes.
+
+4. Want the demo back? **Settings → Load demo engagement** (private to you).
 
 That's it — bookmark the URL on your phone's home screen and it behaves like an app.
 
