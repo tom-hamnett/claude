@@ -146,12 +146,17 @@ async function callText(
 // ============================================================================
 
 function projectContext(p: Project): string {
+  const repo = (p.sources ?? [])
+    .filter((s) => s.status === 'ready')
+    .map((s) => `- [${s.kind}] ${s.name}: ${s.summary ?? ''} ${(s.extraction ?? '').slice(0, 800)}`)
+    .join('\n');
   return [
     `Client: ${p.client || '(unspecified)'}`,
     `Industry: ${p.industry || '(unspecified)'}`,
     `Scope / function: ${p.scope || '(unspecified)'}`,
     p.objective ? `Strategic objective: ${p.objective}` : '',
     p.context ? `Engagement context: ${p.context}` : '',
+    repo ? `\nPROJECT REPOSITORY (org context, budgets, dashboards, briefs — use for baselines and context):\n${repo}` : '',
   ]
     .filter(Boolean)
     .join('\n');

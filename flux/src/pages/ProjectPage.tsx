@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { now, uid } from '../db';
-import { putProcess, putProject, useProcessesByProject, useProject } from '../store';
+import { putProcess, putProject, useAllOpportunities, useProcessesByProject, useProject } from '../store';
 import Icon from '../components/Icon';
 import Modal from '../components/Modal';
+import ProjectRepository from '../components/ProjectRepository';
 import { AIError_, AIThinking, Spinner, useAIRun } from '../components/AIRun';
 import { DRIVER } from '../lib/frameworks';
 import { FLUX_SCHEMA_VERSION } from '../types';
 import { runDiagnostic } from '../services/fluxAI';
-import { computeMetrics } from '../lib/metrics';
-import { fmtPct } from '../lib/format';
+import { computeMetrics, opportunityValue } from '../lib/metrics';
+import { fmtMoney, fmtPct } from '../lib/format';
 import type { DiagnosticSignal, Process, Project } from '../types';
 
 export default function ProjectPage() {
@@ -34,8 +35,81 @@ export default function ProjectPage() {
         {project.objective && <p className="mt-1 text-sm text-ink-500"><span className="font-medium">Objective:</span> {project.objective}</p>}
       </div>
 
+      <ProjectOverview project={project} processes={processes ?? []} />
+      <ProjectRepository project={project} />
       <DiagnosticPanel project={project} />
       <ProcessPanel project={project} processes={processes ?? []} onOpen={(p) => nav(`/processes/${p.id}`)} />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Overview — progress, aggregate findings, data still needed
+// ---------------------------------------------------------------------------
+
+function ProjectOverview({ project, processes }: { project: Project; processes: Process[] }) {
+  const allOpps = useAllOpportunities() ?? [];
+  const procIds = new Set(processes.map((p) => p.id));
+  const opps = allOpps.filter((o) => procIds.has(o.processId));
+  const value = opportunityValue(opps);
+  const currency = project.org?.currency ?? 'GBP';
+
+  const total = processes.length;
+  const reviewed = processes.filter((p) => p.reviewed).length;
+  const diagnosed = processes.filter((p) => p.status === 'diagnosed' || p.status === 'designed').length;
+  const designed = processes.filter((p) => p.status === 'designed').length;
+  const pct = total ? Math.round((diagnosed / total) * 100) : 0;
+
+  // What data would sharpen the analysis.
+  const needs: string[] = [];
+  if (!project.org?.loadedHourlyCost) needs.push('Loaded labour cost / hour (engagement settings) — unlocks all £ figures');
+  if (!(project.sources ?? []).length) needs.push('Project repository: org chart, budget, headcount roster, KPI dashboards');
+  const noVolume = processes.filter((p) => !p.annualVolume).map((p) => p.name);
+  if (noVolume.length) needs.push(`Annual volume for: ${noVolume.slice(0, 4).join(', ')}${noVolume.length > 4 ? '…' : ''}`);
+  const undiagnosed = processes.filter((p) => p.status === 'draft' || p.status === 'mapped');
+  if (undiagnosed.length) needs.push(`Run Diagnose on: ${undiagnosed.slice(0, 4).map((p) => p.name).join(', ')}${undiagnosed.length > 4 ? '…' : ''}`);
+
+  return (
+    <section className="space-y-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Stat label="Sub-processes" value={`${total}`} sub={`${reviewed} reviewed`} />
+        <Stat label="Diagnosed" value={`${diagnosed}/${total}`} sub={`${designed} designed`} />
+        <Stat label="Opportunities" value={`${value.count}`} sub={`${value.quickWins} quick wins`} />
+        <Stat label="Identified value" value={fmtMoney(value.total, currency)} sub="annualised, aggregate" tone />
+      </div>
+
+      {/* Progress bar */}
+      <div className="card p-4">
+        <div className="mb-1 flex items-center justify-between text-sm">
+          <span className="font-medium text-ink-700">Engagement progress</span>
+          <span className="text-ink-400">{pct}% diagnosed</span>
+        </div>
+        <div className="h-2 w-full overflow-hidden rounded-full bg-ink-100">
+          <div className="h-full rounded-full bg-flux-500" style={{ width: `${pct}%` }} />
+        </div>
+      </div>
+
+      {needs.length > 0 && (
+        <div className="card border-l-4 border-bva-500 p-4">
+          <div className="mb-1 flex items-center gap-2">
+            <Icon name="warning" className="h-4 w-4 text-bva-600" />
+            <span className="font-semibold text-ink-800">Data that would sharpen this engagement</span>
+          </div>
+          <ul className="ml-1 space-y-1 text-sm text-ink-600">
+            {needs.map((n, i) => <li key={i}>• {n}</li>)}
+          </ul>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function Stat({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: boolean }) {
+  return (
+    <div className="card p-4">
+      <div className="label">{label}</div>
+      <div className={`font-display text-2xl font-bold ${tone ? 'text-flux-600' : 'text-ink-800'}`}>{value}</div>
+      {sub && <div className="mt-0.5 text-xs text-ink-400">{sub}</div>}
     </div>
   );
 }
@@ -187,9 +261,12 @@ function ProcessPanel({ project, processes, onOpen }: { project: Project; proces
             const m = computeMetrics(p, project.org);
             return (
               <button key={p.id} onClick={() => onOpen(p)} className="card group p-4 text-left transition hover:shadow-lift">
-                <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between gap-2">
                   <div className="font-semibold text-ink-800 group-hover:text-brand-700">{p.name}</div>
-                  <StatusChip status={p.status} />
+                  <div className="flex shrink-0 items-center gap-1">
+                    {p.steps.length > 0 && !p.reviewed && <span className="chip bg-bva-100 text-bva-700">review</span>}
+                    <StatusChip status={p.status} />
+                  </div>
                 </div>
                 <div className="mt-2 grid grid-cols-3 gap-2 text-center text-xs">
                   <Mini label="Steps" value={`${m.stepCount}`} />
