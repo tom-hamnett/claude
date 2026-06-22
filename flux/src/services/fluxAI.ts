@@ -11,6 +11,7 @@ import { getProvider, providerList, uploadFileToGemini } from './ai';
 import type { AIMessage, Attachment, AttachmentKind } from './ai';
 import { AIError } from './ai';
 import { configuredProviders, getAIKey } from './aiKey';
+import { isCloud } from './supabase';
 import { computeMetrics } from '../lib/metrics';
 import { readFileAsBase64 } from '../lib/files';
 import type {
@@ -60,6 +61,14 @@ interface ResolvedAI {
 /** Resolve the primary reasoning provider (map/diagnose/design). */
 async function resolveAI(provider?: AIProviderId): Promise<ResolvedAI> {
   const settings = await getSettings();
+  // Platform (cloud) mode: everyone runs on the shared Gemini key via the
+  // server proxy — no per-user key, provider fixed to Gemini (handles reasoning
+  // + documents + images + audio + video).
+  if (isCloud) {
+    const gem = getProvider('gemini');
+    const model = settings.aiModel && gem.models.some((m) => m.id === settings.aiModel) ? settings.aiModel : gem.defaultModel;
+    return { providerId: 'gemini', model, apiKey: '' };
+  }
   const providerId = provider ?? settings.aiProvider ?? 'anthropic';
   const p = getProvider(providerId);
   // Use the configured model only when it belongs to the chosen provider.
@@ -76,6 +85,7 @@ async function resolveAI(provider?: AIProviderId): Promise<ResolvedAI> {
  * has configured. Preference order favours the strongest reader for each type.
  */
 async function resolveForAttachment(kind: AttachmentKind): Promise<ResolvedAI> {
+  if (isCloud) return resolveAI(); // Gemini proxy handles every attachment kind
   const available = await configuredProviders();
   const prefs: Record<AttachmentKind, AIProviderId[]> = {
     image: ['anthropic', 'gemini', 'openai'],

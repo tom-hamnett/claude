@@ -1,5 +1,6 @@
 import type { AICompleteRequest, AICompleteResult, AIProvider } from './types';
 import { AIError, friendlyMessage, safeJson, tryParseJson } from './types';
+import { geminiBase, geminiUsesProxy, proxyAuthHeaders } from './gateway';
 
 export const geminiProvider: AIProvider = {
   id: 'gemini',
@@ -46,7 +47,9 @@ export const geminiProvider: AIProvider = {
       generationConfig.responseSchema = req.jsonSchema;
     }
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(opts.model)}:generateContent?key=${encodeURIComponent(opts.apiKey)}`;
+    const url = geminiUsesProxy
+      ? `${geminiBase}/v1beta/models/${encodeURIComponent(opts.model)}:generateContent`
+      : `${geminiBase}/v1beta/models/${encodeURIComponent(opts.model)}:generateContent?key=${encodeURIComponent(opts.apiKey)}`;
     const body: Record<string, unknown> = { contents, generationConfig };
     if (req.system) body.systemInstruction = { parts: [{ text: req.system }] };
 
@@ -54,7 +57,7 @@ export const geminiProvider: AIProvider = {
     try {
       resp = await fetch(url, {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', ...(await proxyAuthHeaders()) },
         body: JSON.stringify(body),
         signal: req.signal,
       });

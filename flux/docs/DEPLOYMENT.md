@@ -30,10 +30,13 @@ By default Supabase sends sign-in codes via its own mailer (fine for a small tea
 2. **Add New… → Project** → import your `claude` repository.
 3. **Important — set the root directory:** click **Edit** next to "Root Directory" and choose **`flux`**. (The app lives in that subfolder.)
 4. Framework preset should auto-detect **Vite**. Leave build settings as default.
-5. Expand **Environment Variables** and add the two from Step 1:
+5. Expand **Environment Variables** and add **three**:
    - `VITE_SUPABASE_URL` = your Project URL
    - `VITE_SUPABASE_ANON_KEY` = your anon public key
+   - `GEMINI_API_KEY` = your **Google Gemini** API key ([aistudio.google.com](https://aistudio.google.com/app/apikey) → Create API key)
 6. Click **Deploy**. After ~1 minute you get a live URL like `https://flux-xxxx.vercel.app`.
+
+> **The shared key — how it works.** `GEMINI_API_KEY` is a **server-only** secret (no `VITE_` prefix, so it's never sent to browsers). FLUX includes a small proxy at `/api/gemini` that checks the caller is a signed-in user and then talks to Gemini using this key. So your whole team runs on **one key, on your bill** — nobody pastes or even sees it. This is also the foundation for commercialising FLUX as SaaS (central key + per-tenant projects + metered usage). Want per-user/per-client cost caps or billing later? That layers on top of this proxy.
 
 > Prefer Netlify? Same idea: New site → pick the repo → set **base directory** to `flux`, build `npm run build`, publish `flux/dist`, add the same two env vars. (`netlify.toml` is already in the folder.)
 
@@ -43,9 +46,9 @@ By default Supabase sends sign-in codes via its own mailer (fine for a small tea
 
 1. Open the URL. You'll see the FLUX sign-in screen.
 2. Enter your work email (e.g. `you@v2ogroup.com`). Click **Send code**, check your inbox, enter the 6-digit code.
-3. Each person adds their **own AI key** in **Settings** (it stays on their device).
+3. **No AI key to add** — everyone runs on the shared `GEMINI_API_KEY` you set in Vercel. Settings just shows which Gemini model is in use.
 
-**Projects are private.** A project is visible only to its creator and the people they invite (**Share** button on the project), all within your email domain. Others can create their own separate projects. Everyone on a project sees its sub-processes and the aggregate findings.
+**Projects are private.** A project is visible only to its creator and the people they invite (**Share** button on the project) — **any email, including clients on other domains**. Others can create their own separate projects. Everyone on a project sees its sub-processes and the aggregate findings.
 
 > ⚠️ **Before you trust real client data to it, verify the isolation** (the security lives in database row-level-security that must be confirmed in your environment):
 > 1. As **user A**, create a project "Isolation test".
