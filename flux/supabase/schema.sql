@@ -139,36 +139,42 @@ create policy "own profile" on public.profiles for select using (id = auth.uid()
 drop policy if exists "read own workspace" on public.workspaces;
 create policy "read own workspace" on public.workspaces for select using (id = public.current_workspace());
 
--- Projects: members (or creator) can read/update/delete; any workspace user can create.
+-- Projects: access is purely per-project membership (creator or invited), so a
+-- project can be shared ACROSS email domains (e.g. consultancy + client). The
+-- email-domain workspace is just a home for new signups, not an access boundary.
 drop policy if exists "ws all" on public.projects;
 drop policy if exists "projects read"   on public.projects;
 drop policy if exists "projects insert" on public.projects;
 drop policy if exists "projects modify" on public.projects;
+drop policy if exists "projects delete" on public.projects;
 create policy "projects read" on public.projects for select
-  using (workspace_id = public.current_workspace() and (created_by = auth.uid() or public.accessible_project(id)));
+  using (created_by = auth.uid() or public.accessible_project(id));
 create policy "projects insert" on public.projects for insert
-  with check (workspace_id = public.current_workspace());
+  with check (created_by = auth.uid());
 create policy "projects modify" on public.projects for update
   using (created_by = auth.uid() or public.accessible_project(id))
-  with check (workspace_id = public.current_workspace());
+  with check (created_by = auth.uid() or public.accessible_project(id));
 create policy "projects delete" on public.projects for delete
   using (created_by = auth.uid() or public.accessible_project(id));
 
--- Child tables inherit project access.
+-- Child tables inherit project access (no workspace gate, so cross-org members write too).
 drop policy if exists "ws all" on public.processes;
+drop policy if exists "processes all" on public.processes;
 create policy "processes all" on public.processes for all
   using (public.accessible_project(data->>'projectId'))
-  with check (public.accessible_project(data->>'projectId') and workspace_id = public.current_workspace());
+  with check (public.accessible_project(data->>'projectId'));
 
 drop policy if exists "ws all" on public.opportunities;
+drop policy if exists "opportunities all" on public.opportunities;
 create policy "opportunities all" on public.opportunities for all
   using (public.accessible_process(data->>'processId'))
-  with check (public.accessible_process(data->>'processId') and workspace_id = public.current_workspace());
+  with check (public.accessible_process(data->>'processId'));
 
 drop policy if exists "ws all" on public.knowledge;
+drop policy if exists "knowledge all" on public.knowledge;
 create policy "knowledge all" on public.knowledge for all
   using (public.accessible_project(data->>'projectId'))
-  with check (public.accessible_project(data->>'projectId') and workspace_id = public.current_workspace());
+  with check (public.accessible_project(data->>'projectId'));
 
 -- Membership: visible to a project's members; manageable by its members.
 drop policy if exists "members read"   on public.project_members;

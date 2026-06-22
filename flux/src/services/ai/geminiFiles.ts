@@ -1,4 +1,5 @@
 import { AIError } from './types';
+import { geminiBase, geminiUsesProxy, proxyAuthHeaders } from './gateway';
 
 /**
  * Gemini Files API — resumable upload for media too large to inline (audio,
@@ -10,9 +11,10 @@ import { AIError } from './types';
  *   2) POST <upload URL>             (command: upload, finalize) with the bytes
  *   3) GET  .../v1beta/files/<id>    poll until state === ACTIVE
  */
-const BASE = 'https://generativelanguage.googleapis.com';
-
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// In proxy mode the key is injected server-side; otherwise it rides in the query.
+const keyQuery = (apiKey: string) => (geminiUsesProxy ? '' : `?key=${encodeURIComponent(apiKey)}`);
 
 export async function uploadFileToGemini(opts: {
   apiKey: string;
@@ -27,7 +29,7 @@ export async function uploadFileToGemini(opts: {
   // 1) Start resumable session.
   let startResp: Response;
   try {
-    startResp = await fetch(`${BASE}/upload/v1beta/files?key=${encodeURIComponent(opts.apiKey)}`, {
+    startResp = await fetch(`${geminiBase}/upload/v1beta/files${keyQuery(opts.apiKey)}`, {
       method: 'POST',
       headers: {
         'X-Goog-Upload-Protocol': 'resumable',
@@ -35,6 +37,7 @@ export async function uploadFileToGemini(opts: {
         'X-Goog-Upload-Header-Content-Length': String(numBytes),
         'X-Goog-Upload-Header-Content-Type': opts.mime,
         'Content-Type': 'application/json',
+        ...(await proxyAuthHeaders()),
       },
       body: JSON.stringify({ file: { display_name: opts.name ?? 'flux-source' } }),
       signal: opts.signal,
@@ -74,7 +77,10 @@ export async function uploadFileToGemini(opts: {
   let state = file.state ?? 'PROCESSING';
   for (let i = 0; i < 40 && state === 'PROCESSING'; i++) {
     await sleep(2000);
-    const poll = await fetch(`${BASE}/v1beta/${file.name}?key=${encodeURIComponent(opts.apiKey)}`, { signal: opts.signal });
+    const poll = await fetch(`${geminiBase}/v1beta/${file.name}${keyQuery(opts.apiKey)}`, {
+      headers: { ...(await proxyAuthHeaders()) },
+      signal: opts.signal,
+    });
     if (poll.ok) {
       const pd = (await poll.json()) as { uri?: string; mimeType?: string; state?: string };
       state = pd.state ?? state;

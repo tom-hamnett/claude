@@ -59,14 +59,34 @@ export default function SettingsPage() {
         <section className="card p-5">
           <h2 className="mb-1 font-semibold text-ink-800">Account</h2>
           <p className="mb-3 text-sm text-ink-500">
-            Signed in as <strong>{auth.userEmail ?? '—'}</strong>. Your workspace is shared with everyone on your email domain.
+            Signed in as <strong>{auth.userEmail ?? '—'}</strong>. Projects you create are private to you and the people you invite (via <strong>Share</strong> on a project).
           </p>
           <button className="btn-outline" onClick={() => auth.signOut()}>Sign out</button>
         </section>
       )}
 
+      {isCloud && (
+        <section className="card p-5">
+          <div className="mb-1 flex items-center gap-2">
+            <Icon name="spark" className="h-5 w-5 text-flux-600" />
+            <h2 className="font-semibold text-ink-800">AI</h2>
+          </div>
+          <p className="mb-4 text-sm text-ink-500">
+            FLUX runs on your team's <strong>shared Google Gemini</strong> key — no setup, no key to paste. It handles reasoning, documents, images, audio and video.
+          </p>
+          <label className="label">Model</label>
+          <select
+            className="input max-w-xs"
+            value={settings?.aiModel && getProvider('gemini').models.some((m) => m.id === settings.aiModel) ? settings.aiModel : getProvider('gemini').defaultModel}
+            onChange={(e) => saveProviderModel('gemini', e.target.value)}
+          >
+            {getProvider('gemini').models.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
+          </select>
+        </section>
+      )}
+
       {/* Primary reasoning model */}
-      <section className="card p-5">
+      {!isCloud && <section className="card p-5">
         <h2 className="mb-1 font-semibold text-ink-800">Primary model</h2>
         <p className="mb-4 text-sm text-ink-500">
           Used for the reasoning stages (map, diagnose, design). FLUX automatically routes ingestion to the best model for each file type from the keys you've added below.
@@ -86,10 +106,10 @@ export default function SettingsPage() {
           </div>
         </div>
         <p className="mt-1 text-xs text-ink-400">{provider.models.find((m) => m.id === model)?.notes}</p>
-      </section>
+      </section>}
 
-      {/* API keys (per provider) */}
-      <section className="card p-5">
+      {/* API keys (per provider) — local/BYOK mode only */}
+      {!isCloud && <section className="card p-5">
         <h2 className="mb-1 font-semibold text-ink-800">API keys</h2>
         <p className="mb-3 text-sm text-ink-500">
           Add a key for each provider you want to use. Keys are stored on this device only (never in the cloud). Add a <strong>Google Gemini</strong> key to ingest audio &amp; video.
@@ -113,7 +133,7 @@ export default function SettingsPage() {
           ))}
         </div>
         {status && <div className={`mt-3 text-sm ${status.kind === 'ok' ? 'text-va-600' : 'text-nva-600'}`}>{status.msg}</div>}
-      </section>
+      </section>}
 
       {/* Org defaults */}
       <section className="card p-5">

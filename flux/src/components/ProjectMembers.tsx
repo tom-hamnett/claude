@@ -32,16 +32,11 @@ function MembersModal({ project, onClose }: { project: Project; onClose: () => v
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const myDomain = (auth.userEmail ?? '').split('@')[1];
 
   async function invite() {
     const clean = email.trim().toLowerCase();
-    if (!clean.includes('@')) {
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(clean)) {
       setError('Enter a valid email.');
-      return;
-    }
-    if (myDomain && !clean.endsWith(`@${myDomain}`)) {
-      setError(`Only @${myDomain} colleagues can be added (they share your workspace).`);
       return;
     }
     setBusy(true);
@@ -59,14 +54,14 @@ function MembersModal({ project, onClose }: { project: Project; onClose: () => v
   return (
     <Modal open onClose={onClose} title={`Share "${project.name}"`}>
       <p className="mb-3 text-sm text-ink-500">
-        This project is private. Only its creator and the people below can see it. Invite colleagues by their work email — they'll see it next time they sign in.
+        This project is private. Only its creator and the people below can see it. Invite anyone by email (clients and colleagues alike) — they'll see it next time they sign in.
       </p>
 
       <div className="flex gap-2">
         <input
           className="input"
           type="email"
-          placeholder={myDomain ? `name@${myDomain}` : 'name@company.com'}
+          placeholder="name@company.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && invite()}
