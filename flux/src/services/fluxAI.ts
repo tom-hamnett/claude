@@ -59,15 +59,18 @@ interface ResolvedAI {
 }
 
 /** Resolve the primary reasoning provider (map/diagnose/design). */
+// Platform (cloud) defaults: best model for each job, run on the shared keys
+// via the server proxies (no per-user key).
+const CLOUD_REASONING_MODEL = 'claude-opus-4-8'; // map / diagnose / design / deep research
+const CLOUD_MEDIA_MODEL = 'gemini-3-pro-preview'; // documents, images, audio, video
+
 async function resolveAI(provider?: AIProviderId): Promise<ResolvedAI> {
   const settings = await getSettings();
-  // Platform (cloud) mode: everyone runs on the shared Gemini key via the
-  // server proxy — no per-user key, provider fixed to Gemini (handles reasoning
-  // + documents + images + audio + video).
+  // Cloud mode: reasoning runs on the shared Claude key (Opus 4.8 by default).
   if (isCloud) {
-    const gem = getProvider('gemini');
-    const model = settings.aiModel && gem.models.some((m) => m.id === settings.aiModel) ? settings.aiModel : gem.defaultModel;
-    return { providerId: 'gemini', model, apiKey: '' };
+    const claude = getProvider('anthropic');
+    const model = settings.aiModel && claude.models.some((m) => m.id === settings.aiModel) ? settings.aiModel : CLOUD_REASONING_MODEL;
+    return { providerId: 'anthropic', model, apiKey: '' };
   }
   const providerId = provider ?? settings.aiProvider ?? 'anthropic';
   const p = getProvider(providerId);
@@ -85,7 +88,9 @@ async function resolveAI(provider?: AIProviderId): Promise<ResolvedAI> {
  * has configured. Preference order favours the strongest reader for each type.
  */
 async function resolveForAttachment(kind: AttachmentKind): Promise<ResolvedAI> {
-  if (isCloud) return resolveAI(); // Gemini proxy handles every attachment kind
+  // Cloud mode: all media (docs, images, audio, video) goes to Gemini 3 Pro via
+  // the shared-key proxy — the only model that natively interprets video.
+  if (isCloud) return { providerId: 'gemini', model: CLOUD_MEDIA_MODEL, apiKey: '' };
   const available = await configuredProviders();
   const prefs: Record<AttachmentKind, AIProviderId[]> = {
     image: ['anthropic', 'gemini', 'openai'],

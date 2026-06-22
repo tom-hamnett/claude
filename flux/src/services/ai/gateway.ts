@@ -10,6 +10,10 @@ export const geminiUsesProxy = isCloud;
 
 export const geminiBase = isCloud ? '/api/gemini' : 'https://generativelanguage.googleapis.com';
 
+export const anthropicUsesProxy = isCloud;
+
+export const anthropicBase = isCloud ? '/api/anthropic' : 'https://api.anthropic.com';
+
 /** Bearer header proving the caller is a signed-in FLUX user (proxy mode only). */
 export async function proxyAuthHeaders(): Promise<Record<string, string>> {
   if (!isCloud || !supabase) return {};

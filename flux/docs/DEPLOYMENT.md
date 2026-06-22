@@ -30,13 +30,14 @@ By default Supabase sends sign-in codes via its own mailer (fine for a small tea
 2. **Add New… → Project** → import your `claude` repository.
 3. **Important — set the root directory:** click **Edit** next to "Root Directory" and choose **`flux`**. (The app lives in that subfolder.)
 4. Framework preset should auto-detect **Vite**. Leave build settings as default.
-5. Expand **Environment Variables** and add **three**:
+5. Expand **Environment Variables** and add **four**:
    - `VITE_SUPABASE_URL` = your Project URL
    - `VITE_SUPABASE_ANON_KEY` = your anon public key
-   - `GEMINI_API_KEY` = your **Google Gemini** API key ([aistudio.google.com](https://aistudio.google.com/app/apikey) → Create API key)
+   - `ANTHROPIC_API_KEY` = your **Claude** API key ([console.anthropic.com](https://console.anthropic.com/settings/keys)) — powers reasoning
+   - `GEMINI_API_KEY` = your **Google Gemini** API key ([aistudio.google.com](https://aistudio.google.com/app/apikey)) — powers media/video
 6. Click **Deploy**. After ~1 minute you get a live URL like `https://flux-xxxx.vercel.app`.
 
-> **The shared key — how it works.** `GEMINI_API_KEY` is a **server-only** secret (no `VITE_` prefix, so it's never sent to browsers). FLUX includes a small proxy at `/api/gemini` that checks the caller is a signed-in user and then talks to Gemini using this key. So your whole team runs on **one key, on your bill** — nobody pastes or even sees it. This is also the foundation for commercialising FLUX as SaaS (central key + per-tenant projects + metered usage). Want per-user/per-client cost caps or billing later? That layers on top of this proxy.
+> **The shared keys — how it works.** `ANTHROPIC_API_KEY` and `GEMINI_API_KEY` are **server-only** secrets (no `VITE_` prefix, so they're never sent to browsers). FLUX includes small proxies at `/api/anthropic` and `/api/gemini` that check the caller is a signed-in user, then call the provider using these keys. So your whole team runs on **your keys, on your bill** — nobody pastes or even sees them. Reasoning → Claude (Opus 4.8 by default); documents/images/audio/video → Gemini 3 Pro. This is also the foundation for commercialising FLUX as SaaS (central keys + per-tenant projects + metered usage); per-user/per-client cost caps layer on top of these proxies.
 
 > Prefer Netlify? Same idea: New site → pick the repo → set **base directory** to `flux`, build `npm run build`, publish `flux/dist`, add the same two env vars. (`netlify.toml` is already in the folder.)
 
