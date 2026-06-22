@@ -291,6 +291,114 @@ You are the Metrics & Data specialist for IHG Procurement Excellence. Your job i
 - Key metrics: Total CRF eligible spend, spend by region (AMER, EMEA, APAC, Greater China), spend by category, year-over-year trend
 - This is the primary financial metric for the programme
 
+### QBR METRICS SPECIFICATION (from the actual QBR pack — pages 20-27)
+
+The Metrics Dashboard must replicate these exact metrics from the QBR:
+
+#### METRIC 1: CRF Monthly Tracking (QBR page 20)
+Three sub-metrics, each tracked monthly Jan-Dec, broken by region (GC, EMEAA, AMER):
+
+**1a. CRF Eligible ($M)**
+- Stacked bar chart by region per month
+- Example: Jan $71M (GC: $10, EMEAA: $9, AMER: $52), Feb $65M (GC: $15, EMEAA: n/a, AMER: $41)
+- Headline commentary format: "Slight reduction in $s billed & collected at flat MoM %s. Spend/platform down in AMER."
+
+**1b. CRF Collected ($M)**
+- Stacked bar chart by region per month
+- Example: Jan $1.8M, Feb $1.6M
+- Evolving to include: CRF collection vs YTD targets, surplus/deficit position, CRF eligible as % regional hotel spend
+
+**1c. CRF ($) / P2P Deployed**
+- Line or bar showing CRF dollars per P2P system deployed
+- Tracks efficiency of spend capture per platform deployment
+- Shows rapid decrease in AMER driven by >2x franchise rollout
+
+**1d. Avg. % CRF Collected**
+- Line chart showing collection rate trend
+- Example: Jan 2.5-2.7%, Feb 2.0-2.4%
+
+#### METRIC 2: CMH P2P Roll-out Tracking (QBR page 21)
+**Chart type:** Stacked bar + target line (monthly Jan-Dec)
+- Number of CMH P2P Systems by region (GC, EMEAA, AMER)
+- Example actuals: Jan 755, Feb 755. Target ~868 by Dec.
+- Breakdown: GC 88, AMER 245, EMEAA 422
+- Below the chart, a table showing:
+  - % GC Estate (91%)
+  - % EMEAA Estate (54%)
+  - % AMER Estate (51%)
+  - % Total CMH Est. (69%)
+- Note: "GC #s exclude GC Mall for CMH as all have access to this platform if required"
+- Source: Essbase, Digital team P2P Roll-out tracker
+
+#### METRIC 3: Franchise P2P Roll-out Tracking (QBR page 22)
+**Chart type:** Stacked bar + target line (monthly Jan-Dec)
+- Number of Franchise P2P Systems by region
+- Example: Jan 256, Feb 426 (+180 BS Nexus added in US in Feb)
+- Target ~772 by Dec (reduced — "Ambition currently reduced for 2026 as future solution strategy re-assessed to low adoption rates")
+- Below the chart:
+  - % GC Estate (39%)
+  - % UK & Aus Estate (7%)
+  - % USA Estate (1% → 6%)
+  - % Priority Markets* (5% → 9%)
+  - *Priority Markets = USA, UK, Australia, Greater China
+
+#### METRIC 4: Rapid Ratings — Supplier Coverage (QBR page 23)
+**Two panels:**
+- Left: Current Status — # Suppliers vs Spend Coverage (donut/bar showing 9.4% suppliers, 14.3% spend coverage)
+  - Note: "Spend Coverage by category not available at this stage — pending development of 'supplier golden record' by data initiative"
+- Right: Cumulative in-year tracking vs plan (monthly bar chart)
+  - Outreach target: 518 suppliers by end 2026
+  - Rating coverage ambition: 90% of critical strategic suppliers covered
+  - Jan: 265 suppliers, Feb: 277
+  - 150 Rated (no change MoM)
+  - Gap to outreach ambition: 32
+  - Gap to rating coverage ambition: 54
+  - Colour coding: Low Risk, Mid-Risk, High Risk, Very High Risk, In Negotiation, Cancelled/Inactive, Not Responded, Refused/Declined
+
+#### METRIC 5: EcoVadis (QBR page 24)
+**Two panels:**
+- Left: Current Status — # Suppliers vs Spend Coverage
+- Right: Cumulative tracking vs plan
+  - Outreach target: 300 suppliers by end 2026
+  - Participation rate target: 62% (186 suppliers)
+  - 90% rated good or above target
+  - Jan: 210, Feb: 245
+  - 98% rated 'Good' or above (target >85%)
+  - Performance tracking: Outreach Ambition ▲9 / ▲35, Target Participation Rate ▼17 / ▲6, Ambition for 'good' ratings ▲11 / ▲37
+  - Rating categories: Insufficient (0-24), Partial (25-44), Good (45-64), Advanced (65-84), Outstanding (85-100), In Progress, Expired validity, No-response, Declined/Refused
+
+#### METRIC 6: Sedex SAQ (QBR page 25)
+**Two panels:**
+- Left: Current Status
+- Right: Cumulative tracking
+  - Outreach target: 556 suppliers by end 2026
+  - Pre-screening target: 445 (86%)
+  - Jan: 415, Feb: 415
+  - High-risk suppliers: 59 (invited to SAQ)
+  - Audit invite vs Completion (target 100%): 0→0 invited, 1→0 completed
+  - Categories: Declined/No Response, Pre-Screened, High Risk (Invited to SAQ), Responded to SAQ Invite
+
+#### METRIC 7: Headcount & CSAT (QBR page 26)
+**Three sub-metrics:**
+- Headcount Tracker: Filled vs Open roles, by location (Mexico, India)
+  - Jan: 47 total (32 filled, 11 India, 4 open). Feb: 53 total (36 filled, 11 India, 6 open, +6 MoM)
+  - New hires: +1 S&C mgr in Mex, +1 PMO mgr in India
+  - Offers: 1x Digital & Reporting Specialist, 1x Digital Manager, 1x Sourcing & Contracting Specialist
+- Projects Completed: Jan 17, Feb 21, MoM +4
+- CSAT: Jan 4.8, Feb 4.0, Annual Target 3.8, MoM (0.8)
+  - Response Rate: YTD ~30%
+  - S&C teams (India + Mexico) only
+
+#### METRIC 8: Athena Process Dashboard — I2P Optimisation (QBR page 27)
+**Chart type:** Matrix / heatmap
+- Full Intake-to-Pay process coverage map
+- 15 major process areas (0.0 Intake & Demand → 15.0 System Governance)
+- Split into I2C (Intake to Contract: 0.0-5.0) and P2P (Procure to Pay: 6.0-12.0) plus Process Governance (13.0-15.0)
+- Each sub-process rated: Completed Work (green), WIP (amber), Planned Work (grey)
+- Coverage types: Deep Dive, Light Touch, Skip, TBD
+- Summary: Planned 25/37/11/73, WIP 1/4/0/5, Complete 0/0/0/0
+- Total: 26/41/11/78
+
 ### 2. P2P Roll-out Tracker - Monthly Input Sheet.xlsx
 - Sheet: "P2P Roll-out Tracker"
 - Contains: Hotel-by-hotel P2P (Purchase-to-Pay) system rollout status
@@ -546,9 +654,28 @@ You are the Risk & Governance specialist for IHG Procurement Excellence. Your jo
 </html>
 ```
 
-### Template 2: Metrics Dashboard SVG Chart Pattern
+### Template 2: Metrics Dashboard Layout
 
-Use this pattern for rendering charts in Canvas. Adapt data values from the Excel files.
+The metrics dashboard should replicate the QBR structure with 8 metric pages navigable via tabs:
+- **[CRF Tracking]** — CRF Eligible, Collected, $/P2P Deployed, % Collected (page 20)
+- **[CMH P2P]** — CMH P2P rollout by region with estate coverage % (page 21)
+- **[Franchise P2P]** — Franchise P2P rollout with adjusted ambition (page 22)
+- **[Rapid Ratings]** — Supplier coverage outreach vs plan (page 23)
+- **[EcoVadis]** — ESG ratings tracking vs target (page 24)
+- **[Sedex]** — SAQ coverage and high-risk identification (page 25)
+- **[Headcount & CSAT]** — Team growth and customer satisfaction (page 26)
+- **[Athena I2P]** — Process optimisation coverage matrix (page 27)
+
+Each tab should render a Canvas with the dark theme (same as home view) containing:
+- Title with headline commentary (bold, descriptive summary like the QBR uses)
+- The primary chart (stacked bar / line / progress)
+- A data table below with the key breakdowns
+- Source citation at bottom
+- "Export for Power BI" link showing structured CSV
+
+### SVG Chart Patterns
+
+Use these patterns for rendering charts in Canvas. Adapt data values from the Excel files.
 
 ```html
 <!-- SVG Area Chart Pattern (embed inside the metrics Canvas page) -->
@@ -603,13 +730,66 @@ Use this pattern for rendering charts in Canvas. Adapt data values from the Exce
 
 When the Metrics Agent is asked to export data for Power BI, output in this exact format:
 
-### Table 1: Programme KPIs
+### Table 1: CRF Monthly Tracking
+```csv
+month,region,crf_eligible_m,crf_collected_m,crf_per_p2p_deployed,pct_crf_collected,source
+Jan 2026,GC,10,0.3,,2.7,CRF Analysis 2023-2026.xlsx
+Jan 2026,EMEAA,9,0.2,,2.5,CRF Analysis 2023-2026.xlsx
+Jan 2026,AMER,52,1.4,,2.0,CRF Analysis 2023-2026.xlsx
+Feb 2026,GC,15,0.2,,2.7,CRF Analysis 2023-2026.xlsx
+Feb 2026,EMEAA,,0.3,,2.4,CRF Analysis 2023-2026.xlsx
+Feb 2026,AMER,41,1.1,,2.0,CRF Analysis 2023-2026.xlsx
+```
+
+### Table 2: P2P Rollout (CMH + Franchise)
+```csv
+month,segment,region,systems_count,pct_estate,target_eoy,source
+Jan 2026,CMH,GC,88,91%,868,P2P Roll-out Tracker.xlsx
+Jan 2026,CMH,AMER,245,51%,868,P2P Roll-out Tracker.xlsx
+Jan 2026,CMH,EMEAA,422,54%,868,P2P Roll-out Tracker.xlsx
+Feb 2026,Franchise,GC,,39%,772,P2P Roll-out Tracker.xlsx
+Feb 2026,Franchise,USA,226,6%,772,P2P Roll-out Tracker.xlsx
+Feb 2026,Franchise,UK & Aus,,7%,772,P2P Roll-out Tracker.xlsx
+```
+
+### Table 3: Supplier Metrics (Rapid Ratings + EcoVadis + Sedex)
+```csv
+month,programme,metric,value,target,on_track,source
+Feb 2026,Rapid Ratings,Suppliers Outreached,277,518,Behind,Supplier Metrics Input Sheet.xlsx
+Feb 2026,Rapid Ratings,Suppliers Rated,150,,Behind,Supplier Metrics Input Sheet.xlsx
+Feb 2026,Rapid Ratings,Gap to Outreach Ambition,32,0,,Supplier Metrics Input Sheet.xlsx
+Feb 2026,EcoVadis,Suppliers Outreached,245,300,Ahead,Supplier Metrics Input Sheet.xlsx
+Feb 2026,EcoVadis,Pct Good or Above,98%,85%,Ahead,Supplier Metrics Input Sheet.xlsx
+Feb 2026,Sedex,Suppliers Outreached,415,556,,Supplier Metrics Input Sheet.xlsx
+Feb 2026,Sedex,Pre-Screened,293,445,,Supplier Metrics Input Sheet.xlsx
+Feb 2026,Sedex,High Risk Identified,59,,,Supplier Metrics Input Sheet.xlsx
+```
+
+### Table 4: Headcount & CSAT
+```csv
+month,metric,value,target,mom_change,source
+Jan 2026,Total Headcount,47,,,Monthly Pack
+Jan 2026,Roles Filled,32,,,Monthly Pack
+Jan 2026,Projects Completed,17,,,Monthly Pack
+Jan 2026,CSAT Score,4.8,3.8,,Monthly Pack
+Feb 2026,Total Headcount,53,,+6,Monthly Pack
+Feb 2026,Roles Filled,36,,,Monthly Pack
+Feb 2026,Projects Completed,21,,+4,Monthly Pack
+Feb 2026,CSAT Score,4.0,3.8,-0.8,Monthly Pack
+Feb 2026,CSAT Response Rate,30%,,,Monthly Pack
+```
+
+### Table 5: Programme KPIs (summary)
 ```csv
 period,domain,metric_name,value,target,unit,rag,source_file,last_updated
-Q1 2026,Hotel Procurement,CRF Eligible Spend,142000000,150000000,USD,Amber,CRF Analysis 2023-2026.xlsx,2026-04-15
-Q1 2026,Hotel Procurement,P2P Coverage,62,85,%,Amber,P2P Roll-out Tracker.xlsx,2026-05-22
-Q1 2026,Corporate Procurement,Supplier Performance Score,78,80,%,Amber,Supplier Metrics Input Sheet.xlsx,2026-04-30
-Q1 2026,Function Management,Managed Spend,86000000,,USD,,TH-Essbase Pulls.xlsx,2026-04-15
+Feb 2026,Hotel Procurement,CRF Eligible Spend,65,71,USD M,,CRF Analysis 2023-2026.xlsx,2026-02-28
+Feb 2026,Hotel Procurement,CMH P2P Coverage,69,,% estate,,P2P Roll-out Tracker.xlsx,2026-02-28
+Feb 2026,Hotel Procurement,Franchise P2P Priority Markets,9,,% estate,,P2P Roll-out Tracker.xlsx,2026-02-28
+Feb 2026,Corporate Procurement,Rapid Ratings Outreach,277,518,suppliers,Behind,Supplier Metrics Input Sheet.xlsx,2026-02-28
+Feb 2026,Corporate Procurement,EcoVadis Good Rating,98,85,%,Ahead,Supplier Metrics Input Sheet.xlsx,2026-02-28
+Feb 2026,Function Management,Headcount,53,,FTE,,Monthly Pack,2026-02-28
+Feb 2026,Function Management,CSAT,4.0,3.8,score,Green,Monthly Pack,2026-02-28
+Feb 2026,Function Management,Projects Completed,21,,count,,Monthly Pack,2026-02-28
 ```
 
 ### Table 2: P2P Rollout Detail
