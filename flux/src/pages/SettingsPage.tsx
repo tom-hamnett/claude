@@ -72,16 +72,17 @@ export default function SettingsPage() {
             <h2 className="font-semibold text-ink-800">AI</h2>
           </div>
           <p className="mb-4 text-sm text-ink-500">
-            FLUX runs on your team's <strong>shared Google Gemini</strong> key — no setup, no key to paste. It handles reasoning, documents, images, audio and video.
+            FLUX runs on your team's <strong>shared keys</strong> — no setup, nothing to paste. Reasoning (map, diagnose, design, deep research) runs on <strong>Claude</strong>; documents, images, audio and video are interpreted by <strong>Gemini 3 Pro</strong>.
           </p>
-          <label className="label">Model</label>
+          <label className="label">Reasoning model</label>
           <select
             className="input max-w-xs"
-            value={settings?.aiModel && getProvider('gemini').models.some((m) => m.id === settings.aiModel) ? settings.aiModel : getProvider('gemini').defaultModel}
-            onChange={(e) => saveProviderModel('gemini', e.target.value)}
+            value={settings?.aiModel && getProvider('anthropic').models.some((m) => m.id === settings.aiModel) ? settings.aiModel : 'claude-opus-4-8'}
+            onChange={(e) => saveProviderModel('anthropic', e.target.value)}
           >
-            {getProvider('gemini').models.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
+            {getProvider('anthropic').models.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
           </select>
+          <p className="mt-1 text-xs text-ink-400">Media is always read by Gemini 3 Pro (the only model that natively watches video).</p>
         </section>
       )}
 
