@@ -45,9 +45,33 @@ By default Supabase sends sign-in codes via its own mailer (fine for a small tea
 
 ## Step 3 — Sign in, then VERIFY ISOLATION · ~5 min
 
+> ⚠️ **FIRST — make the email send a CODE, not a link.** FLUX signs you in with a
+> **6-digit code** that you type into the app; it deliberately ignores the magic
+> *link* (the app uses a hash router, so `detectSessionInUrl` is off). Supabase's
+> default email template only contains a link, so **out of the box sign-in is
+> impossible** until you do this once:
+> 1. Supabase Dashboard → **Authentication → Emails → Templates → Magic Link**.
+> 2. Replace the body with one that prints the code — the key token is `{{ .Token }}`:
+>    ```html
+>    <h2>Your FLUX sign-in code</h2>
+>    <p>Enter this 6-digit code to sign in:</p>
+>    <p style="font-size:28px;font-weight:bold;letter-spacing:4px">{{ .Token }}</p>
+>    <p style="color:#888;font-size:12px">Expires in 1 hour. If you didn't request it, ignore this email.</p>
+>    ```
+> 3. **Save.** Now the email contains the code the app asks for.
+
+> ⚠️ **Email rate limits / reliability.** Supabase's built-in email is capped at a
+> couple of sends per hour (testing only). If you hit *"rate limit exceeded"*, either
+> wait ~60 min, or — better, and required before teammates use it — add **custom
+> SMTP**: free **Resend** account → create an API key (`re_…`) → Supabase →
+> **Authentication → SMTP Settings**: host `smtp.resend.com`, port `465`, user
+> `resend`, password = your API key, sender `onboarding@resend.dev` (this test
+> sender only delivers to your *own* Resend account email; verify your domain in
+> Resend to send to everyone).
+
 1. Open the URL. You'll see the FLUX sign-in screen.
-2. Enter your work email (e.g. `you@v2ogroup.com`). Click **Send code**, check your inbox, enter the 6-digit code.
-3. **No AI key to add** — everyone runs on the shared `GEMINI_API_KEY` you set in Vercel. Settings just shows which Gemini model is in use.
+2. Enter your work email (e.g. `you@v2ogroup.com`). Click **Send code**, open the email, and **type the 6-digit code** into the app — ignore any link.
+3. **No AI key to add** — reasoning runs on the shared `ANTHROPIC_API_KEY` (Claude Opus 4.8); media on the shared `GEMINI_API_KEY` (Gemini 3 Pro). Settings just lets you pick the Claude reasoning model.
 
 **Projects are private.** A project is visible only to its creator and the people they invite (**Share** button on the project) — **any email, including clients on other domains**. Others can create their own separate projects. Everyone on a project sees its sub-processes and the aggregate findings.
 
