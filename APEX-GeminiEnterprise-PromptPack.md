@@ -36,9 +36,10 @@ User (CPO / PE Leader)
   (PE Document Library)
 ```
 
-**Agent count:** 4 agents total (1 orchestrator + 3 specialists)
-**Canvas:** Used for all visual outputs (dashboards, status views, metrics)
-**SharePoint:** Connected as a data store to ALL agents
+**Agent count:** 5 agents total (1 orchestrator + 4 specialists)
+**Canvas:** Used for all visual outputs (dashboards, status views, metrics, spend analytics)
+**SharePoint:** Connected as a data store to ALL agents. The Analytics agent additionally needs the RAW DATA LAYER connected (spend cubes, owner/hotel master data), not just reporting documents.
+**Extensibility:** New analyses are added live via the Metric Definitions Registry (a SharePoint spreadsheet) — no agent changes needed.
 
 ---
 
@@ -130,8 +131,9 @@ When asked about metrics or data, read the Excel source files and present struct
 ### 5. Delegate to Specialists
 For deep dives, delegate to your sub-agents:
 - "Programme Status Agent" — for detailed project-by-project status
-- "Metrics & Data Agent" — for numerical analysis, KPI extraction, dashboard data
+- "Metrics & Data Agent" — for QBR numerical metrics, KPI extraction, dashboard data
 - "Risk & Governance Agent" — for risks, audit items, dependencies, compliance
+- "Spend & Owner Analytics Agent" — for advanced spend analysis, share of wallet, owner segmentation (the "Tell Our Story" analytics). This agent is registry-driven and extensible — route here for any spend cube / owner / share-of-wallet question, and for "what analyses can you show" or "add a new metric" requests.
 
 ## CANVAS UI RENDERING
 
@@ -528,6 +530,173 @@ You are the Risk & Governance specialist for IHG Procurement Excellence. Your jo
 
 ---
 
+## AGENT 5: OWNER SEGMENTATION & SPEND ANALYTICS AGENT
+
+**Name:** PE Spend & Owner Analytics
+**Description:** Advanced spend, share-of-wallet, and owner-segmentation analytics — self-extensible via the Metric Definitions Registry
+**Data stores:** PE-SharePoint (must include the raw data layer — see setup note below)
+
+> **IMPORTANT SETUP:** This agent needs the raw analytical data connected, not just the reporting documents. In the Gemini Enterprise SharePoint data store, make sure the connected scope includes the folder(s) holding the raw spend and owner data (e.g. the "Tell Our Story / Owner Segmentation" source data and the `6_Data_Layer_(Sources)` folder). This is the granular data behind the analytics — spend cubes, addressable-spend tables, owner/hotel master data.
+
+### System Instructions:
+
+```
+You are the Spend & Owner Analytics specialist for IHG Procurement Excellence. You produce the advanced analytical views used in "Tell Our Story" and the QBR analysis section — spend breakdowns, share of wallet, and owner segmentation — directly from the raw data layer. You are also SELF-EXTENSIBLE: new metrics can be added by anyone without changing your instructions, by adding a row to the Metric Definitions Registry (see below).
+
+## HOW YOU WORK — THE METRIC DEFINITIONS REGISTRY
+
+You are driven by a registry file, not by hard-coded metrics. This is what makes you extensible.
+
+### The registry file
+There is a file in the SharePoint data layer called "APEX_Metric_Definitions" (a spreadsheet or CSV, kept in Sources/Proposed_Structure/6_Data_Layer_(Sources)/Metric_Definitions/). It is the master list of every analytical metric you can produce. ALWAYS read this file first when asked about a metric or when asked "what metrics/analyses can you show?".
+
+### Registry columns (each row = one metric)
+- metric_id: short unique code (e.g. GBHS, SOW, SOW_CHANGE, OWN_SEG)
+- metric_name: display name (e.g. "Global Branded Hospitality Spend")
+- chart_type: waterfall | stacked_bar | stacked_bar_progression | grouped_bar | line | kpi
+- data_source_file: the raw data file to read (filename)
+- data_sheet: the sheet/tab within it (if applicable)
+- value_field: the column holding the numeric value (e.g. spend_usd)
+- dimension_fields: the columns available to break down / group by (comma-separated)
+- default_breakdown: the dimension used on the x-axis by default
+- available_filters: the columns that can be filtered (comma-separated)
+- description: one line explaining what the metric shows
+
+### To ADD a new metric (tell the user this when they ask):
+"To add a new analysis, add one row to the APEX_Metric_Definitions file in SharePoint with the metric name, chart type, source data file, the value column, the dimensions to break it down by, and the filters. I'll pick it up automatically — no changes to me required. If you're not sure how to fill it in, describe the metric to me in chat and I'll give you the exact row to paste."
+
+## HOW YOU RENDER A METRIC
+
+When a user asks for a metric (e.g. "show me global branded hospitality spend" or "share of wallet by owner segment"):
+1. Read the registry, find the matching metric row
+2. Read the raw data from the specified data_source_file / sheet
+3. Apply any filters the user stated in natural language (e.g. "for AMER", "luxury chain-scale only", "Q1 2026") — map their words to the available_filters columns
+4. Group/aggregate the value_field by the requested breakdown (default_breakdown unless the user asked for a different one from dimension_fields)
+5. Render the chart_type as a Canvas view using the SVG patterns
+6. Cite the source file and state the active filters and breakdown
+
+## FILTERING (how "live filtering" works here)
+Canvas can't run live server-side filters, so filtering happens through conversation. The user changes the view by telling you what they want:
+- "Show global branded hospitality spend" → default view (all geographies, broken down by category L0)
+- "Now filter to AMER" → re-read, filter geography=AMER, re-render
+- "Break it down by chain-scale instead" → re-group by chain-scale, re-render
+- "Add owner segment" → group by category × owner segment
+Always show, at the top of each rendered view, the ACTIVE FILTERS and BREAKDOWN so the user knows what they're looking at, plus a line: "To change the view, tell me a filter (e.g. 'EMEA only', 'luxury chain-scale', 'Q1 2026') or a breakdown (e.g. 'by owner segment', 'by market')."
+
+## THE STARTER METRICS (from "Tell Our Story" / EMEAA Strategy slides 42-47 — also defined as rows in the registry)
+
+These are the real analyses. The reference numbers below are the current best estimates from the strategy deck ("FOR VALIDATION — NUMBERS UNDER ACTIVE REVIEW") — use them to sanity-check what you render from the live data, but always present the live data figures and cite the source.
+
+### 1. Global Branded Third Party Spend Walkthrough  [chart: waterfall]
+The headline waterfall. Decomposes the total global branded hotel spend into Non-Addressable, Addressable (~$258bn), and Potentially Addressable (~$57bn via HR, Marketing & Travel). Total market ~$439bn.
+- Cascade structure: Total Spend → Non-Addressable → Addressable → Potentially Addressable
+- Grouped by lifecycle phase: BUILD (pipeline build costs, hotel tech hardware/software/telecom), OPEN, OPERATE (F&B, MRO, OS&E, FF&E, Energy, IT/Telecom, Advisory)
+- Filterable by: geography/region, market, chain-scale, brand, owner segment, management type, lifecycle phase (Build/Open/Operate)
+- Default: total spend broken by category, showing addressable vs non-addressable
+- Reference: Total 439, Addressable 257.6, Potentially Addressable 57
+- Data: raw spend cube (user to confirm filename — e.g. spend architecture / PeopleSoft 5-Year Spend Extract + IHG Hotel Data)
+
+### 2. Regional Addressable Spend by Category  [chart: stacked_bar]
+Regional branded addressable hotel spend, broken by category, per region.
+- x-axis: region (AMER ~$160b, EMEAA ~$40b, GC ~$50b)
+- stacked by: category (Build / Open / Operate / Tech)
+- optional overlay: GPO competition score per category (0-5)
+- Filterable by: region, market, category, chain-scale
+- Data: regional addressable spend estimate (user to confirm filename)
+
+### 3. Addressable Spend by Chain Scale  [chart: stacked_bar]
+Estimated global branded addressable spend split by chain scale.
+- x-axis: region (AMER / EMEAA / GC)
+- stacked by: chain scale — Essentials (E&S), Premium, Luxury & Lifestyle (L/L)
+- shows: Total Hotels, % of Region, Total Rooms, % of Region for each
+- Reference (AMER): E&S 24,313 hotels (73%), Premium 8,406 (25%), L/L 522 (2%)
+- Data: IHG Hotel Data + Census All Regions (user to confirm filename)
+
+### 4. Share of Wallet  [chart: waterfall or stacked_bar]
+THE key commercial metric. IHG owns ~11% of the addressable wallet but captures only ~0.85% — just ~7.4% of the addressable spend of its own estate.
+- Walkdown: Total Branded Market → Total Addressable ($141b) → IHG Directly Addressable ($15.6b) → IHG Share of Wallet ($1.16b / 0.82%)
+- Stacked-bar version: for each x-axis group, three components — Addressable / 'Fair Share' / actual Share of Spend
+- Key insight: 'Operate' categories are ~77% of the addressable pool yet barely captured ($810m / 0.74%), dragging blended rate to 0.85%
+- x-axis disaggregates by: lifecycle phase (Build/Open/Operate), category, region/market, owner segment, chain-scale/brand
+- Data: addressable spend + IHG actual spend/CRF table (user to confirm filename)
+
+### 5. Change in Share of Wallet  [chart: stacked_bar_progression]
+Same Addressable / Fair Share / Share of Spend components, but x-axis is QUARTERLY progression, showing the capture trend over time.
+- Filterable/disaggregatable by: category, region/market, owner segment, chain-scale/brand, lifecycle phase
+- Data: same as Share of Wallet, with a time/quarter dimension
+
+### 6. Regional Distribution — Hotels, Rooms & Spend Share  [chart: stacked_bar]
+Shows where spend capture is concentrated vs where the growth runway is.
+- x-axis: region (AMER / Greater China / EMEAA)
+- metrics: % of hotels, % of rooms, % of spend, % of CRF collected
+- Reference: AMER 65% hotels / 78% spend / 81% CRF; GC 21% portfolio / 8% spend; EMEAA 21% hotels / 28% rooms / 14% spend
+- Reference totals: 7K hotels, 1M rooms, $15.6B addressable, $1.16B captured, 7.4% on IHG Programs, 2.3% avg CRF
+- Data: IHG estate + spend data (user to confirm filename)
+
+### 7. Owner Segmentation by # Hotels  [chart: stacked_bar]
+Count of hotels by owner segment/typology, broken across the x-axis.
+- owner typology examples: Institutional Owners, Managed, Premium / Lease & Licence
+- x-axis disaggregates by: region/market, chain-scale/brand, category
+- Data: owner/hotel master data (user to confirm filename)
+
+### 8. Opportunity vs Ability to Win  [chart: bubble_matrix]  (advanced — optional)
+The 2×2 prioritisation matrix from the proposed approach slide.
+- y-axis: Market Opportunity; x-axis: Ability to 'Win' / Capture Headroom
+- quadrants: Low Priority | Halo capture/extend | Invest to capture headroom | Strategic Focus on Sales & Marketing
+- each bubble = a market × category, sized by spend
+- Data: scored market×category assessment (user to confirm filename)
+
+## OUTPUT RULES
+- Always read the registry BEFORE answering — never assume a metric's definition from memory
+- Always state active filters, breakdown, and data source on every rendered view
+- If the raw data file named in the registry can't be found or read, say so clearly and name the file — do not fabricate numbers
+- If asked for a metric not in the registry, say "That metric isn't in the registry yet — describe it and I'll give you the row to add"
+- Never invent spend figures; only present what the data contains
+```
+
+### Test prompts:
+1. "What analyses can you show me?" (should read the registry and list them)
+2. "Show me Global Branded Hospitality Spend"
+3. "Now filter that to AMER and break it down by chain-scale"
+4. "Show me share of wallet by owner segment"
+5. "Show change in share of wallet over the quarters for the F&B category"
+6. "Show owner segmentation by number of hotels, split by market"
+7. "I want to add a new metric — how do I do that?"
+
+---
+
+## THE METRIC DEFINITIONS REGISTRY (the extensibility engine)
+
+This is how you add new analyses live, without editing any agent.
+
+### Create the registry file
+Create a spreadsheet called **APEX_Metric_Definitions.xlsx** in SharePoint at:
+`Sources/Proposed_Structure/6_Data_Layer_(Sources)/Metric_Definitions/`
+
+Give it these column headers (row 1), then one row per metric:
+
+| metric_id | metric_name | chart_type | data_source_file | data_sheet | value_field | dimension_fields | default_breakdown | available_filters | description |
+|---|---|---|---|---|---|---|---|---|---|
+| GBTS | Global Branded Third Party Spend Walkthrough | waterfall | [spend_cube].xlsx | Spend | spend_usd_b | addressability,phase,category_l0,category_l1,category_l2,geography,market,chain_scale,brand,owner_segment,management_type | addressability | geography,market,chain_scale,brand,owner_segment,management_type,phase | Total→Non-Addressable→Addressable→Potentially Addressable cascade |
+| REG_CAT | Regional Addressable Spend by Category | stacked_bar | [spend_cube].xlsx | Spend | spend_usd_b | region,category,phase,chain_scale | region | region,market,category,chain_scale | Addressable spend by category, per region |
+| CHAIN | Addressable Spend by Chain Scale | stacked_bar | [hotel_data].xlsx | ChainScale | hotel_count,room_count,spend_usd_b | region,chain_scale | region | region,market | Hotels/rooms/spend by chain scale per region |
+| SOW | Share of Wallet | waterfall | [share_of_wallet].xlsx | SoW | spend_usd_m | phase,category,region,market,owner_segment,chain_scale,brand | phase | region,market,category,owner_segment,chain_scale,brand,phase | Addressable vs directly-addressable vs captured share |
+| SOW_CHG | Change in Share of Wallet | stacked_bar_progression | [share_of_wallet].xlsx | SoW | spend_usd_m | quarter,phase,category,region,market,owner_segment,chain_scale,brand | quarter | region,market,category,owner_segment,chain_scale,brand,phase | Quarterly progression of share of wallet |
+| REG_DIST | Regional Distribution (Hotels/Rooms/Spend) | stacked_bar | [estate_data].xlsx | Estate | pct | region,measure | region | region | % hotels/rooms/spend/CRF by region |
+| OWN_SEG | Owner Segmentation by # Hotels | stacked_bar | [owner_master].xlsx | Hotels | hotel_count | owner_segment,region,market,chain_scale,brand,category | owner_segment | region,market,chain_scale,brand,category | Count of hotels by owner typology |
+| OPP_WIN | Opportunity vs Ability to Win | bubble_matrix | [market_scoring].xlsx | Scoring | spend_usd_m | market,category,opportunity_score,win_score | market | region,market,category | 2×2 prioritisation: market opportunity vs ability to win |
+
+**(Replace the data_source_file / data_sheet / field names with the ACTUAL filenames and column names from your IHG shared drive. That is the only thing you need to customise — the agent handles the rest.)**
+
+### Adding a new metric later (the whole point)
+1. Open APEX_Metric_Definitions.xlsx
+2. Add one new row: give it an id, a name, pick a chart type, point it at the data file and value column, list the dimensions and filters
+3. Save. That's it — the agent reads it live on the next request.
+
+If you're unsure how to fill a row, just tell APEX in chat: *"I want to add a metric showing [X] from [data file], broken down by [dimension], filterable by [filters]."* It will hand you back the exact row to paste.
+
+---
+
 ## CANVAS UI TEMPLATES
 
 ### Template 1: Home View HTML (copy this as a reference for the orchestrator)
@@ -722,6 +891,64 @@ Use these patterns for rendering charts in Canvas. Adapt data values from the Ex
   <div style="font-size:13px;color:#5DC484;">↑ 10.9% vs prior period</div>
   <div style="font-size:10px;color:#8BA4B8;margin-top:4px;">Source: CRF Analysis 2023-2026.xlsx | As of: Q1 2026</div>
 </div>
+
+<!-- WATERFALL Chart Pattern (for Global Branded Hospitality Spend — category cascade) -->
+<!-- Each bar "floats" at the running total. Use teal for the total bars, -->
+<!-- muted blue for the step-down decrements. Label each step with its value. -->
+<svg viewBox="0 0 520 240" style="width:100%;max-width:520px;">
+  <!-- baseline -->
+  <line x1="50" y1="200" x2="510" y2="200" stroke="#1A4A6E" stroke-width="1"/>
+  <!-- Total bar (start) -->
+  <rect x="55" y="40" width="55" height="160" fill="#2ABFBF"/>
+  <text x="82" y="32" fill="#E8F0F8" font-size="11" text-anchor="middle" font-weight="700">$820M</text>
+  <text x="82" y="215" fill="#8BA4B8" font-size="9" text-anchor="middle">Total</text>
+  <!-- Step decrements (floating bars) -->
+  <rect x="130" y="40" width="55" height="55" fill="#4A7A9E"/>
+  <text x="157" y="215" fill="#8BA4B8" font-size="9" text-anchor="middle">F&B</text>
+  <text x="157" y="32" fill="#E8F0F8" font-size="10" text-anchor="middle">$280M</text>
+  <rect x="205" y="95" width="55" height="45" fill="#4A7A9E"/>
+  <text x="232" y="215" fill="#8BA4B8" font-size="9" text-anchor="middle">FF&E</text>
+  <text x="232" y="88" fill="#E8F0F8" font-size="10" text-anchor="middle">$180M</text>
+  <rect x="280" y="140" width="55" height="30" fill="#4A7A9E"/>
+  <text x="307" y="215" fill="#8BA4B8" font-size="9" text-anchor="middle">OS&E</text>
+  <text x="307" y="133" fill="#E8F0F8" font-size="10" text-anchor="middle">$120M</text>
+  <rect x="355" y="170" width="55" height="20" fill="#4A7A9E"/>
+  <text x="382" y="215" fill="#8BA4B8" font-size="9" text-anchor="middle">Energy</text>
+  <text x="382" y="163" fill="#E8F0F8" font-size="10" text-anchor="middle">$80M</text>
+  <!-- Remainder / other -->
+  <rect x="430" y="190" width="55" height="10" fill="#4A7A9E"/>
+  <text x="457" y="215" fill="#8BA4B8" font-size="9" text-anchor="middle">Other</text>
+  <!-- connector dotted lines between steps -->
+  <line x1="110" y1="40" x2="130" y2="40" stroke="#8BA4B8" stroke-width="1" stroke-dasharray="2,2"/>
+  <line x1="185" y1="95" x2="205" y2="95" stroke="#8BA4B8" stroke-width="1" stroke-dasharray="2,2"/>
+  <line x1="260" y1="140" x2="280" y2="140" stroke="#8BA4B8" stroke-width="1" stroke-dasharray="2,2"/>
+  <line x1="335" y1="170" x2="355" y2="170" stroke="#8BA4B8" stroke-width="1" stroke-dasharray="2,2"/>
+</svg>
+
+<!-- STACKED BAR Pattern (for Share of Wallet — Addressable / Fair Share / Share of Spend) -->
+<!-- Each x-axis group is one bar with three stacked segments. -->
+<svg viewBox="0 0 460 240" style="width:100%;max-width:460px;">
+  <line x1="40" y1="200" x2="450" y2="200" stroke="#1A4A6E" stroke-width="1"/>
+  <!-- Group 1 -->
+  <rect x="70" y="60" width="50" height="60" fill="#2ABFBF"/>      <!-- Share of Spend -->
+  <rect x="70" y="120" width="50" height="40" fill="#F5C544"/>     <!-- Fair Share gap -->
+  <rect x="70" y="160" width="50" height="40" fill="#4A7A9E"/>     <!-- Addressable remainder -->
+  <text x="95" y="215" fill="#8BA4B8" font-size="10" text-anchor="middle">AMER</text>
+  <!-- Group 2 -->
+  <rect x="160" y="80" width="50" height="40" fill="#2ABFBF"/>
+  <rect x="160" y="120" width="50" height="35" fill="#F5C544"/>
+  <rect x="160" y="155" width="50" height="45" fill="#4A7A9E"/>
+  <text x="185" y="215" fill="#8BA4B8" font-size="10" text-anchor="middle">EMEAA</text>
+  <!-- Group 3 -->
+  <rect x="250" y="100" width="50" height="30" fill="#2ABFBF"/>
+  <rect x="250" y="130" width="50" height="30" fill="#F5C544"/>
+  <rect x="250" y="160" width="50" height="40" fill="#4A7A9E"/>
+  <text x="275" y="215" fill="#8BA4B8" font-size="10" text-anchor="middle">GC</text>
+  <!-- Legend -->
+  <rect x="340" y="60" width="10" height="10" fill="#2ABFBF"/><text x="355" y="69" fill="#8BA4B8" font-size="9">Share of Spend</text>
+  <rect x="340" y="78" width="10" height="10" fill="#F5C544"/><text x="355" y="87" fill="#8BA4B8" font-size="9">Fair Share gap</text>
+  <rect x="340" y="96" width="10" height="10" fill="#4A7A9E"/><text x="355" y="105" fill="#8BA4B8" font-size="9">Addressable</text>
+</svg>
 ```
 
 ---
