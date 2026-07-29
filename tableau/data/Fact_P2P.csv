@@ -1,0 +1,391 @@
+region,market,product,estate,estate_group,month,year,basis,systems
+AMER,US,BS Flex,Managed,CMH (Managed),2023-12-01,2023,Year End,1.0
+AMER,US,BS Flex,Managed,CMH (Managed),2024-12-01,2024,Year End,76.0
+AMER,US,BS Flex,Managed,CMH (Managed),2025-12-01,2025,Year End,88.0
+AMER,US,BS Flex,Managed,CMH (Managed),2026-01-01,2026,Monthly,88.0
+AMER,US,BS Flex,Managed,CMH (Managed),2026-02-01,2026,Monthly,88.0
+AMER,US,BS Flex,Managed,CMH (Managed),2026-03-01,2026,Monthly,88.0
+AMER,US,BS Flex,Managed,CMH (Managed),2026-04-01,2026,Monthly,92.0
+AMER,US,BS Flex,Managed,CMH (Managed),2026-05-01,2026,Monthly,97.0
+AMER,US,BS Flex,Managed,CMH (Managed),2026-06-01,2026,Monthly,103.0
+AMER,US,BS Flex,Managed,CMH (Managed),2026-07-01,2026,Monthly,109.0
+AMER,US,BS Flex,Managed,CMH (Managed),2026-08-01,2026,Monthly,115.0
+AMER,US,BS Flex,Managed,CMH (Managed),2026-09-01,2026,Monthly,122.0
+AMER,US,BS Flex,Managed,CMH (Managed),2026-10-01,2026,Monthly,128.0
+AMER,US,BS Flex,Managed,CMH (Managed),2026-11-01,2026,Monthly,128.0
+AMER,US,BS Flex,Managed,CMH (Managed),2026-12-01,2026,Monthly,128.0
+AMER,US,BS Nexus,Franchised,Franchise,2023-12-01,2023,Year End,0.0
+AMER,US,BS Nexus,Franchised,Franchise,2024-12-01,2024,Year End,0.0
+AMER,US,BS Nexus,Franchised,Franchise,2025-12-01,2025,Year End,56.0
+AMER,US,BS Nexus,Franchised,Franchise,2026-01-01,2026,Monthly,56.0
+AMER,US,BS Nexus,Franchised,Franchise,2026-02-01,2026,Monthly,226.0
+AMER,US,BS Nexus,Franchised,Franchise,2026-03-01,2026,Monthly,280.0
+AMER,US,BS Nexus,Franchised,Franchise,2026-04-01,2026,Monthly,318.0
+AMER,US,BS Nexus,Franchised,Franchise,2026-05-01,2026,Monthly,318.0
+AMER,US,BS Nexus,Franchised,Franchise,2026-06-01,2026,Monthly,318.0
+AMER,US,BS Nexus,Franchised,Franchise,2026-07-01,2026,Monthly,318.0
+AMER,US,BS Nexus,Franchised,Franchise,2026-08-01,2026,Monthly,318.0
+AMER,US,BS Nexus,Franchised,Franchise,2026-09-01,2026,Monthly,318.0
+AMER,US,BS Nexus,Franchised,Franchise,2026-10-01,2026,Monthly,318.0
+AMER,US,BS Nexus,Franchised,Franchise,2026-11-01,2026,Monthly,318.0
+AMER,US,BS Nexus,Franchised,Franchise,2026-12-01,2026,Monthly,318.0
+AMER,Canada,TBC,Managed,CMH (Managed),2023-12-01,2023,Year End,0.0
+AMER,Canada,TBC,Managed,CMH (Managed),2024-12-01,2024,Year End,0.0
+AMER,Canada,TBC,Managed,CMH (Managed),2025-12-01,2025,Year End,0.0
+AMER,Canada,TBC,Managed,CMH (Managed),2026-01-01,2026,Monthly,0.0
+AMER,Canada,TBC,Managed,CMH (Managed),2026-02-01,2026,Monthly,0.0
+AMER,Canada,TBC,Managed,CMH (Managed),2026-03-01,2026,Monthly,0.0
+AMER,Canada,TBC,Managed,CMH (Managed),2026-04-01,2026,Monthly,0.0
+AMER,Canada,TBC,Managed,CMH (Managed),2026-05-01,2026,Monthly,0.0
+AMER,Canada,TBC,Managed,CMH (Managed),2026-06-01,2026,Monthly,0.0
+AMER,Canada,TBC,Managed,CMH (Managed),2026-07-01,2026,Monthly,0.0
+AMER,Canada,TBC,Managed,CMH (Managed),2026-08-01,2026,Monthly,0.0
+AMER,Canada,TBC,Managed,CMH (Managed),2026-09-01,2026,Monthly,0.0
+AMER,Canada,TBC,Managed,CMH (Managed),2026-10-01,2026,Monthly,0.0
+AMER,Canada,TBC,Managed,CMH (Managed),2026-11-01,2026,Monthly,0.0
+AMER,Canada,TBC,Managed,CMH (Managed),2026-12-01,2026,Monthly,0.0
+AMER,Canada,TBC,Franchised,Franchise,2023-12-01,2023,Year End,0.0
+AMER,Canada,TBC,Franchised,Franchise,2024-12-01,2024,Year End,0.0
+AMER,Canada,TBC,Franchised,Franchise,2025-12-01,2025,Year End,0.0
+AMER,Canada,TBC,Franchised,Franchise,2026-01-01,2026,Monthly,0.0
+AMER,Canada,TBC,Franchised,Franchise,2026-02-01,2026,Monthly,0.0
+AMER,Canada,TBC,Franchised,Franchise,2026-03-01,2026,Monthly,0.0
+AMER,Canada,TBC,Franchised,Franchise,2026-04-01,2026,Monthly,0.0
+AMER,Canada,TBC,Franchised,Franchise,2026-05-01,2026,Monthly,0.0
+AMER,Canada,TBC,Franchised,Franchise,2026-06-01,2026,Monthly,0.0
+AMER,Canada,TBC,Franchised,Franchise,2026-07-01,2026,Monthly,0.0
+AMER,Canada,TBC,Franchised,Franchise,2026-08-01,2026,Monthly,0.0
+AMER,Canada,TBC,Franchised,Franchise,2026-09-01,2026,Monthly,0.0
+AMER,Canada,TBC,Franchised,Franchise,2026-10-01,2026,Monthly,0.0
+AMER,Canada,TBC,Franchised,Franchise,2026-11-01,2026,Monthly,0.0
+AMER,Canada,TBC,Franchised,Franchise,2026-12-01,2026,Monthly,0.0
+AMER,MLAC,TBC,Managed,CMH (Managed),2023-12-01,2023,Year End,0.0
+AMER,MLAC,TBC,Managed,CMH (Managed),2024-12-01,2024,Year End,0.0
+AMER,MLAC,TBC,Managed,CMH (Managed),2025-12-01,2025,Year End,0.0
+AMER,MLAC,TBC,Managed,CMH (Managed),2026-01-01,2026,Monthly,0.0
+AMER,MLAC,TBC,Managed,CMH (Managed),2026-02-01,2026,Monthly,0.0
+AMER,MLAC,TBC,Managed,CMH (Managed),2026-03-01,2026,Monthly,0.0
+AMER,MLAC,TBC,Managed,CMH (Managed),2026-04-01,2026,Monthly,0.0
+AMER,MLAC,TBC,Managed,CMH (Managed),2026-05-01,2026,Monthly,0.0
+AMER,MLAC,TBC,Managed,CMH (Managed),2026-06-01,2026,Monthly,0.0
+AMER,MLAC,TBC,Managed,CMH (Managed),2026-07-01,2026,Monthly,0.0
+AMER,MLAC,TBC,Managed,CMH (Managed),2026-08-01,2026,Monthly,0.0
+AMER,MLAC,TBC,Managed,CMH (Managed),2026-09-01,2026,Monthly,0.0
+AMER,MLAC,TBC,Managed,CMH (Managed),2026-10-01,2026,Monthly,0.0
+AMER,MLAC,TBC,Managed,CMH (Managed),2026-11-01,2026,Monthly,0.0
+AMER,MLAC,TBC,Managed,CMH (Managed),2026-12-01,2026,Monthly,0.0
+AMER,MLAC,TBC,Franchised,Franchise,2023-12-01,2023,Year End,0.0
+AMER,MLAC,TBC,Franchised,Franchise,2024-12-01,2024,Year End,0.0
+AMER,MLAC,TBC,Franchised,Franchise,2025-12-01,2025,Year End,0.0
+AMER,MLAC,TBC,Franchised,Franchise,2026-01-01,2026,Monthly,0.0
+AMER,MLAC,TBC,Franchised,Franchise,2026-02-01,2026,Monthly,0.0
+AMER,MLAC,TBC,Franchised,Franchise,2026-03-01,2026,Monthly,0.0
+AMER,MLAC,TBC,Franchised,Franchise,2026-04-01,2026,Monthly,0.0
+AMER,MLAC,TBC,Franchised,Franchise,2026-05-01,2026,Monthly,0.0
+AMER,MLAC,TBC,Franchised,Franchise,2026-06-01,2026,Monthly,0.0
+AMER,MLAC,TBC,Franchised,Franchise,2026-07-01,2026,Monthly,0.0
+AMER,MLAC,TBC,Franchised,Franchise,2026-08-01,2026,Monthly,0.0
+AMER,MLAC,TBC,Franchised,Franchise,2026-09-01,2026,Monthly,0.0
+AMER,MLAC,TBC,Franchised,Franchise,2026-10-01,2026,Monthly,0.0
+AMER,MLAC,TBC,Franchised,Franchise,2026-11-01,2026,Monthly,0.0
+AMER,MLAC,TBC,Franchised,Franchise,2026-12-01,2026,Monthly,0.0
+EMEAA,UK,ProcureWizard,Managed,CMH (Managed),2023-12-01,2023,Year End,10.0
+EMEAA,UK,ProcureWizard,Managed,CMH (Managed),2024-12-01,2024,Year End,10.0
+EMEAA,UK,ProcureWizard,Managed,CMH (Managed),2025-12-01,2025,Year End,10.0
+EMEAA,UK,ProcureWizard,Managed,CMH (Managed),2026-01-01,2026,Monthly,10.0
+EMEAA,UK,ProcureWizard,Managed,CMH (Managed),2026-02-01,2026,Monthly,10.0
+EMEAA,UK,ProcureWizard,Managed,CMH (Managed),2026-03-01,2026,Monthly,11.0
+EMEAA,UK,ProcureWizard,Managed,CMH (Managed),2026-04-01,2026,Monthly,11.0
+EMEAA,UK,ProcureWizard,Managed,CMH (Managed),2026-05-01,2026,Monthly,11.0
+EMEAA,UK,ProcureWizard,Managed,CMH (Managed),2026-06-01,2026,Monthly,11.0
+EMEAA,UK,ProcureWizard,Managed,CMH (Managed),2026-07-01,2026,Monthly,11.0
+EMEAA,UK,ProcureWizard,Managed,CMH (Managed),2026-08-01,2026,Monthly,11.0
+EMEAA,UK,ProcureWizard,Managed,CMH (Managed),2026-09-01,2026,Monthly,11.0
+EMEAA,UK,ProcureWizard,Managed,CMH (Managed),2026-10-01,2026,Monthly,11.0
+EMEAA,UK,ProcureWizard,Managed,CMH (Managed),2026-11-01,2026,Monthly,11.0
+EMEAA,UK,ProcureWizard,Managed,CMH (Managed),2026-12-01,2026,Monthly,11.0
+EMEAA,UK,ProcureWizard,Franchised,Franchise,2023-12-01,2023,Year End,0.0
+EMEAA,UK,ProcureWizard,Franchised,Franchise,2024-12-01,2024,Year End,18.0
+EMEAA,UK,ProcureWizard,Franchised,Franchise,2025-12-01,2025,Year End,18.0
+EMEAA,UK,ProcureWizard,Franchised,Franchise,2026-01-01,2026,Monthly,18.0
+EMEAA,UK,ProcureWizard,Franchised,Franchise,2026-02-01,2026,Monthly,18.0
+EMEAA,UK,ProcureWizard,Franchised,Franchise,2026-03-01,2026,Monthly,18.0
+EMEAA,UK,ProcureWizard,Franchised,Franchise,2026-04-01,2026,Monthly,18.0
+EMEAA,UK,ProcureWizard,Franchised,Franchise,2026-05-01,2026,Monthly,18.0
+EMEAA,UK,ProcureWizard,Franchised,Franchise,2026-06-01,2026,Monthly,26.0
+EMEAA,UK,ProcureWizard,Franchised,Franchise,2026-07-01,2026,Monthly,26.0
+EMEAA,UK,ProcureWizard,Franchised,Franchise,2026-08-01,2026,Monthly,26.0
+EMEAA,UK,ProcureWizard,Franchised,Franchise,2026-09-01,2026,Monthly,26.0
+EMEAA,UK,ProcureWizard,Franchised,Franchise,2026-10-01,2026,Monthly,26.0
+EMEAA,UK,ProcureWizard,Franchised,Franchise,2026-11-01,2026,Monthly,26.0
+EMEAA,UK,ProcureWizard,Franchised,Franchise,2026-12-01,2026,Monthly,28.0
+EMEAA,France,BS Flex,Managed,CMH (Managed),2023-12-01,2023,Year End,5.0
+EMEAA,France,BS Flex,Managed,CMH (Managed),2024-12-01,2024,Year End,3.0
+EMEAA,France,BS Flex,Managed,CMH (Managed),2025-12-01,2025,Year End,8.0
+EMEAA,France,BS Flex,Managed,CMH (Managed),2026-01-01,2026,Monthly,8.0
+EMEAA,France,BS Flex,Managed,CMH (Managed),2026-02-01,2026,Monthly,8.0
+EMEAA,France,BS Flex,Managed,CMH (Managed),2026-03-01,2026,Monthly,8.0
+EMEAA,France,BS Flex,Managed,CMH (Managed),2026-04-01,2026,Monthly,8.0
+EMEAA,France,BS Flex,Managed,CMH (Managed),2026-05-01,2026,Monthly,8.0
+EMEAA,France,BS Flex,Managed,CMH (Managed),2026-06-01,2026,Monthly,8.0
+EMEAA,France,BS Flex,Managed,CMH (Managed),2026-07-01,2026,Monthly,9.0
+EMEAA,France,BS Flex,Managed,CMH (Managed),2026-08-01,2026,Monthly,9.0
+EMEAA,France,BS Flex,Managed,CMH (Managed),2026-09-01,2026,Monthly,9.0
+EMEAA,France,BS Flex,Managed,CMH (Managed),2026-10-01,2026,Monthly,9.0
+EMEAA,France,BS Flex,Managed,CMH (Managed),2026-11-01,2026,Monthly,9.0
+EMEAA,France,BS Flex,Managed,CMH (Managed),2026-12-01,2026,Monthly,9.0
+EMEAA,Other Europe,BS Flex,Managed,CMH (Managed),2023-12-01,2023,Year End,8.0
+EMEAA,Other Europe,BS Flex,Managed,CMH (Managed),2024-12-01,2024,Year End,7.0
+EMEAA,Other Europe,BS Flex,Managed,CMH (Managed),2025-12-01,2025,Year End,15.0
+EMEAA,Other Europe,BS Flex,Managed,CMH (Managed),2026-01-01,2026,Monthly,15.0
+EMEAA,Other Europe,BS Flex,Managed,CMH (Managed),2026-02-01,2026,Monthly,15.0
+EMEAA,Other Europe,BS Flex,Managed,CMH (Managed),2026-03-01,2026,Monthly,15.0
+EMEAA,Other Europe,BS Flex,Managed,CMH (Managed),2026-04-01,2026,Monthly,15.0
+EMEAA,Other Europe,BS Flex,Managed,CMH (Managed),2026-05-01,2026,Monthly,15.0
+EMEAA,Other Europe,BS Flex,Managed,CMH (Managed),2026-06-01,2026,Monthly,15.0
+EMEAA,Other Europe,BS Flex,Managed,CMH (Managed),2026-07-01,2026,Monthly,15.0
+EMEAA,Other Europe,BS Flex,Managed,CMH (Managed),2026-08-01,2026,Monthly,15.0
+EMEAA,Other Europe,BS Flex,Managed,CMH (Managed),2026-09-01,2026,Monthly,15.0
+EMEAA,Other Europe,BS Flex,Managed,CMH (Managed),2026-10-01,2026,Monthly,15.0
+EMEAA,Other Europe,BS Flex,Managed,CMH (Managed),2026-11-01,2026,Monthly,16.0
+EMEAA,Other Europe,BS Flex,Managed,CMH (Managed),2026-12-01,2026,Monthly,16.0
+EMEAA,Germany,FutureLog,Managed,CMH (Managed),2023-12-01,2023,Year End,0.0
+EMEAA,Germany,FutureLog,Managed,CMH (Managed),2024-12-01,2024,Year End,0.0
+EMEAA,Germany,FutureLog,Managed,CMH (Managed),2025-12-01,2025,Year End,1.0
+EMEAA,Germany,FutureLog,Managed,CMH (Managed),2026-01-01,2026,Monthly,1.0
+EMEAA,Germany,FutureLog,Managed,CMH (Managed),2026-02-01,2026,Monthly,1.0
+EMEAA,Germany,FutureLog,Managed,CMH (Managed),2026-03-01,2026,Monthly,1.0
+EMEAA,Germany,FutureLog,Managed,CMH (Managed),2026-04-01,2026,Monthly,1.0
+EMEAA,Germany,FutureLog,Managed,CMH (Managed),2026-05-01,2026,Monthly,1.0
+EMEAA,Germany,FutureLog,Managed,CMH (Managed),2026-06-01,2026,Monthly,1.0
+EMEAA,Germany,FutureLog,Managed,CMH (Managed),2026-07-01,2026,Monthly,1.0
+EMEAA,Germany,FutureLog,Managed,CMH (Managed),2026-08-01,2026,Monthly,1.0
+EMEAA,Germany,FutureLog,Managed,CMH (Managed),2026-09-01,2026,Monthly,1.0
+EMEAA,Germany,FutureLog,Managed,CMH (Managed),2026-10-01,2026,Monthly,1.0
+EMEAA,Germany,FutureLog,Managed,CMH (Managed),2026-11-01,2026,Monthly,1.0
+EMEAA,Germany,FutureLog,Managed,CMH (Managed),2026-12-01,2026,Monthly,1.0
+EMEAA,Other Europe,FutureLog,Managed,CMH (Managed),2023-12-01,2023,Year End,0.0
+EMEAA,Other Europe,FutureLog,Managed,CMH (Managed),2024-12-01,2024,Year End,0.0
+EMEAA,Other Europe,FutureLog,Managed,CMH (Managed),2025-12-01,2025,Year End,1.0
+EMEAA,Other Europe,FutureLog,Managed,CMH (Managed),2026-01-01,2026,Monthly,1.0
+EMEAA,Other Europe,FutureLog,Managed,CMH (Managed),2026-02-01,2026,Monthly,1.0
+EMEAA,Other Europe,FutureLog,Managed,CMH (Managed),2026-03-01,2026,Monthly,1.0
+EMEAA,Other Europe,FutureLog,Managed,CMH (Managed),2026-04-01,2026,Monthly,1.0
+EMEAA,Other Europe,FutureLog,Managed,CMH (Managed),2026-05-01,2026,Monthly,1.0
+EMEAA,Other Europe,FutureLog,Managed,CMH (Managed),2026-06-01,2026,Monthly,1.0
+EMEAA,Other Europe,FutureLog,Managed,CMH (Managed),2026-07-01,2026,Monthly,1.0
+EMEAA,Other Europe,FutureLog,Managed,CMH (Managed),2026-08-01,2026,Monthly,1.0
+EMEAA,Other Europe,FutureLog,Managed,CMH (Managed),2026-09-01,2026,Monthly,4.0
+EMEAA,Other Europe,FutureLog,Managed,CMH (Managed),2026-10-01,2026,Monthly,4.0
+EMEAA,Other Europe,FutureLog,Managed,CMH (Managed),2026-11-01,2026,Monthly,4.0
+EMEAA,Other Europe,FutureLog,Managed,CMH (Managed),2026-12-01,2026,Monthly,4.0
+EMEAA,UAE,FutureLog,Managed,CMH (Managed),2023-12-01,2023,Year End,0.0
+EMEAA,UAE,FutureLog,Managed,CMH (Managed),2024-12-01,2024,Year End,0.0
+EMEAA,UAE,FutureLog,Managed,CMH (Managed),2025-12-01,2025,Year End,13.0
+EMEAA,UAE,FutureLog,Managed,CMH (Managed),2026-01-01,2026,Monthly,13.0
+EMEAA,UAE,FutureLog,Managed,CMH (Managed),2026-02-01,2026,Monthly,13.0
+EMEAA,UAE,FutureLog,Managed,CMH (Managed),2026-03-01,2026,Monthly,13.0
+EMEAA,UAE,FutureLog,Managed,CMH (Managed),2026-04-01,2026,Monthly,13.0
+EMEAA,UAE,FutureLog,Managed,CMH (Managed),2026-05-01,2026,Monthly,13.0
+EMEAA,UAE,FutureLog,Managed,CMH (Managed),2026-06-01,2026,Monthly,13.0
+EMEAA,UAE,FutureLog,Managed,CMH (Managed),2026-07-01,2026,Monthly,13.0
+EMEAA,UAE,FutureLog,Managed,CMH (Managed),2026-08-01,2026,Monthly,14.0
+EMEAA,UAE,FutureLog,Managed,CMH (Managed),2026-09-01,2026,Monthly,15.0
+EMEAA,UAE,FutureLog,Managed,CMH (Managed),2026-10-01,2026,Monthly,15.0
+EMEAA,UAE,FutureLog,Managed,CMH (Managed),2026-11-01,2026,Monthly,15.0
+EMEAA,UAE,FutureLog,Managed,CMH (Managed),2026-12-01,2026,Monthly,19.0
+EMEAA,KSA,FutureLog,Managed,CMH (Managed),2023-12-01,2023,Year End,0.0
+EMEAA,KSA,FutureLog,Managed,CMH (Managed),2024-12-01,2024,Year End,0.0
+EMEAA,KSA,FutureLog,Managed,CMH (Managed),2025-12-01,2025,Year End,31.0
+EMEAA,KSA,FutureLog,Managed,CMH (Managed),2026-01-01,2026,Monthly,31.0
+EMEAA,KSA,FutureLog,Managed,CMH (Managed),2026-02-01,2026,Monthly,31.0
+EMEAA,KSA,FutureLog,Managed,CMH (Managed),2026-03-01,2026,Monthly,31.0
+EMEAA,KSA,FutureLog,Managed,CMH (Managed),2026-04-01,2026,Monthly,31.0
+EMEAA,KSA,FutureLog,Managed,CMH (Managed),2026-05-01,2026,Monthly,31.0
+EMEAA,KSA,FutureLog,Managed,CMH (Managed),2026-06-01,2026,Monthly,31.0
+EMEAA,KSA,FutureLog,Managed,CMH (Managed),2026-07-01,2026,Monthly,31.0
+EMEAA,KSA,FutureLog,Managed,CMH (Managed),2026-08-01,2026,Monthly,31.0
+EMEAA,KSA,FutureLog,Managed,CMH (Managed),2026-09-01,2026,Monthly,32.0
+EMEAA,KSA,FutureLog,Managed,CMH (Managed),2026-10-01,2026,Monthly,32.0
+EMEAA,KSA,FutureLog,Managed,CMH (Managed),2026-11-01,2026,Monthly,32.0
+EMEAA,KSA,FutureLog,Managed,CMH (Managed),2026-12-01,2026,Monthly,32.0
+EMEAA,India,Prologic,Managed,CMH (Managed),2023-12-01,2023,Year End,0.0
+EMEAA,India,Prologic,Managed,CMH (Managed),2024-12-01,2024,Year End,0.0
+EMEAA,India,Prologic,Managed,CMH (Managed),2025-12-01,2025,Year End,44.0
+EMEAA,India,Prologic,Managed,CMH (Managed),2026-01-01,2026,Monthly,44.0
+EMEAA,India,Prologic,Managed,CMH (Managed),2026-02-01,2026,Monthly,44.0
+EMEAA,India,Prologic,Managed,CMH (Managed),2026-03-01,2026,Monthly,44.0
+EMEAA,India,Prologic,Managed,CMH (Managed),2026-04-01,2026,Monthly,44.0
+EMEAA,India,Prologic,Managed,CMH (Managed),2026-05-01,2026,Monthly,44.0
+EMEAA,India,Prologic,Managed,CMH (Managed),2026-06-01,2026,Monthly,44.0
+EMEAA,India,Prologic,Managed,CMH (Managed),2026-07-01,2026,Monthly,44.0
+EMEAA,India,Prologic,Managed,CMH (Managed),2026-08-01,2026,Monthly,44.0
+EMEAA,India,Prologic,Managed,CMH (Managed),2026-09-01,2026,Monthly,44.0
+EMEAA,India,Prologic,Managed,CMH (Managed),2026-10-01,2026,Monthly,44.0
+EMEAA,India,Prologic,Managed,CMH (Managed),2026-11-01,2026,Monthly,44.0
+EMEAA,India,Prologic,Managed,CMH (Managed),2026-12-01,2026,Monthly,44.0
+EMEAA,Australia,FutureLog,Managed,CMH (Managed),2023-12-01,2023,Year End,0.0
+EMEAA,Australia,FutureLog,Managed,CMH (Managed),2024-12-01,2024,Year End,0.0
+EMEAA,Australia,FutureLog,Managed,CMH (Managed),2025-12-01,2025,Year End,33.0
+EMEAA,Australia,FutureLog,Managed,CMH (Managed),2026-01-01,2026,Monthly,33.0
+EMEAA,Australia,FutureLog,Managed,CMH (Managed),2026-02-01,2026,Monthly,33.0
+EMEAA,Australia,FutureLog,Managed,CMH (Managed),2026-03-01,2026,Monthly,34.0
+EMEAA,Australia,FutureLog,Managed,CMH (Managed),2026-04-01,2026,Monthly,34.0
+EMEAA,Australia,FutureLog,Managed,CMH (Managed),2026-05-01,2026,Monthly,34.0
+EMEAA,Australia,FutureLog,Managed,CMH (Managed),2026-06-01,2026,Monthly,34.0
+EMEAA,Australia,FutureLog,Managed,CMH (Managed),2026-07-01,2026,Monthly,34.0
+EMEAA,Australia,FutureLog,Managed,CMH (Managed),2026-08-01,2026,Monthly,34.0
+EMEAA,Australia,FutureLog,Managed,CMH (Managed),2026-09-01,2026,Monthly,34.0
+EMEAA,Australia,FutureLog,Managed,CMH (Managed),2026-10-01,2026,Monthly,34.0
+EMEAA,Australia,FutureLog,Managed,CMH (Managed),2026-11-01,2026,Monthly,34.0
+EMEAA,Australia,FutureLog,Managed,CMH (Managed),2026-12-01,2026,Monthly,34.0
+EMEAA,Australia,FutureLog,Franchised,Franchise,2023-12-01,2023,Year End,0.0
+EMEAA,Australia,FutureLog,Franchised,Franchise,2024-12-01,2024,Year End,0.0
+EMEAA,Australia,FutureLog,Franchised,Franchise,2025-12-01,2025,Year End,8.0
+EMEAA,Australia,FutureLog,Franchised,Franchise,2026-01-01,2026,Monthly,6.0
+EMEAA,Australia,FutureLog,Franchised,Franchise,2026-02-01,2026,Monthly,6.0
+EMEAA,Australia,FutureLog,Franchised,Franchise,2026-03-01,2026,Monthly,6.0
+EMEAA,Australia,FutureLog,Franchised,Franchise,2026-04-01,2026,Monthly,6.0
+EMEAA,Australia,FutureLog,Franchised,Franchise,2026-05-01,2026,Monthly,6.0
+EMEAA,Australia,FutureLog,Franchised,Franchise,2026-06-01,2026,Monthly,7.0
+EMEAA,Australia,FutureLog,Franchised,Franchise,2026-07-01,2026,Monthly,7.0
+EMEAA,Australia,FutureLog,Franchised,Franchise,2026-08-01,2026,Monthly,7.0
+EMEAA,Australia,FutureLog,Franchised,Franchise,2026-09-01,2026,Monthly,7.0
+EMEAA,Australia,FutureLog,Franchised,Franchise,2026-10-01,2026,Monthly,7.0
+EMEAA,Australia,FutureLog,Franchised,Franchise,2026-11-01,2026,Monthly,7.0
+EMEAA,Australia,FutureLog,Franchised,Franchise,2026-12-01,2026,Monthly,7.0
+EMEAA,NZ,FutureLog,Managed,CMH (Managed),2023-12-01,2023,Year End,0.0
+EMEAA,NZ,FutureLog,Managed,CMH (Managed),2024-12-01,2024,Year End,0.0
+EMEAA,NZ,FutureLog,Managed,CMH (Managed),2025-12-01,2025,Year End,0.0
+EMEAA,NZ,FutureLog,Managed,CMH (Managed),2026-01-01,2026,Monthly,0.0
+EMEAA,NZ,FutureLog,Managed,CMH (Managed),2026-02-01,2026,Monthly,0.0
+EMEAA,NZ,FutureLog,Managed,CMH (Managed),2026-03-01,2026,Monthly,0.0
+EMEAA,NZ,FutureLog,Managed,CMH (Managed),2026-04-01,2026,Monthly,0.0
+EMEAA,NZ,FutureLog,Managed,CMH (Managed),2026-05-01,2026,Monthly,0.0
+EMEAA,NZ,FutureLog,Managed,CMH (Managed),2026-06-01,2026,Monthly,0.0
+EMEAA,NZ,FutureLog,Managed,CMH (Managed),2026-07-01,2026,Monthly,0.0
+EMEAA,NZ,FutureLog,Managed,CMH (Managed),2026-08-01,2026,Monthly,0.0
+EMEAA,NZ,FutureLog,Managed,CMH (Managed),2026-09-01,2026,Monthly,0.0
+EMEAA,NZ,FutureLog,Managed,CMH (Managed),2026-10-01,2026,Monthly,8.0
+EMEAA,NZ,FutureLog,Managed,CMH (Managed),2026-11-01,2026,Monthly,8.0
+EMEAA,NZ,FutureLog,Managed,CMH (Managed),2026-12-01,2026,Monthly,8.0
+EMEAA,Japan,FutureLog,Managed,CMH (Managed),2023-12-01,2023,Year End,0.0
+EMEAA,Japan,FutureLog,Managed,CMH (Managed),2024-12-01,2024,Year End,0.0
+EMEAA,Japan,FutureLog,Managed,CMH (Managed),2025-12-01,2025,Year End,0.0
+EMEAA,Japan,FutureLog,Managed,CMH (Managed),2026-01-01,2026,Monthly,0.0
+EMEAA,Japan,FutureLog,Managed,CMH (Managed),2026-02-01,2026,Monthly,0.0
+EMEAA,Japan,FutureLog,Managed,CMH (Managed),2026-03-01,2026,Monthly,0.0
+EMEAA,Japan,FutureLog,Managed,CMH (Managed),2026-04-01,2026,Monthly,0.0
+EMEAA,Japan,FutureLog,Managed,CMH (Managed),2026-05-01,2026,Monthly,0.0
+EMEAA,Japan,FutureLog,Managed,CMH (Managed),2026-06-01,2026,Monthly,0.0
+EMEAA,Japan,FutureLog,Managed,CMH (Managed),2026-07-01,2026,Monthly,0.0
+EMEAA,Japan,FutureLog,Managed,CMH (Managed),2026-08-01,2026,Monthly,0.0
+EMEAA,Japan,FutureLog,Managed,CMH (Managed),2026-09-01,2026,Monthly,0.0
+EMEAA,Japan,FutureLog,Managed,CMH (Managed),2026-10-01,2026,Monthly,0.0
+EMEAA,Japan,FutureLog,Managed,CMH (Managed),2026-11-01,2026,Monthly,1.0
+EMEAA,Japan,FutureLog,Managed,CMH (Managed),2026-12-01,2026,Monthly,1.0
+EMEAA,Other EAPAC,PurchasePlus,Managed,CMH (Managed),2023-12-01,2023,Year End,89.0
+EMEAA,Other EAPAC,PurchasePlus,Managed,CMH (Managed),2024-12-01,2024,Year End,89.0
+EMEAA,Other EAPAC,PurchasePlus,Managed,CMH (Managed),2025-12-01,2025,Year End,89.0
+EMEAA,Other EAPAC,PurchasePlus,Managed,CMH (Managed),2026-01-01,2026,Monthly,111.0
+EMEAA,Other EAPAC,PurchasePlus,Managed,CMH (Managed),2026-02-01,2026,Monthly,111.0
+EMEAA,Other EAPAC,PurchasePlus,Managed,CMH (Managed),2026-03-01,2026,Monthly,110.0
+EMEAA,Other EAPAC,PurchasePlus,Managed,CMH (Managed),2026-04-01,2026,Monthly,110.0
+EMEAA,Other EAPAC,PurchasePlus,Managed,CMH (Managed),2026-05-01,2026,Monthly,110.0
+EMEAA,Other EAPAC,PurchasePlus,Managed,CMH (Managed),2026-06-01,2026,Monthly,111.0
+EMEAA,Other EAPAC,PurchasePlus,Managed,CMH (Managed),2026-07-01,2026,Monthly,111.0
+EMEAA,Other EAPAC,PurchasePlus,Managed,CMH (Managed),2026-08-01,2026,Monthly,111.0
+EMEAA,Other EAPAC,PurchasePlus,Managed,CMH (Managed),2026-09-01,2026,Monthly,111.0
+EMEAA,Other EAPAC,PurchasePlus,Managed,CMH (Managed),2026-10-01,2026,Monthly,103.0
+EMEAA,Other EAPAC,PurchasePlus,Managed,CMH (Managed),2026-11-01,2026,Monthly,103.0
+EMEAA,Other EAPAC,PurchasePlus,Managed,CMH (Managed),2026-12-01,2026,Monthly,103.0
+GC,GC,PICC,Managed,CMH (Managed),2023-12-01,2023,Year End,180.0
+GC,GC,PICC,Managed,CMH (Managed),2024-12-01,2024,Year End,220.0
+GC,GC,PICC,Managed,CMH (Managed),2025-12-01,2025,Year End,257.0
+GC,GC,PICC,Managed,CMH (Managed),2026-01-01,2026,Monthly,257.0
+GC,GC,PICC,Managed,CMH (Managed),2026-02-01,2026,Monthly,257.0
+GC,GC,PICC,Managed,CMH (Managed),2026-03-01,2026,Monthly,257.0
+GC,GC,PICC,Managed,CMH (Managed),2026-04-01,2026,Monthly,257.0
+GC,GC,PICC,Managed,CMH (Managed),2026-05-01,2026,Monthly,262.0
+GC,GC,PICC,Managed,CMH (Managed),2026-06-01,2026,Monthly,262.0
+GC,GC,PICC,Managed,CMH (Managed),2026-07-01,2026,Monthly,262.0
+GC,GC,PICC,Managed,CMH (Managed),2026-08-01,2026,Monthly,267.0
+GC,GC,PICC,Managed,CMH (Managed),2026-09-01,2026,Monthly,267.0
+GC,GC,PICC,Managed,CMH (Managed),2026-10-01,2026,Monthly,272.0
+GC,GC,PICC,Managed,CMH (Managed),2026-11-01,2026,Monthly,272.0
+GC,GC,PICC,Managed,CMH (Managed),2026-12-01,2026,Monthly,277.0
+GC,GC,MBT,Managed & Franchised,CMH (Managed),2023-12-01,2023,Year End,78.0
+GC,GC,MBT,Managed & Franchised,CMH (Managed),2024-12-01,2024,Year End,79.0
+GC,GC,MBT,Managed & Franchised,CMH (Managed),2025-12-01,2025,Year End,80.0
+GC,GC,MBT,Managed & Franchised,CMH (Managed),2026-01-01,2026,Monthly,80.0
+GC,GC,MBT,Managed & Franchised,CMH (Managed),2026-02-01,2026,Monthly,80.0
+GC,GC,MBT,Managed & Franchised,CMH (Managed),2026-03-01,2026,Monthly,80.0
+GC,GC,MBT,Managed & Franchised,CMH (Managed),2026-04-01,2026,Monthly,80.0
+GC,GC,MBT,Managed & Franchised,CMH (Managed),2026-05-01,2026,Monthly,80.0
+GC,GC,MBT,Managed & Franchised,CMH (Managed),2026-06-01,2026,Monthly,80.0
+GC,GC,MBT,Managed & Franchised,CMH (Managed),2026-07-01,2026,Monthly,80.0
+GC,GC,MBT,Managed & Franchised,CMH (Managed),2026-08-01,2026,Monthly,80.0
+GC,GC,MBT,Managed & Franchised,CMH (Managed),2026-09-01,2026,Monthly,80.0
+GC,GC,MBT,Managed & Franchised,CMH (Managed),2026-10-01,2026,Monthly,80.0
+GC,GC,MBT,Managed & Franchised,CMH (Managed),2026-11-01,2026,Monthly,80.0
+GC,GC,MBT,Managed & Franchised,CMH (Managed),2026-12-01,2026,Monthly,80.0
+GC,GC,Flex,Managed,CMH (Managed),2023-12-01,2023,Year End,80.0
+GC,GC,Flex,Managed,CMH (Managed),2024-12-01,2024,Year End,83.0
+GC,GC,Flex,Managed,CMH (Managed),2025-12-01,2025,Year End,85.0
+GC,GC,Flex,Managed,CMH (Managed),2026-01-01,2026,Monthly,85.0
+GC,GC,Flex,Managed,CMH (Managed),2026-02-01,2026,Monthly,85.0
+GC,GC,Flex,Managed,CMH (Managed),2026-03-01,2026,Monthly,86.0
+GC,GC,Flex,Managed,CMH (Managed),2026-04-01,2026,Monthly,87.0
+GC,GC,Flex,Managed,CMH (Managed),2026-05-01,2026,Monthly,88.0
+GC,GC,Flex,Managed,CMH (Managed),2026-06-01,2026,Monthly,89.0
+GC,GC,Flex,Managed,CMH (Managed),2026-07-01,2026,Monthly,90.0
+GC,GC,Flex,Managed,CMH (Managed),2026-08-01,2026,Monthly,91.0
+GC,GC,Flex,Managed,CMH (Managed),2026-09-01,2026,Monthly,92.0
+GC,GC,Flex,Managed,CMH (Managed),2026-10-01,2026,Monthly,93.0
+GC,GC,Flex,Managed,CMH (Managed),2026-11-01,2026,Monthly,94.0
+GC,GC,Flex,Managed,CMH (Managed),2026-12-01,2026,Monthly,95.0
+GC,GC,GC Mall,Managed - N/A,Managed - N/A (excl. from CMH),2023-12-01,2023,Year End,205.0
+GC,GC,GC Mall,Managed - N/A,Managed - N/A (excl. from CMH),2024-12-01,2024,Year End,305.0
+GC,GC,GC Mall,Managed - N/A,Managed - N/A (excl. from CMH),2025-12-01,2025,Year End,433.0
+GC,GC,GC Mall,Managed - N/A,Managed - N/A (excl. from CMH),2026-01-01,2026,Monthly,433.0
+GC,GC,GC Mall,Managed - N/A,Managed - N/A (excl. from CMH),2026-02-01,2026,Monthly,433.0
+GC,GC,GC Mall,Managed - N/A,Managed - N/A (excl. from CMH),2026-03-01,2026,Monthly,437.0
+GC,GC,GC Mall,Managed - N/A,Managed - N/A (excl. from CMH),2026-04-01,2026,Monthly,435.0
+GC,GC,GC Mall,Managed - N/A,Managed - N/A (excl. from CMH),2026-05-01,2026,Monthly,436.0
+GC,GC,GC Mall,Managed - N/A,Managed - N/A (excl. from CMH),2026-06-01,2026,Monthly,437.0
+GC,GC,GC Mall,Managed - N/A,Managed - N/A (excl. from CMH),2026-07-01,2026,Monthly,438.0
+GC,GC,GC Mall,Managed - N/A,Managed - N/A (excl. from CMH),2026-08-01,2026,Monthly,439.0
+GC,GC,GC Mall,Managed - N/A,Managed - N/A (excl. from CMH),2026-09-01,2026,Monthly,440.0
+GC,GC,GC Mall,Managed - N/A,Managed - N/A (excl. from CMH),2026-10-01,2026,Monthly,441.0
+GC,GC,GC Mall,Managed - N/A,Managed - N/A (excl. from CMH),2026-11-01,2026,Monthly,442.0
+GC,GC,GC Mall,Managed - N/A,Managed - N/A (excl. from CMH),2026-12-01,2026,Monthly,443.0
+GC,GC,GC Mall,Franchised,Franchise,2023-12-01,2023,Year End,70.0
+GC,GC,GC Mall,Franchised,Franchise,2024-12-01,2024,Year End,130.0
+GC,GC,GC Mall,Franchised,Franchise,2025-12-01,2025,Year End,174.0
+GC,GC,GC Mall,Franchised,Franchise,2026-01-01,2026,Monthly,174.0
+GC,GC,GC Mall,Franchised,Franchise,2026-02-01,2026,Monthly,174.0
+GC,GC,GC Mall,Franchised,Franchise,2026-03-01,2026,Monthly,252.0
+GC,GC,GC Mall,Franchised,Franchise,2026-04-01,2026,Monthly,212.0
+GC,GC,GC Mall,Franchised,Franchise,2026-05-01,2026,Monthly,231.0
+GC,GC,GC Mall,Franchised,Franchise,2026-06-01,2026,Monthly,250.0
+GC,GC,GC Mall,Franchised,Franchise,2026-07-01,2026,Monthly,269.0
+GC,GC,GC Mall,Franchised,Franchise,2026-08-01,2026,Monthly,288.0
+GC,GC,GC Mall,Franchised,Franchise,2026-09-01,2026,Monthly,307.0
+GC,GC,GC Mall,Franchised,Franchise,2026-10-01,2026,Monthly,326.0
+GC,GC,GC Mall,Franchised,Franchise,2026-11-01,2026,Monthly,345.0
+GC,GC,GC Mall,Franchised,Franchise,2026-12-01,2026,Monthly,364.0
+GC,GC,CPM,Managed - N/A,Managed - N/A (excl. from CMH),2023-12-01,2023,Year End,103.0
+GC,GC,CPM,Managed - N/A,Managed - N/A (excl. from CMH),2024-12-01,2024,Year End,148.0
+GC,GC,CPM,Managed - N/A,Managed - N/A (excl. from CMH),2025-12-01,2025,Year End,269.0
+GC,GC,CPM,Managed - N/A,Managed - N/A (excl. from CMH),2026-01-01,2026,Monthly,269.0
+GC,GC,CPM,Managed - N/A,Managed - N/A (excl. from CMH),2026-02-01,2026,Monthly,269.0
+GC,GC,CPM,Managed - N/A,Managed - N/A (excl. from CMH),2026-03-01,2026,Monthly,284.0
+GC,GC,CPM,Managed - N/A,Managed - N/A (excl. from CMH),2026-04-01,2026,Monthly,275.0
+GC,GC,CPM,Managed - N/A,Managed - N/A (excl. from CMH),2026-05-01,2026,Monthly,278.0
+GC,GC,CPM,Managed - N/A,Managed - N/A (excl. from CMH),2026-06-01,2026,Monthly,281.0
+GC,GC,CPM,Managed - N/A,Managed - N/A (excl. from CMH),2026-07-01,2026,Monthly,284.0
+GC,GC,CPM,Managed - N/A,Managed - N/A (excl. from CMH),2026-08-01,2026,Monthly,287.0
+GC,GC,CPM,Managed - N/A,Managed - N/A (excl. from CMH),2026-09-01,2026,Monthly,290.0
+GC,GC,CPM,Managed - N/A,Managed - N/A (excl. from CMH),2026-10-01,2026,Monthly,293.0
+GC,GC,CPM,Managed - N/A,Managed - N/A (excl. from CMH),2026-11-01,2026,Monthly,296.0
+GC,GC,CPM,Managed - N/A,Managed - N/A (excl. from CMH),2026-12-01,2026,Monthly,300.0

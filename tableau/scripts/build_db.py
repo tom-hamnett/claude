@@ -1,0 +1,11 @@
+import duckdb
+con = duckdb.connect('apex.duckdb')
+con.execute("CREATE OR REPLACE TABLE dim_hotel AS SELECT * FROM read_csv_auto('src/Dim_Hotel.csv', header=true, sample_size=-1)")
+con.execute("CREATE OR REPLACE TABLE fact_spend AS SELECT * FROM read_csv_auto('src/Fact_Spend.csv', header=true, sample_size=-1)")
+print("dim_hotel:", con.execute("SELECT COUNT(*) FROM dim_hotel").fetchone()[0])
+print("fact_spend:", con.execute("SELECT COUNT(*) FROM fact_spend").fetchone()[0])
+print("\n--- dim_hotel columns ---")
+for r in con.execute("DESCRIBE dim_hotel").fetchall(): print(f"  {r[0]:28s} {r[1]}")
+print("\n--- fact_spend columns ---")
+for r in con.execute("DESCRIBE fact_spend").fetchall(): print(f"  {r[0]:28s} {r[1]}")
+con.close()
