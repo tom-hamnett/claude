@@ -8,7 +8,9 @@ AI layer — only the build clicks differ.
 
 ## Start here
 
-1. **[POWERBI-BUILD-GUIDE.md](POWERBI-BUILD-GUIDE.md)** ← **primary path.** Tom has a
+0. **[powerbi/](powerbi/)** ← **fastest start.** A pre-built `.pbip` with the model,
+   10 DAX measures and 18 visuals already in place. Open it, point it at your data folder.
+1. **[POWERBI-BUILD-GUIDE.md](POWERBI-BUILD-GUIDE.md)** — build it yourself / understand it. Tom has a
    Power BI Creator licence. Click-by-click for two dashboards, incl. DAX measures.
 2. **[VALIDATION-REPORT.md](VALIDATION-REPORT.md)** — what reconciled against the slides
    (the core model matches to the cent) and the structural traps found.
