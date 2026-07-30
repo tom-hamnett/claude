@@ -1,15 +1,27 @@
-# APEX Tableau Build
+# APEX BI Build (Power BI / Tableau)
 
-Tableau-ready data and build instructions, generated from the raw IHG Procurement
+Validated, BI-ready data and build instructions, generated from the raw IHG Procurement
 Excel/CSV extracts.
+
+**The data is tool-agnostic.** The same nine CSVs drive Power BI, Tableau, or the later
+AI layer — only the build clicks differ.
 
 ## Start here
 
-1. **[VALIDATION-REPORT.md](VALIDATION-REPORT.md)** — what reconciled against the slides
-   (the core model matches to the cent), the structural traps found, and three
-   definitional questions for Tom.
-2. **[TABLEAU-BUILD-GUIDE.md](TABLEAU-BUILD-GUIDE.md)** — click-by-click build for two
-   dashboards. Start at "Before you start".
+1. **[POWERBI-BUILD-GUIDE.md](POWERBI-BUILD-GUIDE.md)** ← **primary path.** Tom has a
+   Power BI Creator licence. Click-by-click for two dashboards, incl. DAX measures.
+2. **[VALIDATION-REPORT.md](VALIDATION-REPORT.md)** — what reconciled against the slides
+   (the core model matches to the cent) and the structural traps found.
+3. **[TABLEAU-BUILD-GUIDE.md](TABLEAU-BUILD-GUIDE.md)** — same dashboards in Tableau,
+   kept for reference if a Tableau Creator seat appears later.
+
+## Why Power BI is the better route
+
+Beyond the licence Tom already has: publishing to Power BI puts the dashboard **inside
+the IHG Microsoft tenant behind Entra SSO**, restricted to named users, embeddable in
+Teams/SharePoint. That directly answers the "publicly reachable, unauthenticated"
+finding that got the APEX prototype pulled — a shorter path to something *sanctioned*
+than either the Tableau or GCP routes.
 
 ## Data
 

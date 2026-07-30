@@ -166,15 +166,17 @@ dashboard to support both via a toggle, so this doesn't block anything.
 | Hotel size split (<100 rooms) | 3,925 / 3,069 | **2,935 / 4,059** | Different threshold or field. Totals agree (6,994). Flagged — see below. |
 | Segment split (Premium+L&L) | 1,337 / 5,657 | **1,445 / 5,549** | Grouping definition differs by 108 hotels. |
 
-**Two definitions I could not reproduce and would like from you:**
+**Definitions — now resolved (Tom, 30 July):**
 
-1. **Hotel Size** — slide says <100 Rooms = 3,925. Using `RMS < 100` I get 2,935.
-   (Note 3,925 / 2,935 look like a digit transposition, but I can't assume that.)
-2. **Premium + L&L vs E&S** — slide says 1,337 / 5,657. Grouping
-   `Premium + Lifestyle/Luxury` gives 1,445, and `Essentials + Suites` gives 5,549.
-   Something reclassifies ~108 hotels. Where do "Suites" (808 hotels) belong?
+| Question | Answer | Outcome |
+|---|---|---|
+| **Hotel Size** — slide 3,925 vs calc 2,935 | Slide had a 2/3 transposition; **Excel is correct** | `RMS < 100` → **2,935 / 4,059** stands. No change needed. |
+| **Directly addressable** — slide $15.6bn vs calc $15.23bn | **Spreadsheet is gospel**; slide is stale | Excl-BUILD → **$15.23bn** stands. No change needed. |
+| **Premium + L&L vs E&S** — slide 1,337 / 5,657 vs calc 1,445 / 5,549 | *still open* | Currently Premium+Lifestyle/Luxury vs Essentials+Suites. Question is whether the 808 "Suites" hotels sit in E&S. |
 
-Neither blocks the build; both are one-line fixes once confirmed.
+Both resolved answers confirm the extracts were **already correct** — nothing needed
+reissuing. Section 4's open definitional question is therefore closed: the excl-BUILD
+basis is confirmed as the "directly addressable" definition.
 
 ---
 
