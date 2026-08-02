@@ -18,10 +18,16 @@ built.** No dragging required to get started.
 
 1. **Unzip the data** from `../data/APEX_Tableau_Data.zip` into a folder —
    e.g. `C:\APEX Data\`. Nine CSVs should sit directly in it.
-2. **Download this whole `powerbi` folder** (keep the structure — the `.pbip` points at
-   the two sub-folders).
+2. **Download `APEX-PowerBI-Project.zip`** (in this folder — click it, then the download
+   icon) and **unzip it somewhere separate**, e.g. `C:\APEX PowerBI\`.
+   *GitHub can't download a folder, so this zip keeps the structure intact —
+   the `.pbip` needs its two sub-folders sitting next to it.*
 3. **Double-click `APEX.pbip`.** Power BI Desktop opens it and prompts for the
-   **`DataFolder`** parameter → enter your folder path (e.g. `C:\APEX Data`) → **Load**.
+   **`DataFolder`** parameter → enter your data folder path (e.g. `C:\APEX Data`)
+   → **Load**.
+
+> Keep the two folders separate: **data** CSVs in one, **project** files in the other.
+> The `DataFolder` parameter is what links them.
 
 > If it doesn't prompt: **Home → Transform data → Manage Parameters**, set `DataFolder`,
 > then **Home → Refresh**.
