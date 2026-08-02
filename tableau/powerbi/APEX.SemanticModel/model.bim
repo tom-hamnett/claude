@@ -169,27 +169,27 @@
           {
             "name": "Total Spend",
             "expression": "SUM ( Fact_Spend_Agg[spend] )",
-            "formatString": "\\$#,0,,\\bn;-\\$#,0,,\\bn;\\$#,0,,\\bn"
+            "formatString": "$#,##0.0,,,\"bn\""
           },
           {
             "name": "Addressable Spend",
             "expression": "CALCULATE ( [Total Spend], Fact_Spend_Agg[addressability] = \"Addressable\" )",
-            "formatString": "\\$#,0,,\\bn;-\\$#,0,,\\bn;\\$#,0,,\\bn"
+            "formatString": "$#,##0.0,,,\"bn\""
           },
           {
             "name": "Directly Addressable Spend",
             "expression": "CALCULATE ( [Total Spend], Fact_Spend_Agg[addressability] = \"Addressable\", Fact_Spend_Agg[lifecycle_stage] <> \"BUILD\" )",
-            "formatString": "\\$#,0,,\\bn;-\\$#,0,,\\bn;\\$#,0,,\\bn"
+            "formatString": "$#,##0.0,,,\"bn\""
           },
           {
             "name": "IHG Addressable Spend",
             "expression": "CALCULATE ( [Addressable Spend], Fact_Spend_Agg[ihg_flag] = \"IHG\" )",
-            "formatString": "\\$#,0,,\\bn;-\\$#,0,,\\bn;\\$#,0,,\\bn"
+            "formatString": "$#,##0.0,,,\"bn\""
           },
           {
             "name": "IHG Share of Addressable %",
             "expression": "DIVIDE ( [IHG Addressable Spend], [Addressable Spend] )",
-            "formatString": "0.0%;-0.0%;0.0%"
+            "formatString": "0.0%"
           },
           {
             "name": "Hotel Count",
@@ -199,22 +199,22 @@
           {
             "name": "Programme Spend",
             "expression": "CALCULATE ( SUM ( Fact_Programme_Spend[spend] ), Fact_Programme_Spend[measure] = \"Programme (P2P) Spend\" )",
-            "formatString": "\\$#,0,,\\m;-\\$#,0,,\\m;\\$#,0,,\\m"
+            "formatString": "$#,##0.0,,\"m\""
           },
           {
             "name": "CRF Total",
             "expression": "SUM ( Fact_CRF[crf_usd] )",
-            "formatString": "\\$#,0,,\\m;-\\$#,0,,\\m;\\$#,0,,\\m"
+            "formatString": "$#,##0.0,,\"m\""
           },
           {
             "name": "Capture Rate %",
             "expression": "DIVIDE ( [Programme Spend], [Directly Addressable Spend] )",
-            "formatString": "0.00%;-0.00%;0.00%"
+            "formatString": "0.00%"
           },
           {
             "name": "Average CRF Rate %",
             "expression": "DIVIDE ( [CRF Total], [Programme Spend] )",
-            "formatString": "0.00%;-0.00%;0.00%"
+            "formatString": "0.00%"
           }
         ]
       },

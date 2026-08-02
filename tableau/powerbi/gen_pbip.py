@@ -55,27 +55,27 @@ def m_expr(tbl, cols):
     ]
 
 MEASURES = [
- ("Total Spend", "SUM ( Fact_Spend_Agg[spend] )", "\\$#,0,,\\bn;-\\$#,0,,\\bn;\\$#,0,,\\bn"),
+ ("Total Spend", "SUM ( Fact_Spend_Agg[spend] )", "$#,##0.0,,,\"bn\""),
  ("Addressable Spend",
   'CALCULATE ( [Total Spend], Fact_Spend_Agg[addressability] = "Addressable" )',
-  "\\$#,0,,\\bn;-\\$#,0,,\\bn;\\$#,0,,\\bn"),
+  "$#,##0.0,,,\"bn\""),
  ("Directly Addressable Spend",
   'CALCULATE ( [Total Spend], Fact_Spend_Agg[addressability] = "Addressable", '
   'Fact_Spend_Agg[lifecycle_stage] <> "BUILD" )',
-  "\\$#,0,,\\bn;-\\$#,0,,\\bn;\\$#,0,,\\bn"),
+  "$#,##0.0,,,\"bn\""),
  ("IHG Addressable Spend",
   'CALCULATE ( [Addressable Spend], Fact_Spend_Agg[ihg_flag] = "IHG" )',
-  "\\$#,0,,\\bn;-\\$#,0,,\\bn;\\$#,0,,\\bn"),
+  "$#,##0.0,,,\"bn\""),
  ("IHG Share of Addressable %",
-  "DIVIDE ( [IHG Addressable Spend], [Addressable Spend] )", "0.0%;-0.0%;0.0%"),
+  "DIVIDE ( [IHG Addressable Spend], [Addressable Spend] )", "0.0%"),
  ("Hotel Count", "SUM ( Fact_Spend_Agg[hotels] )", "#,0"),
  ("Programme Spend",
   'CALCULATE ( SUM ( Fact_Programme_Spend[spend] ), '
   'Fact_Programme_Spend[measure] = "Programme (P2P) Spend" )',
-  "\\$#,0,,\\m;-\\$#,0,,\\m;\\$#,0,,\\m"),
- ("CRF Total", "SUM ( Fact_CRF[crf_usd] )", "\\$#,0,,\\m;-\\$#,0,,\\m;\\$#,0,,\\m"),
- ("Capture Rate %", "DIVIDE ( [Programme Spend], [Directly Addressable Spend] )", "0.00%;-0.00%;0.00%"),
- ("Average CRF Rate %", "DIVIDE ( [CRF Total], [Programme Spend] )", "0.00%;-0.00%;0.00%"),
+  "$#,##0.0,,\"m\""),
+ ("CRF Total", "SUM ( Fact_CRF[crf_usd] )", "$#,##0.0,,\"m\""),
+ ("Capture Rate %", "DIVIDE ( [Programme Spend], [Directly Addressable Spend] )", "0.00%"),
+ ("Average CRF Rate %", "DIVIDE ( [CRF Total], [Programme Spend] )", "0.00%"),
 ]
 
 tables = [{

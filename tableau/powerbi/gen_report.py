@@ -37,6 +37,27 @@ def slicer(tbl, col, x, y, w, h):
          "singleVisual":sv}
     return {"x":x,"y":y,"z":0,"width":w,"height":h,"config":json.dumps(cfg),"filters":"[]"}
 
+def matrix(tbl, rows, cols, meas, x, y, w, h, title=None):
+    src="q1"; sel=[]; proj={"Rows":[],"Columns":[],"Values":[]}
+    for grp,flds in (("Rows",rows),("Columns",cols)):
+        for d in flds:
+            ref=f"{tbl}.{d}"
+            sel.append({"Column":{"Expression":{"SourceRef":{"Source":src}},"Property":d},"Name":ref})
+            proj[grp].append({"queryRef":ref})
+    for m in meas:
+        ref=f"{tbl}.{m}"
+        sel.append({"Measure":{"Expression":{"SourceRef":{"Source":src}},"Property":m},"Name":ref})
+        proj["Values"].append({"queryRef":ref})
+    sv={"visualType":"pivotTable","projections":proj,
+        "prototypeQuery":{"Version":2,"From":[{"Name":src,"Entity":tbl,"Type":0}],"Select":sel},
+        "drillFilterOtherVisuals":True}
+    if title:
+        sv["vcObjects"]={"title":[{"properties":{"text":{"expr":{"Literal":{"Value":f"'{title}'"}}},
+                                                "show":{"expr":{"Literal":{"Value":"true"}}}}}]}
+    cfg={"name":uuid.uuid4().hex,"layouts":[{"id":0,"position":{"x":x,"y":y,"z":0,"width":w,"height":h}}],
+         "singleVisual":sv}
+    return {"x":x,"y":y,"z":0,"width":w,"height":h,"config":json.dumps(cfg),"filters":"[]"}
+
 T="Fact_Spend_Agg"
 # ---------- Page 1: Market & Share of Wallet ----------
 p1=[
@@ -47,22 +68,22 @@ p1=[
  slicer(T,"region",860,20,190,90),
  vis("clusteredColumnChart",T,["lifecycle_stage"],["Addressable Spend"],20,125,400,250,
      "1.1 Addressable spend by lifecycle stage"),
- vis("stackedColumnChart",T,["region","ihg_flag"],["Addressable Spend"],430,125,400,250,
+ vis("columnChart",T,["region","ihg_flag"],["Addressable Spend"],430,125,400,250,
      "1.2 IHG vs Rest of Market"),
  vis("waterfallChart",T,["addressability"],["Total Spend"],840,125,400,250,
      "1.6 Spend waterfall"),
- vis("stackedColumnChart",T,["region","lifecycle_stage"],["Addressable Spend"],20,385,400,250,
+ vis("columnChart",T,["region","lifecycle_stage"],["Addressable Spend"],20,385,400,250,
      "1.3 Region x lifecycle"),
  vis("hundredPercentStackedColumnChart",T,["segment_group","lifecycle_stage"],["Addressable Spend"],
      430,385,400,250,"1.4 Segment mix"),
- vis("matrix",T,["lifecycle_stage","reporting_region"],["IHG Addressable Spend"],840,385,400,250,
+ matrix(T,["lifecycle_stage"],["reporting_region"],["IHG Addressable Spend"],840,385,400,250,
      "1.5 Capture heatmap"),
 ]
 # ---------- Page 2: QBR Operational ----------
 p2=[
- vis("stackedColumnChart","Fact_CRF",["month","region"],["CRF Total"],20,20,600,280,
+ vis("columnChart","Fact_CRF",["month","region"],["CRF Total"],20,20,600,280,
      "2.1 CRF monthly tracking"),
- vis("stackedColumnChart","Fact_P2P",["month","region"],["systems"],640,20,600,280,
+ vis("columnChart","Fact_P2P",["month","region"],["systems"],640,20,600,280,
      "2.2 / 2.3 P2P rollout  (filter estate_group!)"),
  slicer("Fact_P2P","estate_group",20,310,280,120),
  vis("clusteredColumnChart","Fact_Supplier",["period","metric"],["value"],310,310,460,280,
