@@ -180,6 +180,46 @@ basis is confirmed as the "directly addressable" definition.
 
 ---
 
+## 5b. Region mapping corrected (Tom, 3 Aug)
+
+The programme-spend file labels regions `AMER` / `ASIA` / `EUROPE/MIDDLE EAST`, which do
+**not** match IHG's actual structure. Tom confirmed: **EMEAA = Europe + IMEA + EAPAC**,
+and **GC is Greater China only** (incl. Taiwan/Macau), not wider Asia.
+
+Rather than approximate, region is now derived from the hotel master — all 222 hotel
+codes join to `Dim_Hotel` on `InnCode`, so the true region is known per hotel.
+
+What `ASIA` actually contained:
+
+| Label | True region | Sub-region | Spend |
+|---|---|---|---|
+| ASIA | **EMEAA** | SEAK, Australasia & Pacific, Japan & Micronesia | $49.8m |
+| ASIA | GR CHINA | GR CHINA (1 hotel) | $92.9m |
+| EUROPE/MIDDLE EAST | **EMEAA** | UK&I, IMEA, S. Europe, N. Europe | $113.9m |
+
+Impact — the earlier approximation was materially wrong:
+
+| Programme spend | Approximated | **Corrected** |
+|---|---|---|
+| AMER | $901.7m | $901.7m |
+| EMEAA | $113.9m | **$163.8m** (+44%) |
+| GC | $142.7m | **$92.9m** (−35%) |
+
+Capture rates (directly-addressable basis) therefore change materially:
+
+| Region | Approximated | **Corrected** |
+|---|---|---|
+| AMER | 4.77% | **9.07%** |
+| EMEAA | 2.09% | **5.73%** |
+| GC | 3.13% | **3.81%** |
+
+The strategic read changes with it: EMEAA is roughly **3× stronger** than the broken
+mapping implied, and **GC — not EMEAA — is the genuine laggard.**
+
+`Fact_Programme_Spend` now carries `region`, `sub_region`, `region_std` and
+`reporting_region` (AMER / EUR / IMEA / EAPAC / GC), all derived from the hotel master.
+`source_region_label` retains the original label for traceability.
+
 ## 6. A data-protection flag
 
 `CRF_Analysis_2023-2026.xlsx` → sheet **`Pivots`** contains **named individuals**

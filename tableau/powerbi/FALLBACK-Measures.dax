@@ -1,5 +1,4 @@
 // APEX - DAX measures. Create on Fact_Spend_Agg: Home > New measure.
-// Set each measure's Format on the Measure tools ribbon as noted.
 
 // format: \$#,##0
 Total Spend = SUM ( Fact_Spend_Agg[spend] )

@@ -6,10 +6,10 @@ USE IF THE .pbip DOESN'T OPEN CLEANLY.
 STEP 1 - parameter:  Home > Transform data > Manage Parameters > New
    Name: DataFolder   Type: Text   Value: your CSV folder (e.g. C:\APEX Data)
 
-STEP 2 - per table:  Home > New Source > Blank Query > Advanced Editor > paste,
-   then rename the query to the name shown.
+STEP 2 - per table: Home > New Source > Blank Query > Advanced Editor > paste,
+   then rename to the name shown.
 
-STEP 3 - relationships (Model view), all One-to-many, single direction:
+STEP 3 - relationships (Model view), One-to-many, single direction:
    Fact_Spend[InnCode]  ->  Dim_Hotel[InnCode]
    Fact_Spend_Agg[region_std]  ->  Dim_Region[region_std]
    Fact_CRF[region_std]  ->  Dim_Region[region_std]
@@ -91,7 +91,7 @@ QUERY NAME:  Fact_Programme_Spend
 let
     Source = Csv.Document(File.Contents(DataFolder & "\Fact_Programme_Spend.csv"),[Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
     Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
-    Typed = Table.TransformColumnTypes(Promoted, {{"hotel_code", type text}, {"hotel_name", type text}, {"company_region", type text}, {"country", type text}, {"brand_code", type text}, {"rooms", Int64.Type}, {"category_l1", type text}, {"category_l2", type text}, {"lifecycle_stage", type text}, {"year", Int64.Type}, {"measure", type text}, {"spend", type number}, {"region_std", type text}})
+    Typed = Table.TransformColumnTypes(Promoted, {{"hotel_code", type text}, {"hotel_name", type text}, {"source_region_label", type text}, {"region", type text}, {"sub_region", type text}, {"region_std", type text}, {"reporting_region", type text}, {"country", type text}, {"brand_code", type text}, {"rooms", Int64.Type}, {"category_l1", type text}, {"category_l2", type text}, {"lifecycle_stage", type text}, {"year", Int64.Type}, {"measure", type text}, {"spend", type number}})
 in
     Typed
 
