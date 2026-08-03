@@ -3,7 +3,7 @@
   "artifacts": [
     {
       "report": {
-        "path": "APEX.Report"
+        "path": "APEX_v2.Report"
       }
     }
   ],

@@ -1,5 +1,10 @@
 # APEX — pre-built Power BI project
 
+> **Use `APEX-PowerBI-v2.zip` and unzip to a BRAND NEW EMPTY FOLDER.**
+> v2 fixes the `$0bnbn` formatting, the missing `stackedColumnChart` visuals and the
+> capture-heatmap error. Unzipping over an old copy does **not** work — Power BI keeps
+> cache folders and Windows tends to nest rather than overwrite. A clean folder avoids both.
+
 **Open one file and the model, relationships, DAX measures and 18 visuals are already
 built.** No dragging required to get started.
 
@@ -7,9 +12,9 @@ built.** No dragging required to get started.
 
 | File | What it is |
 |---|---|
-| `APEX.pbip` | **Open this in Power BI Desktop** |
-| `APEX.SemanticModel/model.bim` | 9 tables, typed columns, relationship, 10 DAX measures |
-| `APEX.Report/report.json` | 2 report pages, 18 visuals, slicers |
+| `APEX_v2.pbip` | **Open this in Power BI Desktop** |
+| `APEX_v2.SemanticModel/model.bim` | 9 tables, typed columns, relationship, 10 DAX measures |
+| `APEX_v2.Report/report.json` | 2 report pages, 18 visuals, slicers |
 | `FALLBACK-PowerQuery.txt` | Paste-in M scripts — use if the `.pbip` misbehaves |
 | `FALLBACK-Measures.dax` | Paste-in DAX measures — same fallback |
 | `gen_pbip.py` / `gen_report.py` | Generators, so this is reproducible not hand-made |
@@ -18,11 +23,11 @@ built.** No dragging required to get started.
 
 1. **Unzip the data** from `../data/APEX_Tableau_Data.zip` into a folder —
    e.g. `C:\APEX Data\`. Nine CSVs should sit directly in it.
-2. **Download `APEX-PowerBI-Project.zip`** (in this folder — click it, then the download
-   icon) and **unzip it somewhere separate**, e.g. `C:\APEX PowerBI\`.
+2. **Download `APEX-PowerBI-v2.zip`** (click it, then the download icon) and **unzip it
+   to a brand new empty folder**, e.g. `C:\APEX PowerBI v2\`.
    *GitHub can't download a folder, so this zip keeps the structure intact —
    the `.pbip` needs its two sub-folders sitting next to it.*
-3. **Double-click `APEX.pbip`.** Power BI Desktop opens it and prompts for the
+3. **Double-click `APEX_v2.pbip`.** Power BI Desktop opens it and prompts for the
    **`DataFolder`** parameter → enter your data folder path (e.g. `C:\APEX Data`)
    → **Load**.
 

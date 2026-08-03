@@ -1,7 +1,7 @@
 import json, os, shutil
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-NAME = "APEX"
+NAME = "APEX_v2"
 SM  = os.path.join(ROOT, f"{NAME}.SemanticModel")
 RPT = os.path.join(ROOT, f"{NAME}.Report")
 for d in (SM, RPT):

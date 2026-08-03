@@ -1,5 +1,5 @@
 import json, os, uuid
-ROOT=os.path.dirname(os.path.abspath(__file__)); RPT=os.path.join(ROOT,"APEX.Report")
+ROOT=os.path.dirname(os.path.abspath(__file__)); RPT=os.path.join(ROOT,"APEX_v2.Report")
 os.makedirs(RPT, exist_ok=True)
 
 def vis(vtype, tbl, dims, meas, x, y, w, h, title=None, wells=("Category","Y")):
@@ -105,5 +105,5 @@ report={"id":0,"resourcePackages":[],"sections":[
   "layoutOptimization":0}
 open(os.path.join(RPT,"report.json"),"w",encoding="utf-8").write(json.dumps(report,indent=2))
 open(os.path.join(RPT,"definition.pbir"),"w",encoding="utf-8").write(json.dumps(
- {"version":"1.0","datasetReference":{"byPath":{"path":"../APEX.SemanticModel"}}},indent=2))
+ {"version":"1.0","datasetReference":{"byPath":{"path":"../APEX_v2.SemanticModel"}}},indent=2))
 print(f"Report written: 2 pages, {len(p1)+len(p2)} visuals")
