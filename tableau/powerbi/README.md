@@ -5,8 +5,11 @@
 > capture-heatmap error. Unzipping over an old copy does **not** work — Power BI keeps
 > cache folders and Windows tends to nest rather than overwrite. A clean folder avoids both.
 
-**Open one file and the model, relationships, DAX measures and 18 visuals are already
-built.** No dragging required to get started.
+**Open one file and the model, relationships, DAX measures and 38 visuals across 4 pages
+are already built.** No dragging required.
+
+The four pages tell one story: **size the prize → diagnose the gap → target the action →
+track delivery.** See **[STORYLINE.md](STORYLINE.md)** for what each page argues.
 
 ## What's here
 
@@ -15,6 +18,7 @@ built.** No dragging required to get started.
 | `APEX_v2.pbip` | **Open this in Power BI Desktop** |
 | `APEX_v2.SemanticModel/model.bim` | 9 tables, typed columns, relationship, 10 DAX measures |
 | `APEX_v2.Report/report.json` | 2 report pages, 18 visuals, slicers |
+| `STORYLINE.md` | **What each page argues** — read this alongside the dashboard |
 | `FALLBACK-PowerQuery.txt` | Paste-in M scripts — use if the `.pbip` misbehaves |
 | `FALLBACK-Measures.dax` | Paste-in DAX measures — same fallback |
 | `gen_pbip.py` / `gen_report.py` | Generators, so this is reproducible not hand-made |

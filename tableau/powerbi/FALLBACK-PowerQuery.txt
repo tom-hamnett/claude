@@ -1,16 +1,19 @@
 APEX - Power Query (M) scripts
 ======================================================================
 
-USE THIS IF THE .pbip FILE DOESN'T OPEN CLEANLY.
+USE IF THE .pbip DOESN'T OPEN CLEANLY.
 
-STEP 1 - create the folder parameter:
-  Home > Transform data > Manage Parameters > New
-    Name: DataFolder     Type: Text
-    Current Value: the folder holding the CSVs, e.g. C:\APEX Data
+STEP 1 - parameter:  Home > Transform data > Manage Parameters > New
+   Name: DataFolder   Type: Text   Value: your CSV folder (e.g. C:\APEX Data)
 
-STEP 2 - for EACH table below:
-  Home > New Source > Blank Query > Advanced Editor > paste > Done
-  then rename the query to the table name shown.
+STEP 2 - per table:  Home > New Source > Blank Query > Advanced Editor > paste,
+   then rename the query to the name shown.
+
+STEP 3 - relationships (Model view), all One-to-many, single direction:
+   Fact_Spend[InnCode]  ->  Dim_Hotel[InnCode]
+   Fact_Spend_Agg[region_std]  ->  Dim_Region[region_std]
+   Fact_CRF[region_std]  ->  Dim_Region[region_std]
+   Fact_Programme_Spend[region_std]  ->  Dim_Region[region_std]
 
 ----------------------------------------------------------------------
 QUERY NAME:  Fact_Spend_Agg
@@ -18,7 +21,7 @@ QUERY NAME:  Fact_Spend_Agg
 let
     Source = Csv.Document(File.Contents(DataFolder & "\Fact_Spend_Agg.csv"),[Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
     Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
-    Typed = Table.TransformColumnTypes(Promoted, {{"ihg_flag", type text}, {"region", type text}, {"reporting_region", type text}, {"sub_region", type text}, {"country", type text}, {"chain_scale", type text}, {"archetype_segment", type text}, {"segment_group", type text}, {"archetype_size_band", type text}, {"size_band_100", type text}, {"management_type", type text}, {"market_categorisation", type text}, {"priority_market", type text}, {"brand", type text}, {"addressability", type text}, {"lifecycle_stage", type text}, {"category", type text}, {"hotels", Int64.Type}, {"rooms_sum", Int64.Type}, {"spend", type number}})
+    Typed = Table.TransformColumnTypes(Promoted, {{"ihg_flag", type text}, {"region", type text}, {"reporting_region", type text}, {"sub_region", type text}, {"country", type text}, {"chain_scale", type text}, {"archetype_segment", type text}, {"segment_group", type text}, {"archetype_size_band", type text}, {"size_band_100", type text}, {"management_type", type text}, {"market_categorisation", type text}, {"priority_market", type text}, {"brand", type text}, {"addressability", type text}, {"lifecycle_stage", type text}, {"category", type text}, {"hotels", Int64.Type}, {"rooms_sum", Int64.Type}, {"spend", type number}, {"region_std", type text}})
 in
     Typed
 
@@ -48,7 +51,7 @@ QUERY NAME:  Fact_CRF
 let
     Source = Csv.Document(File.Contents(DataFolder & "\Fact_CRF.csv"),[Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
     Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
-    Typed = Table.TransformColumnTypes(Promoted, {{"region", type text}, {"month", type date}, {"year", Int64.Type}, {"crf_usd", type number}})
+    Typed = Table.TransformColumnTypes(Promoted, {{"region", type text}, {"month", type date}, {"year", Int64.Type}, {"crf_usd", type number}, {"region_std", type text}})
 in
     Typed
 
@@ -88,7 +91,17 @@ QUERY NAME:  Fact_Programme_Spend
 let
     Source = Csv.Document(File.Contents(DataFolder & "\Fact_Programme_Spend.csv"),[Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
     Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
-    Typed = Table.TransformColumnTypes(Promoted, {{"hotel_code", type text}, {"hotel_name", type text}, {"company_region", type text}, {"country", type text}, {"brand_code", type text}, {"rooms", Int64.Type}, {"category_l1", type text}, {"category_l2", type text}, {"lifecycle_stage", type text}, {"year", Int64.Type}, {"measure", type text}, {"spend", type number}})
+    Typed = Table.TransformColumnTypes(Promoted, {{"hotel_code", type text}, {"hotel_name", type text}, {"company_region", type text}, {"country", type text}, {"brand_code", type text}, {"rooms", Int64.Type}, {"category_l1", type text}, {"category_l2", type text}, {"lifecycle_stage", type text}, {"year", Int64.Type}, {"measure", type text}, {"spend", type number}, {"region_std", type text}})
+in
+    Typed
+
+----------------------------------------------------------------------
+QUERY NAME:  Dim_Region
+----------------------------------------------------------------------
+let
+    Source = Csv.Document(File.Contents(DataFolder & "\Dim_Region.csv"),[Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+    Typed = Table.TransformColumnTypes(Promoted, {{"region_std", type text}, {"region_name", type text}, {"sort_order", Int64.Type}})
 in
     Typed
 

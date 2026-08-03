@@ -4,8 +4,8 @@
   "sections": [
     {
       "id": 0,
-      "name": "ReportSection1",
-      "displayName": "1. Market & Share of Wallet",
+      "name": "S1",
+      "displayName": "1. The Prize",
       "filters": "[]",
       "ordinal": 0,
       "visualContainers": [
@@ -13,99 +13,99 @@
           "x": 20,
           "y": 20,
           "z": 0,
-          "width": 200,
-          "height": 90,
-          "config": "{\"name\": \"91bb7ab7df0d4b659df149e046a50f13\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 20, \"z\": 0, \"width\": 200, \"height\": 90}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Category\": [], \"Values\": [{\"queryRef\": \"Fact_Spend_Agg.Addressable Spend\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"Addressable Spend\"}, \"Name\": \"Fact_Spend_Agg.Addressable Spend\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Total Addressable'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}}}",
+          "width": 235,
+          "height": 95,
+          "config": "{\"name\": \"7ab6b9b89bfe4dbaab5c91b27aba67f0\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 20, \"z\": 0, \"width\": 235, \"height\": 95}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Values\": [{\"queryRef\": \"Fact_Spend_Agg.Total Market Spend\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"Total Market Spend\"}, \"Name\": \"Fact_Spend_Agg.Total Market Spend\"}]}, \"objects\": {\"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Total market spend'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
           "filters": "[]"
         },
         {
-          "x": 230,
+          "x": 265,
           "y": 20,
           "z": 0,
-          "width": 200,
-          "height": 90,
-          "config": "{\"name\": \"28147b73c7a94be790396f6f0fe53a26\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 230, \"y\": 20, \"z\": 0, \"width\": 200, \"height\": 90}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Category\": [], \"Values\": [{\"queryRef\": \"Fact_Spend_Agg.IHG Addressable Spend\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"IHG Addressable Spend\"}, \"Name\": \"Fact_Spend_Agg.IHG Addressable Spend\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'IHG Addressable'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}}}",
+          "width": 235,
+          "height": 95,
+          "config": "{\"name\": \"12e85e0339364a1cbfda2fc0d5dbe462\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 265, \"y\": 20, \"z\": 0, \"width\": 235, \"height\": 95}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Values\": [{\"queryRef\": \"Fact_Spend_Agg.Addressable Spend\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"Addressable Spend\"}, \"Name\": \"Fact_Spend_Agg.Addressable Spend\"}]}, \"objects\": {\"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Procurement-addressable'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
           "filters": "[]"
         },
         {
-          "x": 440,
+          "x": 510,
           "y": 20,
           "z": 0,
-          "width": 200,
-          "height": 90,
-          "config": "{\"name\": \"e812251dacd24eb68a66d3c31fc04a3c\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 440, \"y\": 20, \"z\": 0, \"width\": 200, \"height\": 90}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Category\": [], \"Values\": [{\"queryRef\": \"Fact_Spend_Agg.IHG Share of Addressable %\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"IHG Share of Addressable %\"}, \"Name\": \"Fact_Spend_Agg.IHG Share of Addressable %\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'IHG Share'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}}}",
+          "width": 235,
+          "height": 95,
+          "config": "{\"name\": \"8aac253b7c044d448508a8c8cff94f4d\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 510, \"y\": 20, \"z\": 0, \"width\": 235, \"height\": 95}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Values\": [{\"queryRef\": \"Fact_Spend_Agg.IHG Addressable Spend\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"IHG Addressable Spend\"}, \"Name\": \"Fact_Spend_Agg.IHG Addressable Spend\"}]}, \"objects\": {\"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'IHG estate addressable'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
           "filters": "[]"
         },
         {
-          "x": 650,
+          "x": 755,
           "y": 20,
           "z": 0,
-          "width": 200,
-          "height": 90,
-          "config": "{\"name\": \"0197885bc0a849efa68a7e94de2c1004\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 650, \"y\": 20, \"z\": 0, \"width\": 200, \"height\": 90}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Category\": [], \"Values\": [{\"queryRef\": \"Fact_Spend_Agg.Directly Addressable Spend\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"Directly Addressable Spend\"}, \"Name\": \"Fact_Spend_Agg.Directly Addressable Spend\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'IHG Directly Addressable'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}}}",
+          "width": 235,
+          "height": 95,
+          "config": "{\"name\": \"e84d846463954547bdde0cbcbeaf29be\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 755, \"y\": 20, \"z\": 0, \"width\": 235, \"height\": 95}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Values\": [{\"queryRef\": \"Fact_Spend_Agg.IHG Share of Addressable %\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"IHG Share of Addressable %\"}, \"Name\": \"Fact_Spend_Agg.IHG Share of Addressable %\"}]}, \"objects\": {\"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'IHG share of addressable'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
           "filters": "[]"
         },
         {
-          "x": 860,
+          "x": 1000,
           "y": 20,
           "z": 0,
-          "width": 190,
-          "height": 90,
-          "config": "{\"name\": \"bd509e32a2444d0aba9211af5bd92626\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 860, \"y\": 20, \"z\": 0, \"width\": 190, \"height\": 90}}], \"singleVisual\": {\"visualType\": \"slicer\", \"projections\": {\"Values\": [{\"queryRef\": \"Fact_Spend_Agg.region\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"region\"}, \"Name\": \"Fact_Spend_Agg.region\"}]}, \"drillFilterOtherVisuals\": true}}",
+          "width": 240,
+          "height": 95,
+          "config": "{\"name\": \"332cd97e26ed4292b4262f282d27ac31\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 1000, \"y\": 20, \"z\": 0, \"width\": 240, \"height\": 95}}], \"singleVisual\": {\"visualType\": \"slicer\", \"projections\": {\"Values\": [{\"queryRef\": \"Dim_Region.region_name\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Dim_Region\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"region_name\"}, \"Name\": \"Dim_Region.region_name\"}]}, \"drillFilterOtherVisuals\": true}}",
           "filters": "[]"
         },
         {
           "x": 20,
-          "y": 125,
+          "y": 130,
           "z": 0,
-          "width": 400,
-          "height": 250,
-          "config": "{\"name\": \"fc9ec70dceb64fe4a84b2f2f311b17eb\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 125, \"z\": 0, \"width\": 400, \"height\": 250}}], \"singleVisual\": {\"visualType\": \"clusteredColumnChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Fact_Spend_Agg.lifecycle_stage\"}], \"Y\": [{\"queryRef\": \"Fact_Spend_Agg.Addressable Spend\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"lifecycle_stage\"}, \"Name\": \"Fact_Spend_Agg.lifecycle_stage\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"Addressable Spend\"}, \"Name\": \"Fact_Spend_Agg.Addressable Spend\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'1.1 Addressable spend by lifecycle stage'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}}}",
+          "width": 470,
+          "height": 260,
+          "config": "{\"name\": \"0ba9032ae3aa48d795c00f9e4de94084\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 130, \"z\": 0, \"width\": 470, \"height\": 260}}], \"singleVisual\": {\"visualType\": \"waterfallChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Fact_Spend_Agg.addressability\"}], \"Y\": [{\"queryRef\": \"Fact_Spend_Agg.Total Spend\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"addressability\"}, \"Name\": \"Fact_Spend_Agg.addressability\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"Total Spend\"}, \"Name\": \"Fact_Spend_Agg.Total Spend\"}]}, \"objects\": {\"valueAxis\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}], \"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Of all hotel spend, what can procurement actually address?'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
           "filters": "[]"
         },
         {
-          "x": 430,
-          "y": 125,
+          "x": 500,
+          "y": 130,
           "z": 0,
-          "width": 400,
-          "height": 250,
-          "config": "{\"name\": \"bd231506cb084b55bd31dd50f05548e5\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 430, \"y\": 125, \"z\": 0, \"width\": 400, \"height\": 250}}], \"singleVisual\": {\"visualType\": \"columnChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Fact_Spend_Agg.region\"}, {\"queryRef\": \"Fact_Spend_Agg.ihg_flag\"}], \"Y\": [{\"queryRef\": \"Fact_Spend_Agg.Addressable Spend\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"region\"}, \"Name\": \"Fact_Spend_Agg.region\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"ihg_flag\"}, \"Name\": \"Fact_Spend_Agg.ihg_flag\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"Addressable Spend\"}, \"Name\": \"Fact_Spend_Agg.Addressable Spend\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'1.2 IHG vs Rest of Market'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}}}",
+          "width": 360,
+          "height": 260,
+          "config": "{\"name\": \"dd51d0e7955c4087b3bcfd64a268b84e\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 500, \"y\": 130, \"z\": 0, \"width\": 360, \"height\": 260}}], \"singleVisual\": {\"visualType\": \"clusteredColumnChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Fact_Spend_Agg.lifecycle_stage\"}], \"Y\": [{\"queryRef\": \"Fact_Spend_Agg.Addressable Spend\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"lifecycle_stage\"}, \"Name\": \"Fact_Spend_Agg.lifecycle_stage\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"Addressable Spend\"}, \"Name\": \"Fact_Spend_Agg.Addressable Spend\"}]}, \"objects\": {\"valueAxis\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}], \"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Where the addressable money sits: BUILD dominates'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
           "filters": "[]"
         },
         {
-          "x": 840,
-          "y": 125,
+          "x": 870,
+          "y": 130,
           "z": 0,
-          "width": 400,
-          "height": 250,
-          "config": "{\"name\": \"ed66bc7dee0646c6843c56e73b146733\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 840, \"y\": 125, \"z\": 0, \"width\": 400, \"height\": 250}}], \"singleVisual\": {\"visualType\": \"waterfallChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Fact_Spend_Agg.addressability\"}], \"Y\": [{\"queryRef\": \"Fact_Spend_Agg.Total Spend\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"addressability\"}, \"Name\": \"Fact_Spend_Agg.addressability\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"Total Spend\"}, \"Name\": \"Fact_Spend_Agg.Total Spend\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'1.6 Spend waterfall'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}}}",
+          "width": 370,
+          "height": 260,
+          "config": "{\"name\": \"cb2b8b9e23864a479ef81f736703f304\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 870, \"y\": 130, \"z\": 0, \"width\": 370, \"height\": 260}}], \"singleVisual\": {\"visualType\": \"clusteredColumnChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Dim_Region.region_name\"}], \"Y\": [{\"queryRef\": \"Fact_Spend_Agg.Addressable Spend\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Dim_Region\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"region_name\"}, \"Name\": \"Dim_Region.region_name\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"Addressable Spend\"}, \"Name\": \"Fact_Spend_Agg.Addressable Spend\"}]}, \"objects\": {\"valueAxis\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}], \"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Addressable spend by region'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
           "filters": "[]"
         },
         {
           "x": 20,
-          "y": 385,
+          "y": 400,
           "z": 0,
           "width": 400,
-          "height": 250,
-          "config": "{\"name\": \"bb530f9a7c494760960a3d5ff98011c2\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 385, \"z\": 0, \"width\": 400, \"height\": 250}}], \"singleVisual\": {\"visualType\": \"columnChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Fact_Spend_Agg.region\"}, {\"queryRef\": \"Fact_Spend_Agg.lifecycle_stage\"}], \"Y\": [{\"queryRef\": \"Fact_Spend_Agg.Addressable Spend\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"region\"}, \"Name\": \"Fact_Spend_Agg.region\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"lifecycle_stage\"}, \"Name\": \"Fact_Spend_Agg.lifecycle_stage\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"Addressable Spend\"}, \"Name\": \"Fact_Spend_Agg.Addressable Spend\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'1.3 Region x lifecycle'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}}}",
+          "height": 240,
+          "config": "{\"name\": \"24605844211c4afaa4f9b7879cbce77c\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 400, \"z\": 0, \"width\": 400, \"height\": 240}}], \"singleVisual\": {\"visualType\": \"clusteredColumnChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Fact_Spend_Agg.chain_scale\"}], \"Y\": [{\"queryRef\": \"Fact_Spend_Agg.Addressable Spend\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"chain_scale\"}, \"Name\": \"Fact_Spend_Agg.chain_scale\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"Addressable Spend\"}, \"Name\": \"Fact_Spend_Agg.Addressable Spend\"}]}, \"objects\": {\"valueAxis\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}], \"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'By chain scale'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
           "filters": "[]"
         },
         {
           "x": 430,
-          "y": 385,
+          "y": 400,
           "z": 0,
           "width": 400,
-          "height": 250,
-          "config": "{\"name\": \"f6816ad6ca8944b1ab937ad824ff02b0\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 430, \"y\": 385, \"z\": 0, \"width\": 400, \"height\": 250}}], \"singleVisual\": {\"visualType\": \"hundredPercentStackedColumnChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Fact_Spend_Agg.segment_group\"}, {\"queryRef\": \"Fact_Spend_Agg.lifecycle_stage\"}], \"Y\": [{\"queryRef\": \"Fact_Spend_Agg.Addressable Spend\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"segment_group\"}, \"Name\": \"Fact_Spend_Agg.segment_group\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"lifecycle_stage\"}, \"Name\": \"Fact_Spend_Agg.lifecycle_stage\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"Addressable Spend\"}, \"Name\": \"Fact_Spend_Agg.Addressable Spend\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'1.4 Segment mix'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}}}",
+          "height": 240,
+          "config": "{\"name\": \"88eb3554566b426abe6e5ff10709232a\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 430, \"y\": 400, \"z\": 0, \"width\": 400, \"height\": 240}}], \"singleVisual\": {\"visualType\": \"clusteredColumnChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Fact_Spend_Agg.segment_group\"}], \"Y\": [{\"queryRef\": \"Fact_Spend_Agg.Addressable Spend\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"segment_group\"}, \"Name\": \"Fact_Spend_Agg.segment_group\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"Addressable Spend\"}, \"Name\": \"Fact_Spend_Agg.Addressable Spend\"}]}, \"objects\": {\"valueAxis\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}], \"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'By segment'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
           "filters": "[]"
         },
         {
           "x": 840,
-          "y": 385,
+          "y": 400,
           "z": 0,
           "width": 400,
-          "height": 250,
-          "config": "{\"name\": \"446a4422c5654db88a65a7571ab9a63c\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 840, \"y\": 385, \"z\": 0, \"width\": 400, \"height\": 250}}], \"singleVisual\": {\"visualType\": \"pivotTable\", \"projections\": {\"Rows\": [{\"queryRef\": \"Fact_Spend_Agg.lifecycle_stage\"}], \"Columns\": [{\"queryRef\": \"Fact_Spend_Agg.reporting_region\"}], \"Values\": [{\"queryRef\": \"Fact_Spend_Agg.IHG Addressable Spend\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"lifecycle_stage\"}, \"Name\": \"Fact_Spend_Agg.lifecycle_stage\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"reporting_region\"}, \"Name\": \"Fact_Spend_Agg.reporting_region\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"IHG Addressable Spend\"}, \"Name\": \"Fact_Spend_Agg.IHG Addressable Spend\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'1.5 Capture heatmap'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}}}",
+          "height": 240,
+          "config": "{\"name\": \"8f45af0e10b44ba7a4db8859a2903281\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 840, \"y\": 400, \"z\": 0, \"width\": 400, \"height\": 240}}], \"singleVisual\": {\"visualType\": \"clusteredColumnChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Fact_Spend_Agg.management_type\"}], \"Y\": [{\"queryRef\": \"Fact_Spend_Agg.Addressable Spend\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"management_type\"}, \"Name\": \"Fact_Spend_Agg.management_type\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"Addressable Spend\"}, \"Name\": \"Fact_Spend_Agg.Addressable Spend\"}]}, \"objects\": {\"valueAxis\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}], \"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'By management type'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
           "filters": "[]"
         }
       ],
@@ -116,8 +116,8 @@
     },
     {
       "id": 1,
-      "name": "ReportSection2",
-      "displayName": "2. QBR Operational",
+      "name": "S2",
+      "displayName": "2. Our Position",
       "filters": "[]",
       "ordinal": 1,
       "visualContainers": [
@@ -125,9 +125,215 @@
           "x": 20,
           "y": 20,
           "z": 0,
+          "width": 235,
+          "height": 95,
+          "config": "{\"name\": \"e619684bf07444c3995791cad3dd8bbf\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 20, \"z\": 0, \"width\": 235, \"height\": 95}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Values\": [{\"queryRef\": \"Fact_Spend_Agg.IHG Addressable Spend\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"IHG Addressable Spend\"}, \"Name\": \"Fact_Spend_Agg.IHG Addressable Spend\"}]}, \"objects\": {\"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'IHG estate addressable'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
+          "filters": "[]"
+        },
+        {
+          "x": 265,
+          "y": 20,
+          "z": 0,
+          "width": 235,
+          "height": 95,
+          "config": "{\"name\": \"faeab9384b1b46bbbea6e269cf4e7182\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 265, \"y\": 20, \"z\": 0, \"width\": 235, \"height\": 95}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Values\": [{\"queryRef\": \"Fact_Spend_Agg.IHG Directly Addressable\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"IHG Directly Addressable\"}, \"Name\": \"Fact_Spend_Agg.IHG Directly Addressable\"}]}, \"objects\": {\"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Directly addressable (excl BUILD)'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
+          "filters": "[]"
+        },
+        {
+          "x": 510,
+          "y": 20,
+          "z": 0,
+          "width": 235,
+          "height": 95,
+          "config": "{\"name\": \"88f7c97ccb7f426e8d47f3e2bc5fa16b\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 510, \"y\": 20, \"z\": 0, \"width\": 235, \"height\": 95}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Values\": [{\"queryRef\": \"Fact_Spend_Agg.Programme Spend\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"Programme Spend\"}, \"Name\": \"Fact_Spend_Agg.Programme Spend\"}]}, \"objects\": {\"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Captured on IHG programmes'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
+          "filters": "[]"
+        },
+        {
+          "x": 755,
+          "y": 20,
+          "z": 0,
+          "width": 235,
+          "height": 95,
+          "config": "{\"name\": \"d1ac317b62834991a9b9173c01fe9d12\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 755, \"y\": 20, \"z\": 0, \"width\": 235, \"height\": 95}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Values\": [{\"queryRef\": \"Fact_Spend_Agg.Capture Rate %\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"Capture Rate %\"}, \"Name\": \"Fact_Spend_Agg.Capture Rate %\"}]}, \"objects\": {\"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Capture rate'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
+          "filters": "[]"
+        },
+        {
+          "x": 1000,
+          "y": 20,
+          "z": 0,
+          "width": 240,
+          "height": 95,
+          "config": "{\"name\": \"c693830437624d61ad58699910a60a0a\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 1000, \"y\": 20, \"z\": 0, \"width\": 240, \"height\": 95}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Values\": [{\"queryRef\": \"Fact_Spend_Agg.CRF Total\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"CRF Total\"}, \"Name\": \"Fact_Spend_Agg.CRF Total\"}]}, \"objects\": {\"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'CRF collected (2025)'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
+          "filters": "[]"
+        },
+        {
+          "x": 20,
+          "y": 130,
+          "z": 0,
+          "width": 610,
+          "height": 260,
+          "config": "{\"name\": \"c8005dec8e024dd3b6c9c6924e60f6c1\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 130, \"z\": 0, \"width\": 610, \"height\": 260}}], \"singleVisual\": {\"visualType\": \"clusteredColumnChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Dim_Region.region_name\"}], \"Y\": [{\"queryRef\": \"Fact_Spend_Agg.IHG Directly Addressable\"}, {\"queryRef\": \"Fact_Spend_Agg.Programme Spend\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Dim_Region\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"region_name\"}, \"Name\": \"Dim_Region.region_name\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"IHG Directly Addressable\"}, \"Name\": \"Fact_Spend_Agg.IHG Directly Addressable\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"Programme Spend\"}, \"Name\": \"Fact_Spend_Agg.Programme Spend\"}]}, \"objects\": {\"valueAxis\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}], \"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Addressable vs captured, by region \\u2014 AMER carries the load'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
+          "filters": "[]"
+        },
+        {
+          "x": 640,
+          "y": 130,
+          "z": 0,
+          "width": 300,
+          "height": 260,
+          "config": "{\"name\": \"84c1aaf0b9d04e36aa60e8fca3493ee8\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 640, \"y\": 130, \"z\": 0, \"width\": 300, \"height\": 260}}], \"singleVisual\": {\"visualType\": \"clusteredColumnChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Dim_Region.region_name\"}], \"Y\": [{\"queryRef\": \"Fact_Spend_Agg.Capture Rate %\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Dim_Region\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"region_name\"}, \"Name\": \"Dim_Region.region_name\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"Capture Rate %\"}, \"Name\": \"Fact_Spend_Agg.Capture Rate %\"}]}, \"objects\": {\"valueAxis\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}], \"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Capture rate by region'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
+          "filters": "[]"
+        },
+        {
+          "x": 950,
+          "y": 130,
+          "z": 0,
+          "width": 290,
+          "height": 260,
+          "config": "{\"name\": \"0a4595883a68428d87287b1c2dcbccb2\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 950, \"y\": 130, \"z\": 0, \"width\": 290, \"height\": 260}}], \"singleVisual\": {\"visualType\": \"clusteredColumnChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Dim_Region.region_name\"}], \"Y\": [{\"queryRef\": \"Fact_Spend_Agg.Average CRF Rate %\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Dim_Region\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"region_name\"}, \"Name\": \"Dim_Region.region_name\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"Average CRF Rate %\"}, \"Name\": \"Fact_Spend_Agg.Average CRF Rate %\"}]}, \"objects\": {\"valueAxis\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}], \"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Average CRF rate'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
+          "filters": "[]"
+        },
+        {
+          "x": 20,
+          "y": 400,
+          "z": 0,
+          "width": 610,
+          "height": 240,
+          "config": "{\"name\": \"59924ad33a2543e48c18f2ee9af427e0\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 400, \"z\": 0, \"width\": 610, \"height\": 240}}], \"singleVisual\": {\"visualType\": \"clusteredColumnChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Fact_Spend_Agg.lifecycle_stage\"}], \"Y\": [{\"queryRef\": \"Fact_Spend_Agg.IHG Directly Addressable\"}, {\"queryRef\": \"Fact_Spend_Agg.Programme Spend\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"lifecycle_stage\"}, \"Name\": \"Fact_Spend_Agg.lifecycle_stage\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"IHG Directly Addressable\"}, \"Name\": \"Fact_Spend_Agg.IHG Directly Addressable\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"Programme Spend\"}, \"Name\": \"Fact_Spend_Agg.Programme Spend\"}]}, \"objects\": {\"valueAxis\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}], \"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'The OPERATE gap: biggest pool, least captured'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
+          "filters": "[]"
+        },
+        {
+          "x": 640,
+          "y": 400,
+          "z": 0,
           "width": 600,
-          "height": 280,
-          "config": "{\"name\": \"65c1502520fa428591b11f51aac5f0d8\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 20, \"z\": 0, \"width\": 600, \"height\": 280}}], \"singleVisual\": {\"visualType\": \"columnChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Fact_CRF.month\"}, {\"queryRef\": \"Fact_CRF.region\"}], \"Y\": [{\"queryRef\": \"Fact_CRF.CRF Total\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_CRF\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"month\"}, \"Name\": \"Fact_CRF.month\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"region\"}, \"Name\": \"Fact_CRF.region\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"CRF Total\"}, \"Name\": \"Fact_CRF.CRF Total\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'2.1 CRF monthly tracking'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}}}",
+          "height": 240,
+          "config": "{\"name\": \"9e5cf114e7c2402c83aebe39e245ff75\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 640, \"y\": 400, \"z\": 0, \"width\": 600, \"height\": 240}}], \"singleVisual\": {\"visualType\": \"pivotTable\", \"projections\": {\"Rows\": [{\"queryRef\": \"Fact_Spend_Agg.lifecycle_stage\"}], \"Columns\": [{\"queryRef\": \"Fact_Spend_Agg.region_std\"}], \"Values\": [{\"queryRef\": \"Fact_Spend_Agg.Capture Rate %\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"lifecycle_stage\"}, \"Name\": \"Fact_Spend_Agg.lifecycle_stage\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"region_std\"}, \"Name\": \"Fact_Spend_Agg.region_std\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"Capture Rate %\"}, \"Name\": \"Fact_Spend_Agg.Capture Rate %\"}]}, \"objects\": {\"values\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Capture rate \\u2014 region x lifecycle'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
+          "filters": "[]"
+        }
+      ],
+      "config": "{}",
+      "width": 1280,
+      "height": 720,
+      "displayOption": 1
+    },
+    {
+      "id": 2,
+      "name": "S3",
+      "displayName": "3. Where to Act",
+      "filters": "[]",
+      "ordinal": 2,
+      "visualContainers": [
+        {
+          "x": 20,
+          "y": 20,
+          "z": 0,
+          "width": 235,
+          "height": 95,
+          "config": "{\"name\": \"cc40d40b06384ff4828fc01e06982e21\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 20, \"z\": 0, \"width\": 235, \"height\": 95}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Values\": [{\"queryRef\": \"Fact_Spend_Agg.Headroom\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"Headroom\"}, \"Name\": \"Fact_Spend_Agg.Headroom\"}]}, \"objects\": {\"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Total headroom'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
+          "filters": "[]"
+        },
+        {
+          "x": 265,
+          "y": 20,
+          "z": 0,
+          "width": 235,
+          "height": 95,
+          "config": "{\"name\": \"a63da76a9a534a8aaf87224e8b74affa\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 265, \"y\": 20, \"z\": 0, \"width\": 235, \"height\": 95}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Values\": [{\"queryRef\": \"Fact_Spend_Agg.IHG Hotels\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"IHG Hotels\"}, \"Name\": \"Fact_Spend_Agg.IHG Hotels\"}]}, \"objects\": {\"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'IHG hotels'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
+          "filters": "[]"
+        },
+        {
+          "x": 510,
+          "y": 20,
+          "z": 0,
+          "width": 235,
+          "height": 95,
+          "config": "{\"name\": \"8c21383d4e91484da9c20317abd06aa5\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 510, \"y\": 20, \"z\": 0, \"width\": 235, \"height\": 95}}], \"singleVisual\": {\"visualType\": \"slicer\", \"projections\": {\"Values\": [{\"queryRef\": \"Fact_Spend_Agg.lifecycle_stage\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"lifecycle_stage\"}, \"Name\": \"Fact_Spend_Agg.lifecycle_stage\"}]}, \"drillFilterOtherVisuals\": true}}",
+          "filters": "[]"
+        },
+        {
+          "x": 755,
+          "y": 20,
+          "z": 0,
+          "width": 235,
+          "height": 95,
+          "config": "{\"name\": \"a0e212891477471e806d5547569b30f6\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 755, \"y\": 20, \"z\": 0, \"width\": 235, \"height\": 95}}], \"singleVisual\": {\"visualType\": \"slicer\", \"projections\": {\"Values\": [{\"queryRef\": \"Fact_Spend_Agg.chain_scale\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"chain_scale\"}, \"Name\": \"Fact_Spend_Agg.chain_scale\"}]}, \"drillFilterOtherVisuals\": true}}",
+          "filters": "[]"
+        },
+        {
+          "x": 1000,
+          "y": 20,
+          "z": 0,
+          "width": 240,
+          "height": 95,
+          "config": "{\"name\": \"27b7b2d4ecd147fb928946a1474be679\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 1000, \"y\": 20, \"z\": 0, \"width\": 240, \"height\": 95}}], \"singleVisual\": {\"visualType\": \"slicer\", \"projections\": {\"Values\": [{\"queryRef\": \"Dim_Region.region_name\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Dim_Region\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"region_name\"}, \"Name\": \"Dim_Region.region_name\"}]}, \"drillFilterOtherVisuals\": true}}",
+          "filters": "[]"
+        },
+        {
+          "x": 20,
+          "y": 130,
+          "z": 0,
+          "width": 610,
+          "height": 300,
+          "config": "{\"name\": \"fbba8bfbcffd41cc92d430e8c378d507\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 130, \"z\": 0, \"width\": 610, \"height\": 300}}], \"singleVisual\": {\"visualType\": \"pivotTable\", \"projections\": {\"Rows\": [{\"queryRef\": \"Fact_Spend_Agg.lifecycle_stage\"}, {\"queryRef\": \"Fact_Spend_Agg.category\"}], \"Columns\": [{\"queryRef\": \"Fact_Spend_Agg.region_std\"}], \"Values\": [{\"queryRef\": \"Fact_Spend_Agg.Headroom\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"lifecycle_stage\"}, \"Name\": \"Fact_Spend_Agg.lifecycle_stage\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"category\"}, \"Name\": \"Fact_Spend_Agg.category\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"region_std\"}, \"Name\": \"Fact_Spend_Agg.region_std\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"Headroom\"}, \"Name\": \"Fact_Spend_Agg.Headroom\"}]}, \"objects\": {\"values\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Headroom by category x region \\u2014 where to aim'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
+          "filters": "[]"
+        },
+        {
+          "x": 640,
+          "y": 130,
+          "z": 0,
+          "width": 600,
+          "height": 300,
+          "config": "{\"name\": \"70bc925fbc2f4fb4b81a3b1994ac802f\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 640, \"y\": 130, \"z\": 0, \"width\": 600, \"height\": 300}}], \"singleVisual\": {\"visualType\": \"clusteredBarChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Fact_Spend_Agg.category\"}], \"Y\": [{\"queryRef\": \"Fact_Spend_Agg.Headroom\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"category\"}, \"Name\": \"Fact_Spend_Agg.category\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"Headroom\"}, \"Name\": \"Fact_Spend_Agg.Headroom\"}]}, \"objects\": {\"valueAxis\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}], \"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Biggest category headroom'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
+          "filters": "[]"
+        },
+        {
+          "x": 20,
+          "y": 440,
+          "z": 0,
+          "width": 400,
+          "height": 220,
+          "config": "{\"name\": \"0d853238398946d8a648e099202ead16\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 440, \"z\": 0, \"width\": 400, \"height\": 220}}], \"singleVisual\": {\"visualType\": \"clusteredBarChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Fact_Spend_Agg.market_categorisation\"}], \"Y\": [{\"queryRef\": \"Fact_Spend_Agg.Headroom\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"market_categorisation\"}, \"Name\": \"Fact_Spend_Agg.market_categorisation\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"Headroom\"}, \"Name\": \"Fact_Spend_Agg.Headroom\"}]}, \"objects\": {\"valueAxis\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}], \"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Headroom by market type'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
+          "filters": "[]"
+        },
+        {
+          "x": 430,
+          "y": 440,
+          "z": 0,
+          "width": 400,
+          "height": 220,
+          "config": "{\"name\": \"373c07cd670b4d12a3d0424ca33da2d0\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 430, \"y\": 440, \"z\": 0, \"width\": 400, \"height\": 220}}], \"singleVisual\": {\"visualType\": \"clusteredBarChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Fact_Spend_Agg.segment_group\"}], \"Y\": [{\"queryRef\": \"Fact_Spend_Agg.Headroom\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"segment_group\"}, \"Name\": \"Fact_Spend_Agg.segment_group\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"Headroom\"}, \"Name\": \"Fact_Spend_Agg.Headroom\"}]}, \"objects\": {\"valueAxis\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}], \"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Headroom by segment'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
+          "filters": "[]"
+        },
+        {
+          "x": 840,
+          "y": 440,
+          "z": 0,
+          "width": 400,
+          "height": 220,
+          "config": "{\"name\": \"9b206069ebad476096781c2395e7240b\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 840, \"y\": 440, \"z\": 0, \"width\": 400, \"height\": 220}}], \"singleVisual\": {\"visualType\": \"clusteredBarChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Fact_Spend_Agg.priority_market\"}], \"Y\": [{\"queryRef\": \"Fact_Spend_Agg.Headroom\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Spend_Agg\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"priority_market\"}, \"Name\": \"Fact_Spend_Agg.priority_market\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"Headroom\"}, \"Name\": \"Fact_Spend_Agg.Headroom\"}]}, \"objects\": {\"valueAxis\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}], \"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Priority vs non-priority markets'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
+          "filters": "[]"
+        }
+      ],
+      "config": "{}",
+      "width": 1280,
+      "height": 720,
+      "displayOption": 1
+    },
+    {
+      "id": 3,
+      "name": "S4",
+      "displayName": "4. Delivery (QBR)",
+      "filters": "[]",
+      "ordinal": 3,
+      "visualContainers": [
+        {
+          "x": 20,
+          "y": 20,
+          "z": 0,
+          "width": 610,
+          "height": 270,
+          "config": "{\"name\": \"9eac72712d244ae0a23af75ddcd71144\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 20, \"z\": 0, \"width\": 610, \"height\": 270}}], \"singleVisual\": {\"visualType\": \"columnChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Fact_CRF.month\"}], \"Y\": [{\"queryRef\": \"Fact_Spend_Agg.CRF Total\"}], \"Series\": [{\"queryRef\": \"Fact_CRF.region\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_CRF\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"month\"}, \"Name\": \"Fact_CRF.month\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"region\"}, \"Name\": \"Fact_CRF.region\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"CRF Total\"}, \"Name\": \"Fact_Spend_Agg.CRF Total\"}]}, \"objects\": {\"valueAxis\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}], \"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'CRF collected by month'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
           "filters": "[]"
         },
         {
@@ -135,53 +341,53 @@
           "y": 20,
           "z": 0,
           "width": 600,
-          "height": 280,
-          "config": "{\"name\": \"54752d02d08849e2a334ea5cfd5597b9\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 640, \"y\": 20, \"z\": 0, \"width\": 600, \"height\": 280}}], \"singleVisual\": {\"visualType\": \"columnChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Fact_P2P.month\"}, {\"queryRef\": \"Fact_P2P.region\"}], \"Y\": [{\"queryRef\": \"Fact_P2P.systems\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_P2P\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"month\"}, \"Name\": \"Fact_P2P.month\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"region\"}, \"Name\": \"Fact_P2P.region\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"systems\"}, \"Name\": \"Fact_P2P.systems\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'2.2 / 2.3 P2P rollout  (filter estate_group!)'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}}}",
+          "height": 270,
+          "config": "{\"name\": \"90fc37c5001148d4a7b441d5b2a78272\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 640, \"y\": 20, \"z\": 0, \"width\": 600, \"height\": 270}}], \"singleVisual\": {\"visualType\": \"columnChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Fact_P2P.month\"}], \"Y\": [{\"queryRef\": \"Fact_P2P.systems\"}], \"Series\": [{\"queryRef\": \"Fact_P2P.region\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_P2P\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"month\"}, \"Name\": \"Fact_P2P.month\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"region\"}, \"Name\": \"Fact_P2P.region\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"systems\"}, \"Name\": \"Fact_P2P.systems\"}]}, \"objects\": {\"valueAxis\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}], \"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'P2P rollout \\u2014 set estate_group slicer'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
           "filters": "[]"
         },
         {
           "x": 20,
-          "y": 310,
+          "y": 300,
           "z": 0,
-          "width": 280,
-          "height": 120,
-          "config": "{\"name\": \"518bc7b3fde341a7a0802e73e3903e1d\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 310, \"z\": 0, \"width\": 280, \"height\": 120}}], \"singleVisual\": {\"visualType\": \"slicer\", \"projections\": {\"Values\": [{\"queryRef\": \"Fact_P2P.estate_group\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_P2P\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"estate_group\"}, \"Name\": \"Fact_P2P.estate_group\"}]}, \"drillFilterOtherVisuals\": true}}",
+          "width": 290,
+          "height": 110,
+          "config": "{\"name\": \"0dd39c388f4a49ff958e697a5d53777f\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 300, \"z\": 0, \"width\": 290, \"height\": 110}}], \"singleVisual\": {\"visualType\": \"slicer\", \"projections\": {\"Values\": [{\"queryRef\": \"Fact_P2P.estate_group\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_P2P\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"estate_group\"}, \"Name\": \"Fact_P2P.estate_group\"}]}, \"drillFilterOtherVisuals\": true}}",
           "filters": "[]"
         },
         {
-          "x": 310,
-          "y": 310,
+          "x": 20,
+          "y": 420,
+          "z": 0,
+          "width": 290,
+          "height": 110,
+          "config": "{\"name\": \"ae6f2f18f0b64cb4991721c9874ce4ec\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 420, \"z\": 0, \"width\": 290, \"height\": 110}}], \"singleVisual\": {\"visualType\": \"slicer\", \"projections\": {\"Values\": [{\"queryRef\": \"Fact_Supplier.programme\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Supplier\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"programme\"}, \"Name\": \"Fact_Supplier.programme\"}]}, \"drillFilterOtherVisuals\": true}}",
+          "filters": "[]"
+        },
+        {
+          "x": 20,
+          "y": 540,
+          "z": 0,
+          "width": 290,
+          "height": 110,
+          "config": "{\"name\": \"cb5cfeecc6844e79a5922722826da5e7\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 540, \"z\": 0, \"width\": 290, \"height\": 110}}], \"singleVisual\": {\"visualType\": \"slicer\", \"projections\": {\"Values\": [{\"queryRef\": \"Fact_SystemSize.geo_level\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_SystemSize\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"geo_level\"}, \"Name\": \"Fact_SystemSize.geo_level\"}]}, \"drillFilterOtherVisuals\": true}}",
+          "filters": "[]"
+        },
+        {
+          "x": 320,
+          "y": 300,
           "z": 0,
           "width": 460,
-          "height": 280,
-          "config": "{\"name\": \"af6c2d202a6747138fd937ad993554bd\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 310, \"y\": 310, \"z\": 0, \"width\": 460, \"height\": 280}}], \"singleVisual\": {\"visualType\": \"clusteredColumnChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Fact_Supplier.period\"}, {\"queryRef\": \"Fact_Supplier.metric\"}], \"Y\": [{\"queryRef\": \"Fact_Supplier.value\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Supplier\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"period\"}, \"Name\": \"Fact_Supplier.period\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"metric\"}, \"Name\": \"Fact_Supplier.metric\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"value\"}, \"Name\": \"Fact_Supplier.value\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'2.4 Supplier programmes  (filter programme + row_type)'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}}}",
-          "filters": "[]"
-        },
-        {
-          "x": 20,
-          "y": 440,
-          "z": 0,
-          "width": 280,
-          "height": 150,
-          "config": "{\"name\": \"6adfc24cbd08457da7bc0b36ea996ff8\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 440, \"z\": 0, \"width\": 280, \"height\": 150}}], \"singleVisual\": {\"visualType\": \"slicer\", \"projections\": {\"Values\": [{\"queryRef\": \"Fact_Supplier.programme\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Supplier\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"programme\"}, \"Name\": \"Fact_Supplier.programme\"}]}, \"drillFilterOtherVisuals\": true}}",
+          "height": 350,
+          "config": "{\"name\": \"6da7d0a8307745d4a23d01a68fa68f69\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 320, \"y\": 300, \"z\": 0, \"width\": 460, \"height\": 350}}], \"singleVisual\": {\"visualType\": \"clusteredColumnChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Fact_Supplier.period\"}], \"Y\": [{\"queryRef\": \"Fact_Supplier.value\"}], \"Series\": [{\"queryRef\": \"Fact_Supplier.metric\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_Supplier\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"period\"}, \"Name\": \"Fact_Supplier.period\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"metric\"}, \"Name\": \"Fact_Supplier.metric\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"value\"}, \"Name\": \"Fact_Supplier.value\"}]}, \"objects\": {\"valueAxis\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}], \"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Supplier programmes \\u2014 filter programme + row_type'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
           "filters": "[]"
         },
         {
           "x": 790,
-          "y": 310,
+          "y": 300,
           "z": 0,
           "width": 450,
-          "height": 280,
-          "config": "{\"name\": \"25e737c4dfaa470cb730c0329361cdc1\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 790, \"y\": 310, \"z\": 0, \"width\": 450, \"height\": 280}}], \"singleVisual\": {\"visualType\": \"lineChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Fact_SystemSize.month\"}, {\"queryRef\": \"Fact_SystemSize.geography\"}], \"Y\": [{\"queryRef\": \"Fact_SystemSize.value\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_SystemSize\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"month\"}, \"Name\": \"Fact_SystemSize.month\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"geography\"}, \"Name\": \"Fact_SystemSize.geography\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"value\"}, \"Name\": \"Fact_SystemSize.value\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'2.5 System size  (filter geo_level!)'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}}}",
-          "filters": "[]"
-        },
-        {
-          "x": 20,
-          "y": 600,
-          "z": 0,
-          "width": 280,
-          "height": 110,
-          "config": "{\"name\": \"9ec58b2d025e44739447be4a41e1bfad\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 600, \"z\": 0, \"width\": 280, \"height\": 110}}], \"singleVisual\": {\"visualType\": \"slicer\", \"projections\": {\"Values\": [{\"queryRef\": \"Fact_SystemSize.geo_level\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_SystemSize\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"geo_level\"}, \"Name\": \"Fact_SystemSize.geo_level\"}]}, \"drillFilterOtherVisuals\": true}}",
+          "height": 350,
+          "config": "{\"name\": \"29989a50de1f4213b9c6e4bcfa762c2c\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 790, \"y\": 300, \"z\": 0, \"width\": 450, \"height\": 350}}], \"singleVisual\": {\"visualType\": \"lineChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Fact_SystemSize.month\"}], \"Y\": [{\"queryRef\": \"Fact_SystemSize.value\"}], \"Series\": [{\"queryRef\": \"Fact_SystemSize.geography\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"q1\", \"Entity\": \"Fact_SystemSize\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"month\"}, \"Name\": \"Fact_SystemSize.month\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"geography\"}, \"Name\": \"Fact_SystemSize.geography\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"q1\"}}, \"Property\": \"value\"}, \"Name\": \"Fact_SystemSize.value\"}]}, \"objects\": {\"valueAxis\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}], \"labels\": [{\"properties\": {\"labelDisplayUnits\": {\"expr\": {\"Literal\": {\"Value\": \"0D\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"text\": {\"expr\": {\"Literal\": {\"Value\": \"'System size \\u2014 set geo_level slicer'\"}}}, \"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}}}]}, \"drillFilterOtherVisuals\": true}}",
           "filters": "[]"
         }
       ],

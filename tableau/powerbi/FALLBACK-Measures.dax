@@ -1,33 +1,45 @@
-// APEX - DAX measures
-// Create on the Fact_Spend_Agg table: Home > New measure, paste one at a time.
+// APEX - DAX measures. Create on Fact_Spend_Agg: Home > New measure.
+// Set each measure's Format on the Measure tools ribbon as noted.
 
-// format string: \$#,0,,\bn;-\$#,0,,\bn;\$#,0,,\bn
+// format: \$#,##0
 Total Spend = SUM ( Fact_Spend_Agg[spend] )
 
-// format string: \$#,0,,\bn;-\$#,0,,\bn;\$#,0,,\bn
+// format: \$#,##0
 Addressable Spend = CALCULATE ( [Total Spend], Fact_Spend_Agg[addressability] = "Addressable" )
 
-// format string: \$#,0,,\bn;-\$#,0,,\bn;\$#,0,,\bn
+// format: \$#,##0
 Directly Addressable Spend = CALCULATE ( [Total Spend], Fact_Spend_Agg[addressability] = "Addressable", Fact_Spend_Agg[lifecycle_stage] <> "BUILD" )
 
-// format string: \$#,0,,\bn;-\$#,0,,\bn;\$#,0,,\bn
+// format: \$#,##0
 IHG Addressable Spend = CALCULATE ( [Addressable Spend], Fact_Spend_Agg[ihg_flag] = "IHG" )
 
-// format string: 0.0%;-0.0%;0.0%
+// format: 0.0%
 IHG Share of Addressable % = DIVIDE ( [IHG Addressable Spend], [Addressable Spend] )
 
-// format string: #,0
+// format: #,0
 Hotel Count = SUM ( Fact_Spend_Agg[hotels] )
 
-// format string: \$#,0,,\m;-\$#,0,,\m;\$#,0,,\m
+// format: \$#,##0
 Programme Spend = CALCULATE ( SUM ( Fact_Programme_Spend[spend] ), Fact_Programme_Spend[measure] = "Programme (P2P) Spend" )
 
-// format string: \$#,0,,\m;-\$#,0,,\m;\$#,0,,\m
+// format: \$#,##0
 CRF Total = SUM ( Fact_CRF[crf_usd] )
 
-// format string: 0.00%;-0.00%;0.00%
+// format: 0.00%
 Capture Rate % = DIVIDE ( [Programme Spend], [Directly Addressable Spend] )
 
-// format string: 0.00%;-0.00%;0.00%
+// format: 0.00%
 Average CRF Rate % = DIVIDE ( [CRF Total], [Programme Spend] )
+
+// format: \$#,##0
+IHG Directly Addressable = CALCULATE ( [Directly Addressable Spend], Fact_Spend_Agg[ihg_flag] = "IHG" )
+
+// format: \$#,##0
+Total Market Spend = [Total Spend]
+
+// format: \$#,##0
+Headroom = [IHG Directly Addressable] - [Programme Spend]
+
+// format: #,0
+IHG Hotels = CALCULATE ( [Hotel Count], Fact_Spend_Agg[ihg_flag] = "IHG" )
 

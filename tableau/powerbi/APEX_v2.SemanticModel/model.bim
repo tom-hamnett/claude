@@ -146,6 +146,11 @@
             "dataType": "double",
             "sourceColumn": "spend",
             "formatString": "#,0.00"
+          },
+          {
+            "name": "region_std",
+            "dataType": "string",
+            "sourceColumn": "region_std"
           }
         ],
         "partitions": [
@@ -158,7 +163,7 @@
                 "let",
                 "    Source = Csv.Document(File.Contents(DataFolder & \"\\Fact_Spend_Agg.csv\"),[Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
                 "    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
-                "    Typed = Table.TransformColumnTypes(Promoted, {{\"ihg_flag\", type text}, {\"region\", type text}, {\"reporting_region\", type text}, {\"sub_region\", type text}, {\"country\", type text}, {\"chain_scale\", type text}, {\"archetype_segment\", type text}, {\"segment_group\", type text}, {\"archetype_size_band\", type text}, {\"size_band_100\", type text}, {\"management_type\", type text}, {\"market_categorisation\", type text}, {\"priority_market\", type text}, {\"brand\", type text}, {\"addressability\", type text}, {\"lifecycle_stage\", type text}, {\"category\", type text}, {\"hotels\", Int64.Type}, {\"rooms_sum\", Int64.Type}, {\"spend\", type number}})",
+                "    Typed = Table.TransformColumnTypes(Promoted, {{\"ihg_flag\", type text}, {\"region\", type text}, {\"reporting_region\", type text}, {\"sub_region\", type text}, {\"country\", type text}, {\"chain_scale\", type text}, {\"archetype_segment\", type text}, {\"segment_group\", type text}, {\"archetype_size_band\", type text}, {\"size_band_100\", type text}, {\"management_type\", type text}, {\"market_categorisation\", type text}, {\"priority_market\", type text}, {\"brand\", type text}, {\"addressability\", type text}, {\"lifecycle_stage\", type text}, {\"category\", type text}, {\"hotels\", Int64.Type}, {\"rooms_sum\", Int64.Type}, {\"spend\", type number}, {\"region_std\", type text}})",
                 "in",
                 "    Typed"
               ]
@@ -169,22 +174,22 @@
           {
             "name": "Total Spend",
             "expression": "SUM ( Fact_Spend_Agg[spend] )",
-            "formatString": "$#,##0.0,,,\"bn\""
+            "formatString": "\\$#,##0"
           },
           {
             "name": "Addressable Spend",
             "expression": "CALCULATE ( [Total Spend], Fact_Spend_Agg[addressability] = \"Addressable\" )",
-            "formatString": "$#,##0.0,,,\"bn\""
+            "formatString": "\\$#,##0"
           },
           {
             "name": "Directly Addressable Spend",
             "expression": "CALCULATE ( [Total Spend], Fact_Spend_Agg[addressability] = \"Addressable\", Fact_Spend_Agg[lifecycle_stage] <> \"BUILD\" )",
-            "formatString": "$#,##0.0,,,\"bn\""
+            "formatString": "\\$#,##0"
           },
           {
             "name": "IHG Addressable Spend",
             "expression": "CALCULATE ( [Addressable Spend], Fact_Spend_Agg[ihg_flag] = \"IHG\" )",
-            "formatString": "$#,##0.0,,,\"bn\""
+            "formatString": "\\$#,##0"
           },
           {
             "name": "IHG Share of Addressable %",
@@ -199,12 +204,12 @@
           {
             "name": "Programme Spend",
             "expression": "CALCULATE ( SUM ( Fact_Programme_Spend[spend] ), Fact_Programme_Spend[measure] = \"Programme (P2P) Spend\" )",
-            "formatString": "$#,##0.0,,\"m\""
+            "formatString": "\\$#,##0"
           },
           {
             "name": "CRF Total",
             "expression": "SUM ( Fact_CRF[crf_usd] )",
-            "formatString": "$#,##0.0,,\"m\""
+            "formatString": "\\$#,##0"
           },
           {
             "name": "Capture Rate %",
@@ -215,6 +220,26 @@
             "name": "Average CRF Rate %",
             "expression": "DIVIDE ( [CRF Total], [Programme Spend] )",
             "formatString": "0.00%"
+          },
+          {
+            "name": "IHG Directly Addressable",
+            "expression": "CALCULATE ( [Directly Addressable Spend], Fact_Spend_Agg[ihg_flag] = \"IHG\" )",
+            "formatString": "\\$#,##0"
+          },
+          {
+            "name": "Total Market Spend",
+            "expression": "[Total Spend]",
+            "formatString": "\\$#,##0"
+          },
+          {
+            "name": "Headroom",
+            "expression": "[IHG Directly Addressable] - [Programme Spend]",
+            "formatString": "\\$#,##0"
+          },
+          {
+            "name": "IHG Hotels",
+            "expression": "CALCULATE ( [Hotel Count], Fact_Spend_Agg[ihg_flag] = \"IHG\" )",
+            "formatString": "#,0"
           }
         ]
       },
@@ -474,6 +499,11 @@
             "dataType": "double",
             "sourceColumn": "crf_usd",
             "formatString": "#,0.00"
+          },
+          {
+            "name": "region_std",
+            "dataType": "string",
+            "sourceColumn": "region_std"
           }
         ],
         "partitions": [
@@ -486,7 +516,7 @@
                 "let",
                 "    Source = Csv.Document(File.Contents(DataFolder & \"\\Fact_CRF.csv\"),[Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
                 "    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
-                "    Typed = Table.TransformColumnTypes(Promoted, {{\"region\", type text}, {\"month\", type date}, {\"year\", Int64.Type}, {\"crf_usd\", type number}})",
+                "    Typed = Table.TransformColumnTypes(Promoted, {{\"region\", type text}, {\"month\", type date}, {\"year\", Int64.Type}, {\"crf_usd\", type number}, {\"region_std\", type text}})",
                 "in",
                 "    Typed"
               ]
@@ -740,6 +770,11 @@
             "dataType": "double",
             "sourceColumn": "spend",
             "formatString": "#,0.00"
+          },
+          {
+            "name": "region_std",
+            "dataType": "string",
+            "sourceColumn": "region_std"
           }
         ],
         "partitions": [
@@ -752,7 +787,45 @@
                 "let",
                 "    Source = Csv.Document(File.Contents(DataFolder & \"\\Fact_Programme_Spend.csv\"),[Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
                 "    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
-                "    Typed = Table.TransformColumnTypes(Promoted, {{\"hotel_code\", type text}, {\"hotel_name\", type text}, {\"company_region\", type text}, {\"country\", type text}, {\"brand_code\", type text}, {\"rooms\", Int64.Type}, {\"category_l1\", type text}, {\"category_l2\", type text}, {\"lifecycle_stage\", type text}, {\"year\", Int64.Type}, {\"measure\", type text}, {\"spend\", type number}})",
+                "    Typed = Table.TransformColumnTypes(Promoted, {{\"hotel_code\", type text}, {\"hotel_name\", type text}, {\"company_region\", type text}, {\"country\", type text}, {\"brand_code\", type text}, {\"rooms\", Int64.Type}, {\"category_l1\", type text}, {\"category_l2\", type text}, {\"lifecycle_stage\", type text}, {\"year\", Int64.Type}, {\"measure\", type text}, {\"spend\", type number}, {\"region_std\", type text}})",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "Dim_Region",
+        "columns": [
+          {
+            "name": "region_std",
+            "dataType": "string",
+            "sourceColumn": "region_std"
+          },
+          {
+            "name": "region_name",
+            "dataType": "string",
+            "sourceColumn": "region_name"
+          },
+          {
+            "name": "sort_order",
+            "dataType": "int64",
+            "sourceColumn": "sort_order",
+            "formatString": "#,0"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Dim_Region",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(DataFolder & \"\\Dim_Region.csv\"),[Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    Typed = Table.TransformColumnTypes(Promoted, {{\"region_std\", type text}, {\"region_name\", type text}, {\"sort_order\", Int64.Type}})",
                 "in",
                 "    Typed"
               ]
@@ -828,12 +901,36 @@
         "toTable": "Dim_Hotel",
         "toColumn": "InnCode",
         "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Reg_SpendAgg",
+        "fromTable": "Fact_Spend_Agg",
+        "fromColumn": "region_std",
+        "toTable": "Dim_Region",
+        "toColumn": "region_std",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Reg_CRF",
+        "fromTable": "Fact_CRF",
+        "fromColumn": "region_std",
+        "toTable": "Dim_Region",
+        "toColumn": "region_std",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Reg_Prog",
+        "fromTable": "Fact_Programme_Spend",
+        "fromColumn": "region_std",
+        "toTable": "Dim_Region",
+        "toColumn": "region_std",
+        "crossFilteringBehavior": "oneDirection"
       }
     ],
     "annotations": [
       {
         "name": "PBI_QueryOrder",
-        "value": "[\"DataFolder\", \"Fact_Spend_Agg\", \"Dim_Hotel\", \"Fact_Spend\", \"Fact_CRF\", \"Fact_P2P\", \"Fact_Supplier\", \"Fact_SystemSize\", \"Fact_Programme_Spend\", \"Fact_ShareOfWallet\"]"
+        "value": "[\"DataFolder\", \"Fact_Spend_Agg\", \"Dim_Hotel\", \"Fact_Spend\", \"Fact_CRF\", \"Fact_P2P\", \"Fact_Supplier\", \"Fact_SystemSize\", \"Fact_Programme_Spend\", \"Dim_Region\", \"Fact_ShareOfWallet\"]"
       }
     ]
   }
