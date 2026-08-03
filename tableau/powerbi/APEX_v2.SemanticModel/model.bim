@@ -198,7 +198,7 @@
           },
           {
             "name": "Hotel Count",
-            "expression": "SUM ( Fact_Spend_Agg[hotels] )",
+            "expression": "DISTINCTCOUNT ( Fact_Spend[InnCode] )",
             "formatString": "#,0"
           },
           {
@@ -238,7 +238,7 @@
           },
           {
             "name": "IHG Hotels",
-            "expression": "CALCULATE ( [Hotel Count], Fact_Spend_Agg[ihg_flag] = \"IHG\" )",
+            "expression": "CALCULATE ( DISTINCTCOUNT ( Fact_Spend[InnCode] ), Dim_Hotel[ihg_flag] = \"IHG\", Dim_Hotel[contract_status] = \"Open - Accepting Guests\", Fact_Spend[addressability] = \"Addressable\" )",
             "formatString": "#,0"
           }
         ]

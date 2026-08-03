@@ -71,7 +71,7 @@ MEASURES = [
   "\\$#,##0"),
  ("IHG Share of Addressable %",
   "DIVIDE ( [IHG Addressable Spend], [Addressable Spend] )", "0.0%"),
- ("Hotel Count", "SUM ( Fact_Spend_Agg[hotels] )", "#,0"),
+ ("Hotel Count", "DISTINCTCOUNT ( Fact_Spend[InnCode] )", "#,0"),
  ("Programme Spend",
   'CALCULATE ( SUM ( Fact_Programme_Spend[spend] ), '
   'Fact_Programme_Spend[measure] = "Programme (P2P) Spend" )',
@@ -83,7 +83,11 @@ MEASURES = [
   'CALCULATE ( [Directly Addressable Spend], Fact_Spend_Agg[ihg_flag] = "IHG" )', "\\$#,##0"),
  ("Total Market Spend", "[Total Spend]", "\\$#,##0"),
  ("Headroom", "[IHG Directly Addressable] - [Programme Spend]", "\\$#,##0"),
- ("IHG Hotels", 'CALCULATE ( [Hotel Count], Fact_Spend_Agg[ihg_flag] = "IHG" )', "#,0"),
+ ("IHG Hotels",
+  'CALCULATE ( DISTINCTCOUNT ( Fact_Spend[InnCode] ), '
+  'Dim_Hotel[ihg_flag] = "IHG", '
+  'Dim_Hotel[contract_status] = "Open - Accepting Guests", '
+  'Fact_Spend[addressability] = "Addressable" )', "#,0"),
 ]
 
 tables = [{

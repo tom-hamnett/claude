@@ -7,64 +7,57 @@ def _title(t):
     return {"title":[{"properties":{"text":{"expr":{"Literal":{"Value":f"'{t}'"}}},
                                     "show":{"expr":{"Literal":{"Value":"true"}}}}}]}
 
-def _q(entity, cols, meas, src="q1"):
+def _build(cols, meas):
+    """cols/meas = [(table, field)]. Returns (From, Select) with one alias per table."""
+    alias={}
+    for t,_ in list(cols)+list(meas):
+        if t not in alias: alias[t]=f"e{len(alias)}"
+    frm=[{"Name":a,"Entity":t,"Type":0} for t,a in alias.items()]
     sel=[]
-    for tbl,c in cols:
-        sel.append({"Column":{"Expression":{"SourceRef":{"Source":src}},"Property":c},"Name":f"{tbl}.{c}"})
-    for tbl,m in meas:
-        sel.append({"Measure":{"Expression":{"SourceRef":{"Source":src}},"Property":m},"Name":f"{tbl}.{m}"})
-    return sel
+    for t,c in cols:
+        sel.append({"Column":{"Expression":{"SourceRef":{"Source":alias[t]}},"Property":c},
+                    "Name":f"{t}.{c}"})
+    for t,m in meas:
+        sel.append({"Measure":{"Expression":{"SourceRef":{"Source":alias[t]}},"Property":m},
+                    "Name":f"{t}.{m}"})
+    return frm, sel
 
-def chart(vtype, entity, cats, meas, x,y,w,h, title, legend=None):
-    """cats/meas = list of (table, field). legend = (table, field)"""
-    src="q1"; proj={"Category":[{"queryRef":f"{t}.{c}"} for t,c in cats],
-                    "Y":[{"queryRef":f"{t}.{m}"} for t,m in meas]}
-    allc=list(cats)
-    if legend:
-        proj["Series"]=[{"queryRef":f"{legend[0]}.{legend[1]}"}]; allc=allc+[legend]
+def _wrap(vtype, proj, cols, meas, x,y,w,h, title, extra_objects=None):
+    frm, sel = _build(cols, meas)
     sv={"visualType":vtype,"projections":proj,
-        "prototypeQuery":{"Version":2,"From":[{"Name":src,"Entity":entity,"Type":0}],
-                          "Select":_q(entity,allc,meas,src)},
-        "objects":{"valueAxis":[{"properties":{"labelDisplayUnits":AUTO}}],
-                   "labels":[{"properties":{"labelDisplayUnits":AUTO}}]},
-        "vcObjects":_title(title),"drillFilterOtherVisuals":True}
-    cfg={"name":uuid.uuid4().hex,"layouts":[{"id":0,"position":{"x":x,"y":y,"z":0,"width":w,"height":h}}],
-         "singleVisual":sv}
-    return {"x":x,"y":y,"z":0,"width":w,"height":h,"config":json.dumps(cfg),"filters":"[]"}
-
-def card(entity, tbl, measure, x,y,w,h, title):
-    src="q1"
-    sv={"visualType":"card","projections":{"Values":[{"queryRef":f"{tbl}.{measure}"}]},
-        "prototypeQuery":{"Version":2,"From":[{"Name":src,"Entity":entity,"Type":0}],
-                          "Select":_q(entity,[],[(tbl,measure)],src)},
-        "objects":{"labels":[{"properties":{"labelDisplayUnits":AUTO}}]},
-        "vcObjects":_title(title),"drillFilterOtherVisuals":True}
-    cfg={"name":uuid.uuid4().hex,"layouts":[{"id":0,"position":{"x":x,"y":y,"z":0,"width":w,"height":h}}],
-         "singleVisual":sv}
-    return {"x":x,"y":y,"z":0,"width":w,"height":h,"config":json.dumps(cfg),"filters":"[]"}
-
-def slicer(entity, tbl, col, x,y,w,h):
-    src="q1"
-    sv={"visualType":"slicer","projections":{"Values":[{"queryRef":f"{tbl}.{col}"}]},
-        "prototypeQuery":{"Version":2,"From":[{"Name":src,"Entity":entity,"Type":0}],
-                          "Select":_q(entity,[(tbl,col)],[],src)},
+        "prototypeQuery":{"Version":2,"From":frm,"Select":sel},
         "drillFilterOtherVisuals":True}
-    cfg={"name":uuid.uuid4().hex,"layouts":[{"id":0,"position":{"x":x,"y":y,"z":0,"width":w,"height":h}}],
+    if extra_objects: sv["objects"]=extra_objects
+    if title: sv["vcObjects"]=_title(title)
+    cfg={"name":uuid.uuid4().hex,
+         "layouts":[{"id":0,"position":{"x":x,"y":y,"z":0,"width":w,"height":h}}],
          "singleVisual":sv}
     return {"x":x,"y":y,"z":0,"width":w,"height":h,"config":json.dumps(cfg),"filters":"[]"}
 
-def matrix(entity, rows, cols, meas, x,y,w,h, title):
-    src="q1"; proj={"Rows":[{"queryRef":f"{t}.{c}"} for t,c in rows],
-                    "Columns":[{"queryRef":f"{t}.{c}"} for t,c in cols],
-                    "Values":[{"queryRef":f"{t}.{m}"} for t,m in meas]}
-    sv={"visualType":"pivotTable","projections":proj,
-        "prototypeQuery":{"Version":2,"From":[{"Name":src,"Entity":entity,"Type":0}],
-                          "Select":_q(entity,rows+cols,meas,src)},
-        "objects":{"values":[{"properties":{"labelDisplayUnits":AUTO}}]},
-        "vcObjects":_title(title),"drillFilterOtherVisuals":True}
-    cfg={"name":uuid.uuid4().hex,"layouts":[{"id":0,"position":{"x":x,"y":y,"z":0,"width":w,"height":h}}],
-         "singleVisual":sv}
-    return {"x":x,"y":y,"z":0,"width":w,"height":h,"config":json.dumps(cfg),"filters":"[]"}
+def chart(vtype, _entity, cats, meas, x,y,w,h, title, legend=None):
+    proj={"Category":[{"queryRef":f"{t}.{c}"} for t,c in cats],
+          "Y":[{"queryRef":f"{t}.{m}"} for t,m in meas]}
+    cols=list(cats)
+    if legend:
+        proj["Series"]=[{"queryRef":f"{legend[0]}.{legend[1]}"}]; cols=cols+[legend]
+    return _wrap(vtype, proj, cols, meas, x,y,w,h, title,
+                 {"valueAxis":[{"properties":{"labelDisplayUnits":AUTO}}],
+                  "labels":[{"properties":{"labelDisplayUnits":AUTO}}]})
+
+def card(_entity, tbl, measure, x,y,w,h, title):
+    return _wrap("card", {"Values":[{"queryRef":f"{tbl}.{measure}"}]}, [], [(tbl,measure)],
+                 x,y,w,h, title, {"labels":[{"properties":{"labelDisplayUnits":AUTO}}]})
+
+def slicer(_entity, tbl, col, x,y,w,h):
+    return _wrap("slicer", {"Values":[{"queryRef":f"{tbl}.{col}"}]}, [(tbl,col)], [],
+                 x,y,w,h, None)
+
+def matrix(_entity, rows, cols, meas, x,y,w,h, title):
+    proj={"Rows":[{"queryRef":f"{t}.{c}"} for t,c in rows],
+          "Columns":[{"queryRef":f"{t}.{c}"} for t,c in cols],
+          "Values":[{"queryRef":f"{t}.{m}"} for t,m in meas]}
+    return _wrap("pivotTable", proj, rows+cols, meas, x,y,w,h, title,
+                 {"values":[{"properties":{"labelDisplayUnits":AUTO}}]})
 
 S="Fact_Spend_Agg"; R="Dim_Region"
 # ============ PAGE 1 — THE PRIZE ============

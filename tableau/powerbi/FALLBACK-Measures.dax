@@ -16,7 +16,7 @@ IHG Addressable Spend = CALCULATE ( [Addressable Spend], Fact_Spend_Agg[ihg_flag
 IHG Share of Addressable % = DIVIDE ( [IHG Addressable Spend], [Addressable Spend] )
 
 // format: #,0
-Hotel Count = SUM ( Fact_Spend_Agg[hotels] )
+Hotel Count = DISTINCTCOUNT ( Fact_Spend[InnCode] )
 
 // format: \$#,##0
 Programme Spend = CALCULATE ( SUM ( Fact_Programme_Spend[spend] ), Fact_Programme_Spend[measure] = "Programme (P2P) Spend" )
@@ -40,5 +40,5 @@ Total Market Spend = [Total Spend]
 Headroom = [IHG Directly Addressable] - [Programme Spend]
 
 // format: #,0
-IHG Hotels = CALCULATE ( [Hotel Count], Fact_Spend_Agg[ihg_flag] = "IHG" )
+IHG Hotels = CALCULATE ( DISTINCTCOUNT ( Fact_Spend[InnCode] ), Dim_Hotel[ihg_flag] = "IHG", Dim_Hotel[contract_status] = "Open - Accepting Guests", Fact_Spend[addressability] = "Addressable" )
 
