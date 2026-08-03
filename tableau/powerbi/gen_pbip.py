@@ -39,6 +39,7 @@ TABLES = {
    ("category_l2","string"),("lifecycle_stage","string"),("year","int64"),("measure","string"),
    ("spend","double")],
  "Dim_Region": [("region_std","string"),("region_name","string"),("sort_order","int64")],
+ "Dim_Lifecycle": [("lifecycle_stage","string"),("sort_order","int64")],
  "Fact_ShareOfWallet": [("reporting_region","string"),("region","string"),("lifecycle_stage","string"),
    ("ihg_flag","string"),("addressable_spend","double"),("hotels","int64"),
    ("is_directly_addressable","string")],
@@ -60,34 +61,35 @@ def m_expr(tbl, cols):
 MEASURES = [
  ("Total Spend", "SUM ( Fact_Spend_Agg[spend] )", "\\$#,##0"),
  ("Addressable Spend",
-  'CALCULATE ( [Total Spend], Fact_Spend_Agg[addressability] = "Addressable" )',
+  'CALCULATE ( [Total Spend], KEEPFILTERS ( Fact_Spend_Agg[addressability] = "Addressable" ) )',
   "\\$#,##0"),
  ("Directly Addressable Spend",
-  'CALCULATE ( [Total Spend], Fact_Spend_Agg[addressability] = "Addressable", '
-  'Fact_Spend_Agg[lifecycle_stage] <> "BUILD" )',
-  "\\$#,##0"),
+  'CALCULATE ( [Total Spend], KEEPFILTERS ( Fact_Spend_Agg[addressability] = "Addressable" ), '
+  'KEEPFILTERS ( Fact_Spend_Agg[lifecycle_stage] <> "BUILD" ) )', "\\$#,##0"),
  ("IHG Addressable Spend",
-  'CALCULATE ( [Addressable Spend], Fact_Spend_Agg[ihg_flag] = "IHG" )',
+  'CALCULATE ( [Addressable Spend], KEEPFILTERS ( Fact_Spend_Agg[ihg_flag] = "IHG" ) )', "\\$#,##0"),
+ ("IHG Directly Addressable",
+  'CALCULATE ( [Directly Addressable Spend], KEEPFILTERS ( Fact_Spend_Agg[ihg_flag] = "IHG" ) )',
   "\\$#,##0"),
  ("IHG Share of Addressable %",
   "DIVIDE ( [IHG Addressable Spend], [Addressable Spend] )", "0.0%"),
- ("Hotel Count", "DISTINCTCOUNT ( Fact_Spend[InnCode] )", "#,0"),
- ("Programme Spend",
-  'CALCULATE ( SUM ( Fact_Programme_Spend[spend] ), '
-  'Fact_Programme_Spend[measure] = "Programme (P2P) Spend" )',
-  "\\$#,##0"),
- ("CRF Total", "SUM ( Fact_CRF[crf_usd] )", "\\$#,##0"),
- ("Capture Rate %", "DIVIDE ( [Programme Spend], [Directly Addressable Spend] )", "0.00%"),
- ("Average CRF Rate %", "DIVIDE ( [CRF Total], [Programme Spend] )", "0.00%"),
- ("IHG Directly Addressable",
-  'CALCULATE ( [Directly Addressable Spend], Fact_Spend_Agg[ihg_flag] = "IHG" )', "\\$#,##0"),
  ("Total Market Spend", "[Total Spend]", "\\$#,##0"),
- ("Headroom", "[IHG Directly Addressable] - [Programme Spend]", "\\$#,##0"),
+ ("Hotel Count", "DISTINCTCOUNT ( Fact_Spend[InnCode] )", "#,0"),
  ("IHG Hotels",
-  'CALCULATE ( DISTINCTCOUNT ( Fact_Spend[InnCode] ), '
-  'Dim_Hotel[ihg_flag] = "IHG", '
+  'CALCULATE ( DISTINCTCOUNT ( Fact_Spend[InnCode] ), Dim_Hotel[ihg_flag] = "IHG", '
   'Dim_Hotel[contract_status] = "Open - Accepting Guests", '
   'Fact_Spend[addressability] = "Addressable" )', "#,0"),
+ ("Programme Spend",
+  'CALCULATE ( SUM ( Fact_Programme_Spend[spend] ), '
+  'KEEPFILTERS ( Fact_Programme_Spend[measure] = "Programme (P2P) Spend" ) )', "\\$#,##0"),
+ ("CRF Total", "SUM ( Fact_CRF[crf_usd] )", "\\$#,##0"),
+ ("CRF 2025", "CALCULATE ( [CRF Total], KEEPFILTERS ( Fact_CRF[year] = 2025 ) )", "\\$#,##0"),
+ ("Capture Rate %", "DIVIDE ( [Programme Spend], [IHG Directly Addressable] )", "0.00%"),
+ ("Average CRF Rate %", "DIVIDE ( [CRF 2025], [Programme Spend] )", "0.00%"),
+ ("Headroom", "[IHG Directly Addressable] - [Programme Spend]", "\\$#,##0"),
+ ("P2P Systems", "SUM ( Fact_P2P[systems] )", "#,0"),
+ ("Supplier Value", "SUM ( Fact_Supplier[value] )", "#,0.0"),
+ ("System Size Value", "SUM ( Fact_SystemSize[value] )", "#,0"),
 ]
 
 tables = [{
@@ -127,7 +129,11 @@ model = {
      {"name":"Reg_CRF","fromTable":"Fact_CRF","fromColumn":"region_std",
       "toTable":"Dim_Region","toColumn":"region_std","crossFilteringBehavior":"oneDirection"},
      {"name":"Reg_Prog","fromTable":"Fact_Programme_Spend","fromColumn":"region_std",
-      "toTable":"Dim_Region","toColumn":"region_std","crossFilteringBehavior":"oneDirection"}],
+      "toTable":"Dim_Region","toColumn":"region_std","crossFilteringBehavior":"oneDirection"},
+     {"name":"Life_SpendAgg","fromTable":"Fact_Spend_Agg","fromColumn":"lifecycle_stage",
+      "toTable":"Dim_Lifecycle","toColumn":"lifecycle_stage","crossFilteringBehavior":"oneDirection"},
+     {"name":"Life_Prog","fromTable":"Fact_Programme_Spend","fromColumn":"lifecycle_stage",
+      "toTable":"Dim_Lifecycle","toColumn":"lifecycle_stage","crossFilteringBehavior":"oneDirection"}],
    "annotations": [{"name": "PBI_QueryOrder",
      "value": json.dumps(["DataFolder"] + list(TABLES.keys()))}],
  }}

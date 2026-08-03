@@ -4,41 +4,53 @@
 Total Spend = SUM ( Fact_Spend_Agg[spend] )
 
 // format: \$#,##0
-Addressable Spend = CALCULATE ( [Total Spend], Fact_Spend_Agg[addressability] = "Addressable" )
+Addressable Spend = CALCULATE ( [Total Spend], KEEPFILTERS ( Fact_Spend_Agg[addressability] = "Addressable" ) )
 
 // format: \$#,##0
-Directly Addressable Spend = CALCULATE ( [Total Spend], Fact_Spend_Agg[addressability] = "Addressable", Fact_Spend_Agg[lifecycle_stage] <> "BUILD" )
+Directly Addressable Spend = CALCULATE ( [Total Spend], KEEPFILTERS ( Fact_Spend_Agg[addressability] = "Addressable" ), KEEPFILTERS ( Fact_Spend_Agg[lifecycle_stage] <> "BUILD" ) )
 
 // format: \$#,##0
-IHG Addressable Spend = CALCULATE ( [Addressable Spend], Fact_Spend_Agg[ihg_flag] = "IHG" )
+IHG Addressable Spend = CALCULATE ( [Addressable Spend], KEEPFILTERS ( Fact_Spend_Agg[ihg_flag] = "IHG" ) )
+
+// format: \$#,##0
+IHG Directly Addressable = CALCULATE ( [Directly Addressable Spend], KEEPFILTERS ( Fact_Spend_Agg[ihg_flag] = "IHG" ) )
 
 // format: 0.0%
 IHG Share of Addressable % = DIVIDE ( [IHG Addressable Spend], [Addressable Spend] )
 
+// format: \$#,##0
+Total Market Spend = [Total Spend]
+
 // format: #,0
 Hotel Count = DISTINCTCOUNT ( Fact_Spend[InnCode] )
 
+// format: #,0
+IHG Hotels = CALCULATE ( DISTINCTCOUNT ( Fact_Spend[InnCode] ), Dim_Hotel[ihg_flag] = "IHG", Dim_Hotel[contract_status] = "Open - Accepting Guests", Fact_Spend[addressability] = "Addressable" )
+
 // format: \$#,##0
-Programme Spend = CALCULATE ( SUM ( Fact_Programme_Spend[spend] ), Fact_Programme_Spend[measure] = "Programme (P2P) Spend" )
+Programme Spend = CALCULATE ( SUM ( Fact_Programme_Spend[spend] ), KEEPFILTERS ( Fact_Programme_Spend[measure] = "Programme (P2P) Spend" ) )
 
 // format: \$#,##0
 CRF Total = SUM ( Fact_CRF[crf_usd] )
 
-// format: 0.00%
-Capture Rate % = DIVIDE ( [Programme Spend], [Directly Addressable Spend] )
-
-// format: 0.00%
-Average CRF Rate % = DIVIDE ( [CRF Total], [Programme Spend] )
-
 // format: \$#,##0
-IHG Directly Addressable = CALCULATE ( [Directly Addressable Spend], Fact_Spend_Agg[ihg_flag] = "IHG" )
+CRF 2025 = CALCULATE ( [CRF Total], KEEPFILTERS ( Fact_CRF[year] = 2025 ) )
 
-// format: \$#,##0
-Total Market Spend = [Total Spend]
+// format: 0.00%
+Capture Rate % = DIVIDE ( [Programme Spend], [IHG Directly Addressable] )
+
+// format: 0.00%
+Average CRF Rate % = DIVIDE ( [CRF 2025], [Programme Spend] )
 
 // format: \$#,##0
 Headroom = [IHG Directly Addressable] - [Programme Spend]
 
 // format: #,0
-IHG Hotels = CALCULATE ( DISTINCTCOUNT ( Fact_Spend[InnCode] ), Dim_Hotel[ihg_flag] = "IHG", Dim_Hotel[contract_status] = "Open - Accepting Guests", Fact_Spend[addressability] = "Addressable" )
+P2P Systems = SUM ( Fact_P2P[systems] )
+
+// format: #,0.0
+Supplier Value = SUM ( Fact_Supplier[value] )
+
+// format: #,0
+System Size Value = SUM ( Fact_SystemSize[value] )
 

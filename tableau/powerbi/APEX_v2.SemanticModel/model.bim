@@ -178,17 +178,22 @@
           },
           {
             "name": "Addressable Spend",
-            "expression": "CALCULATE ( [Total Spend], Fact_Spend_Agg[addressability] = \"Addressable\" )",
+            "expression": "CALCULATE ( [Total Spend], KEEPFILTERS ( Fact_Spend_Agg[addressability] = \"Addressable\" ) )",
             "formatString": "\\$#,##0"
           },
           {
             "name": "Directly Addressable Spend",
-            "expression": "CALCULATE ( [Total Spend], Fact_Spend_Agg[addressability] = \"Addressable\", Fact_Spend_Agg[lifecycle_stage] <> \"BUILD\" )",
+            "expression": "CALCULATE ( [Total Spend], KEEPFILTERS ( Fact_Spend_Agg[addressability] = \"Addressable\" ), KEEPFILTERS ( Fact_Spend_Agg[lifecycle_stage] <> \"BUILD\" ) )",
             "formatString": "\\$#,##0"
           },
           {
             "name": "IHG Addressable Spend",
-            "expression": "CALCULATE ( [Addressable Spend], Fact_Spend_Agg[ihg_flag] = \"IHG\" )",
+            "expression": "CALCULATE ( [Addressable Spend], KEEPFILTERS ( Fact_Spend_Agg[ihg_flag] = \"IHG\" ) )",
+            "formatString": "\\$#,##0"
+          },
+          {
+            "name": "IHG Directly Addressable",
+            "expression": "CALCULATE ( [Directly Addressable Spend], KEEPFILTERS ( Fact_Spend_Agg[ihg_flag] = \"IHG\" ) )",
             "formatString": "\\$#,##0"
           },
           {
@@ -197,13 +202,23 @@
             "formatString": "0.0%"
           },
           {
+            "name": "Total Market Spend",
+            "expression": "[Total Spend]",
+            "formatString": "\\$#,##0"
+          },
+          {
             "name": "Hotel Count",
             "expression": "DISTINCTCOUNT ( Fact_Spend[InnCode] )",
             "formatString": "#,0"
           },
           {
+            "name": "IHG Hotels",
+            "expression": "CALCULATE ( DISTINCTCOUNT ( Fact_Spend[InnCode] ), Dim_Hotel[ihg_flag] = \"IHG\", Dim_Hotel[contract_status] = \"Open - Accepting Guests\", Fact_Spend[addressability] = \"Addressable\" )",
+            "formatString": "#,0"
+          },
+          {
             "name": "Programme Spend",
-            "expression": "CALCULATE ( SUM ( Fact_Programme_Spend[spend] ), Fact_Programme_Spend[measure] = \"Programme (P2P) Spend\" )",
+            "expression": "CALCULATE ( SUM ( Fact_Programme_Spend[spend] ), KEEPFILTERS ( Fact_Programme_Spend[measure] = \"Programme (P2P) Spend\" ) )",
             "formatString": "\\$#,##0"
           },
           {
@@ -212,24 +227,19 @@
             "formatString": "\\$#,##0"
           },
           {
+            "name": "CRF 2025",
+            "expression": "CALCULATE ( [CRF Total], KEEPFILTERS ( Fact_CRF[year] = 2025 ) )",
+            "formatString": "\\$#,##0"
+          },
+          {
             "name": "Capture Rate %",
-            "expression": "DIVIDE ( [Programme Spend], [Directly Addressable Spend] )",
+            "expression": "DIVIDE ( [Programme Spend], [IHG Directly Addressable] )",
             "formatString": "0.00%"
           },
           {
             "name": "Average CRF Rate %",
-            "expression": "DIVIDE ( [CRF Total], [Programme Spend] )",
+            "expression": "DIVIDE ( [CRF 2025], [Programme Spend] )",
             "formatString": "0.00%"
-          },
-          {
-            "name": "IHG Directly Addressable",
-            "expression": "CALCULATE ( [Directly Addressable Spend], Fact_Spend_Agg[ihg_flag] = \"IHG\" )",
-            "formatString": "\\$#,##0"
-          },
-          {
-            "name": "Total Market Spend",
-            "expression": "[Total Spend]",
-            "formatString": "\\$#,##0"
           },
           {
             "name": "Headroom",
@@ -237,8 +247,18 @@
             "formatString": "\\$#,##0"
           },
           {
-            "name": "IHG Hotels",
-            "expression": "CALCULATE ( DISTINCTCOUNT ( Fact_Spend[InnCode] ), Dim_Hotel[ihg_flag] = \"IHG\", Dim_Hotel[contract_status] = \"Open - Accepting Guests\", Fact_Spend[addressability] = \"Addressable\" )",
+            "name": "P2P Systems",
+            "expression": "SUM ( Fact_P2P[systems] )",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Supplier Value",
+            "expression": "SUM ( Fact_Supplier[value] )",
+            "formatString": "#,0.0"
+          },
+          {
+            "name": "System Size Value",
+            "expression": "SUM ( Fact_SystemSize[value] )",
             "formatString": "#,0"
           }
         ]
@@ -849,6 +869,39 @@
         ]
       },
       {
+        "name": "Dim_Lifecycle",
+        "columns": [
+          {
+            "name": "lifecycle_stage",
+            "dataType": "string",
+            "sourceColumn": "lifecycle_stage"
+          },
+          {
+            "name": "sort_order",
+            "dataType": "int64",
+            "sourceColumn": "sort_order",
+            "formatString": "#,0"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Dim_Lifecycle",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(DataFolder & \"\\Dim_Lifecycle.csv\"),[Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    Typed = Table.TransformColumnTypes(Promoted, {{\"lifecycle_stage\", type text}, {\"sort_order\", Int64.Type}})",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ]
+      },
+      {
         "name": "Fact_ShareOfWallet",
         "columns": [
           {
@@ -940,12 +993,28 @@
         "toTable": "Dim_Region",
         "toColumn": "region_std",
         "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Life_SpendAgg",
+        "fromTable": "Fact_Spend_Agg",
+        "fromColumn": "lifecycle_stage",
+        "toTable": "Dim_Lifecycle",
+        "toColumn": "lifecycle_stage",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Life_Prog",
+        "fromTable": "Fact_Programme_Spend",
+        "fromColumn": "lifecycle_stage",
+        "toTable": "Dim_Lifecycle",
+        "toColumn": "lifecycle_stage",
+        "crossFilteringBehavior": "oneDirection"
       }
     ],
     "annotations": [
       {
         "name": "PBI_QueryOrder",
-        "value": "[\"DataFolder\", \"Fact_Spend_Agg\", \"Dim_Hotel\", \"Fact_Spend\", \"Fact_CRF\", \"Fact_P2P\", \"Fact_Supplier\", \"Fact_SystemSize\", \"Fact_Programme_Spend\", \"Dim_Region\", \"Fact_ShareOfWallet\"]"
+        "value": "[\"DataFolder\", \"Fact_Spend_Agg\", \"Dim_Hotel\", \"Fact_Spend\", \"Fact_CRF\", \"Fact_P2P\", \"Fact_Supplier\", \"Fact_SystemSize\", \"Fact_Programme_Spend\", \"Dim_Region\", \"Dim_Lifecycle\", \"Fact_ShareOfWallet\"]"
       }
     ]
   }

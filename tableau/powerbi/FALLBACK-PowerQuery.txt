@@ -3,17 +3,18 @@ APEX - Power Query (M) scripts
 
 USE IF THE .pbip DOESN'T OPEN CLEANLY.
 
-STEP 1 - parameter:  Home > Transform data > Manage Parameters > New
-   Name: DataFolder   Type: Text   Value: your CSV folder (e.g. C:\APEX Data)
+STEP 1 - parameter: Home > Transform data > Manage Parameters > New
+   Name: DataFolder   Type: Text   Value: your CSV folder
 
-STEP 2 - per table: Home > New Source > Blank Query > Advanced Editor > paste,
-   then rename to the name shown.
+STEP 2 - per table: Home > New Source > Blank Query > Advanced Editor > paste, rename.
 
 STEP 3 - relationships (Model view), One-to-many, single direction:
    Fact_Spend[InnCode]  ->  Dim_Hotel[InnCode]
    Fact_Spend_Agg[region_std]  ->  Dim_Region[region_std]
    Fact_CRF[region_std]  ->  Dim_Region[region_std]
    Fact_Programme_Spend[region_std]  ->  Dim_Region[region_std]
+   Fact_Spend_Agg[lifecycle_stage]  ->  Dim_Lifecycle[lifecycle_stage]
+   Fact_Programme_Spend[lifecycle_stage]  ->  Dim_Lifecycle[lifecycle_stage]
 
 ----------------------------------------------------------------------
 QUERY NAME:  Fact_Spend_Agg
@@ -102,6 +103,16 @@ let
     Source = Csv.Document(File.Contents(DataFolder & "\Dim_Region.csv"),[Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
     Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
     Typed = Table.TransformColumnTypes(Promoted, {{"region_std", type text}, {"region_name", type text}, {"sort_order", Int64.Type}})
+in
+    Typed
+
+----------------------------------------------------------------------
+QUERY NAME:  Dim_Lifecycle
+----------------------------------------------------------------------
+let
+    Source = Csv.Document(File.Contents(DataFolder & "\Dim_Lifecycle.csv"),[Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+    Typed = Table.TransformColumnTypes(Promoted, {{"lifecycle_stage", type text}, {"sort_order", Int64.Type}})
 in
     Typed
 

@@ -59,7 +59,7 @@ def matrix(_entity, rows, cols, meas, x,y,w,h, title):
     return _wrap("pivotTable", proj, rows+cols, meas, x,y,w,h, title,
                  {"values":[{"properties":{"labelDisplayUnits":AUTO}}]})
 
-S="Fact_Spend_Agg"; R="Dim_Region"
+S="Fact_Spend_Agg"; R="Dim_Region"; L="Dim_Lifecycle"
 # ============ PAGE 1 — THE PRIZE ============
 p1=[
  card(S,S,"Total Market Spend",   20,20,235,95,"Total market spend"),
@@ -69,7 +69,7 @@ p1=[
  slicer(R,R,"region_name",1000,20,240,95),
  chart("waterfallChart",S,[(S,"addressability")],[(S,"Total Spend")],20,130,470,260,
        "Of all hotel spend, what can procurement actually address?"),
- chart("clusteredColumnChart",S,[(S,"lifecycle_stage")],[(S,"Addressable Spend")],500,130,360,260,
+ chart("clusteredColumnChart",L,[(L,"lifecycle_stage")],[(S,"Addressable Spend")],500,130,360,260,
        "Where the addressable money sits: BUILD dominates"),
  chart("clusteredColumnChart",R,[(R,"region_name")],[(S,"Addressable Spend")],870,130,370,260,
        "Addressable spend by region"),
@@ -86,26 +86,26 @@ p2=[
  card(S,S,"IHG Directly Addressable",265,20,235,95,"Directly addressable (excl BUILD)"),
  card(S,S,"Programme Spend",       510,20,235,95,"Captured on IHG programmes"),
  card(S,S,"Capture Rate %",        755,20,235,95,"Capture rate"),
- card(S,S,"CRF Total",            1000,20,240,95,"CRF collected (2025)"),
+ card(S,S,"CRF 2025",            1000,20,240,95,"CRF collected (2025)"),
  chart("clusteredColumnChart",R,[(R,"region_name")],[(S,"IHG Directly Addressable"),(S,"Programme Spend")],
        20,130,610,260,"Addressable vs captured, by region — AMER carries the load"),
  chart("clusteredColumnChart",R,[(R,"region_name")],[(S,"Capture Rate %")],640,130,300,260,
        "Capture rate by region"),
  chart("clusteredColumnChart",R,[(R,"region_name")],[(S,"Average CRF Rate %")],950,130,290,260,
        "Average CRF rate"),
- chart("clusteredColumnChart",S,[(S,"lifecycle_stage")],[(S,"IHG Directly Addressable"),(S,"Programme Spend")],
-       20,400,610,240,"The OPERATE gap: biggest pool, least captured"),
- matrix(S,[(S,"lifecycle_stage")],[(S,"region_std")],[(S,"Capture Rate %")],640,400,600,240,
+ chart("clusteredColumnChart",L,[(L,"lifecycle_stage")],[(S,"IHG Directly Addressable"),(S,"Programme Spend")],
+       20,400,610,240,"Addressable vs captured, by lifecycle stage"),
+ matrix(L,[(L,"lifecycle_stage")],[(R,"region_name")],[(S,"Capture Rate %")],640,400,600,240,
         "Capture rate — region x lifecycle"),
 ]
 # ============ PAGE 3 — WHERE TO ACT ============
 p3=[
  card(S,S,"Headroom", 20,20,235,95,"Total headroom"),
  card(S,S,"IHG Hotels",265,20,235,95,"IHG hotels"),
- slicer(S,S,"lifecycle_stage",510,20,235,95),
+ slicer(L,L,"lifecycle_stage",510,20,235,95),
  slicer(S,S,"chain_scale",755,20,235,95),
  slicer(R,R,"region_name",1000,20,240,95),
- matrix(S,[(S,"lifecycle_stage"),(S,"category")],[(S,"region_std")],[(S,"Headroom")],20,130,610,300,
+ matrix(L,[(L,"lifecycle_stage"),(S,"category")],[(R,"region_name")],[(S,"Headroom")],20,130,610,300,
         "Headroom by category x region — where to aim"),
  chart("clusteredBarChart",S,[(S,"category")],[(S,"Headroom")],640,130,600,300,
        "Biggest category headroom"),
@@ -120,15 +120,15 @@ p3=[
 p4=[
  chart("columnChart","Fact_CRF",[("Fact_CRF","month")],[(S,"CRF Total")],20,20,610,270,
        "CRF collected by month", legend=("Fact_CRF","region")),
- chart("columnChart","Fact_P2P",[("Fact_P2P","month")],[("Fact_P2P","systems")],640,20,600,270,
+ chart("columnChart","Fact_P2P",[("Fact_P2P","month")],[(S,"P2P Systems")],640,20,600,270,
        "P2P rollout — set estate_group slicer", legend=("Fact_P2P","region")),
  slicer("Fact_P2P","Fact_P2P","estate_group",20,300,290,110),
  slicer("Fact_Supplier","Fact_Supplier","programme",20,420,290,110),
  slicer("Fact_SystemSize","Fact_SystemSize","geo_level",20,540,290,110),
- chart("clusteredColumnChart","Fact_Supplier",[("Fact_Supplier","period")],[("Fact_Supplier","value")],
+ chart("clusteredColumnChart","Fact_Supplier",[("Fact_Supplier","period")],[(S,"Supplier Value")],
        320,300,460,350,"Supplier programmes — filter programme + row_type",
        legend=("Fact_Supplier","metric")),
- chart("lineChart","Fact_SystemSize",[("Fact_SystemSize","month")],[("Fact_SystemSize","value")],
+ chart("lineChart","Fact_SystemSize",[("Fact_SystemSize","month")],[(S,"System Size Value")],
        790,300,450,350,"System size — set geo_level slicer",
        legend=("Fact_SystemSize","geography")),
 ]
