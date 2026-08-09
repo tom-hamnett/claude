@@ -1,6 +1,9 @@
-import json, os, shutil
+import json, os, shutil, sys
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(ROOT, "..", "ai"))
+import contract  # measure DAX + descriptions + synonyms, single source of truth
+
 NAME = "APEX_v2"
 SM  = os.path.join(ROOT, f"{NAME}.SemanticModel")
 RPT = os.path.join(ROOT, f"{NAME}.Report")
@@ -37,12 +40,23 @@ TABLES = {
    ("region_std","string"),("reporting_region","string"),
    ("country","string"),("brand_code","string"),("rooms","int64"),("category_l1","string"),
    ("category_l2","string"),("lifecycle_stage","string"),("year","int64"),("measure","string"),
-   ("spend","double")],
+   ("spend","double"),("category","string"),("in_market_model","string"),
+   ("chain_scale","string"),("segment_group","string"),("market_categorisation","string"),
+   ("priority_market","string")],
  "Dim_Region": [("region_std","string"),("region_name","string"),("sort_order","int64")],
  "Dim_Lifecycle": [("lifecycle_stage","string"),("sort_order","int64")],
+ "Dim_Category": [("category","string"),("category_name","string"),("sort_order","int64")],
+ "Dim_ChainScale": [("chain_scale","string"),("chain_scale_name","string"),("sort_order","int64")],
+ "Dim_Segment": [("segment_group","string"),("segment_name","string"),("sort_order","int64")],
+ "Dim_Market": [("market_categorisation","string"),("market_name","string"),("sort_order","int64")],
+ "Dim_Priority": [("priority_market","string"),("priority_name","string"),("sort_order","int64")],
  "Fact_ShareOfWallet": [("reporting_region","string"),("region","string"),("lifecycle_stage","string"),
    ("ihg_flag","string"),("addressable_spend","double"),("hotels","int64"),
    ("is_directly_addressable","string")],
+ "Fact_Insight": [("insight_id","string"),("insight_date","dateTime"),("source","string"),
+   ("source_type","string"),("theme","string"),("region_std","string"),
+   ("lifecycle_stage","string"),("category","string"),("statement","string"),
+   ("so_what","string"),("confidence","string")],
 }
 PQ = {"string":"type text","int64":"Int64.Type","double":"type number","dateTime":"type date"}
 
@@ -58,39 +72,8 @@ def m_expr(tbl, cols):
       '    Typed'
     ]
 
-MEASURES = [
- ("Total Spend", "SUM ( Fact_Spend_Agg[spend] )", "\\$#,##0"),
- ("Addressable Spend",
-  'CALCULATE ( [Total Spend], KEEPFILTERS ( Fact_Spend_Agg[addressability] = "Addressable" ) )',
-  "\\$#,##0"),
- ("Directly Addressable Spend",
-  'CALCULATE ( [Total Spend], KEEPFILTERS ( Fact_Spend_Agg[addressability] = "Addressable" ), '
-  'KEEPFILTERS ( Fact_Spend_Agg[lifecycle_stage] <> "BUILD" ) )', "\\$#,##0"),
- ("IHG Addressable Spend",
-  'CALCULATE ( [Addressable Spend], KEEPFILTERS ( Fact_Spend_Agg[ihg_flag] = "IHG" ) )', "\\$#,##0"),
- ("IHG Directly Addressable",
-  'CALCULATE ( [Directly Addressable Spend], KEEPFILTERS ( Fact_Spend_Agg[ihg_flag] = "IHG" ) )',
-  "\\$#,##0"),
- ("IHG Share of Addressable %",
-  "DIVIDE ( [IHG Addressable Spend], [Addressable Spend] )", "0.0%"),
- ("Total Market Spend", "[Total Spend]", "\\$#,##0"),
- ("Hotel Count", "DISTINCTCOUNT ( Fact_Spend[InnCode] )", "#,0"),
- ("IHG Hotels",
-  'CALCULATE ( DISTINCTCOUNT ( Fact_Spend[InnCode] ), Dim_Hotel[ihg_flag] = "IHG", '
-  'Dim_Hotel[contract_status] = "Open - Accepting Guests", '
-  'Fact_Spend[addressability] = "Addressable" )', "#,0"),
- ("Programme Spend",
-  'CALCULATE ( SUM ( Fact_Programme_Spend[spend] ), '
-  'KEEPFILTERS ( Fact_Programme_Spend[measure] = "Programme (P2P) Spend" ) )', "\\$#,##0"),
- ("CRF Total", "SUM ( Fact_CRF[crf_usd] )", "\\$#,##0"),
- ("CRF 2025", "CALCULATE ( [CRF Total], KEEPFILTERS ( Fact_CRF[year] = 2025 ) )", "\\$#,##0"),
- ("Capture Rate %", "DIVIDE ( [Programme Spend], [IHG Directly Addressable] )", "0.00%"),
- ("Average CRF Rate %", "DIVIDE ( [CRF 2025], [Programme Spend] )", "0.00%"),
- ("Headroom", "[IHG Directly Addressable] - [Programme Spend]", "\\$#,##0"),
- ("P2P Systems", "SUM ( Fact_P2P[systems] )", "#,0"),
- ("Supplier Value", "SUM ( Fact_Supplier[value] )", "#,0.0"),
- ("System Size Value", "SUM ( Fact_SystemSize[value] )", "#,0"),
-]
+MEASURES = [(m["name"], m["dax"], m["fmt"]) for m in contract.MEASURES]
+MEASURE_META = {m["name"]: m for m in contract.MEASURES}
 
 tables = [{
   "name": "_Parameters", "isHidden": True,
@@ -98,16 +81,67 @@ tables = [{
   "partitions": [{"name": "_Parameters", "mode": "import", "source": {"type": "m",
      "expression": ['let Source = #table({"DataFolder"},{{DataFolder}}) in Source']}}]
 }]
+def describe_measure(m):
+    """One description carrying meaning, alternative names, guardrails and the validated
+    value. Everything an AI layer needs to use the measure correctly, in the one field
+    Power BI Copilot actually reads."""
+    parts = [m["desc"]]
+    if m["syn"]:
+        parts.append("Also called: " + ", ".join(m["syn"]) + ".")
+    if m["guards"]:
+        parts.append("GUARDRAILS: " + " ".join(m["guards"]))
+    if m["value"] is not None:
+        v = (f"{m['value']*100:,.2f}%" if m["fmt"].endswith("%")
+             else f"{m['value']:,.0f}")
+        parts.append(f"Validated value with no filters as at {contract.VALIDATED_AS_OF}: {v}.")
+    return "  ".join(parts)
+
+
+def build_column(tbl, c, d):
+    """Descriptions and hidden flags come from the metric contract — they are what an AI
+    layer reads to work out which field means what, so they are not cosmetic."""
+    col = {"name": c, "dataType": d, "sourceColumn": c}
+    if d == "int64":
+        col["formatString"] = "#,0"
+    elif d == "double":
+        col["formatString"] = "#,0.00"
+    meta = contract.COLUMN_META.get((tbl, c))
+    if meta:
+        # Synonyms go inside the description on purpose. Power BI's linguistic-schema
+        # format is version-sensitive and a malformed one refuses to open the whole file;
+        # description text is a plain TOM property that nothing can reject, and Copilot
+        # reads it. Same effect, no risk.
+        col["description"] = meta[0] + ("  Also called: " + ", ".join(meta[1]) + "."
+                                        if meta[1] else "")
+    if (tbl, c) in contract.HIDDEN_COLUMNS:
+        col["isHidden"] = True
+    if c == "sort_order":
+        col["isHidden"] = True
+    return col
+
+
 for tbl, cols in TABLES.items():
     t = {"name": tbl,
-         "columns": [{"name": c, "dataType": d, "sourceColumn": c,
-                      **({"formatString": "#,0"} if d in ("int64",) else {}),
-                      **({"formatString": "#,0.00"} if d == "double" else {})} for c, d in cols],
+         "columns": [build_column(tbl, c, d) for c, d in cols],
          "partitions": [{"name": tbl, "mode": "import",
                          "source": {"type": "m", "expression": m_expr(tbl, cols)}}]}
+    if tbl in contract.TABLE_DESC:
+        t["description"] = contract.TABLE_DESC[tbl]
     if tbl == "Fact_Spend_Agg":
-        t["measures"] = [{"name": n, "expression": e, "formatString": f} for n, e, f in MEASURES]
+        t["measures"] = [{"name": n, "expression": e, "formatString": f,
+                          "description": describe_measure(MEASURE_META[n]),
+                          "displayFolder": MEASURE_META[n]["folder"]}
+                         for n, e, f in MEASURES]
     tables.append(t)
+
+# Sort the conformed dimensions by their sort_order column so slicers read in a sensible
+# order rather than alphabetically.
+for t in tables:
+    names = [c["name"] for c in t.get("columns", [])]
+    if "sort_order" in names:
+        for c in t["columns"]:
+            if c["name"].endswith("_name") or c["name"] == "lifecycle_stage":
+                c["sortByColumn"] = "sort_order"
 
 model = {
  "compatibilityLevel": 1567,
@@ -133,7 +167,23 @@ model = {
      {"name":"Life_SpendAgg","fromTable":"Fact_Spend_Agg","fromColumn":"lifecycle_stage",
       "toTable":"Dim_Lifecycle","toColumn":"lifecycle_stage","crossFilteringBehavior":"oneDirection"},
      {"name":"Life_Prog","fromTable":"Fact_Programme_Spend","fromColumn":"lifecycle_stage",
-      "toTable":"Dim_Lifecycle","toColumn":"lifecycle_stage","crossFilteringBehavior":"oneDirection"}],
+      "toTable":"Dim_Lifecycle","toColumn":"lifecycle_stage","crossFilteringBehavior":"oneDirection"},
+     # Narrative overlay — insights filter with the same region/lifecycle slicers as the numbers
+     {"name":"Reg_Insight","fromTable":"Fact_Insight","fromColumn":"region_std",
+      "toTable":"Dim_Region","toColumn":"region_std","crossFilteringBehavior":"oneDirection"},
+     {"name":"Life_Insight","fromTable":"Fact_Insight","fromColumn":"lifecycle_stage",
+      "toTable":"Dim_Lifecycle","toColumn":"lifecycle_stage","crossFilteringBehavior":"oneDirection"},
+     ] + [
+     # Conformed attribute dimensions. Without these, slicing category / segment / chain
+     # scale / market type filtered the market side only and left programme spend at its
+     # full value in every cell — which made every Headroom chart on page 3 wrong.
+     r for dim, col in [("Dim_Category","category"), ("Dim_ChainScale","chain_scale"),
+                        ("Dim_Segment","segment_group"), ("Dim_Market","market_categorisation"),
+                        ("Dim_Priority","priority_market")]
+       for r in ({"name":f"{dim}_Agg","fromTable":"Fact_Spend_Agg","fromColumn":col,
+                  "toTable":dim,"toColumn":col,"crossFilteringBehavior":"oneDirection"},
+                 {"name":f"{dim}_Prog","fromTable":"Fact_Programme_Spend","fromColumn":col,
+                  "toTable":dim,"toColumn":col,"crossFilteringBehavior":"oneDirection"})],
    "annotations": [{"name": "PBI_QueryOrder",
      "value": json.dumps(["DataFolder"] + list(TABLES.keys()))}],
  }}

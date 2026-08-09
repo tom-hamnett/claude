@@ -9,7 +9,10 @@ AI layer — only the build clicks differ.
 ## Start here
 
 0. **[powerbi/](powerbi/)** ← **fastest start.** A pre-built `.pbip` with the model,
-   10 DAX measures and 18 visuals already in place. Open it, point it at your data folder.
+   21 DAX measures and 47 visuals across 5 pages already in place. Open it, point it at
+   your data folder.
+0b. **[ai/AI-OVERLAY.md](ai/AI-OVERLAY.md)** — the AI layer: architecture, the metric
+   contract, what it fixed, and the next decision.
 1. **[POWERBI-BUILD-GUIDE.md](POWERBI-BUILD-GUIDE.md)** — build it yourself / understand it. Tom has a
    Power BI Creator licence. Click-by-click for two dashboards, incl. DAX measures.
 2. **[VALIDATION-REPORT.md](VALIDATION-REPORT.md)** — what reconciled against the slides
@@ -27,10 +30,10 @@ than either the Tableau or GCP routes.
 
 ## Data
 
-`data/APEX_Tableau_Data.zip` (7.4 MB) — all nine extracts. Download, unzip to a local
-folder, connect Tableau to it.
+`data/APEX_Tableau_Data.zip` (7.7 MB) — all 17 extracts. Download, unzip to a local
+folder, point the `DataFolder` parameter at it.
 
-The small operational files are also loose in `data/` for quick inspection.
+The small files are also loose in `data/` for quick inspection.
 
 | File | Rows | Grain |
 |---|---|---|
@@ -43,6 +46,13 @@ The small operational files are also loose in `data/` for quick inspection.
 | `Fact_SystemSize.csv` | 2,880 | estate × unit × geography × metric × month |
 | `Fact_Programme_Spend.csv` | 28,313 | hotel × category × year |
 | `Fact_ShareOfWallet.csv` | 40 | region × lifecycle × IHG flag |
+| `Fact_Insight.csv` | 207 | narrative overlay — insight × region × lifecycle |
+| `Dim_Region` `Dim_Lifecycle` `Dim_Category` `Dim_ChainScale` `Dim_Segment` `Dim_Market` `Dim_Priority` | 2–12 each | conformed dimensions |
+
+**The conformed dimensions are not optional.** Slice category, segment, chain scale,
+market type or priority market from a fact table and you filter the market side only —
+programme spend comes back at its full $1,158.4m in every cell. Slice from the `Dim_`
+tables and both sides filter together.
 
 ## The model in one line
 
@@ -65,7 +75,11 @@ That single join and those two filters reproduce every number on the strategy sl
 `scripts/` holds the generation scripts (Python + DuckDB). They read the raw source
 files and regenerate every extract, so the pipeline is reproducible rather than a
 one-off manual clean. Order: `build_db.py` → `build_extracts.py` → `b_ops.py` →
-`b_p2p.py` → `b_supp.py` → `b_sys.py` → `b_prog.py` → `b_sow.py`.
+`b_p2p.py` → `b_supp.py` → `b_sys.py` → `b_prog.py` → `b_sow.py` → `b_conform.py`.
+
+Then `ai/gen_insights.py`, `ai/gen_contract.py`, `powerbi/gen_pbip.py`,
+`powerbi/gen_report.py`, and finally the two pre-flight checks — `powerbi/validate.py`
+(every visual reference resolves) and `powerbi/check_data.py` (CSVs match the model).
 
 ## Note on personal data
 

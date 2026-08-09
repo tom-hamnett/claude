@@ -1,6 +1,6 @@
 # APEX — the dashboard storyline
 
-Four pages, each answering one question a decision-maker actually asks. Read left to
+Five pages, each answering one question a decision-maker actually asks. Read left to
 right, top to bottom; drill down by clicking any bar (everything cross-filters).
 
 ---
@@ -47,14 +47,22 @@ CRF collected                 $27m       ← 2.3% of programme spend
 
 **Then the diagnosis**
 - **Addressable vs captured by region** — two bars side by side. The gap *is* the story.
-- **Capture rate by region** — AMER ~4.8%, GC ~3.1%, EMEAA ~2.1%. AMER carries the load;
-  the others are the runway.
-- **The OPERATE gap** — the single most important chart. OPERATE is a large share of
-  directly-addressable spend yet barely captured. It drags the blended rate down.
+- **Capture rate by region** — AMER **9.07%**, EMEAA **5.73%**, GC **3.81%**. AMER carries
+  the load; Greater China is the genuine laggard. Two bars per region: the headline rate
+  and the like-for-like rate.
+- **By lifecycle** — OPERATE **11.73%**, OPEN **4.15%**, IT/TELECOM **1.32%**.
+  OPERATE is the strongest stage, not the weakest — see the caveat below.
 - **Region × lifecycle matrix** — capture rate in every cell. Dark = working, pale = gap.
 
-**The takeaway to land:** we own ~11% of the addressable wallet but capture under 1%.
-The gap is concentrated in OPERATE, and outside AMER.
+**The takeaway to land:** we own ~11% of the addressable wallet and capture 7.6% of what
+we could realistically touch — 5.7% on a like-for-like basis. The gap is concentrated
+outside AMER and, by category, overwhelmingly in FF&E.
+
+> **Two things the deck says that the data does not.** OPERATE is the *best*-captured
+> stage, not the worst — the deck's reading used the market-wide denominator. And the
+> headline 7.60% counts $293.2m of programme spend (HR, Travel, Advisory) that has no
+> addressable denominator at all; like-for-like it is 5.68%. Both are on the page. Settle
+> which one you want to report before this goes to a target-setting conversation.
 
 ---
 
@@ -65,13 +73,20 @@ Built entirely around one measure — **Headroom** = directly addressable − ca
 It answers "how much is still on the table here?"
 
 - **Headroom by category × region matrix** — the targeting grid. Biggest numbers = biggest prize.
-- **Biggest category headroom** — ranked bar. Where to point category teams.
+- **Category headroom with capture rate** — ranked bar, with how much of each category we
+  already capture alongside it. **FF&E is the largest addressable category ($5.81bn) and
+  the worst captured (0.82%)** — $5.76bn, 40% of all headroom, sits there.
 - **By market type / segment / priority market** — is the headroom in priority markets
   (where we have leverage) or elsewhere (where we may not)?
 - **Slicers** for lifecycle, chain scale and region so you can test a hypothesis in
   seconds: *"show me OPERATE headroom in EMEAA priority markets only."*
 
-**The takeaway to land:** a shortlist of category × market combinations worth a plan.
+**The takeaway to land:** a shortlist of category × market combinations worth a plan —
+starting with the FF&E question, because it moves 40% of the number.
+
+> Everything on this page slices from the conformed `Dim_` tables. That matters: slicing
+> the equivalent `Fact_Spend_Agg` column filters the market side only and leaves programme
+> spend at its full value in every cell, which is exactly how this page used to be wrong.
 
 ---
 
@@ -92,17 +107,36 @@ and system size growth.
 
 ---
 
-## How the four pages hang together
+---
+
+## Page 5 — **Narrative**
+> *"What do we actually know about what I'm looking at?"*
+
+The AI overlay surface. Insights carry the same region and lifecycle keys as the facts,
+so the slicers filter the words and the numbers together: pick Greater China and OPERATE
+and you get the capture rate alongside the commentary that applies to it.
+
+Every insight here is computed from the validated model rather than typed in, so it stays
+true when the data refreshes. Three slicers: **theme**, **source type** (Analysis today,
+Document once extraction is reconnected) and **confidence** — filter to *Needs review* to
+see only the things that are genuinely unsettled.
+
+See **[../ai/AI-OVERLAY.md](../ai/AI-OVERLAY.md)** for how this is built and where it goes.
+
+---
+
+## How the five pages hang together
 
 ```
 1. The Prize        →  the opportunity is $256bn, we can address $28.9bn of it
-2. Our Position     →  we capture $1.16bn of it — the gap is OPERATE, and non-AMER
-3. Where to Act     →  here are the specific category x market pockets of headroom
+2. Our Position     →  we capture $1.16bn — 7.6% headline, 5.7% like-for-like
+3. Where to Act     →  $14.37bn of headroom, 40% of it in FF&E alone
 4. Delivery         →  and here's whether current initiatives are on track
+5. Narrative        →  and here's what we know about any slice of it
 ```
 
 That's a strategy conversation: **size the prize → diagnose the gap → target the
-action → track delivery.**
+action → track delivery → carry the context.**
 
 ---
 

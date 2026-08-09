@@ -220,6 +220,66 @@ mapping implied, and **GC — not EMEAA — is the genuine laggard.**
 `reporting_region` (AMER / EUR / IMEA / EAPAC / GC), all derived from the hotel master.
 `source_region_label` retains the original label for traceability.
 
+## 5c. Category taxonomies conformed (9 Aug) — and what it exposed
+
+Building the AI layer's metric contract meant checking every measure against the data.
+That turned up a structural problem nobody had hit yet, because nobody had tried to slice
+capture by category before.
+
+**The two fact tables speak different languages.** `Fact_Spend_Agg` (the market model)
+uses FF&E / F&B / Energy / OS&E / MRO / Hotel Tech; `Fact_Programme_Spend` uses 43
+level-2 categories under 11 level-1 headings. They shared no join.
+
+Consequence: slicing Headroom by category — or by segment, chain scale, market type or
+priority market — filtered the market side only. **Programme spend came back at its full
+$1,158.4m in every single cell**, so all five Headroom charts on page 3 were wrong. Fixed
+with a 43-value crosswalk (`scripts/b_conform.py`) plus five conformed dimensions, and
+hotel attributes inherited onto the programme file via `hotel_code → InnCode` (all 222
+hotels join).
+
+### What that made computable — capture rate by category, for the first time
+
+| Category | Directly addressable | Captured | Capture rate |
+|---|---:|---:|---:|
+| **FF&E** | $5.81bn | $47.4m | **0.82%** |
+| F&B | $3.29bn | $434.9m | 13.22% |
+| Energy | $1.64bn | $161.9m | 9.85% |
+| OS&E | $1.62bn | $109.2m | 6.74% |
+| MRO | $1.41bn | $92.4m | 6.56% |
+| Hotel Tech | $1.46bn | $19.4m | 1.32% |
+
+**FF&E is the largest addressable category and the worst captured** — $5.76bn of headroom,
+40% of the total. Either the single biggest opportunity in the estate, or FF&E spend is
+being captured in a system that does not feed the programme tracker. The two readings
+lead to opposite actions, so this needs settling before it is presented.
+
+### And a scope mismatch in the headline capture rate
+
+| | Amount | % of programme spend |
+|---|---:|---:|
+| Programme spend in categories with an addressable base | $865.2m | 74.7% |
+| Programme spend with **no** addressable base | **$293.2m** | **25.3%** |
+
+$212.5m of that is HR, plus Travel ($28.1m), Management charges ($27.6m) and Advisory
+($25.1m) — captured spend the market model does not treat as addressable at all.
+
+So the headline capture rate counts spend its own denominator excludes:
+
+| Basis | Rate |
+|---|---:|
+| Headline (all programme spend ÷ IHG directly addressable) | **7.60%** |
+| Like-for-like (matched categories only) | **5.68%** |
+
+Both are now published as measures. **Neither is hidden, and that is deliberate** — but
+it is not sustainable in a target-setting conversation. Either the market model gets
+extended to cover HR and Travel, or the reported number becomes 5.68%. Your call.
+
+`Headroom` was also redefined to use the like-for-like numerator, so a category with no
+addressable base nets to zero rather than showing a spurious negative. Total headroom is
+therefore **$14.37bn**, not $14.07bn.
+
+---
+
 ## 6. A data-protection flag
 
 `CRF_Analysis_2023-2026.xlsx` → sheet **`Pivots`** contains **named individuals**

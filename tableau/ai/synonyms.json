@@ -1,0 +1,263 @@
+{
+  "Total Spend": [
+    "spend",
+    "total spend",
+    "all spend",
+    "gross spend"
+  ],
+  "Addressable Spend": [
+    "addressable",
+    "addressable spend",
+    "procurement addressable",
+    "influenceable spend",
+    "market size",
+    "the prize"
+  ],
+  "Directly Addressable Spend": [
+    "directly addressable",
+    "direct addressable spend",
+    "realistic addressable",
+    "addressable excluding build",
+    "capturable spend"
+  ],
+  "IHG Addressable Spend": [
+    "IHG addressable",
+    "our addressable spend",
+    "IHG estate spend",
+    "our estate addressable",
+    "IHG spend pool"
+  ],
+  "IHG Directly Addressable": [
+    "IHG directly addressable",
+    "our directly addressable spend",
+    "what we can capture",
+    "our realistic pool"
+  ],
+  "IHG Share of Addressable %": [
+    "share of addressable",
+    "IHG share",
+    "share of wallet",
+    "our market share"
+  ],
+  "Total Market Spend": [
+    "market spend",
+    "total market"
+  ],
+  "Hotel Count": [
+    "hotels",
+    "hotel count",
+    "number of hotels",
+    "properties"
+  ],
+  "IHG Hotels": [
+    "IHG hotels",
+    "our hotels",
+    "open hotels",
+    "trading hotels",
+    "estate size"
+  ],
+  "Programme Spend": [
+    "programme spend",
+    "program spend",
+    "captured spend",
+    "P2P spend",
+    "spend under management",
+    "what we capture"
+  ],
+  "Programme Spend (like-for-like)": [
+    "like for like programme spend",
+    "matched programme spend",
+    "comparable programme spend"
+  ],
+  "CRF Total": [
+    "CRF",
+    "contract recovery fee",
+    "rebate",
+    "fee collected"
+  ],
+  "CRF 2025": [
+    "CRF 2025",
+    "CRF this year",
+    "annual CRF",
+    "full year CRF"
+  ],
+  "Capture Rate %": [
+    "capture rate",
+    "capture",
+    "penetration",
+    "spend under management rate",
+    "how much are we capturing"
+  ],
+  "Average CRF Rate %": [
+    "CRF rate",
+    "average CRF rate",
+    "fee rate",
+    "recovery rate",
+    "yield"
+  ],
+  "Headroom": [
+    "headroom",
+    "opportunity",
+    "gap",
+    "untapped",
+    "whitespace",
+    "what's left on the table",
+    "uncaptured spend"
+  ],
+  "Capture Rate % (like-for-like)": [
+    "like for like capture rate",
+    "comparable capture rate",
+    "true capture rate",
+    "adjusted capture rate"
+  ],
+  "P2P Systems": [
+    "P2P systems",
+    "P2P rollout",
+    "systems live",
+    "hotels on P2P"
+  ],
+  "Supplier Value": [
+    "supplier value",
+    "supplier programme",
+    "sedex",
+    "ecovadis",
+    "rapid ratings",
+    "supplier assessments"
+  ],
+  "System Size Value": [
+    "system size",
+    "estate size",
+    "rooms",
+    "room count",
+    "estate growth"
+  ],
+  "Insight Count": [
+    "insights",
+    "commentary",
+    "narrative",
+    "notes"
+  ],
+  "Fact_Spend_Agg[addressability]": [
+    "addressability",
+    "addressable flag"
+  ],
+  "Fact_Spend_Agg[lifecycle_stage]": [
+    "lifecycle",
+    "stage",
+    "lifecycle stage",
+    "phase"
+  ],
+  "Fact_Spend_Agg[category]": [
+    "category",
+    "spend category",
+    "commodity"
+  ],
+  "Fact_Spend_Agg[ihg_flag]": [
+    "IHG flag",
+    "ours",
+    "IHG vs competitor",
+    "brand owner"
+  ],
+  "Fact_Spend_Agg[chain_scale]": [
+    "chain scale",
+    "tier"
+  ],
+  "Fact_Spend_Agg[segment_group]": [
+    "segment",
+    "segment group",
+    "premium vs essentials"
+  ],
+  "Fact_Spend_Agg[management_type]": [
+    "management type",
+    "franchised",
+    "managed",
+    "operating model"
+  ],
+  "Fact_Spend_Agg[priority_market]": [
+    "priority market",
+    "priority",
+    "focus market"
+  ],
+  "Fact_Spend_Agg[size_band_100]": [
+    "size band",
+    "hotel size",
+    "small hotels"
+  ],
+  "Dim_Region[region_name]": [
+    "region",
+    "regions",
+    "geography",
+    "AMER",
+    "EMEAA",
+    "Greater China",
+    "GC"
+  ],
+  "Dim_Lifecycle[lifecycle_stage]": [
+    "lifecycle",
+    "stage"
+  ],
+  "Fact_P2P[estate_group]": [
+    "estate group",
+    "estate",
+    "CMH",
+    "franchise"
+  ],
+  "Fact_SystemSize[geo_level]": [
+    "geo level",
+    "geography level"
+  ],
+  "Fact_Supplier[row_type]": [
+    "row type",
+    "actual vs target"
+  ],
+  "Fact_Programme_Spend[measure]": [
+    "measure",
+    "spend type"
+  ],
+  "Dim_Category[category_name]": [
+    "category",
+    "spend category",
+    "commodity",
+    "category name"
+  ],
+  "Dim_ChainScale[chain_scale_name]": [
+    "chain scale",
+    "scale",
+    "tier"
+  ],
+  "Dim_Segment[segment_name]": [
+    "segment",
+    "segment group"
+  ],
+  "Dim_Market[market_name]": [
+    "market type",
+    "market categorisation"
+  ],
+  "Dim_Priority[priority_name]": [
+    "priority market",
+    "priority"
+  ],
+  "Fact_Programme_Spend[in_market_model]": [
+    "in market model",
+    "comparable",
+    "like for like"
+  ],
+  "Fact_Programme_Spend[category_l2]": [
+    "programme category",
+    "L2 category"
+  ],
+  "Fact_Insight[theme]": [
+    "theme",
+    "topic"
+  ],
+  "Fact_Insight[statement]": [
+    "insight",
+    "finding",
+    "commentary"
+  ],
+  "Fact_Insight[so_what]": [
+    "so what",
+    "implication",
+    "action"
+  ]
+}

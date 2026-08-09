@@ -47,7 +47,8 @@
           {
             "name": "ihg_flag",
             "dataType": "string",
-            "sourceColumn": "ihg_flag"
+            "sourceColumn": "ihg_flag",
+            "description": "IHG or Non-IHG. Distinguishes our own estate from competitor hotels in the market model.  Also called: IHG flag, ours, IHG vs competitor, brand owner."
           },
           {
             "name": "region",
@@ -72,7 +73,8 @@
           {
             "name": "chain_scale",
             "dataType": "string",
-            "sourceColumn": "chain_scale"
+            "sourceColumn": "chain_scale",
+            "description": "Chain scale tier of the hotel.  Also called: chain scale, tier."
           },
           {
             "name": "archetype_segment",
@@ -82,7 +84,8 @@
           {
             "name": "segment_group",
             "dataType": "string",
-            "sourceColumn": "segment_group"
+            "sourceColumn": "segment_group",
+            "description": "Premium + Lifestyle/Luxury vs Essentials & Suites. NOTE: whether the 808 'Suites' hotels belong in E&S is still open \u2014 current grouping gives 1,445 / 5,549 vs the slide's 1,337 / 5,657.  Also called: segment, segment group, premium vs essentials."
           },
           {
             "name": "archetype_size_band",
@@ -92,12 +95,14 @@
           {
             "name": "size_band_100",
             "dataType": "string",
-            "sourceColumn": "size_band_100"
+            "sourceColumn": "size_band_100",
+            "description": "Hotel size split at RMS < 100 rooms: 2,935 small / 4,059 large. (The slide's 3,925/3,069 is a confirmed 2/3 transposition \u2014 Excel is correct.)  Also called: size band, hotel size, small hotels."
           },
           {
             "name": "management_type",
             "dataType": "string",
-            "sourceColumn": "management_type"
+            "sourceColumn": "management_type",
+            "description": "Franchised (5,904 / 84.4%) or Managed (1,088 / 15.6%).  Also called: management type, franchised, managed, operating model."
           },
           {
             "name": "market_categorisation",
@@ -107,7 +112,8 @@
           {
             "name": "priority_market",
             "dataType": "string",
-            "sourceColumn": "priority_market"
+            "sourceColumn": "priority_market",
+            "description": "Whether the market is an IHG priority market \u2014 where we have most commercial leverage.  Also called: priority market, priority, focus market."
           },
           {
             "name": "brand",
@@ -117,29 +123,34 @@
           {
             "name": "addressability",
             "dataType": "string",
-            "sourceColumn": "addressability"
+            "sourceColumn": "addressability",
+            "description": "Addressable / Potentially Addressable / Unadressable. Whether procurement can influence this spend. Nearly every strategic number filters to 'Addressable'.  Also called: addressability, addressable flag."
           },
           {
             "name": "lifecycle_stage",
             "dataType": "string",
-            "sourceColumn": "lifecycle_stage"
+            "sourceColumn": "lifecycle_stage",
+            "description": "BUILD (pre-opening construction, modelled) / OPEN (opening & fit-out) / OPERATE (day-to-day running) / IT-TELECOM / Misc. BUILD is ~48% of the pool but is modelled, not capturable today.  Also called: lifecycle, stage, lifecycle stage, phase."
           },
           {
             "name": "category",
             "dataType": "string",
-            "sourceColumn": "category"
+            "sourceColumn": "category",
+            "description": "Spend category: FF&E, OS&E, F&B, MRO, Energy, Advisory, Hotel Tech.  Also called: category, spend category, commodity."
           },
           {
             "name": "hotels",
             "dataType": "int64",
             "sourceColumn": "hotels",
-            "formatString": "#,0"
+            "formatString": "#,0",
+            "isHidden": true
           },
           {
             "name": "rooms_sum",
             "dataType": "int64",
             "sourceColumn": "rooms_sum",
-            "formatString": "#,0"
+            "formatString": "#,0",
+            "isHidden": true
           },
           {
             "name": "spend",
@@ -150,7 +161,8 @@
           {
             "name": "region_std",
             "dataType": "string",
-            "sourceColumn": "region_std"
+            "sourceColumn": "region_std",
+            "isHidden": true
           }
         ],
         "partitions": [
@@ -170,96 +182,154 @@
             }
           }
         ],
+        "description": "Pre-aggregated market spend \u2014 the main analytical source. Grain: hotel attributes x addressability x lifecycle x category. Do not SUM the 'hotels' column.",
         "measures": [
           {
             "name": "Total Spend",
             "expression": "SUM ( Fact_Spend_Agg[spend] )",
-            "formatString": "\\$#,##0"
+            "formatString": "\\$#,##0",
+            "description": "Raw spend with no addressability filter. The whole branded-hotel spend pool, including spend procurement cannot influence. Use only for the page 1 waterfall that shows how the pool narrows. For anything strategic use 'Addressable Spend'.  Also called: spend, total spend, all spend, gross spend.  GUARDRAILS: Not a decision metric on its own \u2014 it includes Unadressable spend.  Validated value with no filters as at 2026-08-09: 439,000,000,028.",
+            "displayFolder": "00 Base"
           },
           {
             "name": "Addressable Spend",
             "expression": "CALCULATE ( [Total Spend], KEEPFILTERS ( Fact_Spend_Agg[addressability] = \"Addressable\" ) )",
-            "formatString": "\\$#,##0"
+            "formatString": "\\$#,##0",
+            "description": "Spend procurement can influence, across the whole branded market (IHG and competitors). addressability = 'Addressable'. This is the headline market-size number on strategy slide 4.  Also called: addressable, addressable spend, procurement addressable, influenceable spend, market size, the prize.  GUARDRAILS: Whole market, not IHG. For IHG only, use 'IHG Addressable Spend'. Includes modelled pipeline BUILD \u2014 see 'Directly Addressable Spend'.  Validated value with no filters as at 2026-08-09: 256,361,641,307.",
+            "displayFolder": "01 Market"
           },
           {
             "name": "Directly Addressable Spend",
             "expression": "CALCULATE ( [Total Spend], KEEPFILTERS ( Fact_Spend_Agg[addressability] = \"Addressable\" ), KEEPFILTERS ( Fact_Spend_Agg[lifecycle_stage] <> \"BUILD\" ) )",
-            "formatString": "\\$#,##0"
+            "formatString": "\\$#,##0",
+            "description": "Addressable spend EXCLUDING modelled pipeline BUILD costs. BUILD is a modelled construction estimate for hotels not yet open, so it cannot be captured on a programme today. This is the strategy slide 12/13 basis and the confirmed definition of 'directly addressable'.  Also called: directly addressable, direct addressable spend, realistic addressable, addressable excluding build, capturable spend.  GUARDRAILS: Market-wide. Do NOT use as the capture-rate denominator \u2014 that needs 'IHG Directly Addressable'. Using this one gives ~0.86% instead of 7.60%.  Validated value with no filters as at 2026-08-09: 134,622,962,651.",
+            "displayFolder": "01 Market"
           },
           {
             "name": "IHG Addressable Spend",
             "expression": "CALCULATE ( [Addressable Spend], KEEPFILTERS ( Fact_Spend_Agg[ihg_flag] = \"IHG\" ) )",
-            "formatString": "\\$#,##0"
+            "formatString": "\\$#,##0",
+            "description": "Addressable spend inside the IHG estate only. Strategy slide 4 headline: $28.9bn.  Also called: IHG addressable, our addressable spend, IHG estate spend, our estate addressable, IHG spend pool.  GUARDRAILS: Includes modelled pipeline BUILD.  Validated value with no filters as at 2026-08-09: 28,913,885,399.",
+            "displayFolder": "02 IHG estate"
           },
           {
             "name": "IHG Directly Addressable",
             "expression": "CALCULATE ( [Directly Addressable Spend], KEEPFILTERS ( Fact_Spend_Agg[ihg_flag] = \"IHG\" ) )",
-            "formatString": "\\$#,##0"
+            "formatString": "\\$#,##0",
+            "description": "IHG addressable spend excluding modelled pipeline BUILD. THE denominator for capture rate and headroom. Confirmed basis (spreadsheet is gospel; the $15.6bn on the slide is stale).  Also called: IHG directly addressable, our directly addressable spend, what we can capture, our realistic pool.  GUARDRAILS: This is the ONLY correct capture-rate denominator.  Validated value with no filters as at 2026-08-09: 15,232,133,229.",
+            "displayFolder": "02 IHG estate"
           },
           {
             "name": "IHG Share of Addressable %",
             "expression": "DIVIDE ( [IHG Addressable Spend], [Addressable Spend] )",
-            "formatString": "0.0%"
+            "formatString": "0.0%",
+            "description": "IHG's share of the global addressable pool. Slide 4: 11.3%.  Also called: share of addressable, IHG share, share of wallet, our market share.  GUARDRAILS: Share of the SPEND pool, not share of hotels or rooms.  Validated value with no filters as at 2026-08-09: 11.28%.",
+            "displayFolder": "02 IHG estate"
           },
           {
             "name": "Total Market Spend",
             "expression": "[Total Spend]",
-            "formatString": "\\$#,##0"
+            "formatString": "\\$#,##0",
+            "description": "Alias of 'Total Spend', used on the page 1 framing card.  Also called: market spend, total market.  Validated value with no filters as at 2026-08-09: 439,000,000,028.",
+            "displayFolder": "00 Base"
           },
           {
             "name": "Hotel Count",
             "expression": "DISTINCTCOUNT ( Fact_Spend[InnCode] )",
-            "formatString": "#,0"
+            "formatString": "#,0",
+            "description": "Distinct hotels with spend data, all brands, no filters. Must be a DISTINCTCOUNT \u2014 Fact_Spend_Agg[hotels] is pre-aggregated and summing it overcounts ~8x.  Also called: hotels, hotel count, number of hotels, properties.  GUARDRAILS: Never SUM Fact_Spend_Agg[hotels]. That column is a pre-aggregated count.  Validated value with no filters as at 2026-08-09: 57,638.",
+            "displayFolder": "03 Estate"
           },
           {
             "name": "IHG Hotels",
             "expression": "CALCULATE ( DISTINCTCOUNT ( Fact_Spend[InnCode] ), Dim_Hotel[ihg_flag] = \"IHG\", Dim_Hotel[contract_status] = \"Open - Accepting Guests\", Fact_Spend[addressability] = \"Addressable\" )",
-            "formatString": "#,0"
+            "formatString": "#,0",
+            "description": "Open, trading IHG hotels with addressable spend. Ties to the Excel pivot: 6,992. (Strategy slide 4 shows 7,014 from an earlier extract date \u2014 0.3% apart.)  Also called: IHG hotels, our hotels, open hotels, trading hotels, estate size.  GUARDRAILS: 'Open - Accepting Guests' only \u2014 excludes Planning Phase pipeline.  Validated value with no filters as at 2026-08-09: 6,992.",
+            "displayFolder": "03 Estate"
           },
           {
             "name": "Programme Spend",
             "expression": "CALCULATE ( SUM ( Fact_Programme_Spend[spend] ), KEEPFILTERS ( Fact_Programme_Spend[measure] = \"Programme (P2P) Spend\" ) )",
-            "formatString": "\\$#,##0"
+            "formatString": "\\$#,##0",
+            "description": "Spend actually flowing through IHG procurement programmes (P2P). The numerator of capture rate. QBR 2025: $1.16bn.  Also called: programme spend, program spend, captured spend, P2P spend, spend under management, what we capture.  GUARDRAILS: The 'measure' filter is essential \u2014 the table also holds a 'Total Spend' row type. Region comes from the hotel master, not the file's own ASIA/EUROPE labels (those do not match IHG's structure).  Validated value with no filters as at 2026-08-09: 1,158,360,300.",
+            "displayFolder": "04 Capture"
+          },
+          {
+            "name": "Programme Spend (like-for-like)",
+            "expression": "CALCULATE ( [Programme Spend], KEEPFILTERS ( Fact_Programme_Spend[in_market_model] = \"Y\" ) )",
+            "formatString": "\\$#,##0",
+            "description": "Programme spend restricted to the six categories that exist in the market model (FF&E, F&B, Energy, OS&E, MRO, Hotel Tech). Excludes $293.2m of HR, Travel, Advisory, Management-charge and Marketing spend, which IHG captures but which the market model does not count as addressable at all.  Also called: like for like programme spend, matched programme spend, comparable programme spend.  GUARDRAILS: Use this when comparing numerator to denominator on equal terms.  Validated value with no filters as at 2026-08-09: 865,195,796.",
+            "displayFolder": "04 Capture"
           },
           {
             "name": "CRF Total",
             "expression": "SUM ( Fact_CRF[crf_usd] )",
-            "formatString": "\\$#,##0"
+            "formatString": "\\$#,##0",
+            "description": "Contract Recovery Fee collected, summed over whatever period is in filter context. Unfiltered this is 2023-2026 combined ($79.1m) \u2014 almost never what you want. Prefer 'CRF 2025'.  Also called: CRF, contract recovery fee, rebate, fee collected.  GUARDRAILS: Unfiltered spans four years. Always slice by year.  Validated value with no filters as at 2026-08-09: 79,106,956.",
+            "displayFolder": "04 Capture"
           },
           {
             "name": "CRF 2025",
             "expression": "CALCULATE ( [CRF Total], KEEPFILTERS ( Fact_CRF[year] = 2025 ) )",
-            "formatString": "\\$#,##0"
+            "formatString": "\\$#,##0",
+            "description": "CRF collected in full-year 2025. Ties to QBR: $27.05m.  Also called: CRF 2025, CRF this year, annual CRF, full year CRF.  GUARDRAILS: Fixed to 2025. 2026 YTD is $8.26m and is a different figure.  Validated value with no filters as at 2026-08-09: 27,054,346.",
+            "displayFolder": "04 Capture"
           },
           {
             "name": "Capture Rate %",
             "expression": "DIVIDE ( [Programme Spend], [IHG Directly Addressable] )",
-            "formatString": "0.00%"
+            "formatString": "0.00%",
+            "description": "Programme spend divided by IHG directly addressable spend. The single most important strategic metric: how much of what we could capture, we do. 7.60%.  Also called: capture rate, capture, penetration, spend under management rate, how much are we capturing.  GUARDRAILS: Denominator is IHG directly addressable ($15.2bn), NOT market ($134.6bn) and NOT IHG total addressable ($28.9bn). The numerator is wider than the denominator: it includes $293.2m of spend in categories with no addressable base (mostly HR) and $33.6m of BUILD. 'Capture Rate % (like-for-like)' puts both on the same scope and gives 5.68%.  Validated value with no filters as at 2026-08-09: 7.60%.",
+            "displayFolder": "04 Capture"
           },
           {
             "name": "Average CRF Rate %",
             "expression": "DIVIDE ( [CRF 2025], [Programme Spend] )",
-            "formatString": "0.00%"
+            "formatString": "0.00%",
+            "description": "CRF collected as a percentage of programme spend. 2.34%.  Also called: CRF rate, average CRF rate, fee rate, recovery rate, yield.  GUARDRAILS: Numerator is fixed to 2025; comparing against a non-2025 programme-spend slice mismatches the periods.  Validated value with no filters as at 2026-08-09: 2.34%.",
+            "displayFolder": "04 Capture"
           },
           {
             "name": "Headroom",
-            "expression": "[IHG Directly Addressable] - [Programme Spend]",
-            "formatString": "\\$#,##0"
+            "expression": "[IHG Directly Addressable] - [Programme Spend (like-for-like)]",
+            "formatString": "\\$#,##0",
+            "description": "Directly addressable spend not yet captured on a programme. The targeting measure \u2014 biggest headroom means biggest prize. $14.37bn in total. Uses the like-for-like numerator so categories with no addressable base net to zero rather than showing a spurious negative.  Also called: headroom, opportunity, gap, untapped, whitespace, what's left on the table, uncaptured spend.  GUARDRAILS: Can go slightly negative in a BUILD slice, where programme spend exists but the denominator is excluded by definition.  Validated value with no filters as at 2026-08-09: 14,366,937,433.",
+            "displayFolder": "05 Opportunity"
+          },
+          {
+            "name": "Capture Rate % (like-for-like)",
+            "expression": "DIVIDE ( [Programme Spend (like-for-like)], [IHG Directly Addressable] )",
+            "formatString": "0.00%",
+            "description": "Capture rate with numerator and denominator on the same category scope: 5.68%. The headline 7.60% includes $293.2m of programme spend in categories the market model treats as non-addressable, so it flatters the position by 1.9 percentage points.  Also called: like for like capture rate, comparable capture rate, true capture rate, adjusted capture rate.  GUARDRAILS: Use alongside, not instead of, 'Capture Rate %' \u2014 the 7.60% is what the strategy deck reports.  Validated value with no filters as at 2026-08-09: 5.68%.",
+            "displayFolder": "04 Capture"
           },
           {
             "name": "P2P Systems",
             "expression": "SUM ( Fact_P2P[systems] )",
-            "formatString": "#,0"
+            "formatString": "#,0",
+            "description": "Count of hotels live on a P2P system. CMH 2025 year-end = 755 (AMER 88 / EMEAA 245 / GC 422); Franchise = 256.  Also called: P2P systems, P2P rollout, systems live, hotels on P2P.  GUARDRAILS: MUST filter estate_group. Unfiltered mixes CMH, Franchise and an excluded 'Managed - N/A' bucket, giving 1,479 instead of 755.",
+            "displayFolder": "06 Delivery"
           },
           {
             "name": "Supplier Value",
             "expression": "SUM ( Fact_Supplier[value] )",
-            "formatString": "#,0.0"
+            "formatString": "#,0.0",
+            "description": "Supplier-programme metric values \u2014 Sedex, EcoVadis, Rapid Ratings. Sedex: 415 outreach / 356 pre-screened / 59 no-response.  Also called: supplier value, supplier programme, sedex, ecovadis, rapid ratings, supplier assessments.  GUARDRAILS: MUST filter both 'programme' and row_type = 'Actual', or Targets and Actuals land in the same bar.",
+            "displayFolder": "06 Delivery"
           },
           {
             "name": "System Size Value",
             "expression": "SUM ( Fact_SystemSize[value] )",
-            "formatString": "#,0"
+            "formatString": "#,0",
+            "description": "Estate size over time \u2014 rooms or hotels, opening/closing balances. Region level: Americas 531,420 + EMEAA 293,825 + GC 223,486 = 1,048,731 rooms.  Also called: system size, estate size, rooms, room count, estate growth.  GUARDRAILS: MUST filter geo_level. The geography column mixes region roll-ups with individual countries; unfiltered it roughly doubles every total.",
+            "displayFolder": "06 Delivery"
+          },
+          {
+            "name": "Insight Count",
+            "expression": "COUNTROWS ( Fact_Insight )",
+            "formatString": "#,0",
+            "description": "Number of narrative insights matching the current filter context. Used by the narrative panel that overlays document/analysis commentary onto the numbers.  Also called: insights, commentary, narrative, notes.",
+            "displayFolder": "07 Narrative"
           }
         ]
       },
@@ -275,7 +345,8 @@
             "name": "HID",
             "dataType": "int64",
             "sourceColumn": "HID",
-            "formatString": "#,0"
+            "formatString": "#,0",
+            "isHidden": true
           },
           {
             "name": "ihg_flag",
@@ -401,7 +472,8 @@
           {
             "name": "has_spend_data",
             "dataType": "string",
-            "sourceColumn": "has_spend_data"
+            "sourceColumn": "has_spend_data",
+            "isHidden": true
           },
           {
             "name": "reporting_region",
@@ -445,7 +517,8 @@
               ]
             }
           }
-        ]
+        ],
+        "description": "Hotel master \u2014 one row per hotel. The authority for region and status."
       },
       {
         "name": "Fact_Spend",
@@ -493,7 +566,8 @@
               ]
             }
           }
-        ]
+        ],
+        "description": "Hotel-level spend, for drill-down. Joins to Dim_Hotel on InnCode."
       },
       {
         "name": "Fact_CRF",
@@ -523,7 +597,8 @@
           {
             "name": "region_std",
             "dataType": "string",
-            "sourceColumn": "region_std"
+            "sourceColumn": "region_std",
+            "isHidden": true
           }
         ],
         "partitions": [
@@ -542,7 +617,8 @@
               ]
             }
           }
-        ]
+        ],
+        "description": "Contract Recovery Fee by region and month, 2023-2026."
       },
       {
         "name": "Fact_P2P",
@@ -570,7 +646,8 @@
           {
             "name": "estate_group",
             "dataType": "string",
-            "sourceColumn": "estate_group"
+            "sourceColumn": "estate_group",
+            "description": "CMH (Managed) / Franchise / excluded 'Managed - N/A'. MUST be filtered \u2014 see the 'P2P Systems' measure.  Also called: estate group, estate, CMH, franchise."
           },
           {
             "name": "month",
@@ -611,7 +688,8 @@
               ]
             }
           }
-        ]
+        ],
+        "description": "P2P system rollout by region, market, product, estate and month."
       },
       {
         "name": "Fact_Supplier",
@@ -624,7 +702,8 @@
           {
             "name": "row_type",
             "dataType": "string",
-            "sourceColumn": "row_type"
+            "sourceColumn": "row_type",
+            "description": "Actual or Target. MUST be filtered.  Also called: row type, actual vs target."
           },
           {
             "name": "metric",
@@ -659,7 +738,8 @@
               ]
             }
           }
-        ]
+        ],
+        "description": "Supplier programme tracking \u2014 Sedex, EcoVadis, Rapid Ratings."
       },
       {
         "name": "Fact_SystemSize",
@@ -682,7 +762,8 @@
           {
             "name": "geo_level",
             "dataType": "string",
-            "sourceColumn": "geo_level"
+            "sourceColumn": "geo_level",
+            "description": "Total / Region / Country. MUST be filtered to one level \u2014 the geography column mixes roll-ups and countries.  Also called: geo level, geography level."
           },
           {
             "name": "metric",
@@ -723,7 +804,8 @@
               ]
             }
           }
-        ]
+        ],
+        "description": "Estate size (rooms and hotels) over time."
       },
       {
         "name": "Fact_Programme_Spend",
@@ -741,7 +823,8 @@
           {
             "name": "source_region_label",
             "dataType": "string",
-            "sourceColumn": "source_region_label"
+            "sourceColumn": "source_region_label",
+            "isHidden": true
           },
           {
             "name": "region",
@@ -756,7 +839,8 @@
           {
             "name": "region_std",
             "dataType": "string",
-            "sourceColumn": "region_std"
+            "sourceColumn": "region_std",
+            "isHidden": true
           },
           {
             "name": "reporting_region",
@@ -787,7 +871,8 @@
           {
             "name": "category_l2",
             "dataType": "string",
-            "sourceColumn": "category_l2"
+            "sourceColumn": "category_l2",
+            "description": "The programme tracker's own level-2 category, kept for traceability. The crosswalk to the market taxonomy lives in the 'category' column.  Also called: programme category, L2 category."
           },
           {
             "name": "lifecycle_stage",
@@ -803,13 +888,45 @@
           {
             "name": "measure",
             "dataType": "string",
-            "sourceColumn": "measure"
+            "sourceColumn": "measure",
+            "description": "'Programme (P2P) Spend' or 'Total Spend'. MUST be filtered \u2014 see 'Programme Spend'.  Also called: measure, spend type."
           },
           {
             "name": "spend",
             "dataType": "double",
             "sourceColumn": "spend",
             "formatString": "#,0.00"
+          },
+          {
+            "name": "category",
+            "dataType": "string",
+            "sourceColumn": "category"
+          },
+          {
+            "name": "in_market_model",
+            "dataType": "string",
+            "sourceColumn": "in_market_model",
+            "description": "Y if this category exists in the market spend model and therefore has an addressable denominator; N otherwise (HR, Travel, Advisory, Management charges, Marketing \u2014 $293.2m, 25.3% of programme spend).  Also called: in market model, comparable, like for like."
+          },
+          {
+            "name": "chain_scale",
+            "dataType": "string",
+            "sourceColumn": "chain_scale"
+          },
+          {
+            "name": "segment_group",
+            "dataType": "string",
+            "sourceColumn": "segment_group"
+          },
+          {
+            "name": "market_categorisation",
+            "dataType": "string",
+            "sourceColumn": "market_categorisation"
+          },
+          {
+            "name": "priority_market",
+            "dataType": "string",
+            "sourceColumn": "priority_market"
           }
         ],
         "partitions": [
@@ -822,13 +939,14 @@
                 "let",
                 "    Source = Csv.Document(File.Contents(DataFolder & \"\\Fact_Programme_Spend.csv\"),[Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
                 "    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
-                "    Typed = Table.TransformColumnTypes(Promoted, {{\"hotel_code\", type text}, {\"hotel_name\", type text}, {\"source_region_label\", type text}, {\"region\", type text}, {\"sub_region\", type text}, {\"region_std\", type text}, {\"reporting_region\", type text}, {\"country\", type text}, {\"brand_code\", type text}, {\"rooms\", Int64.Type}, {\"category_l1\", type text}, {\"category_l2\", type text}, {\"lifecycle_stage\", type text}, {\"year\", Int64.Type}, {\"measure\", type text}, {\"spend\", type number}})",
+                "    Typed = Table.TransformColumnTypes(Promoted, {{\"hotel_code\", type text}, {\"hotel_name\", type text}, {\"source_region_label\", type text}, {\"region\", type text}, {\"sub_region\", type text}, {\"region_std\", type text}, {\"reporting_region\", type text}, {\"country\", type text}, {\"brand_code\", type text}, {\"rooms\", Int64.Type}, {\"category_l1\", type text}, {\"category_l2\", type text}, {\"lifecycle_stage\", type text}, {\"year\", Int64.Type}, {\"measure\", type text}, {\"spend\", type number}, {\"category\", type text}, {\"in_market_model\", type text}, {\"chain_scale\", type text}, {\"segment_group\", type text}, {\"market_categorisation\", type text}, {\"priority_market\", type text}})",
                 "in",
                 "    Typed"
               ]
             }
           }
-        ]
+        ],
+        "description": "Spend captured on IHG procurement programmes. Region derived from the hotel master, not the file's own labels."
       },
       {
         "name": "Dim_Region",
@@ -836,18 +954,22 @@
           {
             "name": "region_std",
             "dataType": "string",
-            "sourceColumn": "region_std"
+            "sourceColumn": "region_std",
+            "isHidden": true
           },
           {
             "name": "region_name",
             "dataType": "string",
-            "sourceColumn": "region_name"
+            "sourceColumn": "region_name",
+            "description": "AMER / EMEAA / Greater China. EMEAA = Europe + IMEA + EAPAC. Greater China is China, Hong Kong, Taiwan and Macau ONLY \u2014 it is NOT wider Asia. Always slice region from Dim_Region so all fact tables filter together.  Also called: region, regions, geography, AMER, EMEAA, Greater China, GC.",
+            "sortByColumn": "sort_order"
           },
           {
             "name": "sort_order",
             "dataType": "int64",
             "sourceColumn": "sort_order",
-            "formatString": "#,0"
+            "formatString": "#,0",
+            "isHidden": true
           }
         ],
         "partitions": [
@@ -866,7 +988,8 @@
               ]
             }
           }
-        ]
+        ],
+        "description": "Conformed region dimension. Slice region from here."
       },
       {
         "name": "Dim_Lifecycle",
@@ -874,13 +997,16 @@
           {
             "name": "lifecycle_stage",
             "dataType": "string",
-            "sourceColumn": "lifecycle_stage"
+            "sourceColumn": "lifecycle_stage",
+            "description": "Conformed lifecycle dimension. Slice from here, not from a fact table, so spend and programme spend filter together.  Also called: lifecycle, stage.",
+            "sortByColumn": "sort_order"
           },
           {
             "name": "sort_order",
             "dataType": "int64",
             "sourceColumn": "sort_order",
-            "formatString": "#,0"
+            "formatString": "#,0",
+            "isHidden": true
           }
         ],
         "partitions": [
@@ -899,7 +1025,218 @@
               ]
             }
           }
-        ]
+        ],
+        "description": "Conformed lifecycle dimension. Slice lifecycle from here."
+      },
+      {
+        "name": "Dim_Category",
+        "columns": [
+          {
+            "name": "category",
+            "dataType": "string",
+            "sourceColumn": "category"
+          },
+          {
+            "name": "category_name",
+            "dataType": "string",
+            "sourceColumn": "category_name",
+            "description": "Conformed spend category. Slice category from HERE, not from a fact table \u2014 this is what makes market spend and programme spend filter together after the taxonomy crosswalk. Six categories have an addressable base (FF&E, F&B, Energy, OS&E, MRO, Hotel Tech); the rest hold captured spend with no market-model equivalent.  Also called: category, spend category, commodity, category name.",
+            "sortByColumn": "sort_order"
+          },
+          {
+            "name": "sort_order",
+            "dataType": "int64",
+            "sourceColumn": "sort_order",
+            "formatString": "#,0",
+            "isHidden": true
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Dim_Category",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(DataFolder & \"\\Dim_Category.csv\"),[Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    Typed = Table.TransformColumnTypes(Promoted, {{\"category\", type text}, {\"category_name\", type text}, {\"sort_order\", Int64.Type}})",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ],
+        "description": "Conformed category dimension, bridging the market taxonomy and the programme tracker's 43 level-2 categories. Slice category from here."
+      },
+      {
+        "name": "Dim_ChainScale",
+        "columns": [
+          {
+            "name": "chain_scale",
+            "dataType": "string",
+            "sourceColumn": "chain_scale"
+          },
+          {
+            "name": "chain_scale_name",
+            "dataType": "string",
+            "sourceColumn": "chain_scale_name",
+            "description": "Conformed chain scale. Slice from here so programme spend filters too.  Also called: chain scale, scale, tier.",
+            "sortByColumn": "sort_order"
+          },
+          {
+            "name": "sort_order",
+            "dataType": "int64",
+            "sourceColumn": "sort_order",
+            "formatString": "#,0",
+            "isHidden": true
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Dim_ChainScale",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(DataFolder & \"\\Dim_ChainScale.csv\"),[Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    Typed = Table.TransformColumnTypes(Promoted, {{\"chain_scale\", type text}, {\"chain_scale_name\", type text}, {\"sort_order\", Int64.Type}})",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ],
+        "description": "Conformed chain scale dimension. Slice chain scale from here."
+      },
+      {
+        "name": "Dim_Segment",
+        "columns": [
+          {
+            "name": "segment_group",
+            "dataType": "string",
+            "sourceColumn": "segment_group"
+          },
+          {
+            "name": "segment_name",
+            "dataType": "string",
+            "sourceColumn": "segment_name",
+            "description": "Conformed segment group \u2014 Premium + Lifestyle/Luxury vs Essentials & Suites.  Also called: segment, segment group.",
+            "sortByColumn": "sort_order"
+          },
+          {
+            "name": "sort_order",
+            "dataType": "int64",
+            "sourceColumn": "sort_order",
+            "formatString": "#,0",
+            "isHidden": true
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Dim_Segment",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(DataFolder & \"\\Dim_Segment.csv\"),[Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    Typed = Table.TransformColumnTypes(Promoted, {{\"segment_group\", type text}, {\"segment_name\", type text}, {\"sort_order\", Int64.Type}})",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ],
+        "description": "Conformed segment dimension. Slice segment from here."
+      },
+      {
+        "name": "Dim_Market",
+        "columns": [
+          {
+            "name": "market_categorisation",
+            "dataType": "string",
+            "sourceColumn": "market_categorisation"
+          },
+          {
+            "name": "market_name",
+            "dataType": "string",
+            "sourceColumn": "market_name",
+            "description": "Conformed market categorisation.  Also called: market type, market categorisation.",
+            "sortByColumn": "sort_order"
+          },
+          {
+            "name": "sort_order",
+            "dataType": "int64",
+            "sourceColumn": "sort_order",
+            "formatString": "#,0",
+            "isHidden": true
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Dim_Market",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(DataFolder & \"\\Dim_Market.csv\"),[Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    Typed = Table.TransformColumnTypes(Promoted, {{\"market_categorisation\", type text}, {\"market_name\", type text}, {\"sort_order\", Int64.Type}})",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ],
+        "description": "Conformed market categorisation dimension. Slice market type from here."
+      },
+      {
+        "name": "Dim_Priority",
+        "columns": [
+          {
+            "name": "priority_market",
+            "dataType": "string",
+            "sourceColumn": "priority_market"
+          },
+          {
+            "name": "priority_name",
+            "dataType": "string",
+            "sourceColumn": "priority_name",
+            "description": "Conformed priority-market flag.  Also called: priority market, priority.",
+            "sortByColumn": "sort_order"
+          },
+          {
+            "name": "sort_order",
+            "dataType": "int64",
+            "sourceColumn": "sort_order",
+            "formatString": "#,0",
+            "isHidden": true
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Dim_Priority",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(DataFolder & \"\\Dim_Priority.csv\"),[Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    Typed = Table.TransformColumnTypes(Promoted, {{\"priority_market\", type text}, {\"priority_name\", type text}, {\"sort_order\", Int64.Type}})",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ],
+        "description": "Conformed priority-market dimension. Slice priority market from here."
       },
       {
         "name": "Fact_ShareOfWallet",
@@ -912,7 +1249,8 @@
           {
             "name": "region",
             "dataType": "string",
-            "sourceColumn": "region"
+            "sourceColumn": "region",
+            "isHidden": true
           },
           {
             "name": "lifecycle_stage",
@@ -958,7 +1296,90 @@
               ]
             }
           }
-        ]
+        ],
+        "description": "Pre-built share-of-wallet summary by region, lifecycle and IHG flag."
+      },
+      {
+        "name": "Fact_Insight",
+        "columns": [
+          {
+            "name": "insight_id",
+            "dataType": "string",
+            "sourceColumn": "insight_id",
+            "isHidden": true
+          },
+          {
+            "name": "insight_date",
+            "dataType": "dateTime",
+            "sourceColumn": "insight_date"
+          },
+          {
+            "name": "source",
+            "dataType": "string",
+            "sourceColumn": "source"
+          },
+          {
+            "name": "source_type",
+            "dataType": "string",
+            "sourceColumn": "source_type"
+          },
+          {
+            "name": "theme",
+            "dataType": "string",
+            "sourceColumn": "theme",
+            "description": "What the insight is about \u2014 e.g. Capture, Headroom, Delivery, Risk, Definition.  Also called: theme, topic."
+          },
+          {
+            "name": "region_std",
+            "dataType": "string",
+            "sourceColumn": "region_std"
+          },
+          {
+            "name": "lifecycle_stage",
+            "dataType": "string",
+            "sourceColumn": "lifecycle_stage"
+          },
+          {
+            "name": "category",
+            "dataType": "string",
+            "sourceColumn": "category"
+          },
+          {
+            "name": "statement",
+            "dataType": "string",
+            "sourceColumn": "statement",
+            "description": "The insight itself, in one sentence.  Also called: insight, finding, commentary."
+          },
+          {
+            "name": "so_what",
+            "dataType": "string",
+            "sourceColumn": "so_what",
+            "description": "The decision implication \u2014 what to do about it.  Also called: so what, implication, action."
+          },
+          {
+            "name": "confidence",
+            "dataType": "string",
+            "sourceColumn": "confidence"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Fact_Insight",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(DataFolder & \"\\Fact_Insight.csv\"),[Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    Typed = Table.TransformColumnTypes(Promoted, {{\"insight_id\", type text}, {\"insight_date\", type date}, {\"source\", type text}, {\"source_type\", type text}, {\"theme\", type text}, {\"region_std\", type text}, {\"lifecycle_stage\", type text}, {\"category\", type text}, {\"statement\", type text}, {\"so_what\", type text}, {\"confidence\", type text}})",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ],
+        "description": "Narrative overlay \u2014 analysis and document commentary tagged to the same region / lifecycle / category dimensions as the numbers, so it filters alongside them."
       }
     ],
     "relationships": [
@@ -1009,12 +1430,108 @@
         "toTable": "Dim_Lifecycle",
         "toColumn": "lifecycle_stage",
         "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Reg_Insight",
+        "fromTable": "Fact_Insight",
+        "fromColumn": "region_std",
+        "toTable": "Dim_Region",
+        "toColumn": "region_std",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Life_Insight",
+        "fromTable": "Fact_Insight",
+        "fromColumn": "lifecycle_stage",
+        "toTable": "Dim_Lifecycle",
+        "toColumn": "lifecycle_stage",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Dim_Category_Agg",
+        "fromTable": "Fact_Spend_Agg",
+        "fromColumn": "category",
+        "toTable": "Dim_Category",
+        "toColumn": "category",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Dim_Category_Prog",
+        "fromTable": "Fact_Programme_Spend",
+        "fromColumn": "category",
+        "toTable": "Dim_Category",
+        "toColumn": "category",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Dim_ChainScale_Agg",
+        "fromTable": "Fact_Spend_Agg",
+        "fromColumn": "chain_scale",
+        "toTable": "Dim_ChainScale",
+        "toColumn": "chain_scale",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Dim_ChainScale_Prog",
+        "fromTable": "Fact_Programme_Spend",
+        "fromColumn": "chain_scale",
+        "toTable": "Dim_ChainScale",
+        "toColumn": "chain_scale",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Dim_Segment_Agg",
+        "fromTable": "Fact_Spend_Agg",
+        "fromColumn": "segment_group",
+        "toTable": "Dim_Segment",
+        "toColumn": "segment_group",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Dim_Segment_Prog",
+        "fromTable": "Fact_Programme_Spend",
+        "fromColumn": "segment_group",
+        "toTable": "Dim_Segment",
+        "toColumn": "segment_group",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Dim_Market_Agg",
+        "fromTable": "Fact_Spend_Agg",
+        "fromColumn": "market_categorisation",
+        "toTable": "Dim_Market",
+        "toColumn": "market_categorisation",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Dim_Market_Prog",
+        "fromTable": "Fact_Programme_Spend",
+        "fromColumn": "market_categorisation",
+        "toTable": "Dim_Market",
+        "toColumn": "market_categorisation",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Dim_Priority_Agg",
+        "fromTable": "Fact_Spend_Agg",
+        "fromColumn": "priority_market",
+        "toTable": "Dim_Priority",
+        "toColumn": "priority_market",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Dim_Priority_Prog",
+        "fromTable": "Fact_Programme_Spend",
+        "fromColumn": "priority_market",
+        "toTable": "Dim_Priority",
+        "toColumn": "priority_market",
+        "crossFilteringBehavior": "oneDirection"
       }
     ],
     "annotations": [
       {
         "name": "PBI_QueryOrder",
-        "value": "[\"DataFolder\", \"Fact_Spend_Agg\", \"Dim_Hotel\", \"Fact_Spend\", \"Fact_CRF\", \"Fact_P2P\", \"Fact_Supplier\", \"Fact_SystemSize\", \"Fact_Programme_Spend\", \"Dim_Region\", \"Dim_Lifecycle\", \"Fact_ShareOfWallet\"]"
+        "value": "[\"DataFolder\", \"Fact_Spend_Agg\", \"Dim_Hotel\", \"Fact_Spend\", \"Fact_CRF\", \"Fact_P2P\", \"Fact_Supplier\", \"Fact_SystemSize\", \"Fact_Programme_Spend\", \"Dim_Region\", \"Dim_Lifecycle\", \"Dim_Category\", \"Dim_ChainScale\", \"Dim_Segment\", \"Dim_Market\", \"Dim_Priority\", \"Fact_ShareOfWallet\", \"Fact_Insight\"]"
       }
     ]
   }

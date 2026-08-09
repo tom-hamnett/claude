@@ -1,0 +1,13 @@
+category,category_name,sort_order
+ADVISORY,ADVISORY,0
+Energy,Energy,1
+F&B,F&B,2
+FF&E,FF&E,3
+HR,HR,4
+"Hotel Tech, Hardware, Software, Telecom","Hotel Tech, Hardware, Software, Telecom",5
+MARKETING,MARKETING,6
+MRO,MRO,7
+"Mgmt Charges, Taxes / Fees","Mgmt Charges, Taxes / Fees",8
+OS&E,OS&E,9
+TRAVEL,TRAVEL,10
+Unmapped,Unmapped,11

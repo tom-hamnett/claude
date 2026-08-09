@@ -52,6 +52,11 @@ def slicer(_entity, tbl, col, x,y,w,h):
     return _wrap("slicer", {"Values":[{"queryRef":f"{tbl}.{col}"}]}, [(tbl,col)], [],
                  x,y,w,h, None)
 
+def table(cols, meas, x,y,w,h, title):
+    proj={"Values":[{"queryRef":f"{t}.{c}"} for t,c in cols]
+                 + [{"queryRef":f"{t}.{m}"} for t,m in meas]}
+    return _wrap("tableEx", proj, cols, meas, x,y,w,h, title)
+
 def matrix(_entity, rows, cols, meas, x,y,w,h, title):
     proj={"Rows":[{"queryRef":f"{t}.{c}"} for t,c in rows],
           "Columns":[{"queryRef":f"{t}.{c}"} for t,c in cols],
@@ -60,6 +65,11 @@ def matrix(_entity, rows, cols, meas, x,y,w,h, title):
                  {"values":[{"properties":{"labelDisplayUnits":AUTO}}]})
 
 S="Fact_Spend_Agg"; R="Dim_Region"; L="Dim_Lifecycle"
+# Conformed attribute dimensions. Slicing these filters BOTH the market side and the
+# programme side — slicing the equivalent Fact_Spend_Agg column only filters the market
+# side, which silently broke every Headroom chart before they existed.
+C="Dim_Category"; CS="Dim_ChainScale"; SG="Dim_Segment"; MK="Dim_Market"; PR="Dim_Priority"
+I="Fact_Insight"
 # ============ PAGE 1 — THE PRIZE ============
 p1=[
  card(S,S,"Total Market Spend",   20,20,235,95,"Total market spend"),
@@ -89,8 +99,9 @@ p2=[
  card(S,S,"CRF 2025",            1000,20,240,95,"CRF collected (2025)"),
  chart("clusteredColumnChart",R,[(R,"region_name")],[(S,"IHG Directly Addressable"),(S,"Programme Spend")],
        20,130,610,260,"Addressable vs captured, by region — AMER carries the load"),
- chart("clusteredColumnChart",R,[(R,"region_name")],[(S,"Capture Rate %")],640,130,300,260,
-       "Capture rate by region"),
+ chart("clusteredColumnChart",R,[(R,"region_name")],
+       [(S,"Capture Rate %"),(S,"Capture Rate % (like-for-like)")],640,130,300,260,
+       "Capture rate by region — headline vs like-for-like"),
  chart("clusteredColumnChart",R,[(R,"region_name")],[(S,"Average CRF Rate %")],950,130,290,260,
        "Average CRF rate"),
  chart("clusteredColumnChart",L,[(L,"lifecycle_stage")],[(S,"IHG Directly Addressable"),(S,"Programme Spend")],
@@ -103,17 +114,17 @@ p3=[
  card(S,S,"Headroom", 20,20,235,95,"Total headroom"),
  card(S,S,"IHG Hotels",265,20,235,95,"IHG hotels"),
  slicer(L,L,"lifecycle_stage",510,20,235,95),
- slicer(S,S,"chain_scale",755,20,235,95),
+ slicer(CS,CS,"chain_scale_name",755,20,235,95),
  slicer(R,R,"region_name",1000,20,240,95),
- matrix(L,[(L,"lifecycle_stage"),(S,"category")],[(R,"region_name")],[(S,"Headroom")],20,130,610,300,
-        "Headroom by category x region — where to aim"),
- chart("clusteredBarChart",S,[(S,"category")],[(S,"Headroom")],640,130,600,300,
-       "Biggest category headroom"),
- chart("clusteredBarChart",S,[(S,"market_categorisation")],[(S,"Headroom")],20,440,400,220,
+ matrix(L,[(L,"lifecycle_stage"),(C,"category_name")],[(R,"region_name")],[(S,"Headroom")],
+        20,130,610,300,"Headroom by category x region — where to aim"),
+ chart("clusteredBarChart",C,[(C,"category_name")],[(S,"Headroom"),(S,"Capture Rate %")],
+       640,130,600,300,"Category headroom, with how much of it we already capture"),
+ chart("clusteredBarChart",MK,[(MK,"market_name")],[(S,"Headroom")],20,440,400,220,
        "Headroom by market type"),
- chart("clusteredBarChart",S,[(S,"segment_group")],[(S,"Headroom")],430,440,400,220,
+ chart("clusteredBarChart",SG,[(SG,"segment_name")],[(S,"Headroom")],430,440,400,220,
        "Headroom by segment"),
- chart("clusteredBarChart",S,[(S,"priority_market")],[(S,"Headroom")],840,440,400,220,
+ chart("clusteredBarChart",PR,[(PR,"priority_name")],[(S,"Headroom")],840,440,400,220,
        "Priority vs non-priority markets"),
 ]
 # ============ PAGE 4 — DELIVERY (QBR) ============
@@ -132,16 +143,36 @@ p4=[
        790,300,450,350,"System size — set geo_level slicer",
        legend=("Fact_SystemSize","geography")),
 ]
+# ============ PAGE 5 — NARRATIVE (the AI overlay surface) ============
+# Insights carry the same region and lifecycle keys as the facts, so the two slicers
+# filter the words and the numbers together. Global insights are stored fanned out across
+# every region x lifecycle, so no slicer combination can hide them; the table visual groups
+# on the displayed columns, which collapses the copies back to one line.
+p5=[
+ card(S,S,"Capture Rate %",       20,20,235,95,"Capture rate (headline)"),
+ card(S,S,"Capture Rate % (like-for-like)",265,20,235,95,"Capture rate (like-for-like)"),
+ card(S,S,"Headroom",            510,20,235,95,"Headroom"),
+ slicer(R,R,"region_name",       755,20,235,95),
+ slicer(L,L,"lifecycle_stage",  1000,20,240,95),
+ slicer(I,I,"theme",              20,130,235,250),
+ slicer(I,I,"source_type",        20,390,235,130),
+ slicer(I,I,"confidence",         20,530,235,130),
+ table([(I,"theme"),(I,"statement"),(I,"so_what"),(I,"source")],[],
+       265,130,975,530,
+       "What we know — filtered by the same slicers as the numbers"),
+]
+
 def page(i,name,disp,vcs):
     return {"id":i,"name":name,"displayName":disp,"filters":"[]","ordinal":i,
             "visualContainers":vcs,"config":json.dumps({}),"width":1280,"height":720,"displayOption":1}
 report={"id":0,"resourcePackages":[],"sections":[
   page(0,"S1","1. The Prize",p1), page(1,"S2","2. Our Position",p2),
-  page(2,"S3","3. Where to Act",p3), page(3,"S4","4. Delivery (QBR)",p4)],
+  page(2,"S3","3. Where to Act",p3), page(3,"S4","4. Delivery (QBR)",p4),
+  page(4,"S5","5. Narrative",p5)],
   "config":json.dumps({"version":"5.43","themeCollection":{"baseTheme":{"name":"CY24SU10"}},
                        "activeSectionIndex":0,"defaultDrillFilterOtherVisuals":True}),
   "layoutOptimization":0}
 open(os.path.join(RPT,"report.json"),"w",encoding="utf-8").write(json.dumps(report,indent=2))
 open(os.path.join(RPT,"definition.pbir"),"w",encoding="utf-8").write(json.dumps(
  {"version":"1.0","datasetReference":{"byPath":{"path":"../APEX_v2.SemanticModel"}}},indent=2))
-print(f"4 pages, {sum(len(p) for p in (p1,p2,p3,p4))} visuals")
+print(f"5 pages, {sum(len(p) for p in (p1,p2,p3,p4,p5))} visuals")
