@@ -1,27 +1,41 @@
 """Avatar Provider Abstraction — provider-agnostic interface.
 
-The engine generates the script and producer brief. The avatar provider
-(HeyGen, D-ID, Synthesia, Hedra, or 'none') turns that script into a
-talking-head video of the user's chosen avatar.
+The engine writes the script and producer brief. The avatar provider
+(HeyGen today; D-ID / Synthesia / Hedra / a future video-to-video engine
+later) turns the spoken lines into a talking-head video of the user's
+chosen avatar. The user brings their own API key (BYOK).
 
-This module exposes a single `AvatarProvider` interface. Each provider
-implementation maps the engine's request to its own API. The user brings
-their own API key (BYOK).
+Design (Option 1 — audio-driven, see docs/HEYGEN_WORKFLOW):
+  - One-time: the user creates an avatar in HeyGen (a 15s reference clip →
+    Avatar V learns how they move) and optionally clones their voice. The
+    engine just needs the resulting avatar_id (+ optional voice_id).
+  - Per video: the engine sends the spoken script for the Hook + Bookend
+    segments. It can drive the avatar two ways, which are mutually
+    exclusive on HeyGen's /v3/videos endpoint:
+        * text  -> script + voice_id (cloned or stock voice)  [hands-off]
+        * audio -> an uploaded recording via audio_asset_id    [your take]
+    "Hybrid" = default to the cloned voice, but let the user drop in a real
+    recording for a specific piece.
+  - The middle Core-Five segments (Tension/Pivot/Proof) are product screens
+    and data-viz — no avatar — so only ~8s of avatar footage is ever
+    rendered per reel.
 
-Usage:
-    from gtm_engine.avatar import get_provider
-    provider = get_provider()  # reads AVATAR_PROVIDER env var
-    video_path = provider.generate_video(
-        script="The exact spoken text",
-        avatar_id="user's trained avatar id",
-        output_path=Path("output.mp4"),
-    )
+The abstraction keeps a `driving_video` hook on the request so a future
+video-to-video provider (frame-exact performance transfer, Option 2) can
+be slotted in without changing callers.
 """
 
+import json
 import logging
 import os
+import sqlite3
+import time
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
+
+from pydantic import BaseModel, ConfigDict
 
 logger = logging.getLogger(__name__)
 
@@ -30,12 +44,35 @@ class AvatarProviderError(Exception):
     """Raised when an avatar provider call fails."""
 
 
+@dataclass
+class RenderRequest:
+    """Everything a provider needs to render one avatar clip.
+
+    Either (script + voice_id) OR audio_asset_id drives the mouth/motion —
+    they are mutually exclusive. driving_video_path is reserved for a future
+    performance-transfer provider and ignored by audio-driven providers.
+    """
+    script: str
+    avatar_id: str
+    output_path: Path
+    voice_id: str | None = None
+    audio_asset_id: str | None = None
+    driving_video_path: Path | None = None   # reserved (Option 2)
+    background: str = "#0d1b2a"
+    aspect_ratio: str = "9:16"
+    motion_prompt: str = ""
+    expressiveness: float = 0.5              # 0..1
+    callback_url: str | None = None
+
+
 class AvatarProvider(ABC):
     """Base interface every avatar provider must implement."""
 
     provider_id: str = "base"
     provider_name: str = "Base"
     requires_api_key: bool = True
+    supports_voice_clone: bool = False
+    supports_audio_upload: bool = False
 
     @abstractmethod
     def is_configured(self) -> bool:
@@ -44,23 +81,7 @@ class AvatarProvider(ABC):
 
     @abstractmethod
     def list_avatars(self) -> list[dict]:
-        """Return a list of available avatars: [{id, name, preview_url}]."""
-        ...
-
-    @abstractmethod
-    def generate_video(
-        self,
-        script: str,
-        avatar_id: str,
-        output_path: Path,
-        voice_id: str | None = None,
-        background: str = "transparent",
-        aspect_ratio: str = "9:16",
-    ) -> Path | None:
-        """Generate a video and save it to output_path.
-
-        Returns the saved path on success, None on failure.
-        """
+        """Return available avatars: [{id, name, preview_url}]."""
         ...
 
     @abstractmethod
@@ -68,11 +89,26 @@ class AvatarProvider(ABC):
         """Return available voices for this provider."""
         ...
 
+    @abstractmethod
+    def render(self, req: RenderRequest) -> Path | None:
+        """Render an avatar clip to req.output_path. None on failure."""
+        ...
+
+    # Optional capabilities — providers override when supported.
+    def upload_audio(self, audio_path: Path) -> str | None:
+        """Upload a recording; return an audio_asset_id. None if unsupported."""
+        return None
+
+    def clone_voice(self, sample_path: Path, name: str) -> str | None:
+        """Clone a voice from a sample; return a voice_id. None if unsupported."""
+        return None
+
 
 class NoAvatarProvider(AvatarProvider):
     """No-avatar mode — content uses TTS voiceover + B-roll only.
 
-    This is the default when no avatar provider is configured.
+    The default when no avatar provider is configured. render() is a no-op
+    so the pipeline can still produce the (avatar-free) middle segments.
     """
 
     provider_id = "none"
@@ -88,22 +124,33 @@ class NoAvatarProvider(AvatarProvider):
     def list_voices(self) -> list[dict]:
         return []
 
-    def generate_video(self, *args, **kwargs) -> Path | None:
-        logger.info("No-avatar mode — skipping avatar video generation")
+    def render(self, req: RenderRequest) -> Path | None:
+        logger.info("No-avatar mode — skipping avatar render")
         return None
 
 
 class HeyGenProvider(AvatarProvider):
-    """HeyGen Avatar API integration.
+    """HeyGen Video Generation API (audio-driven, Option 1).
 
-    Requires HEYGEN_API_KEY in environment. Pricing starts around $49/mo
-    for the creator tier. User trains an avatar from a 2-minute video of
-    themselves; the engine calls v2 of HeyGen's API to render videos.
+    Requires HEYGEN_API_KEY. The user creates their avatar + (optional)
+    voice clone in HeyGen once; the engine renders talking-head clips from
+    the script text (cloned/stock voice) or from an uploaded recording.
+
+    Endpoints used (see https://developers.heygen.com):
+      POST /v2/video/generate      submit a render -> video_id
+      GET  /v1/video_status.get    poll status/URL (fallback to webhooks)
+      POST /v1/asset/upload        upload a recording -> audio asset id
+      GET  /v2/avatars, /v2/voices list avatars / voices
     """
 
     provider_id = "heygen"
     provider_name = "HeyGen"
-    API_BASE = "https://api.heygen.com/v2"
+    supports_voice_clone = True
+    supports_audio_upload = True
+
+    API_V2 = "https://api.heygen.com/v2"
+    API_V1 = "https://api.heygen.com/v1"
+    UPLOAD_BASE = "https://upload.heygen.com/v1"
 
     def __init__(self):
         self.api_key = os.getenv("HEYGEN_API_KEY", "")
@@ -112,20 +159,17 @@ class HeyGenProvider(AvatarProvider):
         return bool(self.api_key)
 
     def _headers(self) -> dict:
-        return {
-            "X-Api-Key": self.api_key,
-            "Content-Type": "application/json",
-        }
+        return {"X-Api-Key": self.api_key, "Content-Type": "application/json"}
 
+    # ── discovery ──────────────────────────────────────────────────────────
     def list_avatars(self) -> list[dict]:
-        """Fetch the user's trained avatars from HeyGen."""
         if not self.is_configured():
             return []
         try:
             import httpx
-            r = httpx.get(f"{self.API_BASE}/avatars", headers=self._headers(), timeout=20)
+            r = httpx.get(f"{self.API_V2}/avatars", headers=self._headers(), timeout=20)
             r.raise_for_status()
-            data = r.json().get("data", {})
+            data = r.json().get("data", {}) or {}
             avatars = data.get("avatars", []) if isinstance(data, dict) else []
             return [
                 {
@@ -141,14 +185,13 @@ class HeyGenProvider(AvatarProvider):
             return []
 
     def list_voices(self) -> list[dict]:
-        """Fetch the available voices from HeyGen."""
         if not self.is_configured():
             return []
         try:
             import httpx
-            r = httpx.get(f"{self.API_BASE}/voices", headers=self._headers(), timeout=20)
+            r = httpx.get(f"{self.API_V2}/voices", headers=self._headers(), timeout=20)
             r.raise_for_status()
-            data = r.json().get("data", {})
+            data = r.json().get("data", {}) or {}
             voices = data.get("voices", []) if isinstance(data, dict) else []
             return [
                 {
@@ -163,114 +206,231 @@ class HeyGenProvider(AvatarProvider):
             logger.error("HeyGen list_voices failed: %s", e)
             return []
 
-    def generate_video(
-        self,
-        script: str,
-        avatar_id: str,
-        output_path: Path,
-        voice_id: str | None = None,
-        background: str = "transparent",
-        aspect_ratio: str = "9:16",
-    ) -> Path | None:
-        """Generate a video via HeyGen v2 API and download to output_path.
+    # ── uploads / cloning ────────────────────────────────────────────────────
+    def upload_audio(self, audio_path: Path) -> str | None:
+        """Upload a recording so it can drive a render via audio_asset_id."""
+        if not self.is_configured():
+            raise AvatarProviderError("HEYGEN_API_KEY not set")
+        try:
+            import httpx
+            audio_path = Path(audio_path)
+            content_type = "audio/mpeg" if audio_path.suffix.lower() == ".mp3" else "audio/wav"
+            r = httpx.post(
+                f"{self.UPLOAD_BASE}/asset",
+                headers={"X-Api-Key": self.api_key, "Content-Type": content_type},
+                content=audio_path.read_bytes(),
+                timeout=120,
+            )
+            r.raise_for_status()
+            data = r.json().get("data", {}) or {}
+            return data.get("id") or data.get("asset_id")
+        except Exception as e:
+            logger.error("HeyGen upload_audio failed: %s", e)
+            return None
 
-        HeyGen's flow:
-        1. POST /v2/video/generate with the avatar + script — returns video_id
-        2. Poll GET /v2/video_status?video_id=... until status == "completed"
-        3. Download the video_url to disk
+    def clone_voice(self, sample_path: Path, name: str) -> str | None:
+        """Voice cloning is provisioned in the HeyGen app/enterprise API.
+
+        We surface the capability but return None here so the UI can direct
+        the user to create the clone once and paste back the voice_id.
         """
+        logger.info("HeyGen voice cloning is a one-time setup in the HeyGen app.")
+        return None
+
+    # ── render ───────────────────────────────────────────────────────────────
+    def render(self, req: RenderRequest) -> Path | None:
         if not self.is_configured():
             raise AvatarProviderError("HEYGEN_API_KEY not set")
 
-        import time
         import httpx
 
-        # Default voice if not provided — HeyGen needs a voice_id always
-        if not voice_id:
-            voices = self.list_voices()
-            voice_id = voices[0]["id"] if voices else ""
+        dims = {"9:16": (720, 1280), "16:9": (1280, 720), "1:1": (720, 720)}
+        width, height = dims.get(req.aspect_ratio, (720, 1280))
 
-        # Map aspect ratio to dimensions
-        dimensions = {"9:16": (720, 1280), "16:9": (1280, 720), "1:1": (720, 720)}
-        width, height = dimensions.get(aspect_ratio, (720, 1280))
+        # Voice block: audio upload takes precedence over TTS (mutually exclusive).
+        if req.audio_asset_id:
+            voice_block = {"type": "audio", "audio_asset_id": req.audio_asset_id}
+        else:
+            voice_id = req.voice_id
+            if not voice_id:
+                voices = self.list_voices()
+                voice_id = voices[0]["id"] if voices else ""
+            voice_block = {"type": "text", "input_text": req.script, "voice_id": voice_id}
 
-        # Step 1: submit generation
+        character = {"type": "avatar", "avatar_id": req.avatar_id, "avatar_style": "normal"}
+        if req.motion_prompt:
+            character["motion_prompt"] = req.motion_prompt
+        character["expressiveness"] = req.expressiveness
+
         payload = {
-            "video_inputs": [
-                {
-                    "character": {
-                        "type": "avatar",
-                        "avatar_id": avatar_id,
-                        "avatar_style": "normal",
-                    },
-                    "voice": {
-                        "type": "text",
-                        "input_text": script,
-                        "voice_id": voice_id,
-                    },
-                    "background": {
-                        "type": "color" if background == "transparent" else "color",
-                        "value": "#0a0a0f" if background == "transparent" else background,
-                    },
-                }
-            ],
+            "video_inputs": [{
+                "character": character,
+                "voice": voice_block,
+                "background": {"type": "color", "value": req.background},
+            }],
             "dimension": {"width": width, "height": height},
         }
+        if req.callback_url:
+            payload["callback_url"] = req.callback_url
 
         try:
-            r = httpx.post(
-                f"{self.API_BASE}/video/generate",
-                headers=self._headers(),
-                json=payload,
-                timeout=30,
-            )
+            r = httpx.post(f"{self.API_V2}/video/generate", headers=self._headers(),
+                           json=payload, timeout=30)
             r.raise_for_status()
-            video_id = r.json().get("data", {}).get("video_id")
+            video_id = (r.json().get("data", {}) or {}).get("video_id")
             if not video_id:
-                logger.error("HeyGen did not return a video_id")
+                logger.error("HeyGen returned no video_id: %s", r.text[:300])
                 return None
-            logger.info("HeyGen video submitted: %s", video_id)
+            logger.info("HeyGen render submitted: %s", video_id)
 
-            # Step 2: poll status
-            video_url = None
-            max_wait = 600  # 10 minutes
-            waited = 0
-            while waited < max_wait:
-                time.sleep(10)
-                waited += 10
-                status_r = httpx.get(
-                    f"{self.API_BASE}/video_status.get",
-                    params={"video_id": video_id},
-                    headers=self._headers(),
-                    timeout=20,
-                )
-                if status_r.status_code != 200:
+            # If a webhook was supplied, let the caller handle completion.
+            if req.callback_url:
+                return None
+
+            # Otherwise poll.
+            return self._poll_and_download(video_id, req.output_path)
+        except Exception as e:
+            logger.error("HeyGen render failed: %s", e)
+            return None
+
+    def _poll_and_download(self, video_id: str, output_path: Path,
+                           max_wait: int = 600) -> Path | None:
+        import httpx
+        waited = 0
+        while waited < max_wait:
+            time.sleep(10)
+            waited += 10
+            try:
+                sr = httpx.get(f"{self.API_V1}/video_status.get",
+                               params={"video_id": video_id},
+                               headers=self._headers(), timeout=20)
+                if sr.status_code != 200:
                     continue
-                status_data = status_r.json().get("data", {})
-                status = status_data.get("status", "")
+                sd = sr.json().get("data", {}) or {}
+                status = sd.get("status", "")
                 logger.info("HeyGen status (%ds): %s", waited, status)
                 if status == "completed":
-                    video_url = status_data.get("video_url")
-                    break
+                    url = sd.get("video_url")
+                    if not url:
+                        return None
+                    output_path.parent.mkdir(parents=True, exist_ok=True)
+                    dr = httpx.get(url, follow_redirects=True, timeout=180)
+                    dr.raise_for_status()
+                    output_path.write_bytes(dr.content)
+                    logger.info("HeyGen video saved to %s", output_path)
+                    return output_path
                 if status == "failed":
-                    logger.error("HeyGen generation failed: %s", status_data)
+                    logger.error("HeyGen generation failed: %s", sd)
                     return None
+            except Exception as e:
+                logger.error("HeyGen poll error: %s", e)
+        logger.error("HeyGen polling timed out")
+        return None
 
-            if not video_url:
-                logger.error("HeyGen polling timed out")
-                return None
 
-            # Step 3: download
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            download_r = httpx.get(video_url, follow_redirects=True, timeout=120)
-            download_r.raise_for_status()
-            output_path.write_bytes(download_r.content)
-            logger.info("HeyGen video saved to %s", output_path)
-            return output_path
+# ---------------------------------------------------------------------------
+# Persisted avatar configuration (per workspace)
+# ---------------------------------------------------------------------------
 
-        except Exception as e:
-            logger.error("HeyGen generation failed: %s", e)
-            return None
+_CONFIG_SCHEMA = """
+CREATE TABLE IF NOT EXISTS avatar_config (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    provider TEXT DEFAULT 'none',
+    avatar_id TEXT DEFAULT '',
+    avatar_name TEXT DEFAULT '',
+    voice_id TEXT DEFAULT '',
+    voice_name TEXT DEFAULT '',
+    mode TEXT DEFAULT 'voice_clone',     -- voice_clone | record | hybrid
+    motion_prompt TEXT DEFAULT '',
+    expressiveness REAL DEFAULT 0.5,
+    background TEXT DEFAULT '#0d1b2a',
+    aspect_ratio TEXT DEFAULT '9:16',
+    updated_at TEXT
+);
+"""
+
+
+class AvatarConfig(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    provider: str = "none"
+    avatar_id: str = ""
+    avatar_name: str = ""
+    voice_id: str = ""
+    voice_name: str = ""
+    mode: str = "voice_clone"            # voice_clone | record | hybrid
+    motion_prompt: str = ""
+    expressiveness: float = 0.5
+    background: str = "#0d1b2a"
+    aspect_ratio: str = "9:16"
+    updated_at: str = ""
+
+    def is_ready(self) -> bool:
+        """True when we have enough to render (avatar picked on a real provider)."""
+        return self.provider not in ("", "none") and bool(self.avatar_id)
+
+
+class AvatarConfigStore:
+    """Single-row per-workspace store for avatar settings."""
+
+    def __init__(self, db_path: Path | None = None):
+        from gtm_engine.config import SQLITE_PATH
+        self.db_path = db_path or SQLITE_PATH
+        self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        self._init_schema()
+
+    def _connect(self) -> sqlite3.Connection:
+        from gtm_engine.db.connection import get_connection
+        conn = get_connection(self.db_path)
+        conn.row_factory = sqlite3.Row
+        return conn
+
+    def _init_schema(self) -> None:
+        with self._connect() as conn:
+            conn.executescript(_CONFIG_SCHEMA)
+            conn.commit()
+
+    def load(self) -> AvatarConfig:
+        with self._connect() as conn:
+            row = conn.execute("SELECT * FROM avatar_config WHERE id = 1").fetchone()
+            if not row:
+                # provider falls back to the AVATAR_PROVIDER env var if set
+                return AvatarConfig(provider=os.getenv("AVATAR_PROVIDER", "none").lower())
+            return AvatarConfig(
+                provider=row["provider"] or "none",
+                avatar_id=row["avatar_id"] or "",
+                avatar_name=row["avatar_name"] or "",
+                voice_id=row["voice_id"] or "",
+                voice_name=row["voice_name"] or "",
+                mode=row["mode"] or "voice_clone",
+                motion_prompt=row["motion_prompt"] or "",
+                expressiveness=row["expressiveness"] if row["expressiveness"] is not None else 0.5,
+                background=row["background"] or "#0d1b2a",
+                aspect_ratio=row["aspect_ratio"] or "9:16",
+                updated_at=row["updated_at"] or "",
+            )
+
+    def save(self, cfg: AvatarConfig) -> None:
+        cfg.updated_at = datetime.now(timezone.utc).isoformat()
+        with self._connect() as conn:
+            conn.execute(
+                """
+                INSERT INTO avatar_config (
+                    id, provider, avatar_id, avatar_name, voice_id, voice_name,
+                    mode, motion_prompt, expressiveness, background, aspect_ratio, updated_at
+                ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                    provider=excluded.provider, avatar_id=excluded.avatar_id,
+                    avatar_name=excluded.avatar_name, voice_id=excluded.voice_id,
+                    voice_name=excluded.voice_name, mode=excluded.mode,
+                    motion_prompt=excluded.motion_prompt, expressiveness=excluded.expressiveness,
+                    background=excluded.background, aspect_ratio=excluded.aspect_ratio,
+                    updated_at=excluded.updated_at
+                """,
+                (cfg.provider, cfg.avatar_id, cfg.avatar_name, cfg.voice_id, cfg.voice_name,
+                 cfg.mode, cfg.motion_prompt, cfg.expressiveness, cfg.background,
+                 cfg.aspect_ratio, cfg.updated_at),
+            )
+            conn.commit()
 
 
 # ---------------------------------------------------------------------------
@@ -280,21 +440,18 @@ class HeyGenProvider(AvatarProvider):
 PROVIDERS: dict[str, type[AvatarProvider]] = {
     "none": NoAvatarProvider,
     "heygen": HeyGenProvider,
-    # Future: "d-id": DIDProvider, "synthesia": SynthesiaProvider, "hedra": HedraProvider
+    # Future: "d-id", "synthesia", "hedra", "runway" (video-to-video, Option 2)
 }
 
 
 def get_provider(provider_id: str | None = None) -> AvatarProvider:
-    """Get the active avatar provider.
-
-    Args:
-        provider_id: explicit provider id, or None to read AVATAR_PROVIDER env var
-                     (defaults to 'none').
-    """
+    """Get an avatar provider. Falls back to the saved config, then env, then 'none'."""
     if not provider_id:
-        provider_id = os.getenv("AVATAR_PROVIDER", "none").lower()
-
-    cls = PROVIDERS.get(provider_id, NoAvatarProvider)
+        try:
+            provider_id = AvatarConfigStore().load().provider
+        except Exception:
+            provider_id = os.getenv("AVATAR_PROVIDER", "none").lower()
+    cls = PROVIDERS.get((provider_id or "none").lower(), NoAvatarProvider)
     return cls()
 
 
@@ -303,9 +460,11 @@ def list_providers() -> list[dict]:
     return [
         {
             "id": p_id,
-            "name": cls().provider_name,
+            "name": cls.provider_name,
             "requires_api_key": cls.requires_api_key,
             "configured": cls().is_configured(),
+            "supports_voice_clone": cls.supports_voice_clone,
+            "supports_audio_upload": cls.supports_audio_upload,
         }
         for p_id, cls in PROVIDERS.items()
     ]

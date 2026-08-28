@@ -202,7 +202,38 @@ with bank._connect() as conn:  # type: ignore[attr-defined]
     conn.commit()
 bank.create_many(ideas)
 
+# ── 4. Producer briefs + video jobs for the PRODUCED items ──────────────────
+# So the PRODUCED review panel shows a real avatar job (dry-run, no API key).
+from gtm_engine.producer import ProducerBrief, ProducerBriefLibrary
+from gtm_engine.video import create_job_from_brief
+
+_brief_lib = ProducerBriefLibrary()
+_produced = bank.list_all(status="content_generated")
+_hook_bookend = {
+    "PRISM vs the annual report": (
+        "One of these is honest. It isn't the annual report.",
+        "See both, side by side. quantumtools.ai",
+    ),
+    "Why I stopped trusting management commentary": (
+        "I stopped trusting the management narrative years ago.",
+        "The data doesn't spin. quantumtools.ai",
+    ),
+}
+for _idea in _produced:
+    _hb = _hook_bookend.get(_idea.title, ("A sharp opening line.", "See it run. quantumtools.ai"))
+    _brief_lib.save(ProducerBrief(
+        idea_id=_idea.id,
+        spoken_script=f"{_hb[0]} {_hb[1]}",
+        segments_json={
+            "hook": {"spoken_text": _hb[0], "duration_seconds": 4},
+            "bookend": {"spoken_text": _hb[1], "duration_seconds": 4},
+        },
+        voice_directive="measured, direct, quietly confident",
+    ))
+    create_job_from_brief(_idea.id)
+
 counts = bank.counts_by_status()
+print(f"Seeded {len(_produced)} producer briefs + video jobs (dry-run).")
 print("Seeded strategy for workspace 'default'.")
 print("Business phase:", strategy.business_phase, "| pillars:", len(pillars),
       "| segments:", len(segments), "| channels:", len(channels))

@@ -397,7 +397,7 @@ def _render_plan():
     pillar_dist = compute_pillar_distribution(strategy)
     gap_pillars = [p for p in pillar_dist if p["status"] == "gap"]
     if gap_pillars:
-        gap_names = ", ".join(f"**{p['name']}**" for p in gap_pillars[:3])
+        gap_names = ", ".join(f"<strong>{p['name']}</strong>" for p in gap_pillars[:3])
         col_gap, col_gapbtn = st.columns([5, 1])
         with col_gap:
             st.markdown(
@@ -555,17 +555,94 @@ def _render_plan():
 def _action_card(icon: str, color: str, text: str, button_label: str,
                  button_key: str, target_tab: str = ""):
     """Render a single action recommendation card."""
+    import re
+    # This card is raw HTML, so convert markdown bold (**...**) to <strong>.
+    html_text = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", text)
     col_body, col_btn = st.columns([5, 1])
     with col_body:
         st.markdown(
             f"<div style='background:{C['card']};padding:12px 16px;border-radius:6px;"
             f"border-left:4px solid {color};margin:4px 0;'>"
-            f"{icon} {text}</div>",
+            f"{icon} {html_text}</div>",
             unsafe_allow_html=True,
         )
     with col_btn:
         st.markdown("")
         st.button(button_label, key=button_key)
+
+
+def _produce_review_panel(idea):
+    """Per-card avatar video: render, QA, free-text review loop (PRODUCED stage)."""
+    from gtm_engine.video import VideoJobStore, create_job_from_brief, render_job, apply_revision
+
+    store = VideoJobStore()
+    job = store.get_for_idea(idea.id)
+
+    with st.expander("🎬 Video", expanded=False):
+        if not job:
+            if st.button("Create video job", key=f"vjmk_{idea.id}", use_container_width=True):
+                create_job_from_brief(idea.id)
+                st.rerun()
+            return
+
+        # Status line
+        status_colors = {
+            "ready": C["green"], "rendering": C["gold"], "queued": C["primary"],
+            "failed": C["hot"], "needs_provider": C["gold"], "approved": C["green"],
+        }
+        sc = status_colors.get(job.status, C["muted"])
+        st.markdown(
+            f"<span style='color:{sc};font-size:0.75rem;font-weight:600;'>"
+            f"● {job.status.replace('_', ' ')}</span>",
+            unsafe_allow_html=True,
+        )
+
+        # Spoken lines (the only avatar footage)
+        st.caption("Avatar speaks (Hook + Bookend only):")
+        st.markdown(f"**Hook:** {job.hook_text or '_—_'}")
+        st.markdown(f"**Bookend:** {job.bookend_text or '_—_'}")
+
+        # QA issues
+        if job.qa_issues:
+            for qi in job.qa_issues:
+                st.markdown(f"<span style='color:{C['gold']};font-size:0.72rem;'>⚠ {qi}</span>",
+                            unsafe_allow_html=True)
+
+        # Ready video
+        if job.status == "ready" and job.video_path and Path(job.video_path).exists():
+            st.video(job.video_path)
+        elif job.status == "needs_provider":
+            st.info("No avatar provider connected. Set up HeyGen in **Settings → Avatar**. "
+                    "Here's the request that will be sent once connected:")
+            if job.dry_run_request:
+                st.code(job.dry_run_request, language="json")
+
+        # Render / re-render
+        rlabel = "Render" if not job.video_path else "Re-render"
+        if st.button(rlabel, key=f"vjr_{idea.id}", use_container_width=True):
+            with st.spinner("Rendering (dry-run if no key)..."):
+                render_job(job.id)
+                st.rerun()
+
+        # Free-text review loop
+        note = st.text_area("Review note (free text)", key=f"vjn_{idea.id}", height=68,
+                            placeholder="e.g. 'punchier hook', 'more energy', 'different background'")
+        if st.button("Request revision", key=f"vjrev_{idea.id}", use_container_width=True,
+                     disabled=not note.strip()):
+            with st.spinner("Interpreting your note + re-rendering..."):
+                apply_revision(job.id, note.strip())
+                st.rerun()
+
+        # Revision history
+        if job.revisions:
+            st.caption("Revisions:")
+            for rev in job.revisions[-4:]:
+                st.markdown(
+                    f"<span style='font-size:0.7rem;color:{C['muted']};'>"
+                    f"[{rev.get('change_type','?')}] {rev.get('note','')[:60]} — "
+                    f"{rev.get('rationale','')[:60]}</span>",
+                    unsafe_allow_html=True,
+                )
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -685,14 +762,17 @@ def _render_create():
 
                 elif status == "idea_approved":
                     if st.button("Producer Brief", key=f"pb_{idea.id}", use_container_width=True):
-                        with st.spinner("Generating..."):
+                        with st.spinner("Generating brief + video job..."):
                             from gtm_engine.producer import generate_producer_brief
-                            generate_producer_brief(idea.id)
+                            from gtm_engine.video import create_job_from_brief
                             from gtm_engine.approval import mark_content_generated
+                            generate_producer_brief(idea.id)
+                            create_job_from_brief(idea.id)
                             mark_content_generated(idea.id)
                             st.rerun()
 
                 elif status == "content_generated":
+                    _produce_review_panel(idea)
                     if st.button("Approve", key=f"cappr_{idea.id}", use_container_width=True):
                         from gtm_engine.approval import approve_content
                         approve_content(idea.id)
@@ -876,18 +956,92 @@ def _render_settings():
     # ── Avatar ──
     with tabs[1]:
         st.markdown("### Avatar Provider (BYOK)")
-        from gtm_engine.avatar import list_providers, get_provider
-        for p in list_providers():
-            status = "Connected" if p["configured"] else "Not configured"
-            st.markdown(f"• **{p['name']}** — {status}")
-        active = get_provider()
-        st.caption(f"Active provider: {active.provider_name}")
-        if active.provider_id == "none":
-            st.info(
-                "No avatar provider configured. Content will use B-roll + voiceover. "
-                "To enable HeyGen, add `HEYGEN_API_KEY=<key>` and `AVATAR_PROVIDER=heygen` "
-                "to your `.env` file."
+        from gtm_engine.avatar import (
+            list_providers, get_provider, AvatarConfig, AvatarConfigStore,
+        )
+
+        cfg_store = AvatarConfigStore()
+        cfg = cfg_store.load()
+
+        provider_ids = [p["id"] for p in list_providers()]
+        prov_labels = {p["id"]: p["name"] for p in list_providers()}
+        sel_provider = st.selectbox(
+            "Provider", provider_ids,
+            index=provider_ids.index(cfg.provider) if cfg.provider in provider_ids else 0,
+            format_func=lambda x: prov_labels.get(x, x),
+        )
+        provider = get_provider(sel_provider)
+
+        if sel_provider == "none":
+            st.info("No avatar. Reels use B-roll + voiceover only.")
+        elif not provider.is_configured():
+            st.warning(
+                f"{prov_labels.get(sel_provider)} selected but no API key found. "
+                f"Add `HEYGEN_API_KEY=<key>` to your `.env` or Streamlit secrets, then reload."
             )
+        else:
+            st.success(f"{prov_labels.get(sel_provider)} connected.")
+
+        # Avatar + voice pickers (only when connected)
+        avatar_id, avatar_name = cfg.avatar_id, cfg.avatar_name
+        voice_id, voice_name = cfg.voice_id, cfg.voice_name
+        if sel_provider != "none" and provider.is_configured():
+            avatars = provider.list_avatars()
+            if avatars:
+                names = [a["name"] or a["id"] for a in avatars]
+                ids = [a["id"] for a in avatars]
+                idx = ids.index(avatar_id) if avatar_id in ids else 0
+                pick = st.selectbox("Your avatar", range(len(ids)),
+                                    index=idx, format_func=lambda i: names[i])
+                avatar_id, avatar_name = ids[pick], names[pick]
+            else:
+                avatar_id = st.text_input("Avatar ID (from HeyGen)", value=avatar_id)
+
+            voices = provider.list_voices()
+            if voices:
+                vnames = ["(auto)"] + [v["name"] or v["id"] for v in voices]
+                vids = [""] + [v["id"] for v in voices]
+                vidx = vids.index(voice_id) if voice_id in vids else 0
+                vpick = st.selectbox("Voice (cloned or stock)", range(len(vids)),
+                                     index=vidx, format_func=lambda i: vnames[i])
+                voice_id = vids[vpick]
+                voice_name = vnames[vpick] if vpick > 0 else ""
+        elif sel_provider != "none":
+            avatar_id = st.text_input("Avatar ID (from HeyGen)", value=avatar_id)
+            voice_id = st.text_input("Voice ID (cloned voice, optional)", value=voice_id)
+
+        # Hybrid mode + delivery defaults
+        mode_opts = {
+            "voice_clone": "Voice-clone (hands-off — generate from script)",
+            "record": "Record per video (upload your audio take)",
+            "hybrid": "Hybrid (clone by default, drop in a take when you want)",
+        }
+        mode = st.radio("Delivery mode", list(mode_opts.keys()),
+                        index=list(mode_opts.keys()).index(cfg.mode) if cfg.mode in mode_opts else 0,
+                        format_func=lambda x: mode_opts[x])
+        expr = st.slider("Expressiveness", 0.0, 1.0, float(cfg.expressiveness), 0.05,
+                         help="0 = flat/measured, 1 = high energy")
+        motion = st.text_input("Default motion direction (optional)", value=cfg.motion_prompt,
+                               placeholder="e.g. calm, direct, slight lean toward camera")
+        aspect = st.selectbox("Aspect ratio", ["9:16", "1:1", "16:9"],
+                              index=["9:16", "1:1", "16:9"].index(cfg.aspect_ratio)
+                              if cfg.aspect_ratio in ["9:16", "1:1", "16:9"] else 0)
+
+        if st.button("Save avatar settings", key="save_avatar_cfg"):
+            cfg_store.save(AvatarConfig(
+                provider=sel_provider, avatar_id=avatar_id, avatar_name=avatar_name,
+                voice_id=voice_id, voice_name=voice_name, mode=mode,
+                motion_prompt=motion, expressiveness=expr, aspect_ratio=aspect,
+                background=cfg.background,
+            ))
+            st.success("Avatar settings saved.")
+            st.rerun()
+
+        st.caption(
+            "One-time setup in HeyGen: record a 15s clip to create your avatar (Avatar V "
+            "learns how you move) and clone your voice, then paste the IDs here. Per reel, "
+            "only the ~8s Hook + Bookend are rendered as avatar footage."
+        )
 
     # ── Core-Five Spec ──
     with tabs[2]:
