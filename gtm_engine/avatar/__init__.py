@@ -129,6 +129,76 @@ class NoAvatarProvider(AvatarProvider):
         return None
 
 
+class MockProvider(AvatarProvider):
+    """Offline simulation — renders a branded preview frame, no external calls.
+
+    Lets the whole Produce -> Review -> Approve loop be exercised (and demoed)
+    without a HeyGen key or any spend. It writes a PNG 'preview frame' showing
+    the spoken line, standing in for the rendered clip.
+    """
+
+    provider_id = "mock"
+    provider_name = "Simulation (offline preview, no key)"
+    requires_api_key = False
+    supports_voice_clone = True
+    supports_audio_upload = True
+
+    def is_configured(self) -> bool:
+        return True
+
+    def list_avatars(self) -> list[dict]:
+        return [{"id": "mock-avatar", "name": "Simulated Avatar", "preview_url": ""}]
+
+    def list_voices(self) -> list[dict]:
+        return [{"id": "mock-voice", "name": "Simulated Voice", "language": "en"}]
+
+    def upload_audio(self, audio_path: Path) -> str | None:
+        return "mock-audio-asset"
+
+    def clone_voice(self, sample_path: Path, name: str) -> str | None:
+        return "mock-voice"
+
+    def render(self, req: RenderRequest) -> Path | None:
+        """Draw a preview frame so the pipeline has a real artefact to show."""
+        try:
+            from PIL import Image, ImageDraw
+        except Exception:
+            logger.warning("Pillow unavailable; mock render returns None")
+            return None
+
+        dims = {"9:16": (540, 960), "16:9": (960, 540), "1:1": (720, 720)}
+        w, h = dims.get(req.aspect_ratio, (540, 960))
+        img = Image.new("RGB", (w, h), req.background or "#0d1b2a")
+        d = ImageDraw.Draw(img)
+        # avatar placeholder
+        cx, cy, r = w // 2, int(h * 0.32), int(w * 0.16)
+        d.ellipse([cx - r, cy - r, cx + r, cy + r], fill="#1b2e44", outline="#6c63ff", width=4)
+        d.text((cx - 10, cy - 12), "🙂", fill="#ffffff")
+        # spoken line, wrapped
+        line = (req.script or "").strip() or "(no script)"
+        words, cur, rows = line.split(), "", []
+        for word in words:
+            if len(cur) + len(word) + 1 > 34:
+                rows.append(cur); cur = word
+            else:
+                cur = f"{cur} {word}".strip()
+        if cur:
+            rows.append(cur)
+        y = int(h * 0.55)
+        for row in rows[:8]:
+            d.text((40, y), row, fill="#ffffff")
+            y += 26
+        d.text((40, h - 60), "SIMULATED PREVIEW — not a real render", fill="#ffd166")
+        d.text((40, h - 36), f"expressiveness {req.expressiveness} · {req.aspect_ratio}",
+               fill="#8aa0c0")
+
+        out = req.output_path.with_suffix(".png")
+        out.parent.mkdir(parents=True, exist_ok=True)
+        img.save(out)
+        logger.info("Mock render wrote preview frame to %s", out)
+        return out
+
+
 class HeyGenProvider(AvatarProvider):
     """HeyGen Video Generation API (audio-driven, Option 1).
 
@@ -439,6 +509,7 @@ class AvatarConfigStore:
 
 PROVIDERS: dict[str, type[AvatarProvider]] = {
     "none": NoAvatarProvider,
+    "mock": MockProvider,
     "heygen": HeyGenProvider,
     # Future: "d-id", "synthesia", "hedra", "runway" (video-to-video, Option 2)
 }

@@ -70,6 +70,22 @@ def test_render_job_dry_run_when_no_provider(db):
     assert rendered.video_path == ""
 
 
+def test_mock_provider_renders_ready(db):
+    """With the simulation provider, a job renders to 'ready' with an artefact."""
+    idea_id = _seed_idea_with_brief(db)
+    store = AvatarConfigStore(db)
+    cfg = store.load()
+    cfg.provider, cfg.avatar_id = "mock", "mock-avatar"
+    store.save(cfg)
+
+    create_job_from_brief(idea_id)
+    job = VideoJobStore(db).get_for_idea(idea_id)
+    rendered = render_job(job.id)
+    assert rendered.status == "ready"
+    assert rendered.video_path
+    assert Path(rendered.video_path).exists()
+
+
 def test_config_ready_gate(db):
     store = AvatarConfigStore(db)
     cfg = store.load()

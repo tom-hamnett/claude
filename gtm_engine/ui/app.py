@@ -608,9 +608,12 @@ def _produce_review_panel(idea):
                 st.markdown(f"<span style='color:{C['gold']};font-size:0.72rem;'>⚠ {qi}</span>",
                             unsafe_allow_html=True)
 
-        # Ready video
+        # Ready media (real video, or a simulated preview frame)
         if job.status == "ready" and job.video_path and Path(job.video_path).exists():
-            st.video(job.video_path)
+            if job.video_path.lower().endswith((".png", ".jpg", ".jpeg")):
+                st.image(job.video_path, caption="Simulated preview frame")
+            else:
+                st.video(job.video_path)
         elif job.status == "needs_provider":
             st.info("No avatar provider connected. Set up HeyGen in **Settings → Avatar**. "
                     "Here's the request that will be sent once connected:")
