@@ -8,6 +8,7 @@ dist/
 build/
 .streamlit/secrets.toml
 data/*.db
+data/workspaces/
 output/
 content_queue/
 logs/
