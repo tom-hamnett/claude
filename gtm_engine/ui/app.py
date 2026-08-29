@@ -235,6 +235,18 @@ def _onboarding_wizard():
                 st.rerun()
             else:
                 st.warning("Please describe your business first.")
+
+        st.markdown("---")
+        st.caption("Just exploring, or on a fresh cloud deploy? Skip setup entirely:")
+        if st.button("⚡ Load the Quantum Tools demo (no API key needed)"):
+            with st.spinner("Loading demo strategy, ideas and produced items..."):
+                from gtm_engine.demo import load_quantum_demo
+                summary = load_quantum_demo()
+                st.success(
+                    f"Loaded {summary['ideas']} ideas across {summary['pillars']} pillars "
+                    f"+ {summary['produced_jobs']} produced items. Opening the app..."
+                )
+                st.rerun()
         return
 
     # Step 2-5: Build content strategy
