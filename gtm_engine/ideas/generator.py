@@ -433,7 +433,7 @@ def generate_idea_batch(
                 prompt,
                 system=IDEA_GENERATION_SYSTEM,
                 max_tokens=8192,
-                temperature=0.85,
+                effort="high",
             )
         except Exception as e:
             logger.error("  Claude call failed for %s: %s", funnel_level, e)
@@ -531,7 +531,7 @@ def generate_for_pillar(pillar_id: str, n: int = 5) -> list[int]:
     prompt = base_context + focus_block
 
     response = call_claude(
-        prompt, system=IDEA_GENERATION_SYSTEM, max_tokens=8192, temperature=0.85,
+        prompt, system=IDEA_GENERATION_SYSTEM, max_tokens=8192, effort="high",
     )
     raw = _parse_json_array(response)
 

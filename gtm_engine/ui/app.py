@@ -640,18 +640,42 @@ def _produce_review_panel(idea):
             unsafe_allow_html=True,
         )
 
-        # ── Step 1: Script ──
-        st.markdown(f"<span style='color:{C['muted']};font-size:0.7rem;'>1 · SCRIPT</span>",
+        # ── Step 1: Script & production (full breakdown + refine loop) ──
+        from gtm_engine.producer import ProducerBriefLibrary, generate_producer_brief
+        st.markdown(f"<span style='color:{C['muted']};font-size:0.7rem;'>1 · SCRIPT & PRODUCTION</span>",
                     unsafe_allow_html=True)
-        st.markdown(f"**Hook:** {job.hook_text or '_—_'}")
-        st.markdown(f"**Bookend:** {job.bookend_text or '_—_'}")
+        brief = ProducerBriefLibrary().get_for_idea(idea.id)
+        if brief and brief.full_brief_md:
+            with st.expander("Full script + shot breakdown", expanded=not job.script_approved):
+                st.markdown(brief.full_brief_md)
+        else:
+            st.markdown(f"**Hook:** {job.hook_text or '_—_'}")
+            st.markdown(f"**Bookend:** {job.bookend_text or '_—_'}")
         for qi in job.qa_issues:
             st.markdown(f"<span style='color:{C['gold']};font-size:0.72rem;'>⚠ {qi}</span>",
                         unsafe_allow_html=True)
+
         if not job.script_approved:
-            if st.button("Approve script", key=f"vjscr_{idea.id}", use_container_width=True):
-                approve_script(job.id)
-                st.rerun()
+            refine = st.text_area(
+                "Refine the script (free text) — iterate until it's sharp",
+                key=f"refine_{idea.id}", height=70,
+                placeholder="e.g. 'sharper hook with a real number', 'make the proof the "
+                            "52-week log', 'more contrarian', 'less corporate'",
+            )
+            rc1, rc2 = st.columns(2)
+            with rc1:
+                if st.button("↻ Refine script", key=f"refb_{idea.id}", use_container_width=True,
+                             disabled=not refine.strip()):
+                    with st.spinner("Rewriting the script (deeper pass)..."):
+                        if generate_producer_brief(idea.id, refinement=refine.strip()):
+                            create_job_from_brief(idea.id)
+                    st.rerun()
+            with rc2:
+                if st.button("✓ Approve script", key=f"vjscr_{idea.id}", use_container_width=True):
+                    approve_script(job.id)
+                    st.rerun()
+            st.caption("Review the full breakdown above. Refine as many times as you like, "
+                       "then approve to move to production.")
             return  # gate: nothing else until the script is locked
         st.markdown(f"<span style='color:{C['green']};font-size:0.72rem;'>✓ script approved</span>",
                     unsafe_allow_html=True)

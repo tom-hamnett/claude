@@ -329,7 +329,8 @@ class ProducerBriefLibrary:
 
 
 def generate_producer_brief(idea_id: int, character=None,
-                            cinematic_direction: str = "") -> ProducerBrief | None:
+                            cinematic_direction: str = "",
+                            refinement: str = "") -> ProducerBrief | None:
     """Generate a detailed producer brief for an approved idea.
 
     Reads the idea, picks scenes from the Scene Library, pulls any
@@ -388,6 +389,12 @@ def generate_producer_brief(idea_id: int, character=None,
             f"and set voice_directive to match the cinematic direction.\n\n"
         )
 
+    refine_block = ""
+    if refinement:
+        refine_block = (
+            f"## REVISION REQUEST (apply this to the rewrite)\n\n{refinement}\n\n"
+        )
+
     prompt = (
         f"## IDEA\n\n"
         f"**Title:** {idea.title}\n"
@@ -401,13 +408,21 @@ def generate_producer_brief(idea_id: int, character=None,
         f"**Data requirement:** {idea.data_requirement or 'none stated'}\n"
         f"**Notes:** {idea.notes}\n\n"
         f"{presenter_block}"
+        f"{refine_block}"
         f"## AVAILABLE SCENES (pick by id)\n\n{scenes_context}\n"
         f"{data_context}\n\n"
         f"## TASK\n\n"
-        f"Produce the full JSON producer brief for this idea. Choose the best "
-        f"scenes, write the exact 50-60 word spoken script (written for the ear — "
-        f"short, punchy, deliverable), specify visual direction and text overlays "
-        f"per segment.\n\n"
+        f"Produce the full JSON producer brief. Make it genuinely SHARP and "
+        f"INSIGHTFUL, not generic:\n"
+        f"- The spoken lines are short and deliverable, but each one must carry a "
+        f"real, specific idea — a number, a named mechanism, an uncomfortable truth. "
+        f"No filler, no throat-clearing, no 'in today's world'.\n"
+        f"- The HOOK must earn the next 3 seconds. The TENSION names the market truth "
+        f"nobody says. The PIVOT and PROOF carry concrete evidence (real data, a real "
+        f"output). The BOOKEND lands a clear point of view + CTA.\n"
+        f"- Write the spoken_text for the EAR: contractions, spoken rhythm, one idea "
+        f"per line. Say it aloud in your head — if you'd stumble, rewrite it.\n"
+        f"- Give each segment's visual_direction enough that an editor could build it.\n\n"
         f"Return ONLY the JSON."
     )
 
@@ -416,7 +431,7 @@ def generate_producer_brief(idea_id: int, character=None,
             prompt,
             system=PRODUCER_SYSTEM,
             max_tokens=4096,
-            temperature=0.5,
+            effort="high",   # script writing is quality-sensitive — don't skimp
         )
     except Exception as e:
         logger.error("Producer brief generation failed for idea %d: %s", idea_id, e)
