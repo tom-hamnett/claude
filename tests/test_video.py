@@ -114,6 +114,50 @@ def test_mock_provider_renders_ready(db):
     assert Path(rendered.video_path).exists()
 
 
+def test_transfer_flow_via_mock(db, tmp_path):
+    """Performance-transfer: script gate + character + driving video -> ready."""
+    from PIL import Image
+    from gtm_engine.video import approve_script
+    idea_id = _seed_idea_with_brief(db)
+
+    char = tmp_path / "character.png"
+    Image.new("RGB", (100, 100), "#1b2e44").save(char)
+    store = AvatarConfigStore(db)
+    cfg = store.load()
+    cfg.provider, cfg.mode = "mock", "transfer"
+    cfg.character_image_path = str(char)
+    store.save(cfg)
+
+    job = create_job_from_brief(idea_id)
+    assert job.engine == "transfer"
+
+    # Without a driving video -> needs_input
+    d0 = render_job(job.id)
+    assert d0.status == "needs_input"
+
+    # Provide a driving video -> ready with an artefact
+    approve_script(job.id)
+    imageio_ffmpeg = pytest.importorskip("imageio_ffmpeg")
+    import subprocess
+    ff = imageio_ffmpeg.get_ffmpeg_exe()
+    vid = tmp_path / "take.mp4"
+    subprocess.run([ff, "-y", "-f", "lavfi", "-i",
+                    "testsrc=duration=1:size=160x120:rate=10", "-t", "1", str(vid)],
+                   check=True, capture_output=True)
+    done = render_job(job.id, driving_video_path=vid)
+    assert done.status == "ready"
+    assert Path(done.video_path).exists()
+
+
+def test_approve_script_gate(db):
+    idea_id = _seed_idea_with_brief(db)
+    from gtm_engine.video import approve_script
+    job = create_job_from_brief(idea_id)
+    assert job.script_approved is False
+    updated = approve_script(job.id)
+    assert updated.script_approved is True
+
+
 def test_config_ready_gate(db):
     store = AvatarConfigStore(db)
     cfg = store.load()

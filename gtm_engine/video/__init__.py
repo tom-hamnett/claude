@@ -47,7 +47,7 @@ FORBIDDEN = [
     "innovative", "cutting-edge", "unlock", "synergy",
 ]
 
-STATUSES = ["needs_provider", "queued", "rendering", "ready", "failed", "approved"]
+STATUSES = ["needs_provider", "needs_input", "queued", "rendering", "ready", "failed", "approved"]
 
 SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS video_jobs (
@@ -68,11 +68,23 @@ CREATE TABLE IF NOT EXISTS video_jobs (
     dry_run_request TEXT DEFAULT '',
     qa_issues TEXT DEFAULT '[]',
     revisions TEXT DEFAULT '[]',
+    script_approved INTEGER DEFAULT 0,
+    driving_video_path TEXT DEFAULT '',
+    character_image_path TEXT DEFAULT '',
+    engine TEXT DEFAULT 'audio',
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_video_jobs_idea ON video_jobs(idea_id);
 """
+
+# Columns added after video_jobs first shipped — applied idempotently.
+_JOB_MIGRATIONS = {
+    "script_approved": "INTEGER DEFAULT 0",
+    "driving_video_path": "TEXT DEFAULT ''",
+    "character_image_path": "TEXT DEFAULT ''",
+    "engine": "TEXT DEFAULT 'audio'",
+}
 
 
 class VideoJob(BaseModel):
@@ -94,6 +106,10 @@ class VideoJob(BaseModel):
     dry_run_request: str = ""
     qa_issues: list[str] = Field(default_factory=list)
     revisions: list[dict] = Field(default_factory=list)
+    script_approved: bool = False
+    driving_video_path: str = ""
+    character_image_path: str = ""
+    engine: str = "audio"                # audio | transfer
     created_at: str = ""
     updated_at: str = ""
 
@@ -118,6 +134,10 @@ class VideoJobStore:
     def _init_schema(self) -> None:
         with self._connect() as conn:
             conn.executescript(SCHEMA_SQL)
+            existing = {r[1] for r in conn.execute("PRAGMA table_info(video_jobs)")}
+            for col, decl in _JOB_MIGRATIONS.items():
+                if col not in existing:
+                    conn.execute(f"ALTER TABLE video_jobs ADD COLUMN {col} {decl}")
             conn.commit()
 
     def save(self, job: VideoJob) -> int:
@@ -130,6 +150,8 @@ class VideoJobStore:
             job.voice_id, job.mode, job.hook_text, job.bookend_text, job.motion_prompt,
             job.expressiveness, job.audio_asset_id, job.video_path, job.dry_run_request,
             json.dumps(job.qa_issues), json.dumps(job.revisions),
+            1 if job.script_approved else 0, job.driving_video_path,
+            job.character_image_path, job.engine,
             job.created_at, job.updated_at,
         )
         with self._connect() as conn:
@@ -138,8 +160,9 @@ class VideoJobStore:
                     """UPDATE video_jobs SET idea_id=?, brief_id=?, status=?, provider=?,
                        avatar_id=?, voice_id=?, mode=?, hook_text=?, bookend_text=?,
                        motion_prompt=?, expressiveness=?, audio_asset_id=?, video_path=?,
-                       dry_run_request=?, qa_issues=?, revisions=?, created_at=?, updated_at=?
-                       WHERE id=?""",
+                       dry_run_request=?, qa_issues=?, revisions=?, script_approved=?,
+                       driving_video_path=?, character_image_path=?, engine=?,
+                       created_at=?, updated_at=? WHERE id=?""",
                     (*cols, job.id),
                 )
                 conn.commit()
@@ -148,8 +171,9 @@ class VideoJobStore:
                 """INSERT INTO video_jobs (idea_id, brief_id, status, provider, avatar_id,
                    voice_id, mode, hook_text, bookend_text, motion_prompt, expressiveness,
                    audio_asset_id, video_path, dry_run_request, qa_issues, revisions,
+                   script_approved, driving_video_path, character_image_path, engine,
                    created_at, updated_at)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 cols,
             )
             conn.commit()
@@ -169,6 +193,9 @@ class VideoJobStore:
             return self._row(row) if row else None
 
     def _row(self, row: sqlite3.Row) -> VideoJob:
+        keys = row.keys()
+        def g(k, d=""):
+            return row[k] if k in keys and row[k] is not None else d
         return VideoJob(
             id=row["id"], idea_id=row["idea_id"], brief_id=row["brief_id"],
             status=row["status"], provider=row["provider"], avatar_id=row["avatar_id"],
@@ -179,6 +206,10 @@ class VideoJobStore:
             dry_run_request=row["dry_run_request"],
             qa_issues=json.loads(row["qa_issues"] or "[]"),
             revisions=json.loads(row["revisions"] or "[]"),
+            script_approved=bool(g("script_approved", 0)),
+            driving_video_path=g("driving_video_path", ""),
+            character_image_path=g("character_image_path", ""),
+            engine=g("engine", "audio") or "audio",
             created_at=row["created_at"], updated_at=row["updated_at"],
         )
 
@@ -275,14 +306,32 @@ def create_job_from_brief(idea_id: int) -> VideoJob | None:
     job.bookend_text = bookend_text
     job.motion_prompt = cfg.motion_prompt or brief.voice_directive
     job.expressiveness = cfg.expressiveness
+    job.character_image_path = cfg.character_image_path
+    job.engine = "transfer" if (cfg.provider == "runway" or cfg.mode == "transfer") else "audio"
     job.qa_issues = run_qa(hook_text, bookend_text)
     job.status = "queued" if cfg.is_ready() else "needs_provider"
     job.id = store.save(job)
     return job
 
 
-def render_job(job_id: int, audio_path: Path | str | None = None) -> VideoJob | None:
-    """Render (or dry-run) the avatar clip for a job."""
+def approve_script(job_id: int) -> VideoJob | None:
+    """Gate the workflow: lock the Hook/Bookend script before recording."""
+    store = VideoJobStore()
+    job = store.get(job_id)
+    if not job:
+        return None
+    job.script_approved = True
+    job.id = store.save(job)
+    return store.get(job.id)
+
+
+def render_job(job_id: int, audio_path: Path | str | None = None,
+               driving_video_path: Path | str | None = None) -> VideoJob | None:
+    """Produce (or dry-run) a job. Dispatches by engine:
+
+    - transfer (Runway): drive the character image with the recorded video.
+    - audio (HeyGen): lip-sync the avatar to text/voice or an uploaded take.
+    """
     store = VideoJobStore()
     job = store.get(job_id)
     if not job:
@@ -301,38 +350,54 @@ def render_job(job_id: int, audio_path: Path | str | None = None) -> VideoJob | 
         aspect_ratio=cfg.aspect_ratio,
         motion_prompt=job.motion_prompt,
         expressiveness=job.expressiveness,
+        gesture=cfg.gesture,
+        character_image_path=Path(cfg.character_image_path) if cfg.character_image_path else None,
     )
+    if driving_video_path:
+        job.driving_video_path = str(driving_video_path)
+        req.driving_video_path = Path(driving_video_path)
 
-    # Decide the drive path from the mode.
-    use_audio = (cfg.mode == "record") or (cfg.mode == "hybrid" and audio_path)
-    if use_audio and audio_path and provider.supports_audio_upload and cfg.is_ready():
-        asset_id = provider.upload_audio(Path(audio_path))
-        if asset_id:
-            req.audio_asset_id = asset_id
-            job.audio_asset_id = asset_id
+    is_transfer = job.engine == "transfer" or provider.supports_performance_transfer and cfg.provider == "runway"
 
-    # No usable provider -> DRY RUN. Store the request for display.
-    if not cfg.is_ready() or not provider.is_configured():
-        job.status = "needs_provider"
+    # For audio-drive providers, an uploaded take can drive the mouth.
+    if not is_transfer:
+        use_audio = (cfg.mode == "record") or (cfg.mode == "hybrid" and audio_path)
+        if use_audio and audio_path and provider.supports_audio_upload and cfg.is_ready():
+            asset_id = provider.upload_audio(Path(audio_path))
+            if asset_id:
+                req.audio_asset_id = asset_id
+                job.audio_asset_id = asset_id
+
+    # Transfer needs a driving video + character image before it can run.
+    transfer_missing_input = is_transfer and not (req.driving_video_path and req.character_image_path)
+
+    # No usable provider / missing input -> DRY RUN. Store the request for display.
+    if not cfg.is_ready() or not provider.is_configured() or transfer_missing_input:
+        job.status = "needs_input" if transfer_missing_input and cfg.is_ready() else "needs_provider"
         job.dry_run_request = json.dumps({
+            "engine": job.engine,
             "provider": cfg.provider or "none",
-            "avatar_id": cfg.avatar_id or "(not set)",
-            "drive": "audio_upload" if req.audio_asset_id else f"voice:{cfg.voice_id or 'default'}",
+            "character_image": cfg.character_image_path or "(not set)",
+            "driving_video": job.driving_video_path or "(record & upload your take)",
+            "gesture_transfer": cfg.gesture,
+            "avatar_id": cfg.avatar_id or "(n/a for transfer)",
             "script": job.spoken_script,
-            "motion_prompt": job.motion_prompt,
             "expressiveness": job.expressiveness,
             "aspect_ratio": cfg.aspect_ratio,
         }, indent=2)
         job.id = store.save(job)
-        logger.info("Dry-run render for job %d (no provider configured).", job.id)
+        logger.info("Dry-run/needs-input for job %d (%s).", job.id, job.status)
         return job
 
     job.status = "rendering"
     store.save(job)
     try:
-        result = provider.render(req)
+        if is_transfer:
+            result = provider.transfer_performance(req)
+        else:
+            result = provider.render(req)
     except Exception as e:
-        logger.error("Render failed for job %d: %s", job.id, e)
+        logger.error("Produce failed for job %d: %s", job.id, e)
         result = None
 
     if result:

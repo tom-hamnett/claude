@@ -584,8 +584,12 @@ def _action_card(icon: str, color: str, text: str, button_label: str,
 
 
 def _produce_review_panel(idea):
-    """Per-card avatar video: render, QA, free-text review loop (PRODUCED stage)."""
-    from gtm_engine.video import VideoJobStore, create_job_from_brief, render_job, apply_revision
+    """PRODUCED-stage wizard: script → approve → record → transpose → review."""
+    from gtm_engine.video import (
+        VideoJobStore, create_job_from_brief, render_job, apply_revision,
+        approve_script, resolve_audio_take,
+    )
+    from gtm_engine.avatar import AvatarConfigStore
 
     store = VideoJobStore()
     job = store.get_for_idea(idea.id)
@@ -597,97 +601,102 @@ def _produce_review_panel(idea):
                 st.rerun()
             return
 
-        # Status line
+        cfg = AvatarConfigStore().load()
+        is_transfer = job.engine == "transfer"
+
         status_colors = {
             "ready": C["green"], "rendering": C["gold"], "queued": C["primary"],
-            "failed": C["hot"], "needs_provider": C["gold"], "approved": C["green"],
+            "failed": C["hot"], "needs_provider": C["gold"], "needs_input": C["gold"],
+            "approved": C["green"],
         }
         sc = status_colors.get(job.status, C["muted"])
+        engine_label = "performance transfer" if is_transfer else "audio-drive"
         st.markdown(
-            f"<span style='color:{sc};font-size:0.75rem;font-weight:600;'>"
-            f"● {job.status.replace('_', ' ')}</span>",
+            f"<span style='color:{sc};font-size:0.75rem;font-weight:600;'>● {job.status.replace('_',' ')}</span>"
+            f"<span style='color:{C['muted']};font-size:0.7rem;'> · {engine_label}</span>",
             unsafe_allow_html=True,
         )
 
-        # Spoken lines (the only avatar footage)
-        st.caption("Avatar speaks (Hook + Bookend only):")
+        # ── Step 1: Script ──
+        st.markdown(f"<span style='color:{C['muted']};font-size:0.7rem;'>1 · SCRIPT</span>",
+                    unsafe_allow_html=True)
         st.markdown(f"**Hook:** {job.hook_text or '_—_'}")
         st.markdown(f"**Bookend:** {job.bookend_text or '_—_'}")
+        for qi in job.qa_issues:
+            st.markdown(f"<span style='color:{C['gold']};font-size:0.72rem;'>⚠ {qi}</span>",
+                        unsafe_allow_html=True)
+        if not job.script_approved:
+            if st.button("Approve script", key=f"vjscr_{idea.id}", use_container_width=True):
+                approve_script(job.id)
+                st.rerun()
+            return  # gate: nothing else until the script is locked
+        st.markdown(f"<span style='color:{C['green']};font-size:0.72rem;'>✓ script approved</span>",
+                    unsafe_allow_html=True)
 
-        # QA issues
-        if job.qa_issues:
-            for qi in job.qa_issues:
-                st.markdown(f"<span style='color:{C['gold']};font-size:0.72rem;'>⚠ {qi}</span>",
-                            unsafe_allow_html=True)
+        # ── Step 2: Record to camera ──
+        st.markdown(f"<span style='color:{C['muted']};font-size:0.7rem;'>2 · RECORD TO CAMERA</span>",
+                    unsafe_allow_html=True)
+        if is_transfer and not cfg.character_image_path:
+            st.warning("No character set. Create yours in **Settings → Avatar** first.")
+        take_types = (["mp4", "mov", "webm"] if is_transfer
+                      else ["mp3", "wav", "mp4", "mov", "webm", "m4a"])
+        take_help = ("Record yourself delivering the script — Act-Two maps your performance "
+                     "onto your character." if is_transfer
+                     else "Video or audio — we use the audio to drive the avatar.")
+        take_file = st.file_uploader(take_help, type=take_types, key=f"vjtake_{idea.id}")
 
-        # Ready media (real video, or a simulated preview frame)
-        if job.status == "ready" and job.video_path and Path(job.video_path).exists():
-            if job.video_path.lower().endswith((".png", ".jpg", ".jpeg")):
-                st.image(job.video_path, caption="Simulated preview frame")
-            else:
-                st.video(job.video_path)
-        elif job.status == "needs_provider":
-            st.info("No avatar provider connected. Set up HeyGen in **Settings → Avatar**. "
-                    "Here's the request that will be sent once connected:")
-            if job.dry_run_request:
-                st.code(job.dry_run_request, language="json")
-
-        # Optional take upload (Record / Hybrid modes) — video OR audio.
-        from gtm_engine.avatar import AvatarConfigStore
-        from gtm_engine.video import resolve_audio_take
-        cfg = AvatarConfigStore().load()
-        take_file = None
-        if cfg.mode in ("record", "hybrid"):
-            take_file = st.file_uploader(
-                "Your take — video or audio (we use the audio to drive the avatar)",
-                type=["mp3", "wav", "mp4", "mov", "webm", "m4a"], key=f"vjaud_{idea.id}",
-            )
-            if cfg.mode == "hybrid":
-                st.caption("Optional — leave empty to use the cloned/stock voice.")
-        if job.audio_asset_id:
-            st.caption(f"✓ Last render used your uploaded take ({job.audio_asset_id[:12]}…)")
-
-        # Render / re-render
-        rlabel = "Render" if not job.video_path else "Re-render"
-        if st.button(rlabel, key=f"vjr_{idea.id}", use_container_width=True):
-            audio_path = None
-            take_failed = False
+        prod_label = ("Transpose onto my character" if is_transfer else "Render")
+        if job.video_path:
+            prod_label = "Re-" + prod_label[0].lower() + prod_label[1:]
+        if st.button(prod_label, key=f"vjr_{idea.id}", use_container_width=True):
+            audio_path = driving_path = None
+            fail = None
             if take_file is not None:
                 updir = OUTPUT_DIR / "uploads"
                 updir.mkdir(parents=True, exist_ok=True)
                 raw = updir / f"idea_{idea.id}_{take_file.name}"
                 raw.write_bytes(take_file.getbuffer())
-                with st.spinner("Pulling audio from your take..."):
-                    audio_path = resolve_audio_take(raw)
-                take_failed = audio_path is None
-            if take_failed:
-                st.error("Couldn't read audio from that file. Try an mp3/wav, or an "
-                         "mp4/mov with an audio track.")
+                if is_transfer:
+                    driving_path = raw
+                else:
+                    with st.spinner("Pulling audio from your take..."):
+                        audio_path = resolve_audio_take(raw)
+                    if audio_path is None:
+                        fail = "Couldn't read audio from that file."
+            elif is_transfer:
+                fail = "Record and upload your take first — transfer needs your performance."
+            if fail:
+                st.error(fail)
             else:
-                with st.spinner("Rendering (dry-run if no key)..."):
-                    done = render_job(job.id, audio_path=audio_path)
-                    if audio_path and done and not done.audio_asset_id:
-                        st.warning("Your take didn't upload to HeyGen — rendered with the "
-                                   "voice instead. Check the HeyGen key and try again.")
+                with st.spinner("Producing (dry-run if no key)..."):
+                    render_job(job.id, audio_path=audio_path, driving_video_path=driving_path)
                     st.rerun()
 
-        # Free-text review loop
-        note = st.text_area("Review note (free text)", key=f"vjn_{idea.id}", height=68,
-                            placeholder="e.g. 'punchier hook', 'more energy', 'different background'")
-        if st.button("Request revision", key=f"vjrev_{idea.id}", use_container_width=True,
-                     disabled=not note.strip()):
-            with st.spinner("Interpreting your note + re-rendering..."):
-                apply_revision(job.id, note.strip())
-                st.rerun()
+        if job.status in ("needs_provider", "needs_input") and job.dry_run_request:
+            st.info("Here's exactly what will run once the provider + inputs are set:")
+            st.code(job.dry_run_request, language="json")
 
-        # Revision history
-        if job.revisions:
-            st.caption("Revisions:")
-            for rev in job.revisions[-4:]:
+        # ── Step 3: Result + review ──
+        if job.status == "ready" and job.video_path and Path(job.video_path).exists():
+            st.markdown(f"<span style='color:{C['muted']};font-size:0.7rem;'>3 · REVIEW</span>",
+                        unsafe_allow_html=True)
+            if job.video_path.lower().endswith((".png", ".jpg", ".jpeg")):
+                st.image(job.video_path, caption="Simulated preview (no live key)")
+            else:
+                st.video(job.video_path)
+
+            note = st.text_area("Review note (free text)", key=f"vjn_{idea.id}", height=68,
+                                placeholder="e.g. 'punchier hook', 'more energy', 'less gesture'")
+            if st.button("Request revision", key=f"vjrev_{idea.id}", use_container_width=True,
+                         disabled=not note.strip()):
+                with st.spinner("Interpreting your note..."):
+                    apply_revision(job.id, note.strip())
+                    st.rerun()
+            for rev in (job.revisions or [])[-4:]:
                 st.markdown(
                     f"<span style='font-size:0.7rem;color:{C['muted']};'>"
-                    f"[{rev.get('change_type','?')}] {rev.get('note','')[:60]} — "
-                    f"{rev.get('rationale','')[:60]}</span>",
+                    f"[{rev.get('change_type','?')}] {rev.get('note','')[:50]} — "
+                    f"{rev.get('rationale','')[:50]}</span>",
                     unsafe_allow_html=True,
                 )
 
@@ -1019,20 +1028,28 @@ def _render_settings():
         )
         provider = get_provider(sel_provider)
 
+        key_names = {"heygen": "HEYGEN_API_KEY", "runway": "RUNWAY_API_KEY"}
         if sel_provider == "none":
             st.info("No avatar. Reels use B-roll + voiceover only.")
+        elif sel_provider == "mock":
+            st.success("Simulation — renders offline previews, no key or spend.")
         elif not provider.is_configured():
             st.warning(
                 f"{prov_labels.get(sel_provider)} selected but no API key found. "
-                f"Add `HEYGEN_API_KEY=<key>` to your `.env` or Streamlit secrets, then reload."
+                f"Add `{key_names.get(sel_provider,'API_KEY')}=<key>` to your `.env` or "
+                f"Streamlit secrets, then reload."
             )
         else:
             st.success(f"{prov_labels.get(sel_provider)} connected.")
 
-        # Avatar + voice pickers (only when connected)
         avatar_id, avatar_name = cfg.avatar_id, cfg.avatar_name
         voice_id, voice_name = cfg.voice_id, cfg.voice_name
-        if sel_provider != "none" and provider.is_configured():
+        character_image_path = cfg.character_image_path
+        character_description = cfg.character_description
+        gesture = cfg.gesture
+
+        # ── HeyGen: pick a stock/custom avatar + voice ──
+        if sel_provider == "heygen" and provider.is_configured():
             avatars = provider.list_avatars()
             if avatars:
                 names = [a["name"] or a["id"] for a in avatars]
@@ -1043,25 +1060,60 @@ def _render_settings():
                 avatar_id, avatar_name = ids[pick], names[pick]
             else:
                 avatar_id = st.text_input("Avatar ID (from HeyGen)", value=avatar_id)
-
             voices = provider.list_voices()
             if voices:
                 vnames = ["(auto)"] + [v["name"] or v["id"] for v in voices]
                 vids = [""] + [v["id"] for v in voices]
                 vidx = vids.index(voice_id) if voice_id in vids else 0
-                vpick = st.selectbox("Voice (cloned or stock)", range(len(vids)),
+                vpick = st.selectbox("Voice", range(len(vids)),
                                      index=vidx, format_func=lambda i: vnames[i])
                 voice_id = vids[vpick]
                 voice_name = vnames[vpick] if vpick > 0 else ""
-        elif sel_provider != "none":
-            avatar_id = st.text_input("Avatar ID (from HeyGen)", value=avatar_id)
-            voice_id = st.text_input("Voice ID (cloned voice, optional)", value=voice_id)
 
-        # Hybrid mode + delivery defaults
+        # ── Runway/Simulation: your AI-restyled character ──
+        if sel_provider in ("runway", "mock"):
+            st.markdown("**Your character** (close-but-not-you, from a photo)")
+            character_description = st.text_input(
+                "Look & setting", value=character_description,
+                placeholder="e.g. sharp navy blazer, modern office, confident and warm",
+            )
+            photo = st.file_uploader("A clear photo of you", type=["png", "jpg", "jpeg"],
+                                     key="char_photo")
+            cc1, cc2 = st.columns(2)
+            with cc1:
+                if st.button("Generate my character", key="gen_char",
+                             disabled=photo is None):
+                    from gtm_engine.avatar import generate_character
+                    outp = OUTPUT_DIR / "characters" / "character.png"
+                    outp.parent.mkdir(parents=True, exist_ok=True)
+                    photo_path = outp.parent / f"src_{photo.name}"
+                    photo_path.write_bytes(photo.getbuffer())
+                    with st.spinner("Generating your character (Nano Banana)..."):
+                        res = generate_character(photo_path, character_description
+                                                 or "authoritative, credible, well-lit", outp)
+                    if res:
+                        character_image_path = str(res)
+                        st.success("Character generated.")
+                    else:
+                        st.error("Generation needs GOOGLE_API_KEY (or upload your own below).")
+            with cc2:
+                own = st.file_uploader("…or upload a character image", type=["png", "jpg", "jpeg"],
+                                       key="char_own")
+                if own is not None:
+                    outp = OUTPUT_DIR / "characters" / f"own_{own.name}"
+                    outp.parent.mkdir(parents=True, exist_ok=True)
+                    outp.write_bytes(own.getbuffer())
+                    character_image_path = str(outp)
+            if character_image_path and Path(character_image_path).exists():
+                st.image(character_image_path, width=160, caption="Your character")
+            gesture = st.checkbox("Transfer body & hand gestures (not just face)", value=gesture)
+
+        # ── Delivery mode + shared defaults ──
         mode_opts = {
             "voice_clone": "Voice-clone (hands-off — generate from script)",
             "record": "Record per video (upload your audio take)",
             "hybrid": "Hybrid (clone by default, drop in a take when you want)",
+            "transfer": "Performance transfer (record to camera → your character)",
         }
         mode = st.radio("Delivery mode", list(mode_opts.keys()),
                         index=list(mode_opts.keys()).index(cfg.mode) if cfg.mode in mode_opts else 0,
@@ -1079,15 +1131,16 @@ def _render_settings():
                 provider=sel_provider, avatar_id=avatar_id, avatar_name=avatar_name,
                 voice_id=voice_id, voice_name=voice_name, mode=mode,
                 motion_prompt=motion, expressiveness=expr, aspect_ratio=aspect,
-                background=cfg.background,
+                background=cfg.background, character_image_path=character_image_path,
+                character_description=character_description, gesture=gesture,
             ))
             st.success("Avatar settings saved.")
             st.rerun()
 
         st.caption(
-            "One-time setup in HeyGen: record a 15s clip to create your avatar (Avatar V "
-            "learns how you move) and clone your voice, then paste the IDs here. Per reel, "
-            "only the ~8s Hook + Bookend are rendered as avatar footage."
+            "Runway (performance transfer): create your character from a photo, then per "
+            "reel you record to camera and Act-Two maps your real expressions onto that "
+            "character. HeyGen (audio-drive): a talking head that lip-syncs to your voice."
         )
 
     # ── Core-Five Spec ──

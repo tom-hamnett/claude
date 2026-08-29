@@ -57,7 +57,9 @@ class RenderRequest:
     output_path: Path
     voice_id: str | None = None
     audio_asset_id: str | None = None
-    driving_video_path: Path | None = None   # reserved (Option 2)
+    driving_video_path: Path | None = None   # performance source (Option 2)
+    character_image_path: Path | None = None  # target character for transfer
+    gesture: bool = True                      # transfer body/hand motion too
     background: str = "#0d1b2a"
     aspect_ratio: str = "9:16"
     motion_prompt: str = ""
@@ -73,6 +75,7 @@ class AvatarProvider(ABC):
     requires_api_key: bool = True
     supports_voice_clone: bool = False
     supports_audio_upload: bool = False
+    supports_performance_transfer: bool = False
 
     @abstractmethod
     def is_configured(self) -> bool:
@@ -101,6 +104,11 @@ class AvatarProvider(ABC):
 
     def clone_voice(self, sample_path: Path, name: str) -> str | None:
         """Clone a voice from a sample; return a voice_id. None if unsupported."""
+        return None
+
+    def transfer_performance(self, req: RenderRequest) -> Path | None:
+        """Drive req.character_image_path with the performance in
+        req.driving_video_path (video-to-video). None if unsupported."""
         return None
 
 
@@ -142,6 +150,7 @@ class MockProvider(AvatarProvider):
     requires_api_key = False
     supports_voice_clone = True
     supports_audio_upload = True
+    supports_performance_transfer = True
 
     def is_configured(self) -> bool:
         return True
@@ -197,6 +206,178 @@ class MockProvider(AvatarProvider):
         img.save(out)
         logger.info("Mock render wrote preview frame to %s", out)
         return out
+
+    def transfer_performance(self, req: RenderRequest) -> Path | None:
+        """Simulate performance transfer: preview the character with a label."""
+        try:
+            from PIL import Image, ImageDraw
+        except Exception:
+            return None
+        dims = {"9:16": (540, 960), "16:9": (960, 540), "1:1": (720, 720)}
+        w, h = dims.get(req.aspect_ratio, (540, 960))
+        if req.character_image_path and Path(req.character_image_path).exists():
+            img = Image.open(str(req.character_image_path)).convert("RGB").resize((w, h))
+        else:
+            img = Image.new("RGB", (w, h), req.background or "#0d1b2a")
+        d = ImageDraw.Draw(img)
+        d.rectangle([0, h - 84, w, h], fill="#0d1b2a")
+        d.text((20, h - 74), "SIMULATED PERFORMANCE TRANSFER", fill="#ffd166")
+        d.text((20, h - 52), f"gesture={req.gesture} · expr={req.expressiveness} · {req.aspect_ratio}",
+               fill="#8aa0c0")
+        d.text((20, h - 30), "your take -> this character (Act-Two, simulated)", fill="#66d9a0")
+        out = req.output_path.with_suffix(".png")
+        out.parent.mkdir(parents=True, exist_ok=True)
+        img.save(out)
+        return out
+
+
+class RunwayProvider(AvatarProvider):
+    """Runway Act-Two performance transfer (video-to-video).
+
+    Drives a target character (your AI-restyled photo) with your recorded
+    performance video, transferring facial expression + (optionally) body and
+    hand gestures. This is the engine that actually echoes your delivery.
+
+    API (https://docs.dev.runwayml.com):
+      POST /v1/character_performance  -> { id }
+      GET  /v1/tasks/{id}             -> { status, output: [url] }
+    character and reference are passed as data: URIs or HTTPS URLs.
+    Reference performance must be <= 10s (our Hook+Bookend is ~8s).
+    """
+
+    provider_id = "runway"
+    provider_name = "Runway Act-Two (performance transfer)"
+    supports_performance_transfer = True
+
+    API_BASE = "https://api.dev.runwayml.com/v1"
+    RUNWAY_VERSION = "2024-11-06"
+
+    def __init__(self):
+        self.api_key = os.getenv("RUNWAY_API_KEY", "")
+
+    def is_configured(self) -> bool:
+        return bool(self.api_key)
+
+    def _headers(self) -> dict:
+        return {
+            "Authorization": f"Bearer {self.api_key}",
+            "X-Runway-Version": self.RUNWAY_VERSION,
+            "Content-Type": "application/json",
+        }
+
+    def list_avatars(self) -> list[dict]:
+        return []   # Runway uses a character image, not a saved avatar id
+
+    def list_voices(self) -> list[dict]:
+        return []
+
+    def render(self, req: RenderRequest) -> Path | None:
+        """Runway is performance-transfer only — no audio-drive path."""
+        logger.info("RunwayProvider.render is not used; call transfer_performance")
+        return None
+
+    @staticmethod
+    def _data_uri(path: Path) -> str:
+        import base64
+        import mimetypes
+        path = Path(path)
+        mime = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+        b64 = base64.b64encode(path.read_bytes()).decode()
+        return f"data:{mime};base64,{b64}"
+
+    def transfer_performance(self, req: RenderRequest) -> Path | None:
+        if not self.is_configured():
+            raise AvatarProviderError("RUNWAY_API_KEY not set")
+        if not (req.driving_video_path and req.character_image_path):
+            logger.error("Runway needs both a driving video and a character image")
+            return None
+
+        import time
+        import httpx
+
+        ratio = {"9:16": "720:1280", "16:9": "1280:720", "1:1": "960:960"}.get(
+            req.aspect_ratio, "720:1280")
+        payload = {
+            "character": {"type": "image", "uri": self._data_uri(req.character_image_path)},
+            "reference": {"type": "video", "uri": self._data_uri(req.driving_video_path)},
+            "ratio": ratio,
+            "bodyControl": req.gesture,
+            "expressiveness": int(round(req.expressiveness * 5)),  # 0..5
+        }
+        try:
+            r = httpx.post(f"{self.API_BASE}/character_performance",
+                           headers=self._headers(), json=payload, timeout=60)
+            r.raise_for_status()
+            task_id = (r.json() or {}).get("id")
+            if not task_id:
+                logger.error("Runway returned no task id: %s", r.text[:300])
+                return None
+            logger.info("Runway Act-Two task submitted: %s", task_id)
+            return self._poll_and_download(task_id, req.output_path)
+        except Exception as e:
+            logger.error("Runway transfer failed: %s", e)
+            return None
+
+    def _poll_and_download(self, task_id: str, output_path: Path,
+                           max_wait: int = 900) -> Path | None:
+        import time
+        import httpx
+        waited = 0
+        while waited < max_wait:
+            time.sleep(10)
+            waited += 10
+            try:
+                tr = httpx.get(f"{self.API_BASE}/tasks/{task_id}",
+                               headers=self._headers(), timeout=20)
+                if tr.status_code != 200:
+                    continue
+                td = tr.json() or {}
+                status = td.get("status", "")
+                logger.info("Runway status (%ds): %s", waited, status)
+                if status == "SUCCEEDED":
+                    out = td.get("output") or []
+                    url = out[0] if out else None
+                    if not url:
+                        return None
+                    output_path = output_path.with_suffix(".mp4")
+                    output_path.parent.mkdir(parents=True, exist_ok=True)
+                    dr = httpx.get(url, follow_redirects=True, timeout=180)
+                    dr.raise_for_status()
+                    output_path.write_bytes(dr.content)
+                    logger.info("Runway video saved to %s", output_path)
+                    return output_path
+                if status in ("FAILED", "CANCELLED"):
+                    logger.error("Runway task %s: %s", status, td)
+                    return None
+            except Exception as e:
+                logger.error("Runway poll error: %s", e)
+        logger.error("Runway polling timed out")
+        return None
+
+
+def generate_character(photo_path: Path, description: str, output_path: Path) -> Path | None:
+    """Create a 'close-but-not-you' character image from a photo (Nano Banana).
+
+    Uses the uploaded photo as a visual anchor and restyles it per the
+    description (altered likeness, authoritative setting). Needs GOOGLE_API_KEY;
+    returns None if unavailable so the UI can fall back to a manual upload.
+    """
+    from gtm_engine.utils.media import generate_image
+    prompt = (
+        "Create a photorealistic portrait of a person clearly INSPIRED BY but "
+        "NOT identical to the reference photo — change hairstyle, jawline and "
+        "styling enough that they are not recognisable as the same individual, "
+        "while keeping a similar age, build and overall vibe. "
+        f"Setting and styling: {description}. "
+        "Authoritative, credible, well-lit, neutral professional background, "
+        "head-and-shoulders framing suitable for a talking-head video."
+    )
+    try:
+        return generate_image(prompt, output_path=output_path, quality="standard",
+                              aspect_ratio="9:16", reference_image=Path(photo_path))
+    except Exception as e:
+        logger.error("Character generation failed: %s", e)
+        return None
 
 
 class HeyGenProvider(AvatarProvider):
@@ -414,14 +595,24 @@ CREATE TABLE IF NOT EXISTS avatar_config (
     avatar_name TEXT DEFAULT '',
     voice_id TEXT DEFAULT '',
     voice_name TEXT DEFAULT '',
-    mode TEXT DEFAULT 'voice_clone',     -- voice_clone | record | hybrid
+    mode TEXT DEFAULT 'voice_clone',     -- voice_clone | record | hybrid | transfer
     motion_prompt TEXT DEFAULT '',
     expressiveness REAL DEFAULT 0.5,
     background TEXT DEFAULT '#0d1b2a',
     aspect_ratio TEXT DEFAULT '9:16',
+    character_image_path TEXT DEFAULT '',
+    character_description TEXT DEFAULT '',
+    gesture INTEGER DEFAULT 1,
     updated_at TEXT
 );
 """
+
+# Columns added after the table first shipped — applied idempotently on load.
+_CONFIG_MIGRATIONS = {
+    "character_image_path": "TEXT DEFAULT ''",
+    "character_description": "TEXT DEFAULT ''",
+    "gesture": "INTEGER DEFAULT 1",
+}
 
 
 class AvatarConfig(BaseModel):
@@ -431,16 +622,25 @@ class AvatarConfig(BaseModel):
     avatar_name: str = ""
     voice_id: str = ""
     voice_name: str = ""
-    mode: str = "voice_clone"            # voice_clone | record | hybrid
+    mode: str = "voice_clone"            # voice_clone | record | hybrid | transfer
     motion_prompt: str = ""
     expressiveness: float = 0.5
     background: str = "#0d1b2a"
     aspect_ratio: str = "9:16"
+    character_image_path: str = ""
+    character_description: str = ""
+    gesture: bool = True
     updated_at: str = ""
 
     def is_ready(self) -> bool:
-        """True when we have enough to render (avatar picked on a real provider)."""
-        return self.provider not in ("", "none") and bool(self.avatar_id)
+        """True when we have enough to produce on the chosen provider."""
+        if self.provider in ("", "none"):
+            return False
+        if self.provider == "runway":
+            return bool(self.character_image_path)
+        if self.provider == "mock":
+            return True
+        return bool(self.avatar_id)
 
 
 class AvatarConfigStore:
@@ -461,6 +661,11 @@ class AvatarConfigStore:
     def _init_schema(self) -> None:
         with self._connect() as conn:
             conn.executescript(_CONFIG_SCHEMA)
+            # Add any columns introduced after this table first shipped.
+            existing = {r[1] for r in conn.execute("PRAGMA table_info(avatar_config)")}
+            for col, decl in _CONFIG_MIGRATIONS.items():
+                if col not in existing:
+                    conn.execute(f"ALTER TABLE avatar_config ADD COLUMN {col} {decl}")
             conn.commit()
 
     def load(self) -> AvatarConfig:
@@ -469,6 +674,7 @@ class AvatarConfigStore:
             if not row:
                 # provider falls back to the AVATAR_PROVIDER env var if set
                 return AvatarConfig(provider=os.getenv("AVATAR_PROVIDER", "none").lower())
+            keys = row.keys()
             return AvatarConfig(
                 provider=row["provider"] or "none",
                 avatar_id=row["avatar_id"] or "",
@@ -480,6 +686,9 @@ class AvatarConfigStore:
                 expressiveness=row["expressiveness"] if row["expressiveness"] is not None else 0.5,
                 background=row["background"] or "#0d1b2a",
                 aspect_ratio=row["aspect_ratio"] or "9:16",
+                character_image_path=(row["character_image_path"] if "character_image_path" in keys else "") or "",
+                character_description=(row["character_description"] if "character_description" in keys else "") or "",
+                gesture=bool(row["gesture"]) if "gesture" in keys and row["gesture"] is not None else True,
                 updated_at=row["updated_at"] or "",
             )
 
@@ -490,19 +699,23 @@ class AvatarConfigStore:
                 """
                 INSERT INTO avatar_config (
                     id, provider, avatar_id, avatar_name, voice_id, voice_name,
-                    mode, motion_prompt, expressiveness, background, aspect_ratio, updated_at
-                ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    mode, motion_prompt, expressiveness, background, aspect_ratio,
+                    character_image_path, character_description, gesture, updated_at
+                ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
                     provider=excluded.provider, avatar_id=excluded.avatar_id,
                     avatar_name=excluded.avatar_name, voice_id=excluded.voice_id,
                     voice_name=excluded.voice_name, mode=excluded.mode,
                     motion_prompt=excluded.motion_prompt, expressiveness=excluded.expressiveness,
                     background=excluded.background, aspect_ratio=excluded.aspect_ratio,
-                    updated_at=excluded.updated_at
+                    character_image_path=excluded.character_image_path,
+                    character_description=excluded.character_description,
+                    gesture=excluded.gesture, updated_at=excluded.updated_at
                 """,
                 (cfg.provider, cfg.avatar_id, cfg.avatar_name, cfg.voice_id, cfg.voice_name,
                  cfg.mode, cfg.motion_prompt, cfg.expressiveness, cfg.background,
-                 cfg.aspect_ratio, cfg.updated_at),
+                 cfg.aspect_ratio, cfg.character_image_path, cfg.character_description,
+                 1 if cfg.gesture else 0, cfg.updated_at),
             )
             conn.commit()
 
@@ -515,7 +728,8 @@ PROVIDERS: dict[str, type[AvatarProvider]] = {
     "none": NoAvatarProvider,
     "mock": MockProvider,
     "heygen": HeyGenProvider,
-    # Future: "d-id", "synthesia", "hedra", "runway" (video-to-video, Option 2)
+    "runway": RunwayProvider,
+    # Future: "d-id", "synthesia", "hedra"
 }
 
 
