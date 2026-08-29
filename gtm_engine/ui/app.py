@@ -583,6 +583,25 @@ def _action_card(icon: str, color: str, text: str, button_label: str,
         st.button(button_label, key=button_key)
 
 
+def _video_view(idea):
+    """Read-only view of a card's script + rendered video (REVIEWED / SCHEDULED)."""
+    from gtm_engine.video import VideoJobStore
+    job = VideoJobStore().get_for_idea(idea.id)
+    if not job:
+        return
+    with st.expander("🎬 Video", expanded=False):
+        st.markdown(f"**Hook:** {job.hook_text or '_—_'}")
+        st.markdown(f"**Bookend:** {job.bookend_text or '_—_'}")
+        if job.status == "ready" and job.video_path and Path(job.video_path).exists():
+            if job.video_path.lower().endswith((".png", ".jpg", ".jpeg")):
+                st.image(job.video_path, caption="Preview")
+            else:
+                st.video(job.video_path)
+        else:
+            st.caption(f"No rendered video yet (status: {job.status.replace('_',' ')}). "
+                       f"Move back to PRODUCED to render.")
+
+
 def _produce_review_panel(idea):
     """PRODUCED-stage wizard: script → approve → record → transpose → review."""
     from gtm_engine.video import (
@@ -720,9 +739,16 @@ def _produce_review_panel(idea):
 def _render_create():
     from gtm_engine.ideas import IdeaBank
     from gtm_engine.approval import get_pipeline_counts
+    from gtm_engine.utils.ai_client import connection_status
 
     bank = IdeaBank()
     counts = get_pipeline_counts()
+
+    conn = connection_status()
+    if not conn["anthropic"]:
+        st.warning("⚠ No Anthropic key detected — generating ideas and scripts (Producer Brief) "
+                   "won't work. Add `ANTHROPIC_API_KEY` in Secrets, then reload. "
+                   "Check it under **Settings → Connections**.")
 
     # ── Top action bar ──
     col_gen, col_brief, col_counts = st.columns([2, 2, 3])
@@ -851,10 +877,14 @@ def _render_create():
                         st.rerun()
 
                 elif status == "content_approved":
+                    _video_view(idea)
                     if st.button("Schedule", key=f"sched_{idea.id}", use_container_width=True):
                         from gtm_engine.approval import schedule_deployment
                         schedule_deployment(idea.id)
                         st.rerun()
+
+                elif status == "deployment_scheduled":
+                    _video_view(idea)
 
             if len(ideas) > 10:
                 st.caption(f"+ {len(ideas) - 10} more")
@@ -994,10 +1024,46 @@ def _render_perform():
 # ═══════════════════════════════════════════════════════════════════════════
 
 def _render_settings():
-    tabs = st.tabs(["Brand Standards", "Avatar", "Core-Five Spec", "Intelligence Feed"])
+    tabs = st.tabs(["Connections", "Brand Standards", "Cast & Voice",
+                    "Core-Five Spec", "Intelligence Feed"])
+
+    # ── Connections (key status for every service) ──
+    with tabs[0]:
+        st.markdown("### Connections")
+        st.caption("What each key powers. Add them in Manage app → Settings → Secrets.")
+        from gtm_engine.utils.ai_client import connection_status, test_anthropic
+        status = connection_status()
+        rows = [
+            ("anthropic", "Anthropic (Claude)", "writes scripts, strategy & ideas", "ANTHROPIC_API_KEY"),
+            ("heygen", "HeyGen", "renders the avatar video", "HEYGEN_API_KEY"),
+            ("google", "Google (Gemini)", "images & AI character", "GOOGLE_API_KEY"),
+            ("runway", "Runway (advanced)", "performance transfer", "RUNWAY_API_KEY"),
+        ]
+        for key, label, what, envname in rows:
+            ok = status.get(key)
+            dot = C["green"] if ok else C["hot"]
+            state = "connected" if ok else "not set"
+            st.markdown(
+                f"<div style='padding:8px 0;'>"
+                f"<span style='color:{dot};'>●</span> <strong>{label}</strong> — "
+                f"<span style='color:{C['muted']};'>{what}</span><br>"
+                f"<span style='color:{dot};font-size:0.8rem;'>{state}</span> "
+                f"<span style='color:{C['muted']};font-size:0.75rem;'>· {envname}</span></div>",
+                unsafe_allow_html=True,
+            )
+        st.markdown("")
+        if st.button("Test Anthropic (live call)", key="test_anthropic"):
+            with st.spinner("Pinging Claude..."):
+                ok, msg = test_anthropic()
+            if ok:
+                st.success(f"Anthropic works ✓ (replied: {msg})")
+            else:
+                st.error(f"Anthropic call failed: {msg}")
+        st.caption("A key showing 'connected' only means it's present. Use Test Anthropic to "
+                   "confirm it actually works (right key + billing enabled).")
 
     # ── Brand Standards ──
-    with tabs[0]:
+    with tabs[1]:
         st.markdown("### Brand Standards")
         brand_path = DATA_DIR / "brand_standards.json"
         if brand_path.exists():
@@ -1026,7 +1092,7 @@ def _render_settings():
             st.warning("Brand standards not initialised. Run `python main.py brand` in the terminal.")
 
     # ── Avatar ──
-    with tabs[1]:
+    with tabs[2]:
         st.markdown("### Cast & Voice")
         from gtm_engine.avatar import (
             list_providers, get_provider, AvatarConfig, AvatarConfigStore,
@@ -1178,7 +1244,7 @@ def _render_settings():
         )
 
     # ── Core-Five Spec ──
-    with tabs[2]:
+    with tabs[3]:
         st.markdown("### Core-Five Reel Architecture")
         from gtm_engine.segments import load_segments
         segments = load_segments()
@@ -1193,7 +1259,7 @@ def _render_settings():
             st.markdown(f"• {rule}")
 
     # ── Intelligence Feed ──
-    with tabs[3]:
+    with tabs[4]:
         st.markdown("### Live Signals")
         st.caption(
             "Drop raw signals: customer quotes, data findings, market events. "

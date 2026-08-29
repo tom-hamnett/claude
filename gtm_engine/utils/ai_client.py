@@ -15,6 +15,34 @@ from gtm_engine.config import ANTHROPIC_API_KEY, DEFAULT_AI_MODEL
 logger = logging.getLogger(__name__)
 
 
+def connection_status() -> dict:
+    """Presence of each service key (what the UI shows as connected/not)."""
+    from gtm_engine.config import _get
+    return {
+        "anthropic": bool(_get("ANTHROPIC_API_KEY")),   # scripts, strategy, ideas
+        "google": bool(_get("GOOGLE_API_KEY")),          # images / character
+        "heygen": bool(_get("HEYGEN_API_KEY")),          # avatar video
+        "runway": bool(_get("RUNWAY_API_KEY")),          # performance transfer
+    }
+
+
+def test_anthropic() -> tuple[bool, str]:
+    """Make a tiny live call to confirm the Anthropic key actually works."""
+    from gtm_engine.config import _get
+    if not _get("ANTHROPIC_API_KEY"):
+        return False, "No ANTHROPIC_API_KEY set."
+    try:
+        import anthropic
+        client = anthropic.Anthropic(api_key=_get("ANTHROPIC_API_KEY"))
+        r = client.messages.create(
+            model=DEFAULT_AI_MODEL, max_tokens=5, temperature=0,
+            messages=[{"role": "user", "content": "Reply with just: OK"}],
+        )
+        return True, (r.content[0].text or "").strip()[:40] or "OK"
+    except Exception as e:
+        return False, str(e)[:200]
+
+
 @retry(wait=wait_exponential(min=2, max=30), stop=stop_after_attempt(4))
 def call_claude(
     prompt: str,
