@@ -512,37 +512,50 @@ class HeyGenProvider(AvatarProvider):
                 voice_id = voices[0]["id"] if voices else ""
             voice_block = {"type": "text", "input_text": req.script, "voice_id": voice_id}
 
-        # v2 /video/generate accepts avatar_id + avatar_style (+ scale/offset).
-        # motion_prompt / expressiveness are v3/Avatar-V concepts and would be
-        # rejected here, so they're carried on the job for QA/display only.
-        character = {"type": "avatar", "avatar_id": req.avatar_id, "avatar_style": "normal"}
+        # Expressive fields (motion_prompt / expressiveness) only apply to
+        # Avatar IV/V avatars; classic avatars ignore or reject them. We attempt
+        # them, then transparently retry without on a 400 so any avatar works.
+        base_character = {"type": "avatar", "avatar_id": req.avatar_id, "avatar_style": "normal"}
+        expressive_character = dict(base_character)
+        if req.motion_prompt:
+            expressive_character["motion_prompt"] = req.motion_prompt
+        # HeyGen expressiveness is 0..1; pass through.
+        expressive_character["expressiveness"] = round(float(req.expressiveness), 2)
 
-        payload = {
-            "video_inputs": [{
-                "character": character,
-                "voice": voice_block,
-                "background": {"type": "color", "value": req.background},
-            }],
-            "dimension": {"width": width, "height": height},
-        }
-        if req.callback_url:
-            payload["callback_url"] = req.callback_url
+        def _build(character):
+            p = {
+                "video_inputs": [{
+                    "character": character,
+                    "voice": voice_block,
+                    "background": {"type": "color", "value": req.background},
+                }],
+                "dimension": {"width": width, "height": height},
+            }
+            if req.callback_url:
+                p["callback_url"] = req.callback_url
+            return p
+
+        def _submit(character) -> tuple[str | None, int, str]:
+            r = httpx.post(f"{self.API_V2}/video/generate", headers=self._headers(),
+                           json=_build(character), timeout=30)
+            vid = None
+            if r.status_code == 200:
+                vid = (r.json().get("data", {}) or {}).get("video_id")
+            return vid, r.status_code, r.text[:300]
 
         try:
-            r = httpx.post(f"{self.API_V2}/video/generate", headers=self._headers(),
-                           json=payload, timeout=30)
-            r.raise_for_status()
-            video_id = (r.json().get("data", {}) or {}).get("video_id")
+            video_id, code, body = _submit(expressive_character)
+            if not video_id and code == 400:
+                # Retry without the expressive fields (classic avatar path).
+                logger.info("HeyGen 400 with expressive fields (%s) — retrying plain", body)
+                video_id, code, body = _submit(base_character)
             if not video_id:
-                logger.error("HeyGen returned no video_id: %s", r.text[:300])
+                logger.error("HeyGen returned no video_id (%s): %s", code, body)
                 return None
             logger.info("HeyGen render submitted: %s", video_id)
 
-            # If a webhook was supplied, let the caller handle completion.
             if req.callback_url:
-                return None
-
-            # Otherwise poll.
+                return None  # webhook path — caller handles completion
             return self._poll_and_download(video_id, req.output_path)
         except Exception as e:
             logger.error("HeyGen render failed: %s", e)
