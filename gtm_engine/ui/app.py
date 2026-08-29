@@ -1183,6 +1183,28 @@ def _render_settings():
             ch_avatar_id, ch_avatar_name = a_ids[ap], (a_names[ap] if ap else "")
         else:
             ch_avatar_id = st.text_input("HeyGen avatar id", value=ch_avatar_id, key="ch_av_txt")
+
+        # Always allow pasting a HeyGen "Copy ID" — photo avatars with multiple
+        # looks (Avatar IV) often don't list cleanly. A pasted id overrides.
+        paste_id = st.text_input(
+            "…or paste a HeyGen ‘Copy ID’ (from the avatar’s ⋯ menu)", value="",
+            key="ch_paste", placeholder="paste the id you copied in HeyGen",
+        )
+        is_photo = st.checkbox(
+            "This is a Photo Avatar (Avatar IV — expressive)",
+            value=str(ch_avatar_id).startswith("tp:"), key="ch_isphoto",
+            help="Tick for photo avatars / Avatar IV so it renders expressively.",
+        )
+        if paste_id.strip():
+            pid = paste_id.strip()
+            pid = pid[3:] if pid.startswith("tp:") else pid
+            ch_avatar_id = f"tp:{pid}" if is_photo else pid
+            ch_avatar_name = f"{ch_name} (pasted)"
+        elif is_photo and ch_avatar_id and not str(ch_avatar_id).startswith("tp:"):
+            ch_avatar_id = f"tp:{ch_avatar_id}"
+        elif not is_photo and str(ch_avatar_id).startswith("tp:"):
+            ch_avatar_id = ch_avatar_id[3:]
+
         if hey_voices:
             v_ids = [""] + [v["id"] for v in hey_voices]
             v_names = ["(default)"] + [v["name"] or v["id"] for v in hey_voices]
