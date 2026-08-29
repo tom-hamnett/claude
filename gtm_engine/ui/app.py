@@ -656,26 +656,63 @@ def _produce_review_panel(idea):
                         unsafe_allow_html=True)
 
         if not job.script_approved:
+            # ── Per-reel production direction (approved with the script) ──
+            from gtm_engine.video import update_job_production
+            from gtm_engine.casting import CastingStore
+            envs = CastingStore().list_environments()
+            st.markdown("**🎥 Production direction (this reel)**")
+            motion = st.text_input(
+                "Cinematic / avatar motion", value=job.motion_prompt,
+                key=f"mot_{idea.id}",
+                placeholder="body part + action + emotion — e.g. 'leans in, open hand, warm'",
+            )
+            env_choices = [None] + [e.id for e in envs]
+            env_labels = {e.id: e.name for e in envs}
+            cur_env = job.environment_id if job.environment_id in [e.id for e in envs] else None
+            env_pick = st.selectbox(
+                "Environment / look start-point", env_choices,
+                index=env_choices.index(cur_env) if cur_env in env_choices else 0,
+                format_func=lambda i: "(character default)" if i is None else env_labels.get(i, "?"),
+                key=f"env_{idea.id}",
+            )
+            camera = st.text_input(
+                "Camera direction", value=job.camera_note, key=f"cam_{idea.id}",
+                placeholder="e.g. 'slow push-in on the hook, cut wide on the data'",
+            )
+            st.caption("Motion drives HeyGen; environment sets the backdrop. Camera direction "
+                       "is captured for the edit — HeyGen avatar clips don't move the camera.")
+
             refine = st.text_area(
                 "Refine the script (free text) — iterate until it's sharp",
                 key=f"refine_{idea.id}", height=70,
                 placeholder="e.g. 'sharper hook with a real number', 'make the proof the "
                             "52-week log', 'more contrarian', 'less corporate'",
             )
-            rc1, rc2 = st.columns(2)
+
+            def _save_direction():
+                update_job_production(job.id, motion_prompt=motion,
+                                      environment_id=env_pick, camera_note=camera)
+
+            rc1, rc2, rc3 = st.columns(3)
             with rc1:
-                if st.button("↻ Refine script", key=f"refb_{idea.id}", use_container_width=True,
+                if st.button("Save direction", key=f"savdir_{idea.id}", use_container_width=True):
+                    _save_direction()
+                    st.rerun()
+            with rc2:
+                if st.button("↻ Refine", key=f"refb_{idea.id}", use_container_width=True,
                              disabled=not refine.strip()):
+                    _save_direction()
                     with st.spinner("Rewriting the script (deeper pass)..."):
                         if generate_producer_brief(idea.id, refinement=refine.strip()):
                             create_job_from_brief(idea.id)
                     st.rerun()
-            with rc2:
-                if st.button("✓ Approve script", key=f"vjscr_{idea.id}", use_container_width=True):
+            with rc3:
+                if st.button("✓ Approve", key=f"vjscr_{idea.id}", use_container_width=True):
+                    _save_direction()
                     approve_script(job.id)
                     st.rerun()
-            st.caption("Review the full breakdown above. Refine as many times as you like, "
-                       "then approve to move to production.")
+            st.caption("Set the direction, refine the script as many times as you like, "
+                       "then approve script + direction together to move to production.")
             return  # gate: nothing else until the script is locked
         st.markdown(f"<span style='color:{C['green']};font-size:0.72rem;'>✓ script approved</span>",
                     unsafe_allow_html=True)

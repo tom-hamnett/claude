@@ -72,6 +72,8 @@ CREATE TABLE IF NOT EXISTS video_jobs (
     driving_video_path TEXT DEFAULT '',
     character_image_path TEXT DEFAULT '',
     engine TEXT DEFAULT 'audio',
+    environment_id INTEGER,
+    camera_note TEXT DEFAULT '',
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
@@ -84,6 +86,8 @@ _JOB_MIGRATIONS = {
     "driving_video_path": "TEXT DEFAULT ''",
     "character_image_path": "TEXT DEFAULT ''",
     "engine": "TEXT DEFAULT 'audio'",
+    "environment_id": "INTEGER",
+    "camera_note": "TEXT DEFAULT ''",
 }
 
 
@@ -110,6 +114,8 @@ class VideoJob(BaseModel):
     driving_video_path: str = ""
     character_image_path: str = ""
     engine: str = "audio"                # audio | transfer
+    environment_id: int | None = None    # per-reel environment (overrides character)
+    camera_note: str = ""                # per-reel camera direction (used in assembly)
     created_at: str = ""
     updated_at: str = ""
 
@@ -151,7 +157,7 @@ class VideoJobStore:
             job.expressiveness, job.audio_asset_id, job.video_path, job.dry_run_request,
             json.dumps(job.qa_issues), json.dumps(job.revisions),
             1 if job.script_approved else 0, job.driving_video_path,
-            job.character_image_path, job.engine,
+            job.character_image_path, job.engine, job.environment_id, job.camera_note,
             job.created_at, job.updated_at,
         )
         with self._connect() as conn:
@@ -162,6 +168,7 @@ class VideoJobStore:
                        motion_prompt=?, expressiveness=?, audio_asset_id=?, video_path=?,
                        dry_run_request=?, qa_issues=?, revisions=?, script_approved=?,
                        driving_video_path=?, character_image_path=?, engine=?,
+                       environment_id=?, camera_note=?,
                        created_at=?, updated_at=? WHERE id=?""",
                     (*cols, job.id),
                 )
@@ -172,8 +179,8 @@ class VideoJobStore:
                    voice_id, mode, hook_text, bookend_text, motion_prompt, expressiveness,
                    audio_asset_id, video_path, dry_run_request, qa_issues, revisions,
                    script_approved, driving_video_path, character_image_path, engine,
-                   created_at, updated_at)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                   environment_id, camera_note, created_at, updated_at)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 cols,
             )
             conn.commit()
@@ -210,6 +217,8 @@ class VideoJobStore:
             driving_video_path=g("driving_video_path", ""),
             character_image_path=g("character_image_path", ""),
             engine=g("engine", "audio") or "audio",
+            environment_id=g("environment_id", None),
+            camera_note=g("camera_note", "") or "",
             created_at=row["created_at"], updated_at=row["updated_at"],
         )
 
@@ -318,7 +327,12 @@ def create_job_from_brief(idea_id: int) -> VideoJob | None:
         job.avatar_id = character.avatar_id or cfg.avatar_id
         job.voice_id = character.voice_id or cfg.voice_id
         job.expressiveness = character.expressiveness
-        job.motion_prompt = character.cinematic_direction or brief.voice_directive
+        # Per-reel direction: seed from the character, but keep any the user
+        # already set on an existing job so refines don't wipe their edits.
+        if not (existing and existing.motion_prompt):
+            job.motion_prompt = character.cinematic_direction or brief.voice_directive
+        if not (existing and existing.environment_id):
+            job.environment_id = character.environment_id
         job.character_image_path = character.photo_path or cfg.character_image_path
     else:
         job.avatar_id = cfg.avatar_id
@@ -343,8 +357,27 @@ def create_job_from_brief(idea_id: int) -> VideoJob | None:
     return job
 
 
+def update_job_production(job_id: int, motion_prompt: str | None = None,
+                          environment_id: int | None = None,
+                          camera_note: str | None = None) -> VideoJob | None:
+    """Save per-reel production direction (cinematic/avatar motion, environment,
+    camera note). Only provided fields are updated."""
+    store = VideoJobStore()
+    job = store.get(job_id)
+    if not job:
+        return None
+    if motion_prompt is not None:
+        job.motion_prompt = motion_prompt
+    if environment_id is not None:
+        job.environment_id = environment_id or None
+    if camera_note is not None:
+        job.camera_note = camera_note
+    job.id = store.save(job)
+    return store.get(job.id)
+
+
 def approve_script(job_id: int) -> VideoJob | None:
-    """Gate the workflow: lock the Hook/Bookend script before recording."""
+    """Gate the workflow: lock the Hook/Bookend script + production before render."""
     store = VideoJobStore()
     job = store.get(job_id)
     if not job:
@@ -370,27 +403,31 @@ def render_job(job_id: int, audio_path: Path | str | None = None,
     provider = get_provider(cfg.provider)
     out_path = OUTPUT_DIR / "videos" / f"idea_{job.idea_id}_job_{job.id}.mp4"
 
-    # Re-resolve the active character LIVE so a job created before the cast was
-    # set up still renders with the current avatar/voice/environment (no stale jobs).
+    # Fill in from the active character only where the job doesn't already have
+    # a value — so per-reel production edits (motion, environment) are honoured,
+    # and a job created before the cast was set up still gets an avatar.
     background = cfg.background
     try:
         from gtm_engine.casting import CastingStore
         cs = CastingStore()
         ch = cs.get_default_character()
         if ch:
-            if ch.avatar_id:
+            if not job.avatar_id and ch.avatar_id:
                 job.avatar_id = ch.avatar_id
-            if ch.voice_id:
+            if not job.voice_id and ch.voice_id:
                 job.voice_id = ch.voice_id
-            job.expressiveness = ch.expressiveness
-            if ch.cinematic_direction:
+            if not job.expressiveness:
+                job.expressiveness = ch.expressiveness
+            if not job.motion_prompt and ch.cinematic_direction:
                 job.motion_prompt = ch.cinematic_direction
-            if ch.photo_path:
+            if not job.character_image_path and ch.photo_path:
                 job.character_image_path = ch.photo_path
-            if ch.environment_id:
-                env = cs.get_environment(ch.environment_id)
-                if env and env.background_type == "color":
-                    background = env.background_value
+        # Environment: per-reel job value wins, else the character's default.
+        env_id = job.environment_id or (ch.environment_id if ch else None)
+        if env_id:
+            env = cs.get_environment(env_id)
+            if env and env.background_type == "color":
+                background = env.background_value
     except Exception:
         pass
 
