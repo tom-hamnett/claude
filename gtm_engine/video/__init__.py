@@ -74,6 +74,10 @@ CREATE TABLE IF NOT EXISTS video_jobs (
     engine TEXT DEFAULT 'audio',
     environment_id INTEGER,
     camera_note TEXT DEFAULT '',
+    hook_type TEXT DEFAULT 'rotate',
+    tone TEXT DEFAULT '',
+    passion REAL DEFAULT 0.5,
+    own_hook TEXT DEFAULT '',
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
@@ -88,6 +92,10 @@ _JOB_MIGRATIONS = {
     "engine": "TEXT DEFAULT 'audio'",
     "environment_id": "INTEGER",
     "camera_note": "TEXT DEFAULT ''",
+    "hook_type": "TEXT DEFAULT 'rotate'",
+    "tone": "TEXT DEFAULT ''",
+    "passion": "REAL DEFAULT 0.5",
+    "own_hook": "TEXT DEFAULT ''",
 }
 
 
@@ -116,6 +124,10 @@ class VideoJob(BaseModel):
     engine: str = "audio"                # audio | transfer
     environment_id: int | None = None    # per-reel environment (overrides character)
     camera_note: str = ""                # per-reel camera direction (used in assembly)
+    hook_type: str = "rotate"            # hook archetype id, or 'rotate'
+    tone: str = ""                       # sharp | measured | warm | ...
+    passion: float = 0.5                 # 0 calm .. 1 fired-up
+    own_hook: str = ""                   # user-written hook (verbatim), optional
     created_at: str = ""
     updated_at: str = ""
 
@@ -158,6 +170,7 @@ class VideoJobStore:
             json.dumps(job.qa_issues), json.dumps(job.revisions),
             1 if job.script_approved else 0, job.driving_video_path,
             job.character_image_path, job.engine, job.environment_id, job.camera_note,
+            job.hook_type, job.tone, job.passion, job.own_hook,
             job.created_at, job.updated_at,
         )
         with self._connect() as conn:
@@ -168,7 +181,7 @@ class VideoJobStore:
                        motion_prompt=?, expressiveness=?, audio_asset_id=?, video_path=?,
                        dry_run_request=?, qa_issues=?, revisions=?, script_approved=?,
                        driving_video_path=?, character_image_path=?, engine=?,
-                       environment_id=?, camera_note=?,
+                       environment_id=?, camera_note=?, hook_type=?, tone=?, passion=?, own_hook=?,
                        created_at=?, updated_at=? WHERE id=?""",
                     (*cols, job.id),
                 )
@@ -179,8 +192,9 @@ class VideoJobStore:
                    voice_id, mode, hook_text, bookend_text, motion_prompt, expressiveness,
                    audio_asset_id, video_path, dry_run_request, qa_issues, revisions,
                    script_approved, driving_video_path, character_image_path, engine,
-                   environment_id, camera_note, created_at, updated_at)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                   environment_id, camera_note, hook_type, tone, passion, own_hook,
+                   created_at, updated_at)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 cols,
             )
             conn.commit()
@@ -219,6 +233,10 @@ class VideoJobStore:
             engine=g("engine", "audio") or "audio",
             environment_id=g("environment_id", None),
             camera_note=g("camera_note", "") or "",
+            hook_type=g("hook_type", "rotate") or "rotate",
+            tone=g("tone", "") or "",
+            passion=g("passion", 0.5) if g("passion", 0.5) is not None else 0.5,
+            own_hook=g("own_hook", "") or "",
             created_at=row["created_at"], updated_at=row["updated_at"],
         )
 
@@ -359,9 +377,12 @@ def create_job_from_brief(idea_id: int) -> VideoJob | None:
 
 def update_job_production(job_id: int, motion_prompt: str | None = None,
                           environment_id: int | None = None,
-                          camera_note: str | None = None) -> VideoJob | None:
-    """Save per-reel production direction (cinematic/avatar motion, environment,
-    camera note). Only provided fields are updated."""
+                          camera_note: str | None = None,
+                          hook_type: str | None = None, tone: str | None = None,
+                          passion: float | None = None,
+                          own_hook: str | None = None) -> VideoJob | None:
+    """Save per-reel direction (motion, environment, camera, hook, tone, passion,
+    own-hook). Only provided fields are updated."""
     store = VideoJobStore()
     job = store.get(job_id)
     if not job:
@@ -372,8 +393,33 @@ def update_job_production(job_id: int, motion_prompt: str | None = None,
         job.environment_id = environment_id or None
     if camera_note is not None:
         job.camera_note = camera_note
+    if hook_type is not None:
+        job.hook_type = hook_type
+    if tone is not None:
+        job.tone = tone
+    if passion is not None:
+        job.passion = passion
+    if own_hook is not None:
+        job.own_hook = own_hook
     job.id = store.save(job)
     return store.get(job.id)
+
+
+def regenerate_script(job_id: int, refinement: str = "") -> VideoJob | None:
+    """Rewrite the script for a job using its stored direction (hook/tone/
+    passion/own-hook), then refresh the job's Hook/Bookend from the new brief."""
+    from gtm_engine.producer import generate_producer_brief
+    store = VideoJobStore()
+    job = store.get(job_id)
+    if not job:
+        return None
+    brief = generate_producer_brief(
+        job.idea_id, refinement=refinement, hook_type=job.hook_type or "rotate",
+        tone=job.tone, passion=job.passion, own_hook=job.own_hook,
+    )
+    if not brief:
+        return job
+    return create_job_from_brief(job.idea_id)
 
 
 def approve_script(job_id: int) -> VideoJob | None:

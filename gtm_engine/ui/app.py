@@ -655,64 +655,95 @@ def _produce_review_panel(idea):
             st.markdown(f"<span style='color:{C['gold']};font-size:0.72rem;'>⚠ {qi}</span>",
                         unsafe_allow_html=True)
 
+        # ── 5-point DNA check (advisory — flags, never blocks) ──
+        from gtm_engine.hooks import evaluate_dna
+        full_script = (brief.spoken_script if brief else job.spoken_script) or job.spoken_script
+        dna = evaluate_dna(job.hook_text, job.bookend_text, full_script, idea.product or "")
+        with st.expander("Content check (hook · problem · payoff · subtle sell · soft CTA)",
+                         expanded=False):
+            for c in dna:
+                col = C["green"] if c["ok"] else C["gold"]
+                mark = "✓" if c["ok"] else "•"
+                st.markdown(f"<span style='color:{col};font-size:0.78rem;'>{mark} "
+                            f"<strong>{c['label']}</strong> — {c['note']}</span>",
+                            unsafe_allow_html=True)
+            weak = sum(1 for c in dna if not c["ok"])
+            if weak:
+                st.caption(f"{weak} thing(s) could be stronger. Fix with a refine note, or approve "
+                           "anyway — this is a guide, not a gate.")
+
         if not job.script_approved:
-            # ── Per-reel production direction (approved with the script) ──
-            from gtm_engine.video import update_job_production
+            from gtm_engine.video import update_job_production, regenerate_script
             from gtm_engine.casting import CastingStore
+            from gtm_engine.hooks import list_hooks, TONES, ROTATE
             envs = CastingStore().list_environments()
-            st.markdown("**🎥 Production direction (this reel)**")
-            motion = st.text_input(
-                "Cinematic / avatar motion", value=job.motion_prompt,
-                key=f"mot_{idea.id}",
-                placeholder="body part + action + emotion — e.g. 'leans in, open hand, warm'",
-            )
-            env_choices = [None] + [e.id for e in envs]
-            env_labels = {e.id: e.name for e in envs}
-            cur_env = job.environment_id if job.environment_id in [e.id for e in envs] else None
-            env_pick = st.selectbox(
-                "Environment / look start-point", env_choices,
-                index=env_choices.index(cur_env) if cur_env in env_choices else 0,
-                format_func=lambda i: "(character default)" if i is None else env_labels.get(i, "?"),
-                key=f"env_{idea.id}",
-            )
-            camera = st.text_input(
-                "Camera direction", value=job.camera_note, key=f"cam_{idea.id}",
-                placeholder="e.g. 'slow push-in on the hook, cut wide on the data'",
-            )
-            st.caption("Motion drives HeyGen; environment sets the backdrop. Camera direction "
-                       "is captured for the edit — HeyGen avatar clips don't move the camera.")
+
+            # ── Direction: hook · tone · passion ──
+            st.markdown("**🎬 Direction (this reel)**")
+            hook_opts = [ROTATE] + [h["id"] for h in list_hooks()]
+            hook_names = {ROTATE: "Rotate / surprise me",
+                          **{h["id"]: h["name"] for h in list_hooks()}}
+            hi = hook_opts.index(job.hook_type) if job.hook_type in hook_opts else 0
+            hook_type = st.selectbox("Hook style", hook_opts, index=hi,
+                                     format_func=lambda x: hook_names.get(x, x), key=f"hk_{idea.id}")
+            # show the archetype's example as a nudge
+            for h in list_hooks():
+                if h["id"] == hook_type:
+                    st.caption(f"e.g. \"{h['example']}\" — {h['what']}")
+            own_hook = st.text_input("…or write your own hook (used verbatim)",
+                                     value=job.own_hook, key=f"own_{idea.id}",
+                                     placeholder="type the exact opening line you want")
+            dc1, dc2 = st.columns(2)
+            with dc1:
+                ti = TONES.index(job.tone) if job.tone in TONES else 0
+                tone = st.selectbox("Tone", TONES, index=ti, key=f"tn_{idea.id}")
+            with dc2:
+                passion = st.slider("Passion / energy", 0.0, 1.0, float(job.passion), 0.05,
+                                    key=f"ps_{idea.id}", help="0 = calm & considered, 1 = fired-up")
+
+            # ── Production (motion · environment · camera) ──
+            with st.expander("🎥 Production (motion · environment · camera)", expanded=False):
+                motion = st.text_input("Cinematic / avatar motion", value=job.motion_prompt,
+                                       key=f"mot_{idea.id}",
+                                       placeholder="'leans in, open hand, warm'")
+                env_choices = [None] + [e.id for e in envs]
+                env_labels = {e.id: e.name for e in envs}
+                cur_env = job.environment_id if job.environment_id in [e.id for e in envs] else None
+                env_pick = st.selectbox(
+                    "Environment / look start-point", env_choices,
+                    index=env_choices.index(cur_env) if cur_env in env_choices else 0,
+                    format_func=lambda i: "(character default)" if i is None else env_labels.get(i, "?"),
+                    key=f"env_{idea.id}")
+                camera = st.text_input("Camera direction", value=job.camera_note, key=f"cam_{idea.id}",
+                                       placeholder="'slow push-in on the hook' (used in the edit)")
 
             refine = st.text_area(
-                "Refine the script (free text) — iterate until it's sharp",
-                key=f"refine_{idea.id}", height=70,
-                placeholder="e.g. 'sharper hook with a real number', 'make the proof the "
-                            "52-week log', 'more contrarian', 'less corporate'",
+                "Refine (free text) — iterate until it's sharp",
+                key=f"refine_{idea.id}", height=68,
+                placeholder="e.g. 'sharper hook with a real number', 'make the sell subtler', "
+                            "'more contrarian', 'less corporate'",
             )
 
-            def _save_direction():
-                update_job_production(job.id, motion_prompt=motion,
-                                      environment_id=env_pick, camera_note=camera)
+            def _save():
+                update_job_production(job.id, motion_prompt=motion, environment_id=env_pick,
+                                      camera_note=camera, hook_type=hook_type, tone=tone,
+                                      passion=passion, own_hook=own_hook)
 
             rc1, rc2, rc3 = st.columns(3)
             with rc1:
-                if st.button("Save direction", key=f"savdir_{idea.id}", use_container_width=True):
-                    _save_direction()
-                    st.rerun()
+                if st.button("Save", key=f"savdir_{idea.id}", use_container_width=True):
+                    _save(); st.rerun()
             with rc2:
-                if st.button("↻ Refine", key=f"refb_{idea.id}", use_container_width=True,
-                             disabled=not refine.strip()):
-                    _save_direction()
-                    with st.spinner("Rewriting the script (deeper pass)..."):
-                        if generate_producer_brief(idea.id, refinement=refine.strip()):
-                            create_job_from_brief(idea.id)
+                if st.button("↻ Regenerate", key=f"refb_{idea.id}", use_container_width=True):
+                    _save()
+                    with st.spinner("Rewriting to your direction..."):
+                        regenerate_script(job.id, refinement=refine.strip())
                     st.rerun()
             with rc3:
                 if st.button("✓ Approve", key=f"vjscr_{idea.id}", use_container_width=True):
-                    _save_direction()
-                    approve_script(job.id)
-                    st.rerun()
-            st.caption("Set the direction, refine the script as many times as you like, "
-                       "then approve script + direction together to move to production.")
+                    _save(); approve_script(job.id); st.rerun()
+            st.caption("Don't like it? Change the hook style (or write your own), dial the tone/energy, "
+                       "or type a refine note — then **Regenerate**. Approve when it's yours.")
             return  # gate: nothing else until the script is locked
         st.markdown(f"<span style='color:{C['green']};font-size:0.72rem;'>✓ script approved</span>",
                     unsafe_allow_html=True)

@@ -330,7 +330,9 @@ class ProducerBriefLibrary:
 
 def generate_producer_brief(idea_id: int, character=None,
                             cinematic_direction: str = "",
-                            refinement: str = "") -> ProducerBrief | None:
+                            refinement: str = "",
+                            hook_type: str = "rotate", tone: str = "",
+                            passion: float = 0.5, own_hook: str = "") -> ProducerBrief | None:
     """Generate a detailed producer brief for an approved idea.
 
     Reads the idea, picks scenes from the Scene Library, pulls any
@@ -395,6 +397,19 @@ def generate_producer_brief(idea_id: int, character=None,
             f"## REVISION REQUEST (apply this to the rewrite)\n\n{refinement}\n\n"
         )
 
+    # Direction: hook archetype, tone, passion, or a user-written hook.
+    from gtm_engine.hooks import hook_brief, passion_label
+    if own_hook.strip():
+        hook_dir = (f"USE THIS EXACT HOOK as the opening line (spoken_text of the hook "
+                    f"segment), word for word: \"{own_hook.strip()}\"")
+    else:
+        hook_dir = hook_brief(hook_type)
+    direction_block = (
+        f"## DIRECTION\n\n"
+        f"{hook_dir}\n"
+        f"Tone: {tone or 'sharp, credible'}. Delivery energy: {passion_label(passion)}.\n\n"
+    )
+
     prompt = (
         f"## IDEA\n\n"
         f"**Title:** {idea.title}\n"
@@ -408,10 +423,19 @@ def generate_producer_brief(idea_id: int, character=None,
         f"**Data requirement:** {idea.data_requirement or 'none stated'}\n"
         f"**Notes:** {idea.notes}\n\n"
         f"{presenter_block}"
+        f"{direction_block}"
         f"{refine_block}"
         f"## AVAILABLE SCENES (pick by id)\n\n{scenes_context}\n"
         f"{data_context}\n\n"
         f"## TASK\n\n"
+        f"Every reel must earn its place — this is NOT a post for a post's sake. "
+        f"It MUST carry all five of these (the content DNA):\n"
+        f"  1. A HOOK in the directed archetype/style — the first spoken line.\n"
+        f"  2. A REAL PROBLEM the audience feels, named explicitly (the Tension).\n"
+        f"  3. A clear PAYOFF / one takeaway (the Bookend).\n"
+        f"  4. A SUBTLE SELL — reference the relevant product ONCE, lightly, as the "
+        f"natural answer to the problem. Never pitch, never 'buy now'. Teach, don't sell.\n"
+        f"  5. A SOFT CTA (e.g. 'see it run. quantumtools.ai').\n\n"
         f"Produce the full JSON producer brief. Make it genuinely SHARP and "
         f"INSIGHTFUL, not generic:\n"
         f"- The spoken lines are short and deliverable, but each one must carry a "
