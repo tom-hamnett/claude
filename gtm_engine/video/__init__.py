@@ -296,20 +296,49 @@ def create_job_from_brief(idea_id: int) -> VideoJob | None:
     store = VideoJobStore()
     existing = store.get_for_idea(idea_id)
 
+    # Resolve the active character from the Casting library (avatar + voice + env).
+    character = None
+    try:
+        from gtm_engine.casting import CastingStore
+        cs = CastingStore()
+        cs.seed_if_empty()
+        character = cs.get_default_character()
+    except Exception:
+        character = None
+
     job = existing or VideoJob(idea_id=idea_id)
     job.brief_id = brief.id
     job.provider = cfg.provider
-    job.avatar_id = cfg.avatar_id
-    job.voice_id = cfg.voice_id
     job.mode = cfg.mode
     job.hook_text = hook_text
     job.bookend_text = bookend_text
-    job.motion_prompt = cfg.motion_prompt or brief.voice_directive
-    job.expressiveness = cfg.expressiveness
-    job.character_image_path = cfg.character_image_path
     job.engine = "transfer" if (cfg.provider == "runway" or cfg.mode == "transfer") else "audio"
+
+    if character:
+        job.avatar_id = character.avatar_id or cfg.avatar_id
+        job.voice_id = character.voice_id or cfg.voice_id
+        job.expressiveness = character.expressiveness
+        job.motion_prompt = character.cinematic_direction or brief.voice_directive
+        job.character_image_path = character.photo_path or cfg.character_image_path
+    else:
+        job.avatar_id = cfg.avatar_id
+        job.voice_id = cfg.voice_id
+        job.expressiveness = cfg.expressiveness
+        job.motion_prompt = cfg.motion_prompt or brief.voice_directive
+        job.character_image_path = cfg.character_image_path
+
+    # Ready when the provider can run with what this character supplies.
+    if cfg.provider in ("", "none"):
+        ready = False
+    elif cfg.provider == "mock":
+        ready = True
+    elif cfg.provider == "runway":
+        ready = bool(job.character_image_path)
+    else:  # heygen etc. — needs an avatar id
+        ready = bool(job.avatar_id)
+
     job.qa_issues = run_qa(hook_text, bookend_text)
-    job.status = "queued" if cfg.is_ready() else "needs_provider"
+    job.status = "queued" if ready else "needs_provider"
     job.id = store.save(job)
     return job
 
@@ -341,28 +370,51 @@ def render_job(job_id: int, audio_path: Path | str | None = None,
     provider = get_provider(cfg.provider)
     out_path = OUTPUT_DIR / "videos" / f"idea_{job.idea_id}_job_{job.id}.mp4"
 
+    # Environment background from the active character, else the config default.
+    background = cfg.background
+    try:
+        from gtm_engine.casting import CastingStore
+        cs = CastingStore()
+        ch = cs.get_default_character()
+        if ch and ch.environment_id:
+            env = cs.get_environment(ch.environment_id)
+            if env and env.background_type == "color":
+                background = env.background_value
+    except Exception:
+        pass
+
     req = RenderRequest(
         script=job.spoken_script,
-        avatar_id=cfg.avatar_id,
+        avatar_id=job.avatar_id,
         output_path=out_path,
-        voice_id=cfg.voice_id or None,
-        background=cfg.background,
+        voice_id=job.voice_id or None,
+        background=background,
         aspect_ratio=cfg.aspect_ratio,
         motion_prompt=job.motion_prompt,
         expressiveness=job.expressiveness,
         gesture=cfg.gesture,
-        character_image_path=Path(cfg.character_image_path) if cfg.character_image_path else None,
+        character_image_path=Path(job.character_image_path) if job.character_image_path else None,
     )
     if driving_video_path:
         job.driving_video_path = str(driving_video_path)
         req.driving_video_path = Path(driving_video_path)
 
-    is_transfer = job.engine == "transfer" or provider.supports_performance_transfer and cfg.provider == "runway"
+    is_transfer = job.engine == "transfer" or (provider.supports_performance_transfer and cfg.provider == "runway")
+
+    # Job-level readiness: the character/inputs the chosen provider needs.
+    if cfg.provider in ("", "none"):
+        ready = False
+    elif cfg.provider == "mock":
+        ready = True
+    elif is_transfer:
+        ready = bool(req.character_image_path)
+    else:
+        ready = bool(job.avatar_id)
 
     # For audio-drive providers, an uploaded take can drive the mouth.
     if not is_transfer:
         use_audio = (cfg.mode == "record") or (cfg.mode == "hybrid" and audio_path)
-        if use_audio and audio_path and provider.supports_audio_upload and cfg.is_ready():
+        if use_audio and audio_path and provider.supports_audio_upload and ready:
             asset_id = provider.upload_audio(Path(audio_path))
             if asset_id:
                 req.audio_asset_id = asset_id
@@ -372,15 +424,16 @@ def render_job(job_id: int, audio_path: Path | str | None = None,
     transfer_missing_input = is_transfer and not (req.driving_video_path and req.character_image_path)
 
     # No usable provider / missing input -> DRY RUN. Store the request for display.
-    if not cfg.is_ready() or not provider.is_configured() or transfer_missing_input:
-        job.status = "needs_input" if transfer_missing_input and cfg.is_ready() else "needs_provider"
+    if not ready or not provider.is_configured() or transfer_missing_input:
+        job.status = "needs_input" if transfer_missing_input and ready else "needs_provider"
         job.dry_run_request = json.dumps({
             "engine": job.engine,
             "provider": cfg.provider or "none",
-            "character_image": cfg.character_image_path or "(not set)",
+            "avatar_id": job.avatar_id or "(n/a for transfer)",
+            "voice_id": job.voice_id or "(default)",
+            "character_image": job.character_image_path or "(not set)",
             "driving_video": job.driving_video_path or "(record & upload your take)",
-            "gesture_transfer": cfg.gesture,
-            "avatar_id": cfg.avatar_id or "(n/a for transfer)",
+            "background": background,
             "script": job.spoken_script,
             "expressiveness": job.expressiveness,
             "aspect_ratio": cfg.aspect_ratio,

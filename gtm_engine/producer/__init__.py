@@ -80,13 +80,25 @@ Your output is what the content and video pipelines read to make the
 actual asset. It must be unambiguous. If a human director picked this
 up, they should be able to shoot it without asking questions.
 
+=== WRITE FOR THE EAR (this is spoken by an avatar — readability is everything) ===
+The spoken_text is performed aloud, so it must SOUND natural, not read like a post:
+  - Short sentences. One idea each. Lead with the sharpest line — hook in the first 3 words.
+  - Use everyday spoken rhythm and contractions ("you're", "it's", "here's").
+  - No jargon walls, no clause pile-ups, no reading out URLs mid-sentence.
+  - Punctuation IS the pacing: use full stops for beats, an em dash for a pause,
+    the occasional one-word sentence for emphasis.
+  - Say it out loud in your head — if you'd stumble, rewrite it.
+  - Each on-screen segment's spoken_text is ~4 seconds ≈ 8-12 words. Keep Hook and
+    Bookend especially tight and punchy.
+  - Honour the PRESENTER persona and the CINEMATIC DIRECTION for tone and delivery.
+
 THE CORE-FIVE STRUCTURE (20s = 5 x 4s segments):
 
 === INVIOLABLE SEGMENT RULES ===
 
-  1. HOOK (0-4s) — THE CHARACTER (Theo) APPEARS HERE
-     - Hyper-stylised Theo in one of the locked scenes
-     - Animated from hero.png via Veo startFrame
+  1. HOOK (0-4s) — THE CHARACTER (the presenter) APPEARS HERE
+     - The presenter in the chosen environment
+     - Rendered as a HeyGen talking-head from the presenter's avatar + voice
      - This is the ONLY segment where the character appears (besides Bookend)
      - Scroll-stopping opening line
 
@@ -94,23 +106,23 @@ THE CORE-FIVE STRUCTURE (20s = 5 x 4s segments):
      - Bold text overlays on dark background (#0a0a0f)
      - OR a data point / statistic filling the screen
      - The uncomfortable truth visualised as typography or numbers
-     - NO Theo. NO character. NO person. Pure text/data.
+     - NO presenter. NO character. NO person. Pure text/data.
 
   3. PIVOT (8-12s) — NO CHARACTER. DATA VISUALISATION ONLY.
      - Clean chart, metric dashboard, or product UI screenshot
      - Brand colours: #6c63ff purple, #ffd166 gold on #0a0a0f dark
      - Can be a screen recording of the actual product running
-     - NO Theo. NO character. Purely visual evidence.
+     - NO presenter. NO character. Purely visual evidence.
 
   4. PROOF (12-16s) — NO CHARACTER. PRODUCT OUTPUT ONLY.
      - Actual product screenshot or screen recording
      - Real data from the Data Vault (PRISM benchmark, Analyst's Edge diagnostic, Atlas trade log)
      - Concrete artefact — real numbers, real output, not a claim
-     - NO Theo. NO character. The product speaks for itself.
+     - NO presenter. NO character. The product speaks for itself.
 
-  5. BOOKEND (16-20s) — THE CHARACTER (Theo) RETURNS
+  5. BOOKEND (16-20s) — THE CHARACTER (the presenter) RETURNS
      - EXACT same scene as Hook — same environment, same lighting
-     - Theo addresses the viewer directly (helmet turns to camera)
+     - The presenter addresses the viewer directly, looking to camera
      - Subtle open-palm gesture
      - CTA as text overlay (e.g. "See it run. quantumtools.ai")
 
@@ -119,11 +131,11 @@ THE CORE-FIVE STRUCTURE (20s = 5 x 4s segments):
 If you put the character in Tension, Pivot, or Proof, the brief is WRONG.
 Those three segments are: text, data viz, and product output ONLY.
 
-THE CHARACTER:
-Theo — The Obsidian Seraph. Male-presenting entity, vantablack suit,
-smooth obsidian teardrop helmet, three floating cyan neon halos. No
-human facial features. Always animated from a locked hero reference
-image via Veo startFrame. ONLY appears in Hook and Bookend.
+THE PRESENTER:
+A real, human on-camera host rendered as a talking-head avatar (HeyGen).
+Their persona and delivery direction are supplied below under PRESENTER.
+The presenter ONLY appears in the Hook and Bookend; the middle three
+segments are product screens and data visualisations, no person.
 
 THE SCENES (you will choose ONE for Hook+Bookend):
 Each scene has an id, name, description, and environment prompt. The
@@ -146,7 +158,7 @@ YOUR OUTPUT: A JSON object with these fields:
     "hook": {
       "duration_seconds": 4,
       "visual_type": "character_in_scene",
-      "visual_direction": "Theo in [scene]. Camera direction. 1-2 sentences.",
+      "visual_direction": "The presenter in [environment]. Camera direction. 1-2 sentences.",
       "spoken_text": "exact words spoken during this segment",
       "text_overlay": "on-screen text, max 6 words",
       "transition_out": "how this segment ends (e.g. hard cut to black)"
@@ -178,7 +190,7 @@ YOUR OUTPUT: A JSON object with these fields:
     "bookend": {
       "duration_seconds": 4,
       "visual_type": "character_in_scene",
-      "visual_direction": "SAME scene as Hook. Theo turns to camera, open-palm gesture. Exact match.",
+      "visual_direction": "SAME scene as Hook. The presenter turns to camera with an open, warm gesture. Same look as Hook.",
       "spoken_text": "exact words — the closing line",
       "text_overlay": "CTA: e.g. 'See it run. quantumtools.ai'",
       "transition_out": "hold 0.5s on final frame"
@@ -316,18 +328,32 @@ class ProducerBriefLibrary:
         )
 
 
-def generate_producer_brief(idea_id: int) -> ProducerBrief | None:
+def generate_producer_brief(idea_id: int, character=None,
+                            cinematic_direction: str = "") -> ProducerBrief | None:
     """Generate a detailed producer brief for an approved idea.
 
     Reads the idea, picks scenes from the Scene Library, pulls any
     referenced data sources, and calls Claude to produce the full
-    production spec.
+    production spec — written for delivery by the given character with the
+    supplied cinematic direction. If no character is passed, the active
+    default from the Casting library is used.
     """
     bank = IdeaBank()
     idea = bank.get(idea_id)
     if not idea:
         logger.error("Idea %d not found", idea_id)
         return None
+
+    if character is None:
+        try:
+            from gtm_engine.casting import CastingStore
+            cs = CastingStore()
+            cs.seed_if_empty()
+            character = cs.get_default_character()
+        except Exception:
+            character = None
+    if character and not cinematic_direction:
+        cinematic_direction = character.cinematic_direction
 
     scene_lib = SceneLibrary()
     all_scenes = scene_lib.list_all()
@@ -350,6 +376,18 @@ def generate_producer_brief(idea_id: int) -> ProducerBrief | None:
         for d in all_data:
             data_context += f"- id: `{d.id}` | **{d.name}** ({d.source_type}) | {d.description[:150]}\n"
 
+    presenter_block = ""
+    if character:
+        presenter_block = (
+            f"## PRESENTER\n\n"
+            f"**Name:** {character.name}\n"
+            f"**Persona:** {character.persona}\n"
+            f"**Cinematic direction (how they deliver it):** "
+            f"{cinematic_direction or 'natural, credible, engaging'}\n\n"
+            f"Write the spoken lines so THIS presenter can deliver them naturally, "
+            f"and set voice_directive to match the cinematic direction.\n\n"
+        )
+
     prompt = (
         f"## IDEA\n\n"
         f"**Title:** {idea.title}\n"
@@ -362,12 +400,14 @@ def generate_producer_brief(idea_id: int) -> ProducerBrief | None:
         f"**Edginess:** {idea.edginess_score}/10\n"
         f"**Data requirement:** {idea.data_requirement or 'none stated'}\n"
         f"**Notes:** {idea.notes}\n\n"
+        f"{presenter_block}"
         f"## AVAILABLE SCENES (pick by id)\n\n{scenes_context}\n"
         f"{data_context}\n\n"
         f"## TASK\n\n"
         f"Produce the full JSON producer brief for this idea. Choose the best "
-        f"scenes, write the exact 50-60 word spoken script, specify visual "
-        f"direction and text overlays per segment.\n\n"
+        f"scenes, write the exact 50-60 word spoken script (written for the ear — "
+        f"short, punchy, deliverable), specify visual direction and text overlays "
+        f"per segment.\n\n"
         f"Return ONLY the JSON."
     )
 
@@ -439,11 +479,11 @@ def _render_brief_markdown(idea: Idea, raw: dict, scenes: list[Scene]) -> str:
 
     # Visual type labels for clarity
     visual_type_labels = {
-        "hook": "CHARACTER IN SCENE (Theo)",
+        "hook": "CHARACTER IN SCENE (the presenter)",
         "tension": "TEXT / DATA OVERLAY (no character)",
         "pivot": "DATA VISUALISATION (no character)",
         "proof": "PRODUCT SCREENSHOT (no character)",
-        "bookend": "CHARACTER IN SCENE (Theo — same as Hook)",
+        "bookend": "CHARACTER IN SCENE (the presenter — same as Hook)",
     }
 
     lines = [

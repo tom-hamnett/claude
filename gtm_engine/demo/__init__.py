@@ -25,6 +25,13 @@ def load_quantum_demo() -> dict:
     """Load the Quantum Tools demo into the active workspace. Returns a summary."""
     now = datetime.now(timezone.utc).isoformat()
 
+    # 0. Cast + environments (starter set)
+    try:
+        from gtm_engine.casting import CastingStore
+        CastingStore().seed_if_empty()
+    except Exception:
+        pass
+
     # 1. Brief
     save_json({
         "umbrella_brand": "Quantum Tools",

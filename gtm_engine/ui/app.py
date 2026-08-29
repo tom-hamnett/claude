@@ -633,19 +633,27 @@ def _produce_review_panel(idea):
         st.markdown(f"<span style='color:{C['green']};font-size:0.72rem;'>✓ script approved</span>",
                     unsafe_allow_html=True)
 
-        # ── Step 2: Record to camera ──
-        st.markdown(f"<span style='color:{C['muted']};font-size:0.7rem;'>2 · RECORD TO CAMERA</span>",
+        # ── Step 2: Generate (simple) or record→transpose (advanced) ──
+        wants_upload = is_transfer or cfg.mode in ("record", "hybrid")
+        step2_label = "RECORD TO CAMERA" if is_transfer else ("YOUR TAKE" if wants_upload else "GENERATE")
+        st.markdown(f"<span style='color:{C['muted']};font-size:0.7rem;'>2 · {step2_label}</span>",
                     unsafe_allow_html=True)
-        if is_transfer and not cfg.character_image_path:
-            st.warning("No character set. Create yours in **Settings → Avatar** first.")
-        take_types = (["mp4", "mov", "webm"] if is_transfer
-                      else ["mp3", "wav", "mp4", "mov", "webm", "m4a"])
-        take_help = ("Record yourself delivering the script — Act-Two maps your performance "
-                     "onto your character." if is_transfer
-                     else "Video or audio — we use the audio to drive the avatar.")
-        take_file = st.file_uploader(take_help, type=take_types, key=f"vjtake_{idea.id}")
+        if is_transfer and not job.character_image_path:
+            st.warning("No character set. Create yours in **Settings → Cast & Voice** first.")
 
-        prod_label = ("Transpose onto my character" if is_transfer else "Render")
+        take_file = None
+        if wants_upload:
+            take_types = (["mp4", "mov", "webm"] if is_transfer
+                          else ["mp3", "wav", "mp4", "mov", "webm", "m4a"])
+            take_help = ("Record yourself delivering the script — Act-Two maps your performance "
+                         "onto your character." if is_transfer
+                         else "Video or audio — we use the audio to drive the avatar (optional in Hybrid).")
+            take_file = st.file_uploader(take_help, type=take_types, key=f"vjtake_{idea.id}")
+
+        if is_transfer:
+            prod_label = "Transpose onto my character"
+        else:
+            prod_label = "Generate video"
         if job.video_path:
             prod_label = "Re-" + prod_label[0].lower() + prod_label[1:]
         if st.button(prod_label, key=f"vjr_{idea.id}", use_container_width=True):
@@ -1011,136 +1019,154 @@ def _render_settings():
 
     # ── Avatar ──
     with tabs[1]:
-        st.markdown("### Avatar Provider (BYOK)")
+        st.markdown("### Cast & Voice")
         from gtm_engine.avatar import (
             list_providers, get_provider, AvatarConfig, AvatarConfigStore,
         )
+        from gtm_engine.casting import CastingStore, Character, Environment
 
         cfg_store = AvatarConfigStore()
         cfg = cfg_store.load()
+        casting = CastingStore()
+        casting.seed_if_empty()
 
+        # ── Provider (HeyGen is the simple default) ──
         provider_ids = [p["id"] for p in list_providers()]
         prov_labels = {p["id"]: p["name"] for p in list_providers()}
         sel_provider = st.selectbox(
-            "Provider", provider_ids,
+            "Video provider", provider_ids,
             index=provider_ids.index(cfg.provider) if cfg.provider in provider_ids else 0,
             format_func=lambda x: prov_labels.get(x, x),
+            help="HeyGen = simple text→video talking head (recommended).",
         )
         provider = get_provider(sel_provider)
-
         key_names = {"heygen": "HEYGEN_API_KEY", "runway": "RUNWAY_API_KEY"}
         if sel_provider == "none":
             st.info("No avatar. Reels use B-roll + voiceover only.")
         elif sel_provider == "mock":
             st.success("Simulation — renders offline previews, no key or spend.")
         elif not provider.is_configured():
-            st.warning(
-                f"{prov_labels.get(sel_provider)} selected but no API key found. "
-                f"Add `{key_names.get(sel_provider,'API_KEY')}=<key>` to your `.env` or "
-                f"Streamlit secrets, then reload."
-            )
+            st.warning(f"{prov_labels.get(sel_provider)} selected but no key. Add "
+                       f"`{key_names.get(sel_provider,'API_KEY')}` to Secrets, then reload.")
         else:
             st.success(f"{prov_labels.get(sel_provider)} connected.")
 
-        avatar_id, avatar_name = cfg.avatar_id, cfg.avatar_name
-        voice_id, voice_name = cfg.voice_id, cfg.voice_name
-        character_image_path = cfg.character_image_path
-        character_description = cfg.character_description
-        gesture = cfg.gesture
+        hey_avatars = provider.list_avatars() if (sel_provider == "heygen" and provider.is_configured()) else []
+        hey_voices = provider.list_voices() if (sel_provider == "heygen" and provider.is_configured()) else []
+        envs = casting.list_environments()
+        env_ids = [e.id for e in envs]
+        env_labels = {e.id: e.name for e in envs}
 
-        # ── HeyGen: pick a stock/custom avatar + voice ──
-        if sel_provider == "heygen" and provider.is_configured():
-            avatars = provider.list_avatars()
-            if avatars:
-                names = [a["name"] or a["id"] for a in avatars]
-                ids = [a["id"] for a in avatars]
-                idx = ids.index(avatar_id) if avatar_id in ids else 0
-                pick = st.selectbox("Your avatar", range(len(ids)),
-                                    index=idx, format_func=lambda i: names[i])
-                avatar_id, avatar_name = ids[pick], names[pick]
-            else:
-                avatar_id = st.text_input("Avatar ID (from HeyGen)", value=avatar_id)
-            voices = provider.list_voices()
-            if voices:
-                vnames = ["(auto)"] + [v["name"] or v["id"] for v in voices]
-                vids = [""] + [v["id"] for v in voices]
-                vidx = vids.index(voice_id) if voice_id in vids else 0
-                vpick = st.selectbox("Voice", range(len(vids)),
-                                     index=vidx, format_func=lambda i: vnames[i])
-                voice_id = vids[vpick]
-                voice_name = vnames[vpick] if vpick > 0 else ""
+        # ── Characters library ──
+        st.markdown("#### Characters")
+        st.caption("Your cast. Pick who's on camera per reel; the default is used unless you change it.")
+        chars = casting.list_characters()
+        labels = [f"{c.name}{' ⭐ default' if c.is_default else ''}"
+                  f"{'' if c.is_ready() else '  (needs avatar)'}" for c in chars]
+        options = list(range(len(chars))) + ["__new__"]
+        sel = st.selectbox("Edit", options, format_func=lambda i: "➕ New character" if i == "__new__" else labels[i])
+        ch = Character(name="New character", persona="") if sel == "__new__" else chars[sel]
 
-        # ── Runway/Simulation: your AI-restyled character ──
-        if sel_provider in ("runway", "mock"):
-            st.markdown("**Your character** (close-but-not-you, from a photo)")
-            character_description = st.text_input(
-                "Look & setting", value=character_description,
-                placeholder="e.g. sharp navy blazer, modern office, confident and warm",
-            )
-            photo = st.file_uploader("A clear photo of you", type=["png", "jpg", "jpeg"],
-                                     key="char_photo")
-            cc1, cc2 = st.columns(2)
-            with cc1:
-                if st.button("Generate my character", key="gen_char",
-                             disabled=photo is None):
-                    from gtm_engine.avatar import generate_character
-                    outp = OUTPUT_DIR / "characters" / "character.png"
-                    outp.parent.mkdir(parents=True, exist_ok=True)
-                    photo_path = outp.parent / f"src_{photo.name}"
-                    photo_path.write_bytes(photo.getbuffer())
-                    with st.spinner("Generating your character (Nano Banana)..."):
-                        res = generate_character(photo_path, character_description
-                                                 or "authoritative, credible, well-lit", outp)
-                    if res:
-                        character_image_path = str(res)
-                        st.success("Character generated.")
-                    else:
-                        st.error("Generation needs GOOGLE_API_KEY (or upload your own below).")
-            with cc2:
-                own = st.file_uploader("…or upload a character image", type=["png", "jpg", "jpeg"],
-                                       key="char_own")
-                if own is not None:
-                    outp = OUTPUT_DIR / "characters" / f"own_{own.name}"
-                    outp.parent.mkdir(parents=True, exist_ok=True)
-                    outp.write_bytes(own.getbuffer())
-                    character_image_path = str(outp)
-            if character_image_path and Path(character_image_path).exists():
-                st.image(character_image_path, width=160, caption="Your character")
-            gesture = st.checkbox("Transfer body & hand gestures (not just face)", value=gesture)
+        ch_name = st.text_input("Name", value=ch.name, key="ch_name")
+        ch_persona = st.text_area("Persona (who they are, how they come across)", value=ch.persona,
+                                  height=68, key="ch_persona")
+        ch_cine = st.text_input("Cinematic direction (delivery)", value=ch.cinematic_direction,
+                                placeholder="e.g. measured, direct, lean in on the key line", key="ch_cine")
 
-        # ── Delivery mode + shared defaults ──
-        mode_opts = {
-            "voice_clone": "Voice-clone (hands-off — generate from script)",
-            "record": "Record per video (upload your audio take)",
-            "hybrid": "Hybrid (clone by default, drop in a take when you want)",
-            "transfer": "Performance transfer (record to camera → your character)",
-        }
-        mode = st.radio("Delivery mode", list(mode_opts.keys()),
-                        index=list(mode_opts.keys()).index(cfg.mode) if cfg.mode in mode_opts else 0,
-                        format_func=lambda x: mode_opts[x])
-        expr = st.slider("Expressiveness", 0.0, 1.0, float(cfg.expressiveness), 0.05,
-                         help="0 = flat/measured, 1 = high energy")
-        motion = st.text_input("Default motion direction (optional)", value=cfg.motion_prompt,
-                               placeholder="e.g. calm, direct, slight lean toward camera")
-        aspect = st.selectbox("Aspect ratio", ["9:16", "1:1", "16:9"],
-                              index=["9:16", "1:1", "16:9"].index(cfg.aspect_ratio)
-                              if cfg.aspect_ratio in ["9:16", "1:1", "16:9"] else 0)
+        # Avatar + voice (dropdowns when HeyGen is connected, else text)
+        ch_avatar_id, ch_avatar_name = ch.avatar_id, ch.avatar_name
+        ch_voice_id, ch_voice_name = ch.voice_id, ch.voice_name
+        if hey_avatars:
+            a_ids = [""] + [a["id"] for a in hey_avatars]
+            a_names = ["(none yet)"] + [a["name"] or a["id"] for a in hey_avatars]
+            ai = a_ids.index(ch_avatar_id) if ch_avatar_id in a_ids else 0
+            ap = st.selectbox("HeyGen avatar", range(len(a_ids)), index=ai,
+                              format_func=lambda i: a_names[i], key="ch_av")
+            ch_avatar_id, ch_avatar_name = a_ids[ap], (a_names[ap] if ap else "")
+        else:
+            ch_avatar_id = st.text_input("HeyGen avatar id", value=ch_avatar_id, key="ch_av_txt")
+        if hey_voices:
+            v_ids = [""] + [v["id"] for v in hey_voices]
+            v_names = ["(default)"] + [v["name"] or v["id"] for v in hey_voices]
+            vi = v_ids.index(ch_voice_id) if ch_voice_id in v_ids else 0
+            vp = st.selectbox("Voice", range(len(v_ids)), index=vi,
+                              format_func=lambda i: v_names[i], key="ch_vo")
+            ch_voice_id, ch_voice_name = v_ids[vp], (v_names[vp] if vp else "")
+        else:
+            ch_voice_id = st.text_input("Voice id (optional)", value=ch_voice_id, key="ch_vo_txt")
 
-        if st.button("Save avatar settings", key="save_avatar_cfg"):
-            cfg_store.save(AvatarConfig(
-                provider=sel_provider, avatar_id=avatar_id, avatar_name=avatar_name,
-                voice_id=voice_id, voice_name=voice_name, mode=mode,
-                motion_prompt=motion, expressiveness=expr, aspect_ratio=aspect,
-                background=cfg.background, character_image_path=character_image_path,
-                character_description=character_description, gesture=gesture,
-            ))
-            st.success("Avatar settings saved.")
-            st.rerun()
+        if env_ids:
+            cur_env = ch.environment_id if ch.environment_id in env_ids else env_ids[0]
+            ep = st.selectbox("Default environment", env_ids,
+                              index=env_ids.index(cur_env),
+                              format_func=lambda i: env_labels.get(i, "?"), key="ch_env")
+        else:
+            ep = None
+        ch_expr = st.slider("Expressiveness", 0.0, 1.0, float(ch.expressiveness), 0.05, key="ch_expr")
+        ch_default = st.checkbox("Make this the default character", value=ch.is_default, key="ch_def")
+
+        b1, b2 = st.columns(2)
+        with b1:
+            if st.button("Save character", key="ch_save", use_container_width=True):
+                casting.save_character(Character(
+                    id=None if sel == "__new__" else ch.id, name=ch_name, persona=ch_persona,
+                    avatar_id=ch_avatar_id, avatar_name=ch_avatar_name, voice_id=ch_voice_id,
+                    voice_name=ch_voice_name, cinematic_direction=ch_cine, expressiveness=ch_expr,
+                    environment_id=ep, is_default=ch_default, photo_path=ch.photo_path,
+                ))
+                cfg.provider = sel_provider
+                cfg_store.save(cfg)
+                st.success("Character saved.")
+                st.rerun()
+        with b2:
+            if sel != "__new__" and st.button("Delete", key="ch_del", use_container_width=True):
+                casting.delete_character(ch.id)
+                st.rerun()
+
+        # ── Environments ──
+        st.markdown("#### Environments")
+        for e in envs:
+            st.markdown(
+                f"<span style='display:inline-block;width:12px;height:12px;border-radius:3px;"
+                f"background:{e.background_value};margin-right:6px;'></span>"
+                f"**{e.name}** — <span style='color:{C['muted']};font-size:0.8rem;'>{e.description}</span>",
+                unsafe_allow_html=True)
+        with st.expander("Add an environment"):
+            en = st.text_input("Name", key="env_name")
+            ed = st.text_input("Description", key="env_desc")
+            ecol = st.color_picker("Background colour", value="#0d1b2a", key="env_col")
+            if st.button("Add environment", key="env_add", disabled=not en):
+                casting.save_environment(Environment(name=en, description=ed,
+                                                     background_type="color", background_value=ecol))
+                st.rerun()
+
+        # ── Advanced (record-to-camera / performance transfer) ──
+        with st.expander("Advanced — record-to-camera & performance transfer"):
+            st.caption("Optional. Leave on HeyGen text→video for the simple workflow.")
+            mode_opts = {
+                "voice_clone": "Text→video (hands-off, recommended)",
+                "record": "Record per video (upload audio take)",
+                "hybrid": "Hybrid (text by default, take when you want)",
+                "transfer": "Performance transfer (Runway — record to camera)",
+            }
+            mode = st.radio("Delivery mode", list(mode_opts.keys()),
+                            index=list(mode_opts.keys()).index(cfg.mode) if cfg.mode in mode_opts else 0,
+                            format_func=lambda x: mode_opts[x])
+            aspect = st.selectbox("Aspect ratio", ["9:16", "1:1", "16:9"],
+                                  index=["9:16", "1:1", "16:9"].index(cfg.aspect_ratio)
+                                  if cfg.aspect_ratio in ["9:16", "1:1", "16:9"] else 0)
+            gesture = st.checkbox("Transfer body & hand gestures (Runway)", value=cfg.gesture)
+            if st.button("Save engine settings", key="save_engine_cfg"):
+                cfg.mode, cfg.aspect_ratio, cfg.gesture = mode, aspect, gesture
+                cfg.provider = sel_provider
+                cfg_store.save(cfg)
+                st.success("Saved.")
+                st.rerun()
 
         st.caption(
-            "Runway (performance transfer): create your character from a photo, then per "
-            "reel you record to camera and Act-Two maps your real expressions onto that "
-            "character. HeyGen (audio-drive): a talking head that lip-syncs to your voice."
+            "Simple workflow: pick a video provider (HeyGen), set up your cast (avatar + voice "
+            "+ persona + environment), make one the default. Then per reel: approve idea → "
+            "generate script (written for delivery) → generate video."
         )
 
     # ── Core-Five Spec ──
