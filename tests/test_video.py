@@ -43,6 +43,34 @@ def _seed_idea_with_brief(db):
     return idea_id
 
 
+def test_resolve_audio_take_passthrough(tmp_path):
+    from gtm_engine.video import resolve_audio_take
+    wav = tmp_path / "take.wav"
+    wav.write_bytes(b"RIFF....WAVE")
+    assert resolve_audio_take(wav) == wav
+
+
+def test_extract_audio_missing_returns_none():
+    from gtm_engine.video import extract_audio
+    assert extract_audio(Path("/tmp/does-not-exist-xyz.mp4")) is None
+
+
+def test_extract_audio_from_video(tmp_path):
+    imageio_ffmpeg = pytest.importorskip("imageio_ffmpeg")
+    import subprocess
+    from gtm_engine.video import resolve_audio_take
+    ff = imageio_ffmpeg.get_ffmpeg_exe()
+    vid = tmp_path / "clip.mp4"
+    subprocess.run(
+        [ff, "-y", "-f", "lavfi", "-i", "testsrc=duration=1:size=320x240:rate=10",
+         "-f", "lavfi", "-i", "sine=frequency=440:duration=1", "-shortest", str(vid)],
+        check=True, capture_output=True,
+    )
+    out = resolve_audio_take(vid)
+    assert out is not None and out.exists() and out.stat().st_size > 0
+    assert out.suffix == ".wav"
+
+
 def test_qa_flags_length_and_forbidden():
     assert run_qa("", "") == ["Hook line is empty.", "Bookend line is empty."]
     long = "one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen"

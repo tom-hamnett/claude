@@ -183,6 +183,45 @@ class VideoJobStore:
         )
 
 
+# ── Audio extraction (video take -> wav for HeyGen) ──────────────────────────
+
+AUDIO_EXTS = {".mp3", ".wav"}
+VIDEO_EXTS = {".mp4", ".mov", ".webm", ".m4a", ".aac", ".mkv"}
+
+
+def extract_audio(src: Path) -> Path | None:
+    """Extract a HeyGen-friendly wav from a video/other file. None on failure.
+
+    Uses the ffmpeg binary bundled by imageio-ffmpeg, so it works on hosts
+    (e.g. Streamlit Cloud) with no system ffmpeg.
+    """
+    src = Path(src)
+    if not src.exists():
+        return None
+    try:
+        import subprocess
+        import imageio_ffmpeg
+        ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+        out = src.with_suffix(".extracted.wav")
+        subprocess.run(
+            [ffmpeg, "-y", "-i", str(src), "-vn",
+             "-acodec", "pcm_s16le", "-ar", "44100", "-ac", "1", str(out)],
+            check=True, capture_output=True,
+        )
+        return out if out.exists() and out.stat().st_size > 0 else None
+    except Exception as e:
+        logger.error("Audio extraction failed for %s: %s", src, e)
+        return None
+
+
+def resolve_audio_take(src: Path) -> Path | None:
+    """Return a HeyGen-ready audio file: pass mp3/wav through, else extract."""
+    src = Path(src)
+    if src.suffix.lower() in AUDIO_EXTS:
+        return src
+    return extract_audio(src)
+
+
 # ── QA ──────────────────────────────────────────────────────────────────────
 
 def run_qa(hook_text: str, bookend_text: str) -> list[str]:

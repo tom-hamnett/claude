@@ -632,35 +632,44 @@ def _produce_review_panel(idea):
             if job.dry_run_request:
                 st.code(job.dry_run_request, language="json")
 
-        # Optional audio upload (Record / Hybrid modes)
+        # Optional take upload (Record / Hybrid modes) — video OR audio.
         from gtm_engine.avatar import AvatarConfigStore
+        from gtm_engine.video import resolve_audio_take
         cfg = AvatarConfigStore().load()
-        audio_file = None
+        take_file = None
         if cfg.mode in ("record", "hybrid"):
-            audio_file = st.file_uploader(
-                "Your audio take (mp3/wav) — avatar lip-syncs to it",
-                type=["mp3", "wav"], key=f"vjaud_{idea.id}",
+            take_file = st.file_uploader(
+                "Your take — video or audio (we use the audio to drive the avatar)",
+                type=["mp3", "wav", "mp4", "mov", "webm", "m4a"], key=f"vjaud_{idea.id}",
             )
             if cfg.mode == "hybrid":
                 st.caption("Optional — leave empty to use the cloned/stock voice.")
         if job.audio_asset_id:
-            st.caption(f"✓ Last render used your uploaded audio ({job.audio_asset_id[:12]}…)")
+            st.caption(f"✓ Last render used your uploaded take ({job.audio_asset_id[:12]}…)")
 
         # Render / re-render
         rlabel = "Render" if not job.video_path else "Re-render"
         if st.button(rlabel, key=f"vjr_{idea.id}", use_container_width=True):
             audio_path = None
-            if audio_file is not None:
+            take_failed = False
+            if take_file is not None:
                 updir = OUTPUT_DIR / "uploads"
                 updir.mkdir(parents=True, exist_ok=True)
-                audio_path = updir / f"idea_{idea.id}_{audio_file.name}"
-                audio_path.write_bytes(audio_file.getbuffer())
-            with st.spinner("Rendering (dry-run if no key)..."):
-                done = render_job(job.id, audio_path=audio_path)
-                if audio_path and done and not done.audio_asset_id:
-                    st.warning("Audio upload didn't return an asset — rendered with the "
-                               "voice instead. Check the HeyGen key/file format (mp3/wav).")
-                st.rerun()
+                raw = updir / f"idea_{idea.id}_{take_file.name}"
+                raw.write_bytes(take_file.getbuffer())
+                with st.spinner("Pulling audio from your take..."):
+                    audio_path = resolve_audio_take(raw)
+                take_failed = audio_path is None
+            if take_failed:
+                st.error("Couldn't read audio from that file. Try an mp3/wav, or an "
+                         "mp4/mov with an audio track.")
+            else:
+                with st.spinner("Rendering (dry-run if no key)..."):
+                    done = render_job(job.id, audio_path=audio_path)
+                    if audio_path and done and not done.audio_asset_id:
+                        st.warning("Your take didn't upload to HeyGen — rendered with the "
+                                   "voice instead. Check the HeyGen key and try again.")
+                    st.rerun()
 
         # Free-text review loop
         note = st.text_area("Review note (free text)", key=f"vjn_{idea.id}", height=68,
