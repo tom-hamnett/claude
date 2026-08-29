@@ -26,6 +26,27 @@ def connection_status() -> dict:
     }
 
 
+# Current Claude models (Opus/Sonnet 5, Opus 4.6+, Fable/Mythos 5) reject the
+# `temperature` sampling param and support `output_config.effort`. Older models
+# (Haiku 4.5, Sonnet 4.5) are the opposite. We simply never send `temperature`
+# (safe on every model) and add `effort` only where it's supported.
+_EFFORT_MODELS = ("opus-5", "sonnet-5", "fable-5", "mythos-5",
+                  "opus-4-6", "opus-4-7", "opus-4-8", "sonnet-4-6")
+
+
+def _supports_effort(model: str) -> bool:
+    return any(s in model for s in _EFFORT_MODELS)
+
+
+def _first_text(response) -> str:
+    """Return the first text block. Current models also emit thinking blocks,
+    so response.content[0] is not necessarily the text."""
+    for block in response.content:
+        if getattr(block, "type", None) == "text":
+            return block.text or ""
+    return ""
+
+
 def test_anthropic() -> tuple[bool, str]:
     """Make a tiny live call to confirm the Anthropic key actually works."""
     from gtm_engine.config import _get
@@ -34,11 +55,14 @@ def test_anthropic() -> tuple[bool, str]:
     try:
         import anthropic
         client = anthropic.Anthropic(api_key=_get("ANTHROPIC_API_KEY"))
-        r = client.messages.create(
-            model=DEFAULT_AI_MODEL, max_tokens=5, temperature=0,
-            messages=[{"role": "user", "content": "Reply with just: OK"}],
-        )
-        return True, (r.content[0].text or "").strip()[:40] or "OK"
+        kwargs: dict[str, Any] = {
+            "model": DEFAULT_AI_MODEL, "max_tokens": 64,
+            "messages": [{"role": "user", "content": "Reply with just: OK"}],
+        }
+        if _supports_effort(DEFAULT_AI_MODEL):
+            kwargs["output_config"] = {"effort": "low"}
+        r = client.messages.create(**kwargs)
+        return True, (_first_text(r).strip()[:40] or "OK")
     except Exception as e:
         return False, str(e)[:200]
 
@@ -49,29 +73,30 @@ def call_claude(
     system: str = "",
     model: str = DEFAULT_AI_MODEL,
     max_tokens: int = 4096,
-    temperature: float = 0.7,
+    temperature: float | None = None,  # accepted for back-compat, not sent
+    effort: str = "low",
 ) -> str:
     """Send a prompt to Claude and return the text response.
 
-    Retries up to 4 times with exponential backoff on transient failures.
+    `temperature` is intentionally NOT forwarded — current Claude models reject
+    it. Retries up to 4 times with exponential backoff on transient failures.
     """
     import anthropic
 
     client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-    messages = [{"role": "user", "content": prompt}]
-
     kwargs: dict[str, Any] = {
         "model": model,
         "max_tokens": max_tokens,
-        "temperature": temperature,
-        "messages": messages,
+        "messages": [{"role": "user", "content": prompt}],
     }
     if system:
         kwargs["system"] = system
+    if _supports_effort(model):
+        kwargs["output_config"] = {"effort": effort}
 
     logger.info("Calling Claude model=%s tokens=%d", model, max_tokens)
     response = client.messages.create(**kwargs)
-    return response.content[0].text
+    return _first_text(response)
 
 
 @retry(wait=wait_exponential(min=2, max=30), stop=stop_after_attempt(4))
