@@ -421,16 +421,28 @@ class HeyGenProvider(AvatarProvider):
             r = httpx.get(f"{self.API_V2}/avatars", headers=self._headers(), timeout=20)
             r.raise_for_status()
             data = r.json().get("data", {}) or {}
-            avatars = data.get("avatars", []) if isinstance(data, dict) else []
-            return [
-                {
+            out = []
+            # Studio / stock avatars (classic — stiffer).
+            for a in (data.get("avatars", []) if isinstance(data, dict) else []):
+                out.append({
                     "id": a.get("avatar_id", ""),
                     "name": a.get("avatar_name", ""),
                     "preview_url": a.get("preview_image_url", ""),
                     "gender": a.get("gender", ""),
-                }
-                for a in avatars
-            ]
+                })
+            # Photo avatars (Avatar IV — expressive). Prefix the id so render()
+            # knows to use the talking_photo character type.
+            for tp in (data.get("talking_photos", []) if isinstance(data, dict) else []):
+                tp_id = tp.get("talking_photo_id", "")
+                if not tp_id:
+                    continue
+                out.append({
+                    "id": f"tp:{tp_id}",
+                    "name": f"{tp.get('talking_photo_name', tp_id)} (photo · expressive)",
+                    "preview_url": tp.get("preview_image_url", ""),
+                    "gender": "",
+                })
+            return out
         except Exception as e:
             logger.error("HeyGen list_avatars failed: %s", e)
             return []
@@ -512,10 +524,16 @@ class HeyGenProvider(AvatarProvider):
                 voice_id = voices[0]["id"] if voices else ""
             voice_block = {"type": "text", "input_text": req.script, "voice_id": voice_id}
 
+        # A "tp:" prefix marks a photo avatar (Avatar IV — expressive), which
+        # uses the talking_photo character type; otherwise a studio avatar.
+        if req.avatar_id.startswith("tp:"):
+            base_character = {"type": "talking_photo", "talking_photo_id": req.avatar_id[3:]}
+        else:
+            base_character = {"type": "avatar", "avatar_id": req.avatar_id, "avatar_style": "normal"}
+
         # Expressive fields (motion_prompt / expressiveness) only apply to
         # Avatar IV/V avatars; classic avatars ignore or reject them. We attempt
         # them, then transparently retry without on a 400 so any avatar works.
-        base_character = {"type": "avatar", "avatar_id": req.avatar_id, "avatar_style": "normal"}
         expressive_character = dict(base_character)
         if req.motion_prompt:
             expressive_character["motion_prompt"] = req.motion_prompt
