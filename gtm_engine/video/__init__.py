@@ -370,16 +370,27 @@ def render_job(job_id: int, audio_path: Path | str | None = None,
     provider = get_provider(cfg.provider)
     out_path = OUTPUT_DIR / "videos" / f"idea_{job.idea_id}_job_{job.id}.mp4"
 
-    # Environment background from the active character, else the config default.
+    # Re-resolve the active character LIVE so a job created before the cast was
+    # set up still renders with the current avatar/voice/environment (no stale jobs).
     background = cfg.background
     try:
         from gtm_engine.casting import CastingStore
         cs = CastingStore()
         ch = cs.get_default_character()
-        if ch and ch.environment_id:
-            env = cs.get_environment(ch.environment_id)
-            if env and env.background_type == "color":
-                background = env.background_value
+        if ch:
+            if ch.avatar_id:
+                job.avatar_id = ch.avatar_id
+            if ch.voice_id:
+                job.voice_id = ch.voice_id
+            job.expressiveness = ch.expressiveness
+            if ch.cinematic_direction:
+                job.motion_prompt = ch.cinematic_direction
+            if ch.photo_path:
+                job.character_image_path = ch.photo_path
+            if ch.environment_id:
+                env = cs.get_environment(ch.environment_id)
+                if env and env.background_type == "color":
+                    background = env.background_value
     except Exception:
         pass
 

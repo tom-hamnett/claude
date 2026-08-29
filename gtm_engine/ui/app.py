@@ -596,9 +596,13 @@ def _produce_review_panel(idea):
 
     with st.expander("🎬 Video", expanded=False):
         if not job:
+            st.caption("This card has no script yet.")
             if st.button("Create video job", key=f"vjmk_{idea.id}", use_container_width=True):
-                create_job_from_brief(idea.id)
-                st.rerun()
+                if create_job_from_brief(idea.id):
+                    st.rerun()
+                else:
+                    st.error("No script found for this card. Move it back to APPROVED and click "
+                             "**Producer Brief** first (needs ANTHROPIC_API_KEY in Secrets).")
             return
 
         cfg = AvatarConfigStore().load()
@@ -826,11 +830,15 @@ def _render_create():
 
                 elif status == "idea_approved":
                     if st.button("Producer Brief", key=f"pb_{idea.id}", use_container_width=True):
-                        with st.spinner("Generating brief + video job..."):
+                        with st.spinner("Writing the script (Claude)..."):
                             from gtm_engine.producer import generate_producer_brief
                             from gtm_engine.video import create_job_from_brief
                             from gtm_engine.approval import mark_content_generated
-                            generate_producer_brief(idea.id)
+                            brief = generate_producer_brief(idea.id)
+                        if not brief:
+                            st.error("Script generation failed — check that ANTHROPIC_API_KEY "
+                                     "is set in Secrets (and has billing). The card was not moved.")
+                        else:
                             create_job_from_brief(idea.id)
                             mark_content_generated(idea.id)
                             st.rerun()
