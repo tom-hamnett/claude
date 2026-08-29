@@ -220,7 +220,7 @@ class HeyGenProvider(AvatarProvider):
 
     API_V2 = "https://api.heygen.com/v2"
     API_V1 = "https://api.heygen.com/v1"
-    UPLOAD_BASE = "https://upload.heygen.com/v1"
+    API_V3 = "https://api.heygen.com/v3"
 
     def __init__(self):
         self.api_key = os.getenv("HEYGEN_API_KEY", "")
@@ -278,22 +278,26 @@ class HeyGenProvider(AvatarProvider):
 
     # ── uploads / cloning ────────────────────────────────────────────────────
     def upload_audio(self, audio_path: Path) -> str | None:
-        """Upload a recording so it can drive a render via audio_asset_id."""
+        """Upload a recording so it can drive a render via audio_asset_id.
+
+        POST /v3/assets, multipart form-data (field 'file'), <=32MB, mp3/wav.
+        Returns data.asset_id.
+        """
         if not self.is_configured():
             raise AvatarProviderError("HEYGEN_API_KEY not set")
         try:
             import httpx
             audio_path = Path(audio_path)
-            content_type = "audio/mpeg" if audio_path.suffix.lower() == ".mp3" else "audio/wav"
+            mime = "audio/mpeg" if audio_path.suffix.lower() == ".mp3" else "audio/wav"
             r = httpx.post(
-                f"{self.UPLOAD_BASE}/asset",
-                headers={"X-Api-Key": self.api_key, "Content-Type": content_type},
-                content=audio_path.read_bytes(),
-                timeout=120,
+                f"{self.API_V3}/assets",
+                headers={"X-Api-Key": self.api_key},   # let httpx set multipart boundary
+                files={"file": (audio_path.name, audio_path.read_bytes(), mime)},
+                timeout=180,
             )
             r.raise_for_status()
             data = r.json().get("data", {}) or {}
-            return data.get("id") or data.get("asset_id")
+            return data.get("asset_id") or data.get("id")
         except Exception as e:
             logger.error("HeyGen upload_audio failed: %s", e)
             return None
@@ -327,10 +331,10 @@ class HeyGenProvider(AvatarProvider):
                 voice_id = voices[0]["id"] if voices else ""
             voice_block = {"type": "text", "input_text": req.script, "voice_id": voice_id}
 
+        # v2 /video/generate accepts avatar_id + avatar_style (+ scale/offset).
+        # motion_prompt / expressiveness are v3/Avatar-V concepts and would be
+        # rejected here, so they're carried on the job for QA/display only.
         character = {"type": "avatar", "avatar_id": req.avatar_id, "avatar_style": "normal"}
-        if req.motion_prompt:
-            character["motion_prompt"] = req.motion_prompt
-        character["expressiveness"] = req.expressiveness
 
         payload = {
             "video_inputs": [{
