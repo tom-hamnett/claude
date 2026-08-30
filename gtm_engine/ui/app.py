@@ -618,6 +618,63 @@ def _video_view(idea):
                 st.rerun()
 
 
+def _heygen_handoff(idea, job):
+    """The full production package for making this reel in HeyGen — copy-ready."""
+    from gtm_engine.producer import ProducerBriefLibrary
+    from gtm_engine.casting import CastingStore
+    brief = ProducerBriefLibrary().get_for_idea(idea.id)
+    segs = (brief.segments_json if brief else {}) or {}
+
+    st.caption("HeyGen → The Analyst → **Photo to Video** → pick a look, then paste each piece:")
+
+    st.markdown("**① Script — paste into the script box**")
+    st.code(job.spoken_script or "—", language=None)
+
+    st.markdown("**② Avatar IV custom motion — paste into ‘Custom Motion’**")
+    st.code(job.motion_prompt or "measured and direct; lean in slightly on the key line",
+            language=None)
+
+    # Look / setting suggestion from the per-reel environment (or character default)
+    look = "a natural, front-facing look, well lit"
+    try:
+        cs = CastingStore()
+        ch = cs.get_default_character()
+        env_id = job.environment_id or (ch.environment_id if ch else None)
+        if env_id:
+            env = cs.get_environment(env_id)
+            if env:
+                look = f"{env.name} — {env.description}"
+    except Exception:
+        pass
+    st.markdown("**③ Look / setting for this reel**")
+    st.caption(look + (f"  ·  tone: {job.tone}" if job.tone else ""))
+
+    # Per-segment shot direction (the creative bit)
+    st.markdown("**④ Shot direction (what happens on screen)**")
+    for seg_id, label in [("hook", "Hook (you)"), ("tension", "Tension (text/data)"),
+                          ("pivot", "Pivot (data-viz)"), ("proof", "Proof (product)"),
+                          ("bookend", "Bookend (you)")]:
+        s = segs.get(seg_id, {}) or {}
+        vd = s.get("visual_direction", "")
+        spoken = s.get("spoken_text", "")
+        overlay = s.get("text_overlay", "")
+        if vd or spoken or overlay:
+            bits = []
+            if spoken:
+                bits.append(f"say: “{spoken}”")
+            if vd:
+                bits.append(vd)
+            if overlay:
+                bits.append(f"on-screen: {overlay}")
+            st.markdown(f"<span style='font-size:0.8rem;'><strong>{label}</strong> — "
+                        f"{' · '.join(bits)}</span>", unsafe_allow_html=True)
+
+    if job.camera_note:
+        st.markdown(f"**⑤ Camera** — {job.camera_note}")
+
+    st.markdown("[Open HeyGen ↗](https://app.heygen.com) — make it, then upload it back below.")
+
+
 def _produce_review_panel(idea):
     """PRODUCED-stage wizard: script → approve → record → transpose → review."""
     from gtm_engine.video import (
@@ -774,7 +831,7 @@ def _produce_review_panel(idea):
             how = "your HeyGen template" if (_ch and _ch.template_id) else "Avatar IV"
             st.markdown(f"<span style='color:{C['muted']};font-size:0.7rem;'>2 · GENERATE (automated)</span>",
                         unsafe_allow_html=True)
-            st.caption(f"Renders automatically via {how} — your avatar, no manual work.")
+            st.caption(f"One tap — renders via {how} with your per-reel motion direction.")
             lbl = "Generate video" if not job.video_path else "Re-generate video"
             if st.button(lbl, key=f"vjr_{idea.id}", use_container_width=True):
                 with st.spinner("Generating with your avatar..."):
@@ -782,19 +839,19 @@ def _produce_review_panel(idea):
                     st.rerun()
             if job.status == "failed" and job.error:
                 st.error(f"Render failed: {job.error}")
+            with st.expander("…or make it by hand in HeyGen (full production package)"):
+                _heygen_handoff(idea, job)
         else:
             st.markdown(f"<span style='color:{C['muted']};font-size:0.7rem;'>2 · MAKE IT IN HEYGEN</span>",
                         unsafe_allow_html=True)
-            st.caption("For full automation, add a **HeyGen Template ID** to your character "
-                       "(Settings → Cast & Voice). Otherwise make it in HeyGen and upload it back:")
-            st.code(job.spoken_script or "—", language=None)
-            st.markdown("[Open HeyGen ↗](https://app.heygen.com)")
+            _heygen_handoff(idea, job)
 
-        # ── Upload a finished video (always available) ──
-        with st.expander("Upload a finished video (made in HeyGen)"):
-            st.code(job.spoken_script or "—", language=None)
-            fin = st.file_uploader("Finished video (mp4/mov)", type=["mp4", "mov", "webm"],
-                                   key=f"fin_{idea.id}")
+        # ── Upload the finished video (always available) ──
+        st.markdown(f"<span style='color:{C['muted']};font-size:0.7rem;'>3 · UPLOAD THE FINISHED VIDEO</span>",
+                    unsafe_allow_html=True)
+        with st.container():
+            fin = st.file_uploader("Drop the finished HeyGen video (mp4/mov)",
+                                   type=["mp4", "mov", "webm"], key=f"fin_{idea.id}")
             if fin is not None and st.button("Attach finished video", key=f"finb_{idea.id}",
                                              use_container_width=True):
                 attach_finished_video(job.id, fin.getbuffer(), fin.name)
