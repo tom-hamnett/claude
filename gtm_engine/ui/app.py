@@ -22,6 +22,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR, SQLITE_PATH
 from gtm_engine.utils.file_io import load_json
 
+# Bump on each deploy so a redeploy is visibly confirmable in the running app.
+BUILD_TAG = "2026-08-30 · full-reel + two-model QA"
+
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
     "bg":       "#0d1b2a",
@@ -67,6 +70,9 @@ def main():
     if not _is_setup_complete():
         _onboarding_wizard()
         return
+
+    # Tiny build stamp so a redeploy is visibly confirmable at a glance.
+    st.caption(f"build {BUILD_TAG}")
 
     # Three-tab navigation
     plan_tab, create_tab, perform_tab, settings_tab = st.tabs([
