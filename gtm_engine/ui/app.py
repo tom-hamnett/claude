@@ -764,84 +764,96 @@ def _produce_review_panel(idea):
         st.markdown(f"<span style='color:{C['green']};font-size:0.72rem;'>✓ script approved</span>",
                     unsafe_allow_html=True)
 
-        # ── Step 2: Generate (simple) or record→transpose (advanced) ──
-        wants_upload = is_transfer or cfg.mode in ("record", "hybrid")
-        step2_label = "RECORD TO CAMERA" if is_transfer else ("YOUR TAKE" if wants_upload else "GENERATE")
-        st.markdown(f"<span style='color:{C['muted']};font-size:0.7rem;'>2 · {step2_label}</span>",
+        # ── Step 2: Make it in HeyGen (full functionality), then upload back ──
+        from gtm_engine.video import attach_finished_video
+        st.markdown(f"<span style='color:{C['muted']};font-size:0.7rem;'>2 · MAKE IT IN HEYGEN</span>",
                     unsafe_allow_html=True)
-        if is_transfer and not job.character_image_path:
-            st.warning("No character set. Create yours in **Settings → Cast & Voice** first.")
+        st.caption("Produce the reel in HeyGen with your full avatar + looks + editing, then "
+                   "upload the finished file here. Copy the spoken script:")
+        st.code(job.spoken_script or "—", language=None)
+        dirbits = []
+        if job.motion_prompt:
+            dirbits.append(f"Motion: {job.motion_prompt}")
+        if job.tone:
+            dirbits.append(f"Tone: {job.tone}")
+        if dirbits:
+            st.caption(" · ".join(dirbits))
+        st.markdown("[Open HeyGen ↗](https://app.heygen.com) — make the video with your avatar.")
 
-        take_file = None
-        if wants_upload:
-            take_types = (["mp4", "mov", "webm"] if is_transfer
-                          else ["mp3", "wav", "mp4", "mov", "webm", "m4a"])
-            take_help = ("Record yourself delivering the script — Act-Two maps your performance "
-                         "onto your character." if is_transfer
-                         else "Video or audio — we use the audio to drive the avatar (optional in Hybrid).")
-            take_file = st.file_uploader(take_help, type=take_types, key=f"vjtake_{idea.id}")
+        st.markdown(f"<span style='color:{C['muted']};font-size:0.7rem;'>3 · UPLOAD THE FINISHED VIDEO</span>",
+                    unsafe_allow_html=True)
+        fin = st.file_uploader("Drop the finished HeyGen video (mp4/mov)",
+                               type=["mp4", "mov", "webm"], key=f"fin_{idea.id}")
+        if fin is not None and st.button("Attach finished video", key=f"finb_{idea.id}",
+                                         use_container_width=True):
+            attach_finished_video(job.id, fin.getbuffer(), fin.name)
+            from gtm_engine.persistence import backup_quietly
+            backup_quietly()
+            st.success("Video attached.")
+            st.rerun()
 
-        if is_transfer:
-            prod_label = "Transpose onto my character"
-        else:
-            prod_label = "Generate video"
-        if job.video_path:
-            prod_label = "Re-" + prod_label[0].lower() + prod_label[1:]
-        if st.button(prod_label, key=f"vjr_{idea.id}", use_container_width=True):
-            audio_path = driving_path = None
-            fail = None
-            if take_file is not None:
-                updir = OUTPUT_DIR / "uploads"
-                updir.mkdir(parents=True, exist_ok=True)
-                raw = updir / f"idea_{idea.id}_{take_file.name}"
-                raw.write_bytes(take_file.getbuffer())
-                if is_transfer:
-                    driving_path = raw
-                else:
-                    with st.spinner("Pulling audio from your take..."):
-                        audio_path = resolve_audio_take(raw)
-                    if audio_path is None:
-                        fail = "Couldn't read audio from that file."
-            elif is_transfer:
-                fail = "Record and upload your take first — transfer needs your performance."
-            if fail:
-                st.error(fail)
-            else:
-                with st.spinner("Producing (dry-run if no key)..."):
-                    render_job(job.id, audio_path=audio_path, driving_video_path=driving_path)
-                    st.rerun()
+        # ── Advanced: auto-generate via the API (photo Avatar IV / classic) ──
+        with st.expander("Auto-generate via API instead (advanced)"):
+            _api_generate_controls(idea, job, cfg, is_transfer, render_job, resolve_audio_take)
 
-        if job.status == "failed" and job.error:
-            st.error(f"Render failed: {job.error}")
-            st.caption("Fix the cause (often the avatar id / photo-avatar toggle or voice), "
-                       "then tap Generate again. Paste this to the builder if unsure.")
-        if job.status in ("needs_provider", "needs_input") and job.dry_run_request:
-            st.info("Here's exactly what will run once the provider + inputs are set:")
-            st.code(job.dry_run_request, language="json")
-
-        # ── Step 3: Result + review ──
+        # ── Step 4: Result + review ──
         if job.status == "ready" and job.video_path and Path(job.video_path).exists():
-            st.markdown(f"<span style='color:{C['muted']};font-size:0.7rem;'>3 · REVIEW</span>",
+            st.markdown(f"<span style='color:{C['muted']};font-size:0.7rem;'>4 · REVIEW</span>",
                         unsafe_allow_html=True)
             if job.video_path.lower().endswith((".png", ".jpg", ".jpeg")):
-                st.image(job.video_path, caption="Simulated preview (no live key)")
+                st.image(job.video_path, caption="Preview")
             else:
                 st.video(job.video_path)
-
-            note = st.text_area("Review note (free text)", key=f"vjn_{idea.id}", height=68,
-                                placeholder="e.g. 'punchier hook', 'more energy', 'less gesture'")
-            if st.button("Request revision", key=f"vjrev_{idea.id}", use_container_width=True,
+            note = st.text_area("Review note (free text)", key=f"vjn2_{idea.id}", height=60,
+                                placeholder="e.g. 'redo with a punchier hook'")
+            if st.button("Request revision", key=f"vjrev2_{idea.id}", use_container_width=True,
                          disabled=not note.strip()):
                 with st.spinner("Interpreting your note..."):
                     apply_revision(job.id, note.strip())
                     st.rerun()
-            for rev in (job.revisions or [])[-4:]:
-                st.markdown(
-                    f"<span style='font-size:0.7rem;color:{C['muted']};'>"
-                    f"[{rev.get('change_type','?')}] {rev.get('note','')[:50]} — "
-                    f"{rev.get('rationale','')[:50]}</span>",
-                    unsafe_allow_html=True,
-                )
+        return
+
+
+def _api_generate_controls(idea, job, cfg, is_transfer, render_job, resolve_audio_take):
+    """Optional: auto-generate the avatar clip via the API (photo Avatar IV /
+    classic / simulation). The primary path is the HeyGen handoff above."""
+    st.caption("Renders the avatar clip via the API. Works with an Avatar IV photo "
+               "or a classic avatar — not a trained multi-look avatar.")
+    wants_upload = is_transfer or cfg.mode in ("record", "hybrid")
+    take_file = None
+    if wants_upload:
+        take_types = (["mp4", "mov", "webm"] if is_transfer
+                      else ["mp3", "wav", "mp4", "mov", "webm", "m4a"])
+        take_file = st.file_uploader("Your take (video/audio)", type=take_types,
+                                     key=f"vjtake_{idea.id}")
+    label = "Transpose onto my character" if is_transfer else "Generate via API"
+    if st.button(label, key=f"vjr_{idea.id}", use_container_width=True):
+        audio_path = driving_path = None
+        fail = None
+        if take_file is not None:
+            updir = OUTPUT_DIR / "uploads"
+            updir.mkdir(parents=True, exist_ok=True)
+            raw = updir / f"idea_{idea.id}_{take_file.name}"
+            raw.write_bytes(take_file.getbuffer())
+            if is_transfer:
+                driving_path = raw
+            else:
+                with st.spinner("Pulling audio from your take..."):
+                    audio_path = resolve_audio_take(raw)
+                if audio_path is None:
+                    fail = "Couldn't read audio from that file."
+        elif is_transfer:
+            fail = "Record and upload your take first — transfer needs your performance."
+        if fail:
+            st.error(fail)
+        else:
+            with st.spinner("Producing (dry-run if no key)..."):
+                render_job(job.id, audio_path=audio_path, driving_video_path=driving_path)
+                st.rerun()
+    if job.status == "failed" and job.error:
+        st.error(f"Render failed: {job.error}")
+    if job.status in ("needs_provider", "needs_input") and job.dry_run_request:
+        st.code(job.dry_run_request, language="json")
 
 
 def _render_kanban_card(idea, status):

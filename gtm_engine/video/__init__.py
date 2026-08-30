@@ -426,6 +426,23 @@ def regenerate_script(job_id: int, refinement: str = "") -> VideoJob | None:
     return create_job_from_brief(job.idea_id)
 
 
+def attach_finished_video(job_id: int, video_bytes: bytes, filename: str) -> VideoJob | None:
+    """Attach a video the user produced elsewhere (e.g. HeyGen app) to the job."""
+    store = VideoJobStore()
+    job = store.get(job_id)
+    if not job:
+        return None
+    ext = Path(filename).suffix.lower() or ".mp4"
+    out = OUTPUT_DIR / "videos" / f"idea_{job.idea_id}_final{ext}"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_bytes(video_bytes)
+    job.video_path = str(out)
+    job.status = "ready"
+    job.error = ""
+    job.id = store.save(job)
+    return store.get(job.id)
+
+
 def approve_script(job_id: int) -> VideoJob | None:
     """Gate the workflow: lock the Hook/Bookend script + production before render."""
     store = VideoJobStore()
