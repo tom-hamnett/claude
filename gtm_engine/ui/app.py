@@ -840,6 +840,57 @@ def _produce_review_panel(idea):
                 )
 
 
+def _render_kanban_card(idea, status):
+    """One content card + its stage-appropriate actions (full width)."""
+    pillar_tag = ""
+    for t in (idea.tags or []):
+        if t not in ("standalone", "hook", "tension", "pivot", "proof", "bookend"):
+            pillar_tag = t
+            break
+    product_badge = (f"<span style='color:{C['primary']};font-size:0.72rem;'>{idea.product}</span> "
+                     if idea.product else "")
+    st.markdown(
+        f"<div style='background:{C['card']};padding:12px 14px;border-radius:8px;"
+        f"margin-bottom:6px;border-left:3px solid {C['primary']};'>"
+        f"{product_badge}"
+        f"<strong style='font-size:0.95rem;'>{idea.title}</strong><br>"
+        f"<span style='color:{C['gold']};font-size:0.82rem;font-style:italic;'>{idea.hook}</span><br>"
+        f"<span style='color:{C['muted']};font-size:0.7rem;'>"
+        f"{pillar_tag} · {idea.segment_type} · e{idea.edginess_score}</span></div>",
+        unsafe_allow_html=True,
+    )
+    if status == "idea_draft":
+        if st.button("Approve", key=f"app_{idea.id}", use_container_width=True):
+            from gtm_engine.approval import approve_idea
+            approve_idea(idea.id); st.rerun()
+    elif status == "idea_approved":
+        if st.button("Producer Brief", key=f"pb_{idea.id}", use_container_width=True):
+            with st.spinner("Writing the script (Claude)..."):
+                from gtm_engine.producer import generate_producer_brief
+                from gtm_engine.video import create_job_from_brief
+                from gtm_engine.approval import mark_content_generated
+                brief = generate_producer_brief(idea.id)
+            if not brief:
+                st.error("Script generation failed — check ANTHROPIC_API_KEY in Secrets "
+                         "(and billing). The card was not moved.")
+            else:
+                create_job_from_brief(idea.id)
+                mark_content_generated(idea.id)
+                st.rerun()
+    elif status == "content_generated":
+        _produce_review_panel(idea)
+        if st.button("Approve", key=f"cappr_{idea.id}", use_container_width=True):
+            from gtm_engine.approval import approve_content
+            approve_content(idea.id); st.rerun()
+    elif status == "content_approved":
+        _video_view(idea)
+        if st.button("Schedule", key=f"sched_{idea.id}", use_container_width=True):
+            from gtm_engine.approval import schedule_deployment
+            schedule_deployment(idea.id); st.rerun()
+    elif status == "deployment_scheduled":
+        _video_view(idea)
+
+
 # ═══════════════════════════════════════════════════════════════════════════
 #  CREATE TAB (Kanban Board)
 # ═══════════════════════════════════════════════════════════════════════════
@@ -909,111 +960,57 @@ def _render_create():
 
     st.markdown("---")
 
-    # ── Kanban columns ──
+    # ── Pipeline: one stage at a time, full width (readable on phone + laptop) ──
     stages = [
-        ("idea_draft", "IDEAS", "Draft ideas for review"),
-        ("idea_approved", "APPROVED", "Ready for producer brief / content generation"),
-        ("content_generated", "PRODUCED", "Content generated, needs review"),
-        ("content_approved", "REVIEWED", "Approved, ready to schedule"),
-        ("deployment_scheduled", "SCHEDULED", "Queued for deployment"),
+        ("idea_draft", "Ideas", "Draft ideas for review"),
+        ("idea_approved", "Approved", "Ready for a producer brief"),
+        ("content_generated", "Produced", "Script written — direct, review, render"),
+        ("content_approved", "Reviewed", "Approved — ready to schedule"),
+        ("deployment_scheduled", "Scheduled", "Queued for deployment"),
     ]
+    counts = {s: len(bank.list_all(status=s, limit=200)) for s, _, _ in stages}
+    labels = [f"{lbl} ({counts[s]})" for s, lbl, _ in stages]
 
-    # Render as columns
-    kanban_cols = st.columns(len(stages))
+    # Default to the first non-empty stage so you land where there's work.
+    default_idx = next((i for i, (s, _, _) in enumerate(stages) if counts[s]), 0)
+    sel = st.radio("Pipeline stage", labels, index=default_idx, horizontal=True,
+                   label_visibility="collapsed")
+    idx = labels.index(sel)
+    status, label, desc = stages[idx]
+    st.caption(f"**{label}** — {desc}")
 
-    for col_idx, (status, label, desc) in enumerate(stages):
-        with kanban_cols[col_idx]:
-            ideas = bank.list_all(status=status, limit=20)
-            st.markdown(
-                f"<div style='background:{C['panel']};padding:8px 12px;border-radius:6px;"
-                f"text-align:center;margin-bottom:8px;'>"
-                f"<strong>{label}</strong> ({len(ideas)})<br>"
-                f"<span style='font-size:0.7rem;color:{C['muted']}'>{desc}</span></div>",
-                unsafe_allow_html=True,
-            )
-
-            for idea in ideas[:10]:
-                # Determine pillar tag color
-                pillar_tag = ""
-                for t in (idea.tags or []):
-                    if t not in ("standalone", "hook", "tension", "pivot", "proof", "bookend"):
-                        pillar_tag = t
-                        break
-
-                product_badge = f"<span style='color:{C['primary']};font-size:0.7rem;'>{idea.product}</span> " if idea.product else ""
-
-                st.markdown(
-                    f"<div style='background:{C['card']};padding:10px;border-radius:6px;"
-                    f"margin-bottom:6px;border-left:3px solid {C['primary']};'>"
-                    f"{product_badge}"
-                    f"<strong style='font-size:0.85rem;'>{idea.title[:50]}</strong><br>"
-                    f"<span style='color:{C['gold']};font-size:0.75rem;font-style:italic;'>"
-                    f"{idea.hook[:60]}</span><br>"
-                    f"<span style='color:{C['muted']};font-size:0.65rem;'>"
-                    f"{pillar_tag} · {idea.segment_type} · e{idea.edginess_score}</span>"
-                    f"</div>",
-                    unsafe_allow_html=True,
-                )
-
-                # Action buttons per card per stage
-                if status == "idea_draft":
-                    if st.button("Approve", key=f"app_{idea.id}", use_container_width=True):
-                        from gtm_engine.approval import approve_idea
-                        approve_idea(idea.id)
-                        st.rerun()
-
-                elif status == "idea_approved":
-                    if st.button("Producer Brief", key=f"pb_{idea.id}", use_container_width=True):
-                        with st.spinner("Writing the script (Claude)..."):
-                            from gtm_engine.producer import generate_producer_brief
-                            from gtm_engine.video import create_job_from_brief
-                            from gtm_engine.approval import mark_content_generated
-                            brief = generate_producer_brief(idea.id)
-                        if not brief:
-                            st.error("Script generation failed — check that ANTHROPIC_API_KEY "
-                                     "is set in Secrets (and has billing). The card was not moved.")
-                        else:
-                            create_job_from_brief(idea.id)
-                            mark_content_generated(idea.id)
-                            st.rerun()
-
-                elif status == "content_generated":
-                    _produce_review_panel(idea)
-                    if st.button("Approve", key=f"cappr_{idea.id}", use_container_width=True):
-                        from gtm_engine.approval import approve_content
-                        approve_content(idea.id)
-                        st.rerun()
-
-                elif status == "content_approved":
-                    _video_view(idea)
-                    if st.button("Schedule", key=f"sched_{idea.id}", use_container_width=True):
-                        from gtm_engine.approval import schedule_deployment
-                        schedule_deployment(idea.id)
-                        st.rerun()
-
-                elif status == "deployment_scheduled":
-                    _video_view(idea)
-
-            if len(ideas) > 10:
-                st.caption(f"+ {len(ideas) - 10} more")
+    ideas = bank.list_all(status=status, limit=50)
+    if not ideas:
+        st.info(f"Nothing in {label} yet.")
+    for idea in ideas:
+        _render_kanban_card(idea, status)
 
     # ── Side panels (slide-out style via expanders) ──
     st.markdown("---")
     col_dv, col_sl, col_cl = st.columns(3)
 
     with col_dv:
-        with st.expander("Data Vault"):
+        with st.expander("📊 Data Vault — real data your scripts cite"):
             from gtm_engine.data_vault import DataVault, DataSource
+            from gtm_engine.persistence import backup_quietly
             vault = DataVault()
             sources = vault.list_all()
-            st.caption(f"{len(sources)} data sources")
-            for src in sources[:5]:
+            st.caption("When a script says 'NEEDS DATA', add the real thing here — "
+                       "then it cites your numbers, not a placeholder.")
+            for src in sources[:8]:
                 st.markdown(f"• **{src.name}** ({src.source_type})")
-            new_name = st.text_input("Add data source", placeholder="Name", key="dv_name")
-            new_content = st.text_area("Content", height=80, key="dv_content",
-                                       placeholder="Paste the actual data...")
-            if st.button("Save", key="dv_save", disabled=not (new_name and new_content)):
-                vault.create(DataSource(name=new_name, content=new_content))
+            new_name = st.text_input("Name", placeholder="e.g. ATLAS 52-week performance log",
+                                     key="dv_name")
+            new_type = st.selectbox("Type",
+                                    ["dataset", "benchmark", "quote", "metric", "document", "url"],
+                                    key="dv_type")
+            new_content = st.text_area("The actual data (paste text / CSV / numbers)", height=90,
+                                       key="dv_content", placeholder="Paste the real data...")
+            if st.button("Save to Data Vault", key="dv_save",
+                         disabled=not (new_name and new_content)):
+                vault.create(DataSource(name=new_name, source_type=new_type, content=new_content))
+                backup_quietly()
+                st.success(f"Added '{new_name}'.")
                 st.rerun()
 
     with col_sl:
