@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS characters (
     voice_id TEXT DEFAULT '',
     voice_name TEXT DEFAULT '',
     photo_path TEXT DEFAULT '',
+    image_key TEXT DEFAULT '',
     cinematic_direction TEXT DEFAULT '',
     expressiveness REAL DEFAULT 0.5,
     environment_id INTEGER,
@@ -51,6 +52,7 @@ class Character(BaseModel):
     voice_id: str = ""
     voice_name: str = ""
     photo_path: str = ""
+    image_key: str = ""                  # HeyGen image_key -> Avatar IV (expressive)
     cinematic_direction: str = ""        # default delivery direction
     expressiveness: float = 0.5
     environment_id: int | None = None
@@ -122,6 +124,9 @@ class CastingStore:
     def _init_schema(self) -> None:
         with self._connect() as conn:
             conn.executescript(SCHEMA_SQL)
+            existing = {r[1] for r in conn.execute("PRAGMA table_info(characters)")}
+            if "image_key" not in existing:
+                conn.execute("ALTER TABLE characters ADD COLUMN image_key TEXT DEFAULT ''")
             conn.commit()
 
     # ── environments ──
@@ -179,12 +184,13 @@ class CastingStore:
             if ch.is_default:  # only one default
                 conn.execute("UPDATE characters SET is_default=0")
             vals = (ch.name, ch.persona, ch.avatar_id, ch.avatar_name, ch.voice_id,
-                    ch.voice_name, ch.photo_path, ch.cinematic_direction, ch.expressiveness,
-                    ch.environment_id, 1 if ch.is_default else 0, ch.created_at, ch.updated_at)
+                    ch.voice_name, ch.photo_path, ch.image_key, ch.cinematic_direction,
+                    ch.expressiveness, ch.environment_id, 1 if ch.is_default else 0,
+                    ch.created_at, ch.updated_at)
             if ch.id:
                 conn.execute(
                     """UPDATE characters SET name=?, persona=?, avatar_id=?, avatar_name=?,
-                       voice_id=?, voice_name=?, photo_path=?, cinematic_direction=?,
+                       voice_id=?, voice_name=?, photo_path=?, image_key=?, cinematic_direction=?,
                        expressiveness=?, environment_id=?, is_default=?, created_at=?, updated_at=?
                        WHERE id=?""",
                     (*vals, ch.id),
@@ -193,8 +199,9 @@ class CastingStore:
                 return ch.id
             cur = conn.execute(
                 """INSERT INTO characters (name, persona, avatar_id, avatar_name, voice_id,
-                   voice_name, photo_path, cinematic_direction, expressiveness, environment_id,
-                   is_default, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                   voice_name, photo_path, image_key, cinematic_direction, expressiveness,
+                   environment_id, is_default, created_at, updated_at)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 vals,
             )
             conn.commit()

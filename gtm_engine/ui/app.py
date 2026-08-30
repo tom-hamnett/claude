@@ -1314,6 +1314,34 @@ def _render_settings():
         elif not is_photo and str(ch_avatar_id).startswith("tp:"):
             ch_avatar_id = ch_avatar_id[3:]
 
+        # ── Avatar IV (recommended): upload a photo → expressive render ──
+        st.markdown("**⭐ Avatar IV (expressive) — upload a photo**")
+        if ch.image_key:
+            st.caption(f"✓ Avatar IV photo set. Renders expressively from it.")
+        if sel != "__new__" and sel_provider == "heygen" and provider.is_configured():
+            av4_photo = st.file_uploader("A clear photo of your presenter (jpg/png)",
+                                         type=["jpg", "jpeg", "png"], key="ch_av4")
+            if av4_photo is not None and st.button("Use this photo as Avatar IV",
+                                                   key="ch_av4_btn", use_container_width=True):
+                from gtm_engine.avatar import get_provider as _gp
+                updir = OUTPUT_DIR / "characters"
+                updir.mkdir(parents=True, exist_ok=True)
+                pth = updir / f"av4_{av4_photo.name}"
+                pth.write_bytes(av4_photo.getbuffer())
+                with st.spinner("Uploading photo to HeyGen..."):
+                    key = _gp("heygen").upload_image(pth)
+                if key:
+                    ch.image_key = key
+                    casting.save_character(ch)
+                    from gtm_engine.persistence import backup_quietly
+                    backup_quietly()
+                    st.success("Avatar IV photo ready — this character now renders expressively.")
+                    st.rerun()
+                else:
+                    st.error("Photo upload failed — check the HeyGen key.")
+        st.caption("Avatar IV animates one photo, interpreting your voice for real expression. "
+                   "This is the reliable path — the avatar-id/look fields above are for classic avatars.")
+
         if hey_voices:
             v_ids = [""] + [v["id"] for v in hey_voices]
             v_names = ["(default)"] + [v["name"] or v["id"] for v in hey_voices]
@@ -1342,6 +1370,7 @@ def _render_settings():
                     avatar_id=ch_avatar_id, avatar_name=ch_avatar_name, voice_id=ch_voice_id,
                     voice_name=ch_voice_name, cinematic_direction=ch_cine, expressiveness=ch_expr,
                     environment_id=ep, is_default=ch_default, photo_path=ch.photo_path,
+                    image_key=ch.image_key,
                 ))
                 cfg.provider = sel_provider
                 cfg_store.save(cfg)

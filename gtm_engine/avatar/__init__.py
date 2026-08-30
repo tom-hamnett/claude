@@ -59,6 +59,7 @@ class RenderRequest:
     audio_asset_id: str | None = None
     driving_video_path: Path | None = None   # performance source (Option 2)
     character_image_path: Path | None = None  # target character for transfer
+    image_key: str = ""                       # HeyGen image_key -> Avatar IV (av4)
     gesture: bool = True                      # transfer body/hand motion too
     background: str = "#0d1b2a"
     aspect_ratio: str = "9:16"
@@ -505,6 +506,65 @@ class HeyGenProvider(AvatarProvider):
         logger.info("HeyGen voice cloning is a one-time setup in the HeyGen app.")
         return None
 
+    def upload_image(self, image_path: Path) -> str | None:
+        """Upload a photo and return its image_key (drives Avatar IV / av4)."""
+        if not self.is_configured():
+            raise AvatarProviderError("HEYGEN_API_KEY not set")
+        try:
+            import httpx
+            p = Path(image_path)
+            mime = "image/jpeg" if p.suffix.lower() in (".jpg", ".jpeg") else "image/png"
+            r = httpx.post(
+                "https://upload.heygen.com/v1/asset",
+                headers={"X-Api-Key": self.api_key, "Content-Type": mime},
+                content=p.read_bytes(), timeout=120,
+            )
+            r.raise_for_status()
+            d = r.json().get("data", {}) or {}
+            return d.get("image_key") or d.get("id")
+        except Exception as e:
+            logger.error("HeyGen upload_image failed: %s", e)
+            return None
+
+    def _render_av4(self, req: "RenderRequest", width: int, height: int) -> "Path | None":
+        """Avatar IV (expressive) render from an uploaded photo's image_key."""
+        import httpx
+        self.last_error = ""
+        voice_id = req.voice_id
+        if not voice_id:
+            voices = self.list_voices()
+            voice_id = voices[0]["id"] if voices else ""
+        payload = {
+            "image_key": req.image_key,
+            "script": req.script,
+            "voice_id": voice_id,
+            "dimension": {"width": width, "height": height},
+        }
+        if req.motion_prompt:
+            payload["custom_motion_prompt"] = req.motion_prompt
+            payload["enhance_custom_motion_prompt"] = True
+        if req.callback_url:
+            payload["callback_url"] = req.callback_url
+        try:
+            r = httpx.post(f"{self.API_V2}/video/av4/generate",
+                           headers=self._headers(), json=payload, timeout=30)
+            if r.status_code != 200:
+                self.last_error = f"HeyGen av4 {r.status_code}: {r.text[:250]}"
+                return None
+            vid = (r.json().get("data", {}) or {}).get("video_id")
+            if not vid:
+                self.last_error = f"av4 returned no video_id: {r.text[:200]}"
+                return None
+            if req.callback_url:
+                return None
+            result = self._poll_and_download(vid, req.output_path)
+            if not result and not self.last_error:
+                self.last_error = "av4 render didn't complete (timeout/failed)."
+            return result
+        except Exception as e:
+            self.last_error = f"av4 exception: {e}"
+            return None
+
     # ── render ───────────────────────────────────────────────────────────────
     def render(self, req: RenderRequest) -> Path | None:
         if not self.is_configured():
@@ -514,6 +574,10 @@ class HeyGenProvider(AvatarProvider):
 
         dims = {"9:16": (720, 1280), "16:9": (1280, 720), "1:1": (720, 720)}
         width, height = dims.get(req.aspect_ratio, (720, 1280))
+
+        # Avatar IV (expressive) — driven by an uploaded photo's image_key.
+        if req.image_key:
+            return self._render_av4(req, width, height)
 
         # Voice block: audio upload takes precedence over TTS (mutually exclusive).
         if req.audio_asset_id:
