@@ -51,6 +51,16 @@ def main():
     if not _check_auth():
         return
 
+    # Durable persistence: on a fresh container, pull the last snapshot before
+    # anything reads the DB. Best-effort — no-op if Supabase isn't configured.
+    if not st.session_state.get("_restored"):
+        try:
+            from gtm_engine.persistence import restore_if_empty
+            restore_if_empty()
+        except Exception:
+            pass
+        st.session_state["_restored"] = True
+
     _init_db()
 
     # First-time? Show onboarding
@@ -241,7 +251,9 @@ def _onboarding_wizard():
         if st.button("⚡ Load the Quantum Tools demo (no API key needed)"):
             with st.spinner("Loading demo strategy, ideas and produced items..."):
                 from gtm_engine.demo import load_quantum_demo
+                from gtm_engine.persistence import backup_quietly
                 summary = load_quantum_demo()
+                backup_quietly()
                 st.success(
                     f"Loaded {summary['ideas']} ideas across {summary['pillars']} pillars "
                     f"+ {summary['produced_jobs']} produced items. Opening the app..."
@@ -598,8 +610,12 @@ def _video_view(idea):
             else:
                 st.video(job.video_path)
         else:
-            st.caption(f"No rendered video yet (status: {job.status.replace('_',' ')}). "
-                       f"Move back to PRODUCED to render.")
+            st.caption(f"No rendered video yet (status: {job.status.replace('_',' ')}).")
+            if st.button("← Back to PRODUCED to render", key=f"back_{idea.id}",
+                         use_container_width=True):
+                from gtm_engine.ideas import IdeaBank
+                IdeaBank().update_status(idea.id, "content_generated", "moved back to render")
+                st.rerun()
 
 
 def _produce_review_panel(idea):
@@ -1129,6 +1145,8 @@ def _render_settings():
             ("anthropic", "Anthropic (Claude)", "writes scripts, strategy & ideas", "ANTHROPIC_API_KEY"),
             ("heygen", "HeyGen", "renders the avatar video", "HEYGEN_API_KEY"),
             ("google", "Google (Gemini)", "images & AI character", "GOOGLE_API_KEY"),
+            ("supabase", "Supabase (backup)", "saves your setup so it survives redeploys",
+             "SUPABASE_URL + SUPABASE_KEY"),
             ("runway", "Runway (advanced)", "performance transfer", "RUNWAY_API_KEY"),
         ]
         for key, label, what, envname in rows:
@@ -1153,6 +1171,28 @@ def _render_settings():
                 st.error(f"Anthropic call failed: {msg}")
         st.caption("A key showing 'connected' only means it's present. Use Test Anthropic to "
                    "confirm it actually works (right key + billing enabled).")
+
+        st.markdown("---")
+        st.markdown("**Durable backup**")
+        from gtm_engine.persistence import is_configured as _sb_ok, backup, restore
+        if not _sb_ok():
+            st.caption("Add SUPABASE_URL + SUPABASE_KEY (service_role) in Secrets so your setup, "
+                       "cast and content survive redeploys. Free — create a project at supabase.com.")
+        else:
+            bcol1, bcol2 = st.columns(2)
+            with bcol1:
+                if st.button("Back up now", key="sb_backup"):
+                    ok, msg = backup()
+                    (st.success if ok else st.error)(msg)
+            with bcol2:
+                if st.button("Restore now", key="sb_restore"):
+                    ok, msg = restore()
+                    if ok:
+                        st.success(msg + " Reload to see it.")
+                    else:
+                        st.error(msg)
+            st.caption("Auto-backs-up after you load the demo or save a character; auto-restores "
+                       "on a fresh deploy. Use these to force it or verify it works.")
 
     # ── Brand Standards ──
     with tabs[1]:
@@ -1304,6 +1344,8 @@ def _render_settings():
                 ))
                 cfg.provider = sel_provider
                 cfg_store.save(cfg)
+                from gtm_engine.persistence import backup_quietly
+                backup_quietly()
                 st.success("Character saved.")
                 st.rerun()
         with b2:

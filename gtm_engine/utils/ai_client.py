@@ -23,6 +23,7 @@ def connection_status() -> dict:
         "google": bool(_get("GOOGLE_API_KEY")),          # images / character
         "heygen": bool(_get("HEYGEN_API_KEY")),          # avatar video
         "runway": bool(_get("RUNWAY_API_KEY")),          # performance transfer
+        "supabase": bool(_get("SUPABASE_URL") and _get("SUPABASE_KEY")),  # durable backup
     }
 
 
