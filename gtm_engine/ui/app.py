@@ -684,6 +684,54 @@ def _heygen_handoff(idea, job):
     st.markdown("[Open HeyGen ↗](https://app.heygen.com) — make it, then upload it back below.")
 
 
+def _auto_assemble_ui(idea, job):
+    """The 'agent builds it for me' path — assemble the whole Core-Five reel into
+    one vertical mp4 (presenter hook/bookend + data/proof middle + captions)."""
+    import json as _json
+    from gtm_engine.video import assemble_reel
+    from gtm_engine.config import GOOGLE_API_KEY
+
+    st.caption("The tool builds the **whole reel** — your presenter on the hook & bookend, "
+               "the data/proof beats in the middle, captions — and stitches one vertical "
+               "video you just review. Any beat it can't render richly becomes a clean "
+               "branded card, so you always get a complete reel.")
+    broll = st.toggle(
+        "Cinematic B-roll for the middle beats (Veo — ~£1–2 per reel)",
+        value=bool(GOOGLE_API_KEY), key=f"broll_{idea.id}",
+        help="On: AI-generated cinematic B-roll for the tension/pivot/proof beats. "
+             "Off (or no Google key): clean branded text/data cards — free.",
+    )
+    lbl = "✨ Auto-assemble full reel" if not job.video_path else "✨ Re-assemble reel"
+    if st.button(lbl, key=f"asm_{idea.id}", use_container_width=True, type="primary"):
+        prog = st.progress(0.0, text="Starting…")
+
+        def _p(i, t, label):
+            prog.progress(min(i / max(t, 1), 1.0), text=f"{label} ({i}/{t})")
+
+        with st.spinner("Building your reel — the middle/avatar beats can take a few minutes…"):
+            assemble_reel(job.id, include_broll=broll, on_progress=_p)
+        from gtm_engine.persistence import backup_quietly
+        backup_quietly()
+        st.rerun()
+
+    methods = {}
+    try:
+        methods = (_json.loads(job.assembly_json or "{}") or {}).get("methods") or {}
+    except Exception:
+        methods = {}
+    if methods:
+        icon = {"avatar": "🧑 presenter", "b-roll": "🎬 b-roll", "card": "🅰 card"}
+        chips = "  ·  ".join(f"{k}: {icon.get(v, v)}" for k, v in methods.items())
+        st.caption("Built from — " + chips)
+        cards = [k for k, v in methods.items() if v == "card"]
+        if cards:
+            st.caption("Cards stood in where richer media wasn't available. To upgrade: add "
+                       "**looks** (Cast & Voice) so the presenter renders on the hook/bookend, "
+                       "and switch **B-roll on** for the middle. Beats on cards: " + ", ".join(cards))
+    if job.status == "failed" and job.error:
+        st.error(job.error)
+
+
 def _produce_review_panel(idea):
     """PRODUCED-stage wizard: script → approve → record → transpose → review."""
     from gtm_engine.video import (
@@ -851,29 +899,30 @@ def _produce_review_panel(idea):
         st.markdown(f"<span style='color:{C['green']};font-size:0.72rem;'>✓ script approved</span>",
                     unsafe_allow_html=True)
 
-        # ── Step 2: Produce the video (automated if a template/photo is set) ──
+        # ── Step 2: Produce the video ──
         from gtm_engine.video import attach_finished_video
         from gtm_engine.casting import CastingStore
         _ch = CastingStore().get_default_character()
         automated = bool(_ch and (_ch.template_id or _ch.image_key))
 
-        if automated:
-            how = "your HeyGen template" if (_ch and _ch.template_id) else "Avatar IV"
-            st.markdown(f"<span style='color:{C['muted']};font-size:0.7rem;'>2 · GENERATE (automated)</span>",
-                        unsafe_allow_html=True)
-            st.caption(f"One tap — renders via {how} with your per-reel motion direction.")
-            lbl = "Generate video" if not job.video_path else "Re-generate video"
-            if st.button(lbl, key=f"vjr_{idea.id}", use_container_width=True):
-                with st.spinner("Generating with your avatar..."):
-                    render_job(job.id)
-                    st.rerun()
-            if job.status == "failed" and job.error:
-                st.error(f"Render failed: {job.error}")
-            with st.expander("…or make it by hand in HeyGen (full production package)"):
-                _heygen_handoff(idea, job)
-        else:
-            st.markdown(f"<span style='color:{C['muted']};font-size:0.7rem;'>2 · MAKE IT IN HEYGEN</span>",
-                        unsafe_allow_html=True)
+        # Lead with the full-reel auto-assembler (the hands-off path).
+        st.markdown(f"<span style='color:{C['muted']};font-size:0.7rem;'>2 · BUILD THE FULL REEL "
+                    f"(hands-off)</span>", unsafe_allow_html=True)
+        _auto_assemble_ui(idea, job)
+
+        # Alternatives: single-avatar render, or make it by hand in HeyGen.
+        with st.expander("Alternatives — one avatar clip, or make it by hand in HeyGen"):
+            if automated:
+                how = "your HeyGen template" if (_ch and _ch.template_id) else "Avatar IV"
+                st.caption(f"Just the presenter clip (hook + bookend), rendered via {how}.")
+                lbl = "Generate avatar clip only" if not job.video_path else "Re-generate avatar clip"
+                if st.button(lbl, key=f"vjr_{idea.id}", use_container_width=True):
+                    with st.spinner("Generating with your avatar..."):
+                        render_job(job.id)
+                        st.rerun()
+                if job.status == "failed" and job.error:
+                    st.error(f"Render failed: {job.error}")
+            st.markdown("**Make it by hand in HeyGen (full production package)**")
             _heygen_handoff(idea, job)
 
         # ── Upload the finished video (always available) ──

@@ -80,6 +80,7 @@ CREATE TABLE IF NOT EXISTS video_jobs (
     own_hook TEXT DEFAULT '',
     error TEXT DEFAULT '',
     look_id INTEGER,
+    assembly_json TEXT DEFAULT '{}',
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
@@ -100,6 +101,7 @@ _JOB_MIGRATIONS = {
     "own_hook": "TEXT DEFAULT ''",
     "error": "TEXT DEFAULT ''",
     "look_id": "INTEGER",
+    "assembly_json": "TEXT DEFAULT '{}'",
 }
 
 
@@ -134,6 +136,7 @@ class VideoJob(BaseModel):
     own_hook: str = ""                   # user-written hook (verbatim), optional
     error: str = ""                      # last render error, for display
     look_id: int | None = None           # chosen look (character's Look Library)
+    assembly_json: str = "{}"            # auto-assembler state (segment clips/methods)
     created_at: str = ""
     updated_at: str = ""
 
@@ -177,7 +180,7 @@ class VideoJobStore:
             1 if job.script_approved else 0, job.driving_video_path,
             job.character_image_path, job.engine, job.environment_id, job.camera_note,
             job.hook_type, job.tone, job.passion, job.own_hook, job.error,
-            job.look_id, job.created_at, job.updated_at,
+            job.look_id, job.assembly_json, job.created_at, job.updated_at,
         )
         with self._connect() as conn:
             if job.id:
@@ -188,7 +191,7 @@ class VideoJobStore:
                        dry_run_request=?, qa_issues=?, revisions=?, script_approved=?,
                        driving_video_path=?, character_image_path=?, engine=?,
                        environment_id=?, camera_note=?, hook_type=?, tone=?, passion=?, own_hook=?,
-                       error=?, look_id=?, created_at=?, updated_at=? WHERE id=?""",
+                       error=?, look_id=?, assembly_json=?, created_at=?, updated_at=? WHERE id=?""",
                     (*cols, job.id),
                 )
                 conn.commit()
@@ -199,8 +202,8 @@ class VideoJobStore:
                    audio_asset_id, video_path, dry_run_request, qa_issues, revisions,
                    script_approved, driving_video_path, character_image_path, engine,
                    environment_id, camera_note, hook_type, tone, passion, own_hook, error,
-                   look_id, created_at, updated_at)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                   look_id, assembly_json, created_at, updated_at)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 cols,
             )
             conn.commit()
@@ -245,6 +248,7 @@ class VideoJobStore:
             own_hook=g("own_hook", "") or "",
             error=g("error", "") or "",
             look_id=g("look_id", None),
+            assembly_json=g("assembly_json", "{}") or "{}",
             created_at=row["created_at"], updated_at=row["updated_at"],
         )
 
@@ -754,3 +758,7 @@ def apply_revision(job_id: int, note: str, auto_render: bool = True) -> VideoJob
     if auto_render and needs_rerender:
         return render_job(job.id)
     return store.get(job.id)
+
+
+# Full-reel auto-assembler (hook + middle + bookend → one stitched mp4).
+from gtm_engine.video.assembler import assemble_reel  # noqa: E402,F401

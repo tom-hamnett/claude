@@ -247,3 +247,52 @@ def test_suggest_look_parses_choice(monkeypatch):
     lid, rationale = suggest_look(job, looks)
     assert lid == 12
     assert "warmer" in rationale
+
+
+def test_auto_assemble_fallback_cards(db, tmp_path, monkeypatch):
+    """With no media keys, assemble_reel still stitches a full reel from PIL cards."""
+    from gtm_engine.producer import ProducerBrief, ProducerBriefLibrary
+    import gtm_engine.video.assembler as asm
+    monkeypatch.setattr(asm, "ASSEMBLY_DIR", tmp_path / "assembly")
+    monkeypatch.setattr(asm, "OUTPUT_DIR", tmp_path / "out")
+    segs = {s: {"spoken_text": f"line {s}", "text_overlay": s.title(),
+                "duration_seconds": 1,
+                "visual_type": "character_in_scene" if s in ("hook", "bookend") else "data"}
+            for s in ["hook", "tension", "pivot", "proof", "bookend"]}
+    ProducerBriefLibrary().save(ProducerBrief(idea_id=1, spoken_script="x", segments_json=segs))
+    store = VideoJobStore()
+    job = VideoJob(idea_id=1, hook_text="a", bookend_text="b")
+    job.id = store.save(job)
+
+    steps = []
+    out = video_mod.assemble_reel(job.id, include_broll=False,
+                                  on_progress=lambda i, t, l: steps.append((i, t)))
+    assert out.status == "ready"
+    assert out.video_path and Path(out.video_path).exists()
+    assert Path(out.video_path).stat().st_size > 0
+    meta = json.loads(out.assembly_json)
+    assert set(meta["methods"]) == {"hook", "tension", "pivot", "proof", "bookend"}
+    assert all(v == "card" for v in meta["methods"].values())  # no keys -> all cards
+    assert steps and steps[-1][0] == steps[-1][1]  # progress reached 100%
+
+
+def test_auto_assemble_is_resumable(db, tmp_path, monkeypatch):
+    """A second assemble reuses cached segment clips (same paths)."""
+    from gtm_engine.producer import ProducerBrief, ProducerBriefLibrary
+    import gtm_engine.video.assembler as asm
+    monkeypatch.setattr(asm, "ASSEMBLY_DIR", tmp_path / "assembly")
+    monkeypatch.setattr(asm, "OUTPUT_DIR", tmp_path / "out")
+    segs = {"hook": {"spoken_text": "a", "text_overlay": "Hook", "duration_seconds": 1,
+                     "visual_type": "character_in_scene"},
+            "bookend": {"spoken_text": "b", "text_overlay": "End", "duration_seconds": 1,
+                        "visual_type": "character_in_scene"}}
+    ProducerBriefLibrary().save(ProducerBrief(idea_id=1, spoken_script="x", segments_json=segs))
+    store = VideoJobStore()
+    job = VideoJob(idea_id=1)
+    job.id = store.save(job)
+    out1 = video_mod.assemble_reel(job.id, include_broll=False)
+    paths1 = {k: v["path"] for k, v in json.loads(out1.assembly_json)["segments"].items()}
+    out2 = video_mod.assemble_reel(job.id, include_broll=False)
+    paths2 = {k: v["path"] for k, v in json.loads(out2.assembly_json)["segments"].items()}
+    assert paths1 == paths2  # cached, not rebuilt with new hashes
+    assert out2.status == "ready"
