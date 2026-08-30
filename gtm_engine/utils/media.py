@@ -352,6 +352,26 @@ def _generate_with_nano_banana(
     return None
 
 
+def describe_look(image_path) -> str:
+    """One-line description of a presenter look (wardrobe/setting/vibe) via Gemini
+    vision — used to auto-label a character's looks. Returns '' if unavailable."""
+    if not GOOGLE_API_KEY:
+        return ""
+    try:
+        from pathlib import Path
+        import PIL.Image
+        client = _get_client()
+        img = PIL.Image.open(str(Path(image_path)))
+        prompt = ("Describe this person's look for a talking-head video in ONE short line: "
+                  "wardrobe, setting, and vibe/energy. Example: 'navy blazer, book-lined study, "
+                  "authoritative and calm'. Max 14 words, no preamble.")
+        r = client.models.generate_content(model="gemini-2.5-flash", contents=[img, prompt])
+        return (getattr(r, "text", "") or "").strip().strip('"')[:200]
+    except Exception as e:
+        logger.error("describe_look failed: %s", e)
+        return ""
+
+
 @retry(wait=wait_exponential(min=2, max=30), stop=stop_after_attempt(3))
 def generate_image(
     prompt: str,

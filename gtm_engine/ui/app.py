@@ -634,11 +634,15 @@ def _heygen_handoff(idea, job):
     st.code(job.motion_prompt or "measured and direct; lean in slightly on the key line",
             language=None)
 
-    # Look / setting suggestion from the per-reel environment (or character default)
+    # Look / setting suggestion — the auto-cast look from the Look Library wins,
+    # else the per-reel environment (or character default).
     look = "a natural, front-facing look, well lit"
+    cast_look = None
     try:
         cs = CastingStore()
         ch = cs.get_default_character()
+        if job.look_id:
+            cast_look = cs.get_look(job.look_id)
         env_id = job.environment_id or (ch.environment_id if ch else None)
         if env_id:
             env = cs.get_environment(env_id)
@@ -647,7 +651,12 @@ def _heygen_handoff(idea, job):
     except Exception:
         pass
     st.markdown("**③ Look / setting for this reel**")
-    st.caption(look + (f"  ·  tone: {job.tone}" if job.tone else ""))
+    if cast_look:
+        st.markdown(f"👗 Auto-cast look: **{cast_look.name or 'Look'}** — "
+                    f"{cast_look.description or ''}")
+        st.caption(f"Setting: {look}" + (f"  ·  tone: {job.tone}" if job.tone else ""))
+    else:
+        st.caption(look + (f"  ·  tone: {job.tone}" if job.tone else ""))
 
     # Per-segment shot direction (the creative bit)
     st.markdown("**④ Shot direction (what happens on screen)**")
@@ -790,6 +799,26 @@ def _produce_review_panel(idea):
                 camera = st.text_input("Camera direction", value=job.camera_note, key=f"cam_{idea.id}",
                                        placeholder="'slow push-in on the hook' (used in the edit)")
 
+            # ── Look override (from the character's Look Library) ──
+            _char = CastingStore().get_default_character()
+            char_looks = CastingStore().list_looks(_char.id) if (_char and _char.id) else []
+            look_pick = 0  # 0 = Auto (let the tool cast the best look)
+            if char_looks:
+                look_choices = [0] + [lk.id for lk in char_looks]
+                look_names = {lk.id: (lk.name or "Look") for lk in char_looks}
+                cur_look = job.look_id if job.look_id in [lk.id for lk in char_looks] else 0
+                with st.expander("👗 Look (auto-cast — override if you want)", expanded=False):
+                    look_pick = st.selectbox(
+                        "Look for this reel", look_choices,
+                        index=look_choices.index(cur_look) if cur_look in look_choices else 0,
+                        format_func=lambda i: "Auto — best fit for this reel" if i == 0
+                            else look_names.get(i, "?"), key=f"look_{idea.id}")
+                    if job.look_id:
+                        _lk = CastingStore().get_look(job.look_id)
+                        if _lk:
+                            st.caption(f"Currently cast: **{_lk.name or 'Look'}** — "
+                                       f"{_lk.description or ''}")
+
             refine = st.text_area(
                 "Refine (free text) — iterate until it's sharp",
                 key=f"refine_{idea.id}", height=68,
@@ -800,7 +829,8 @@ def _produce_review_panel(idea):
             def _save():
                 update_job_production(job.id, motion_prompt=motion, environment_id=env_pick,
                                       camera_note=camera, hook_type=hook_type, tone=tone,
-                                      passion=passion, own_hook=own_hook)
+                                      passion=passion, own_hook=own_hook,
+                                      look_id=(look_pick if char_looks else None))
 
             rc1, rc2, rc3 = st.columns(3)
             with rc1:
@@ -1433,6 +1463,64 @@ def _render_settings():
                     st.error("Photo upload failed — check the HeyGen key.")
         st.caption("Avatar IV animates one photo, interpreting your voice for real expression. "
                    "This is the reliable path — the avatar-id/look fields above are for classic avatars.")
+
+        # ── Look Library (upload a subset of your looks → auto-cast per reel) ──
+        if sel != "__new__" and ch.id:
+            st.markdown("**👗 Look Library — your wardrobe/settings**")
+            st.caption("Upload 5–8 of your favourite looks (a clear photo of each). The tool "
+                       "auto-describes each one and picks the best-fit look for every reel — you "
+                       "can always override. This is how you get variety without look drift.")
+            looks = casting.list_looks(ch.id)
+            if looks:
+                for lk in looks:
+                    lc1, lc2, lc3 = st.columns([1, 4, 1])
+                    with lc1:
+                        if lk.photo_path and Path(lk.photo_path).exists():
+                            st.image(lk.photo_path, width=56)
+                        else:
+                            st.markdown("🖼️")
+                    with lc2:
+                        ready = "✓" if lk.image_key else "⚠︎ no HeyGen key"
+                        st.markdown(f"**{lk.name or 'Look'}** · {ready}<br>"
+                                    f"<span style='color:{C['muted']};font-size:0.8rem;'>"
+                                    f"{lk.description or '(no description)'}</span>",
+                                    unsafe_allow_html=True)
+                    with lc3:
+                        if st.button("✕", key=f"look_del_{lk.id}", help="Remove this look"):
+                            casting.delete_look(lk.id)
+                            from gtm_engine.persistence import backup_quietly
+                            backup_quietly()
+                            st.rerun()
+            new_looks = st.file_uploader(
+                "Add looks (you can select several at once)",
+                type=["jpg", "jpeg", "png"], accept_multiple_files=True, key="look_up",
+            )
+            if new_looks and st.button("Add these looks", key="look_add_btn",
+                                       use_container_width=True):
+                from gtm_engine.avatar import get_provider as _gp
+                from gtm_engine.utils.media import describe_look
+                from gtm_engine.casting import Look
+                from gtm_engine.persistence import backup_quietly
+                updir = OUTPUT_DIR / "characters" / f"looks_{ch.id}"
+                updir.mkdir(parents=True, exist_ok=True)
+                heygen_ready = sel_provider == "heygen" and provider.is_configured()
+                added = 0
+                with st.spinner(f"Processing {len(new_looks)} look(s)…"):
+                    for f in new_looks:
+                        pth = updir / f.name
+                        pth.write_bytes(f.getbuffer())
+                        image_key = ""
+                        if heygen_ready:
+                            image_key = _gp("heygen").upload_image(pth) or ""
+                        desc = describe_look(pth)
+                        casting.add_look(Look(
+                            character_id=ch.id, name=Path(f.name).stem[:40],
+                            description=desc, image_key=image_key, photo_path=str(pth),
+                        ))
+                        added += 1
+                backup_quietly()
+                st.success(f"Added {added} look(s). The tool will auto-cast the best one per reel.")
+                st.rerun()
 
         if hey_voices:
             v_ids = [""] + [v["id"] for v in hey_voices]

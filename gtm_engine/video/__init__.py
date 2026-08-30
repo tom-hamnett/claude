@@ -79,6 +79,7 @@ CREATE TABLE IF NOT EXISTS video_jobs (
     passion REAL DEFAULT 0.5,
     own_hook TEXT DEFAULT '',
     error TEXT DEFAULT '',
+    look_id INTEGER,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
@@ -98,6 +99,7 @@ _JOB_MIGRATIONS = {
     "passion": "REAL DEFAULT 0.5",
     "own_hook": "TEXT DEFAULT ''",
     "error": "TEXT DEFAULT ''",
+    "look_id": "INTEGER",
 }
 
 
@@ -131,6 +133,7 @@ class VideoJob(BaseModel):
     passion: float = 0.5                 # 0 calm .. 1 fired-up
     own_hook: str = ""                   # user-written hook (verbatim), optional
     error: str = ""                      # last render error, for display
+    look_id: int | None = None           # chosen look (character's Look Library)
     created_at: str = ""
     updated_at: str = ""
 
@@ -174,7 +177,7 @@ class VideoJobStore:
             1 if job.script_approved else 0, job.driving_video_path,
             job.character_image_path, job.engine, job.environment_id, job.camera_note,
             job.hook_type, job.tone, job.passion, job.own_hook, job.error,
-            job.created_at, job.updated_at,
+            job.look_id, job.created_at, job.updated_at,
         )
         with self._connect() as conn:
             if job.id:
@@ -185,7 +188,7 @@ class VideoJobStore:
                        dry_run_request=?, qa_issues=?, revisions=?, script_approved=?,
                        driving_video_path=?, character_image_path=?, engine=?,
                        environment_id=?, camera_note=?, hook_type=?, tone=?, passion=?, own_hook=?,
-                       error=?, created_at=?, updated_at=? WHERE id=?""",
+                       error=?, look_id=?, created_at=?, updated_at=? WHERE id=?""",
                     (*cols, job.id),
                 )
                 conn.commit()
@@ -196,8 +199,8 @@ class VideoJobStore:
                    audio_asset_id, video_path, dry_run_request, qa_issues, revisions,
                    script_approved, driving_video_path, character_image_path, engine,
                    environment_id, camera_note, hook_type, tone, passion, own_hook, error,
-                   created_at, updated_at)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                   look_id, created_at, updated_at)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 cols,
             )
             conn.commit()
@@ -241,6 +244,7 @@ class VideoJobStore:
             passion=g("passion", 0.5) if g("passion", 0.5) is not None else 0.5,
             own_hook=g("own_hook", "") or "",
             error=g("error", "") or "",
+            look_id=g("look_id", None),
             created_at=row["created_at"], updated_at=row["updated_at"],
         )
 
@@ -303,6 +307,52 @@ def run_qa(hook_text: str, bookend_text: str) -> list[str]:
     return issues
 
 
+# ── Look selection ────────────────────────────────────────────────────────────
+
+_LOOK_SYSTEM = """You are a creative director casting the right WARDROBE/SETTING (a "look")
+for one short vertical social video. You are given the reel's hook + closing line, its
+tone, and a numbered list of available looks (each a short description of wardrobe,
+setting and vibe). Pick the single look that best fits the energy and subject of THIS
+reel. Match a sharp/provocative reel to a bolder look, a warm/human reel to a softer
+one, an authoritative/analytical reel to a more formal one.
+
+Return ONLY a JSON object:
+{"look_number": <the number of the best look>, "rationale": "<one short sentence why>"}"""
+
+
+def suggest_look(job: "VideoJob", looks: list) -> tuple[int | None, str]:
+    """Ask Claude which look best fits this reel. Returns (look_id, rationale).
+
+    Falls back to the first look (no rationale) if the model is unavailable or
+    the response can't be parsed — so a look is always chosen when any exist.
+    """
+    if not looks:
+        return None, ""
+    if len(looks) == 1:
+        return looks[0].id, "Only look available."
+    try:
+        from gtm_engine.utils.ai_client import call_claude
+        catalogue = "\n".join(
+            f"{i+1}. {lk.name or 'Look'} — {lk.description or '(no description)'}"
+            for i, lk in enumerate(looks)
+        )
+        prompt = (
+            f"HOOK: {job.hook_text}\n"
+            f"CLOSING: {job.bookend_text}\n"
+            f"TONE: {job.tone or 'default'} | PASSION: {job.passion}\n\n"
+            f"AVAILABLE LOOKS:\n{catalogue}\n\nReturn ONLY the JSON."
+        )
+        raw = call_claude(prompt, system=_LOOK_SYSTEM, max_tokens=300)
+        s, e = raw.find("{"), raw.rfind("}")
+        data = json.loads(raw[s : e + 1]) if s != -1 and e != -1 else {}
+        n = int(data.get("look_number", 0))
+        if 1 <= n <= len(looks):
+            return looks[n - 1].id, str(data.get("rationale", "")).strip()
+    except Exception as exc:
+        logger.info("suggest_look fell back to first look: %s", exc)
+    return looks[0].id, ""
+
+
 # ── Build / render ────────────────────────────────────────────────────────────
 
 def create_job_from_brief(idea_id: int) -> VideoJob | None:
@@ -356,6 +406,15 @@ def create_job_from_brief(idea_id: int) -> VideoJob | None:
         if not (existing and existing.environment_id):
             job.environment_id = character.environment_id
         job.character_image_path = character.photo_path or cfg.character_image_path
+        # Auto-cast a look from the character's Look Library (keep any the user
+        # already chose on an existing job).
+        if not (existing and existing.look_id):
+            try:
+                looks = cs.list_looks(character.id) if character.id else []
+                if looks:
+                    job.look_id, _ = suggest_look(job, looks)
+            except Exception:
+                pass
     else:
         job.avatar_id = cfg.avatar_id
         job.voice_id = cfg.voice_id
@@ -384,9 +443,11 @@ def update_job_production(job_id: int, motion_prompt: str | None = None,
                           camera_note: str | None = None,
                           hook_type: str | None = None, tone: str | None = None,
                           passion: float | None = None,
-                          own_hook: str | None = None) -> VideoJob | None:
+                          own_hook: str | None = None,
+                          look_id: int | None = None) -> VideoJob | None:
     """Save per-reel direction (motion, environment, camera, hook, tone, passion,
-    own-hook). Only provided fields are updated."""
+    own-hook, look). Only provided fields are updated. Pass look_id=0 to clear
+    the look back to Auto."""
     store = VideoJobStore()
     job = store.get(job_id)
     if not job:
@@ -405,6 +466,8 @@ def update_job_production(job_id: int, motion_prompt: str | None = None,
         job.passion = passion
     if own_hook is not None:
         job.own_hook = own_hook
+    if look_id is not None:
+        job.look_id = look_id or None
     job.id = store.save(job)
     return store.get(job.id)
 
@@ -493,6 +556,14 @@ def render_job(job_id: int, audio_path: Path | str | None = None,
                 job.motion_prompt = ch.cinematic_direction
             if not job.character_image_path and ch.photo_path:
                 job.character_image_path = ch.photo_path
+        # Look: a per-reel look from the Look Library overrides the character's
+        # default image_key (the wardrobe/setting this specific reel is cast in).
+        if job.look_id:
+            look = cs.get_look(job.look_id)
+            if look and look.image_key:
+                image_key = look.image_key
+                if look.photo_path and not job.character_image_path:
+                    job.character_image_path = look.photo_path
         # Environment: per-reel job value wins, else the character's default.
         env_id = job.environment_id or (ch.environment_id if ch else None)
         if env_id:

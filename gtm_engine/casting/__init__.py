@@ -40,6 +40,15 @@ CREATE TABLE IF NOT EXISTS environments (
     background_value TEXT DEFAULT '#0d1b2a',
     created_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS looks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    character_id INTEGER,
+    name TEXT DEFAULT '',
+    description TEXT DEFAULT '',
+    image_key TEXT DEFAULT '',
+    photo_path TEXT DEFAULT '',
+    created_at TEXT NOT NULL
+);
 """
 
 
@@ -74,6 +83,18 @@ class Environment(BaseModel):
     description: str = ""
     background_type: str = "color"       # color | image
     background_value: str = "#0d1b2a"
+    created_at: str = ""
+
+
+class Look(BaseModel):
+    """One of a character's looks — a photo (HeyGen image_key) + a described vibe."""
+    model_config = ConfigDict(extra="ignore")
+    id: int | None = None
+    character_id: int | None = None
+    name: str = ""
+    description: str = ""                 # wardrobe / setting / vibe (auto by Gemini)
+    image_key: str = ""                  # HeyGen image_key -> av4 render
+    photo_path: str = ""
     created_at: str = ""
 
 
@@ -214,6 +235,34 @@ class CastingStore:
     def delete_character(self, char_id: int) -> None:
         with self._connect() as conn:
             conn.execute("DELETE FROM characters WHERE id=?", (char_id,))
+            conn.commit()
+
+    # ── looks ──
+    def list_looks(self, character_id: int) -> list[Look]:
+        with self._connect() as conn:
+            rows = conn.execute("SELECT * FROM looks WHERE character_id=? ORDER BY id",
+                                (character_id,)).fetchall()
+            return [Look(**dict(r)) for r in rows]
+
+    def get_look(self, look_id: int) -> Look | None:
+        with self._connect() as conn:
+            r = conn.execute("SELECT * FROM looks WHERE id=?", (look_id,)).fetchone()
+            return Look(**dict(r)) if r else None
+
+    def add_look(self, look: Look) -> int:
+        with self._connect() as conn:
+            cur = conn.execute(
+                """INSERT INTO looks (character_id, name, description, image_key, photo_path, created_at)
+                   VALUES (?,?,?,?,?,?)""",
+                (look.character_id, look.name, look.description, look.image_key,
+                 look.photo_path, datetime.now(timezone.utc).isoformat()),
+            )
+            conn.commit()
+            return cur.lastrowid
+
+    def delete_look(self, look_id: int) -> None:
+        with self._connect() as conn:
+            conn.execute("DELETE FROM looks WHERE id=?", (look_id,))
             conn.commit()
 
     def seed_if_empty(self) -> None:

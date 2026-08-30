@@ -2,7 +2,7 @@
 
 import pytest
 
-from gtm_engine.casting import CastingStore, Character, Environment
+from gtm_engine.casting import CastingStore, Character, Environment, Look
 
 
 @pytest.fixture
@@ -58,3 +58,28 @@ def test_add_environment(store):
     envs = store.list_environments()
     assert len(envs) == before + 1
     assert any(e.name == "Rooftop" for e in envs)
+
+
+def test_look_library_crud(store):
+    store.seed_if_empty()
+    ch = store.get_default_character()
+    assert store.list_looks(ch.id) == []
+    lid = store.add_look(Look(character_id=ch.id, name="Navy Blazer",
+                              description="navy blazer, book-lined study, authoritative",
+                              image_key="img_abc"))
+    looks = store.list_looks(ch.id)
+    assert len(looks) == 1
+    assert looks[0].name == "Navy Blazer"
+    assert looks[0].image_key == "img_abc"
+    assert store.get_look(lid).description.startswith("navy blazer")
+    store.delete_look(lid)
+    assert store.list_looks(ch.id) == []
+
+
+def test_looks_are_scoped_to_character(store):
+    store.seed_if_empty()
+    chars = store.list_characters()
+    store.add_look(Look(character_id=chars[0].id, name="A"))
+    store.add_look(Look(character_id=chars[1].id, name="B"))
+    assert len(store.list_looks(chars[0].id)) == 1
+    assert store.list_looks(chars[0].id)[0].name == "A"

@@ -214,3 +214,36 @@ def test_apply_revision_visual_note_no_rerender(db, monkeypatch):
     assert updated.revisions[-1]["note_for_editor"].startswith("swap the chart")
     # visual notes are logged but don't touch the spoken lines
     assert updated.hook_text == "Your framework is now cheap."
+
+
+def test_suggest_look_fallback_without_api(monkeypatch):
+    """With no Claude available, suggest_look returns the first look (never crashes)."""
+    from gtm_engine.video import suggest_look
+    from gtm_engine.casting import Look
+    monkeypatch.setattr("gtm_engine.utils.ai_client.call_claude",
+                        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("no key")))
+    job = VideoJob(idea_id=1, hook_text="Everyone's wrong about X", tone="sharp")
+    looks = [Look(id=7, name="Bold"), Look(id=8, name="Soft")]
+    lid, rationale = suggest_look(job, looks)
+    assert lid == 7
+
+
+def test_suggest_look_empty_and_single():
+    from gtm_engine.video import suggest_look
+    from gtm_engine.casting import Look
+    job = VideoJob(idea_id=1)
+    assert suggest_look(job, []) == (None, "")
+    lid, _ = suggest_look(job, [Look(id=3, name="Only")])
+    assert lid == 3
+
+
+def test_suggest_look_parses_choice(monkeypatch):
+    from gtm_engine.video import suggest_look
+    from gtm_engine.casting import Look
+    monkeypatch.setattr("gtm_engine.utils.ai_client.call_claude",
+                        lambda *a, **k: '{"look_number": 2, "rationale": "warmer fits"}')
+    job = VideoJob(idea_id=1, tone="warm")
+    looks = [Look(id=11, name="Formal"), Look(id=12, name="Casual")]
+    lid, rationale = suggest_look(job, looks)
+    assert lid == 12
+    assert "warmer" in rationale
