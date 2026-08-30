@@ -60,6 +60,7 @@ class RenderRequest:
     driving_video_path: Path | None = None   # performance source (Option 2)
     character_image_path: Path | None = None  # target character for transfer
     image_key: str = ""                       # HeyGen image_key -> Avatar IV (av4)
+    template_id: str = ""                      # HeyGen template -> full-automation path
     gesture: bool = True                      # transfer body/hand motion too
     background: str = "#0d1b2a"
     aspect_ratio: str = "9:16"
@@ -526,6 +527,66 @@ class HeyGenProvider(AvatarProvider):
             logger.error("HeyGen upload_image failed: %s", e)
             return None
 
+    def get_template_variables(self, template_id: str) -> dict:
+        """Return {variable_name: type} for a HeyGen template (text/image/…)."""
+        try:
+            import httpx
+            r = httpx.get(f"{self.API_V2}/template/{template_id}",
+                          headers=self._headers(), timeout=20)
+            r.raise_for_status()
+            data = r.json().get("data", {}) or {}
+            vs = data.get("variables", {}) or {}
+            return {n: (v.get("type", "text") if isinstance(v, dict) else "text")
+                    for n, v in vs.items()}
+        except Exception as e:
+            logger.error("get_template_variables failed: %s", e)
+            return {}
+
+    def _render_template(self, req: "RenderRequest", width: int, height: int) -> "Path | None":
+        """Full automation: render the user's HeyGen template, filling the script
+        into its first text variable. The avatar/look/style live in the template."""
+        import httpx
+        self.last_error = ""
+        tid = req.template_id
+        varmap = self.get_template_variables(tid)
+        text_vars = [n for n, t in varmap.items() if t == "text"]
+        if not text_vars:
+            self.last_error = ("Your HeyGen template has no text variable for the script. "
+                               "In HeyGen, mark the script text box as a variable, then reuse "
+                               "the template id.")
+            return None
+        script_var = text_vars[0]
+        payload = {
+            "title": "Quantum Tools reel",
+            "caption": False,
+            "variables": {
+                script_var: {"name": script_var, "type": "text",
+                             "properties": {"content": req.script}},
+            },
+            "dimension": {"width": width, "height": height},
+        }
+        if req.callback_url:
+            payload["callback_url"] = req.callback_url
+        try:
+            r = httpx.post(f"{self.API_V2}/template/{tid}/generate",
+                           headers=self._headers(), json=payload, timeout=30)
+            if r.status_code != 200:
+                self.last_error = f"HeyGen template {r.status_code}: {r.text[:250]}"
+                return None
+            vid = (r.json().get("data", {}) or {}).get("video_id")
+            if not vid:
+                self.last_error = f"template returned no video_id: {r.text[:200]}"
+                return None
+            if req.callback_url:
+                return None
+            result = self._poll_and_download(vid, req.output_path)
+            if not result and not self.last_error:
+                self.last_error = "template render didn't complete (timeout/failed)."
+            return result
+        except Exception as e:
+            self.last_error = f"template exception: {e}"
+            return None
+
     def _render_av4(self, req: "RenderRequest", width: int, height: int) -> "Path | None":
         """Avatar IV (expressive) render — from either an uploaded photo's
         image_key OR an existing Avatar IV avatar/look you already built."""
@@ -579,6 +640,11 @@ class HeyGenProvider(AvatarProvider):
 
         dims = {"9:16": (720, 1280), "16:9": (1280, 720), "1:1": (720, 720)}
         width, height = dims.get(req.aspect_ratio, (720, 1280))
+
+        # Full automation with the user's OWN trained avatar: a HeyGen template
+        # (avatar/look/style baked in; we fill the script). Preferred path.
+        if req.template_id:
+            return self._render_template(req, width, height)
 
         # Avatar IV (expressive) needs an uploaded photo's image_key. HeyGen's API
         # will NOT drive a trained avatar/look by id — so a "tp:" look with no

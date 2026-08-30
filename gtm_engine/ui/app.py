@@ -764,36 +764,47 @@ def _produce_review_panel(idea):
         st.markdown(f"<span style='color:{C['green']};font-size:0.72rem;'>✓ script approved</span>",
                     unsafe_allow_html=True)
 
-        # ── Step 2: Make it in HeyGen (full functionality), then upload back ──
+        # ── Step 2: Produce the video (automated if a template/photo is set) ──
         from gtm_engine.video import attach_finished_video
-        st.markdown(f"<span style='color:{C['muted']};font-size:0.7rem;'>2 · MAKE IT IN HEYGEN</span>",
-                    unsafe_allow_html=True)
-        st.caption("Produce the reel in HeyGen with your full avatar + looks + editing, then "
-                   "upload the finished file here. Copy the spoken script:")
-        st.code(job.spoken_script or "—", language=None)
-        dirbits = []
-        if job.motion_prompt:
-            dirbits.append(f"Motion: {job.motion_prompt}")
-        if job.tone:
-            dirbits.append(f"Tone: {job.tone}")
-        if dirbits:
-            st.caption(" · ".join(dirbits))
-        st.markdown("[Open HeyGen ↗](https://app.heygen.com) — make the video with your avatar.")
+        from gtm_engine.casting import CastingStore
+        _ch = CastingStore().get_default_character()
+        automated = bool(_ch and (_ch.template_id or _ch.image_key))
 
-        st.markdown(f"<span style='color:{C['muted']};font-size:0.7rem;'>3 · UPLOAD THE FINISHED VIDEO</span>",
-                    unsafe_allow_html=True)
-        fin = st.file_uploader("Drop the finished HeyGen video (mp4/mov)",
-                               type=["mp4", "mov", "webm"], key=f"fin_{idea.id}")
-        if fin is not None and st.button("Attach finished video", key=f"finb_{idea.id}",
-                                         use_container_width=True):
-            attach_finished_video(job.id, fin.getbuffer(), fin.name)
-            from gtm_engine.persistence import backup_quietly
-            backup_quietly()
-            st.success("Video attached.")
-            st.rerun()
+        if automated:
+            how = "your HeyGen template" if (_ch and _ch.template_id) else "Avatar IV"
+            st.markdown(f"<span style='color:{C['muted']};font-size:0.7rem;'>2 · GENERATE (automated)</span>",
+                        unsafe_allow_html=True)
+            st.caption(f"Renders automatically via {how} — your avatar, no manual work.")
+            lbl = "Generate video" if not job.video_path else "Re-generate video"
+            if st.button(lbl, key=f"vjr_{idea.id}", use_container_width=True):
+                with st.spinner("Generating with your avatar..."):
+                    render_job(job.id)
+                    st.rerun()
+            if job.status == "failed" and job.error:
+                st.error(f"Render failed: {job.error}")
+        else:
+            st.markdown(f"<span style='color:{C['muted']};font-size:0.7rem;'>2 · MAKE IT IN HEYGEN</span>",
+                        unsafe_allow_html=True)
+            st.caption("For full automation, add a **HeyGen Template ID** to your character "
+                       "(Settings → Cast & Voice). Otherwise make it in HeyGen and upload it back:")
+            st.code(job.spoken_script or "—", language=None)
+            st.markdown("[Open HeyGen ↗](https://app.heygen.com)")
 
-        # ── Advanced: auto-generate via the API (photo Avatar IV / classic) ──
-        with st.expander("Auto-generate via API instead (advanced)"):
+        # ── Upload a finished video (always available) ──
+        with st.expander("Upload a finished video (made in HeyGen)"):
+            st.code(job.spoken_script or "—", language=None)
+            fin = st.file_uploader("Finished video (mp4/mov)", type=["mp4", "mov", "webm"],
+                                   key=f"fin_{idea.id}")
+            if fin is not None and st.button("Attach finished video", key=f"finb_{idea.id}",
+                                             use_container_width=True):
+                attach_finished_video(job.id, fin.getbuffer(), fin.name)
+                from gtm_engine.persistence import backup_quietly
+                backup_quietly()
+                st.success("Video attached.")
+                st.rerun()
+
+        # ── Other generation options (advanced) ──
+        with st.expander("Other generation options (advanced)"):
             _api_generate_controls(idea, job, cfg, is_transfer, render_job, resolve_audio_take)
 
         # ── Step 4: Result + review ──
@@ -1326,8 +1337,20 @@ def _render_settings():
         elif not is_photo and str(ch_avatar_id).startswith("tp:"):
             ch_avatar_id = ch_avatar_id[3:]
 
-        # ── Avatar IV (recommended): upload a photo → expressive render ──
-        st.markdown("**⭐ Avatar IV (expressive) — upload a photo**")
+        # ── HeyGen Template (full automation with YOUR avatar — recommended) ──
+        st.markdown("**🚀 HeyGen Template — full automation (recommended)**")
+        ch_template_id = st.text_input(
+            "HeyGen Template ID", value=ch.template_id, key="ch_tmpl",
+            placeholder="paste your HeyGen template id",
+            help="Build a template once in HeyGen with your avatar + look + a TEXT variable for "
+                 "the script. Paste its id here and the tool auto-generates every reel via the "
+                 "API — your full avatar, zero manual work.",
+        )
+        st.caption("This is the automated path: your trained avatar + styling live in the template; "
+                   "the tool fills the script per reel. Set this and you never touch HeyGen per video.")
+
+        # ── Avatar IV (alternative): upload a photo → expressive render ──
+        st.markdown("**⭐ Avatar IV (alternative) — upload a photo**")
         if ch.image_key:
             st.caption(f"✓ Avatar IV photo set. Renders expressively from it.")
         if sel != "__new__" and sel_provider == "heygen" and provider.is_configured():
@@ -1382,7 +1405,7 @@ def _render_settings():
                     avatar_id=ch_avatar_id, avatar_name=ch_avatar_name, voice_id=ch_voice_id,
                     voice_name=ch_voice_name, cinematic_direction=ch_cine, expressiveness=ch_expr,
                     environment_id=ep, is_default=ch_default, photo_path=ch.photo_path,
-                    image_key=ch.image_key,
+                    image_key=ch.image_key, template_id=ch_template_id,
                 ))
                 cfg.provider = sel_provider
                 cfg_store.save(cfg)

@@ -475,12 +475,14 @@ def render_job(job_id: int, audio_path: Path | str | None = None,
     # and a job created before the cast was set up still gets an avatar.
     background = cfg.background
     image_key = ""
+    template_id = ""
     try:
         from gtm_engine.casting import CastingStore
         cs = CastingStore()
         ch = cs.get_default_character()
         if ch:
             image_key = ch.image_key or ""
+            template_id = ch.template_id or ""
             if not job.avatar_id and ch.avatar_id:
                 job.avatar_id = ch.avatar_id
             if not job.voice_id and ch.voice_id:
@@ -512,6 +514,7 @@ def render_job(job_id: int, audio_path: Path | str | None = None,
         gesture=cfg.gesture,
         character_image_path=Path(job.character_image_path) if job.character_image_path else None,
         image_key=image_key,
+        template_id=template_id,
     )
     if driving_video_path:
         job.driving_video_path = str(driving_video_path)
@@ -527,7 +530,7 @@ def render_job(job_id: int, audio_path: Path | str | None = None,
     elif is_transfer:
         ready = bool(req.character_image_path)
     else:
-        ready = bool(job.avatar_id or req.image_key)  # avatar id OR Avatar IV photo
+        ready = bool(job.avatar_id or req.image_key or req.template_id)  # avatar id / photo / template
 
     # For audio-drive providers, an uploaded take can drive the mouth.
     if not is_transfer:
