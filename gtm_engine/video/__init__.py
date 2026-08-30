@@ -78,6 +78,7 @@ CREATE TABLE IF NOT EXISTS video_jobs (
     tone TEXT DEFAULT '',
     passion REAL DEFAULT 0.5,
     own_hook TEXT DEFAULT '',
+    error TEXT DEFAULT '',
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
@@ -96,6 +97,7 @@ _JOB_MIGRATIONS = {
     "tone": "TEXT DEFAULT ''",
     "passion": "REAL DEFAULT 0.5",
     "own_hook": "TEXT DEFAULT ''",
+    "error": "TEXT DEFAULT ''",
 }
 
 
@@ -128,6 +130,7 @@ class VideoJob(BaseModel):
     tone: str = ""                       # sharp | measured | warm | ...
     passion: float = 0.5                 # 0 calm .. 1 fired-up
     own_hook: str = ""                   # user-written hook (verbatim), optional
+    error: str = ""                      # last render error, for display
     created_at: str = ""
     updated_at: str = ""
 
@@ -170,7 +173,7 @@ class VideoJobStore:
             json.dumps(job.qa_issues), json.dumps(job.revisions),
             1 if job.script_approved else 0, job.driving_video_path,
             job.character_image_path, job.engine, job.environment_id, job.camera_note,
-            job.hook_type, job.tone, job.passion, job.own_hook,
+            job.hook_type, job.tone, job.passion, job.own_hook, job.error,
             job.created_at, job.updated_at,
         )
         with self._connect() as conn:
@@ -182,7 +185,7 @@ class VideoJobStore:
                        dry_run_request=?, qa_issues=?, revisions=?, script_approved=?,
                        driving_video_path=?, character_image_path=?, engine=?,
                        environment_id=?, camera_note=?, hook_type=?, tone=?, passion=?, own_hook=?,
-                       created_at=?, updated_at=? WHERE id=?""",
+                       error=?, created_at=?, updated_at=? WHERE id=?""",
                     (*cols, job.id),
                 )
                 conn.commit()
@@ -192,9 +195,9 @@ class VideoJobStore:
                    voice_id, mode, hook_text, bookend_text, motion_prompt, expressiveness,
                    audio_asset_id, video_path, dry_run_request, qa_issues, revisions,
                    script_approved, driving_video_path, character_image_path, engine,
-                   environment_id, camera_note, hook_type, tone, passion, own_hook,
+                   environment_id, camera_note, hook_type, tone, passion, own_hook, error,
                    created_at, updated_at)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 cols,
             )
             conn.commit()
@@ -237,6 +240,7 @@ class VideoJobStore:
             tone=g("tone", "") or "",
             passion=g("passion", 0.5) if g("passion", 0.5) is not None else 0.5,
             own_hook=g("own_hook", "") or "",
+            error=g("error", "") or "",
             created_at=row["created_at"], updated_at=row["updated_at"],
         )
 
@@ -538,20 +542,25 @@ def render_job(job_id: int, audio_path: Path | str | None = None,
 
     job.status = "rendering"
     store.save(job)
+    err = ""
     try:
         if is_transfer:
             result = provider.transfer_performance(req)
         else:
             result = provider.render(req)
+        err = getattr(provider, "last_error", "") or ""
     except Exception as e:
         logger.error("Produce failed for job %d: %s", job.id, e)
         result = None
+        err = str(e)[:250]
 
     if result:
         job.video_path = str(result)
         job.status = "ready"
+        job.error = ""
     else:
         job.status = "failed"
+        job.error = err or "Render failed (no detail returned)."
     job.id = store.save(job)
     return job
 

@@ -76,6 +76,7 @@ class AvatarProvider(ABC):
     supports_voice_clone: bool = False
     supports_audio_upload: bool = False
     supports_performance_transfer: bool = False
+    last_error: str = ""              # set by render()/transfer() on failure
 
     @abstractmethod
     def is_configured(self) -> bool:
@@ -561,6 +562,7 @@ class HeyGenProvider(AvatarProvider):
                 vid = (r.json().get("data", {}) or {}).get("video_id")
             return vid, r.status_code, r.text[:300]
 
+        self.last_error = ""
         try:
             video_id, code, body = _submit(expressive_character)
             if not video_id and code == 400:
@@ -568,14 +570,19 @@ class HeyGenProvider(AvatarProvider):
                 logger.info("HeyGen 400 with expressive fields (%s) — retrying plain", body)
                 video_id, code, body = _submit(base_character)
             if not video_id:
+                self.last_error = f"HeyGen submit {code}: {body}"
                 logger.error("HeyGen returned no video_id (%s): %s", code, body)
                 return None
             logger.info("HeyGen render submitted: %s", video_id)
 
             if req.callback_url:
                 return None  # webhook path — caller handles completion
-            return self._poll_and_download(video_id, req.output_path)
+            result = self._poll_and_download(video_id, req.output_path)
+            if not result and not self.last_error:
+                self.last_error = "HeyGen render didn't complete (timeout or failed status)."
+            return result
         except Exception as e:
+            self.last_error = f"HeyGen render exception: {e}"
             logger.error("HeyGen render failed: %s", e)
             return None
 
@@ -606,6 +613,7 @@ class HeyGenProvider(AvatarProvider):
                     logger.info("HeyGen video saved to %s", output_path)
                     return output_path
                 if status == "failed":
+                    self.last_error = f"HeyGen job failed: {str(sd.get('error') or sd)[:250]}"
                     logger.error("HeyGen generation failed: %s", sd)
                     return None
             except Exception as e:

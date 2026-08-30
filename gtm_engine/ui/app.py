@@ -811,6 +811,10 @@ def _produce_review_panel(idea):
                     render_job(job.id, audio_path=audio_path, driving_video_path=driving_path)
                     st.rerun()
 
+        if job.status == "failed" and job.error:
+            st.error(f"Render failed: {job.error}")
+            st.caption("Fix the cause (often the avatar id / photo-avatar toggle or voice), "
+                       "then tap Generate again. Paste this to the builder if unsure.")
         if job.status in ("needs_provider", "needs_input") and job.dry_run_request:
             st.info("Here's exactly what will run once the provider + inputs are set:")
             st.code(job.dry_run_request, language="json")
