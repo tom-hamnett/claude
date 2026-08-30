@@ -580,10 +580,16 @@ class HeyGenProvider(AvatarProvider):
         dims = {"9:16": (720, 1280), "16:9": (1280, 720), "1:1": (720, 720)}
         width, height = dims.get(req.aspect_ratio, (720, 1280))
 
-        # Avatar IV (expressive) — an uploaded photo's image_key OR an existing
-        # Avatar IV avatar/look (the "tp:" pasted Copy ID). Both use the av4 path.
-        if req.image_key or req.avatar_id.startswith("tp:"):
+        # Avatar IV (expressive) needs an uploaded photo's image_key. HeyGen's API
+        # will NOT drive a trained avatar/look by id — so a "tp:" look with no
+        # image_key can't render; tell the user to add a photo rather than 400.
+        if req.image_key:
             return self._render_av4(req, width, height)
+        if req.avatar_id.startswith("tp:"):
+            self.last_error = ("Avatar IV needs an uploaded photo. HeyGen's API can't render "
+                               "from a trained avatar/look id — in Cast & Voice, use "
+                               "'⭐ Avatar IV — upload a photo' (a photo of your presenter).")
+            return None
 
         # Voice block: audio upload takes precedence over TTS (mutually exclusive).
         if req.audio_asset_id:
