@@ -527,7 +527,8 @@ class HeyGenProvider(AvatarProvider):
             return None
 
     def _render_av4(self, req: "RenderRequest", width: int, height: int) -> "Path | None":
-        """Avatar IV (expressive) render from an uploaded photo's image_key."""
+        """Avatar IV (expressive) render — from either an uploaded photo's
+        image_key OR an existing Avatar IV avatar/look you already built."""
         import httpx
         self.last_error = ""
         voice_id = req.voice_id
@@ -535,11 +536,15 @@ class HeyGenProvider(AvatarProvider):
             voices = self.list_voices()
             voice_id = voices[0]["id"] if voices else ""
         payload = {
-            "image_key": req.image_key,
             "script": req.script,
             "voice_id": voice_id,
             "dimension": {"width": width, "height": height},
         }
+        if req.image_key:
+            payload["image_key"] = req.image_key
+        elif req.avatar_id.startswith("tp:"):
+            # Reference an EXISTING Avatar IV avatar/look (the id you copied).
+            payload["talking_photo_id"] = req.avatar_id[3:]
         if req.motion_prompt:
             payload["custom_motion_prompt"] = req.motion_prompt
             payload["enhance_custom_motion_prompt"] = True
@@ -575,8 +580,9 @@ class HeyGenProvider(AvatarProvider):
         dims = {"9:16": (720, 1280), "16:9": (1280, 720), "1:1": (720, 720)}
         width, height = dims.get(req.aspect_ratio, (720, 1280))
 
-        # Avatar IV (expressive) — driven by an uploaded photo's image_key.
-        if req.image_key:
+        # Avatar IV (expressive) — an uploaded photo's image_key OR an existing
+        # Avatar IV avatar/look (the "tp:" pasted Copy ID). Both use the av4 path.
+        if req.image_key or req.avatar_id.startswith("tp:"):
             return self._render_av4(req, width, height)
 
         # Voice block: audio upload takes precedence over TTS (mutually exclusive).
