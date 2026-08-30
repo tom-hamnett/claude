@@ -372,6 +372,54 @@ def describe_look(image_path) -> str:
         return ""
 
 
+def qa_video(video_path, context: str = "") -> dict:
+    """Watch a finished reel with Gemini and return a structured QA verdict.
+
+    Gemini reads video natively (frames + audio), so this catches what a text
+    check can't: lip-sync, framing, caption legibility, pacing, glitches, and
+    whether the reel actually lands its hook. Advisory — returns issues, never
+    blocks. Returns {} if unavailable (no key / upload failure)."""
+    if not GOOGLE_API_KEY:
+        return {}
+    p = Path(video_path)
+    if not p.exists():
+        return {}
+    try:
+        client = _get_client()
+        f = client.files.upload(file=str(p))
+        # Video files need processing before they can be read — poll to ACTIVE.
+        waited = 0
+        while getattr(f, "state", None) and str(f.state).endswith("PROCESSING") and waited < 120:
+            time.sleep(3)
+            waited += 3
+            f = client.files.get(name=f.name)
+        if getattr(f, "state", None) and str(f.state).endswith("FAILED"):
+            return {}
+        prompt = (
+            "You are a sharp social-video QA reviewer. Watch this vertical reel and judge it "
+            "as a scroll-stopping social post. " + (f"Context: {context}. " if context else "") +
+            "Check: (1) does the first ~2s hook actually stop the scroll; (2) lip-sync / does the "
+            "presenter look natural; (3) framing & headroom; (4) are on-screen captions legible and "
+            "well-timed; (5) pacing / dead air; (6) any visual glitch or artefact; (7) does it land "
+            "one clear takeaway. Score 0-100 for overall readiness.\n"
+            'Return ONLY JSON: {"score": <0-100>, "verdict": "<one line>", '
+            '"issues": [{"severity":"high|medium|low","area":"<hook|sync|framing|captions|pacing|glitch|payoff>","note":"<what & how to fix>"}], '
+            '"keep": "<one thing that works>"}'
+        )
+        r = client.models.generate_content(model="gemini-2.5-flash", contents=[f, prompt])
+        raw = (getattr(r, "text", "") or "").strip()
+        s, e = raw.find("{"), raw.rfind("}")
+        data = json.loads(raw[s : e + 1]) if s != -1 and e != -1 else {}
+        try:
+            client.files.delete(name=f.name)   # tidy up the uploaded copy
+        except Exception:
+            pass
+        return data if isinstance(data, dict) else {}
+    except Exception as ex:
+        logger.error("qa_video failed: %s", ex)
+        return {}
+
+
 @retry(wait=wait_exponential(min=2, max=30), stop=stop_after_attempt(3))
 def generate_image(
     prompt: str,

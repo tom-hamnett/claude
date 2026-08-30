@@ -296,3 +296,47 @@ def test_auto_assemble_is_resumable(db, tmp_path, monkeypatch):
     paths2 = {k: v["path"] for k, v in json.loads(out2.assembly_json)["segments"].items()}
     assert paths1 == paths2  # cached, not rebuilt with new hashes
     assert out2.status == "ready"
+
+
+def test_auto_sharpen_stops_when_dna_passes(db, monkeypatch):
+    """If the script already passes the DNA check, no rewrite rounds run."""
+    from gtm_engine.producer import ProducerBrief, ProducerBriefLibrary
+    ProducerBriefLibrary().save(ProducerBrief(
+        idea_id=1, spoken_script="Your framework is a problem. PRISM is the answer. See it run."))
+    store = VideoJobStore()
+    job = VideoJob(idea_id=1, hook_text="Your framework is a problem.",
+                   bookend_text="See it run.")
+    job.id = store.save(job)
+    # DNA passes (hook, problem-word, bookend, product PRISM, no pitchy) -> product must match
+    monkeypatch.setattr("gtm_engine.ideas.IdeaBank.get",
+                        lambda self, i: type("I", (), {"product": "PRISM"})())
+    called = {"n": 0}
+    monkeypatch.setattr(video_mod, "regenerate_script",
+                        lambda *a, **k: called.__setitem__("n", called["n"] + 1))
+    out, rounds = video_mod.auto_sharpen(job.id)
+    assert called["n"] == 0            # never had to rewrite
+    assert rounds and rounds[-1]["fixed"] is True
+
+
+def test_auto_sharpen_rewrites_until_max_rounds(db, monkeypatch):
+    """When weak points persist, it rewrites up to max_rounds and logs each pass."""
+    from gtm_engine.producer import ProducerBrief, ProducerBriefLibrary
+    ProducerBriefLibrary().save(ProducerBrief(idea_id=1, spoken_script="flat copy"))
+    store = VideoJobStore()
+    job = VideoJob(idea_id=1, hook_text="", bookend_text="")  # weak: no hook/payoff
+    job.id = store.save(job)
+    monkeypatch.setattr("gtm_engine.ideas.IdeaBank.get",
+                        lambda self, i: type("I", (), {"product": "PRISM"})())
+    calls = {"n": 0}
+    monkeypatch.setattr(video_mod, "regenerate_script",
+                        lambda *a, **k: calls.__setitem__("n", calls["n"] + 1))
+    out, rounds = video_mod.auto_sharpen(job.id, max_rounds=3)
+    assert calls["n"] == 3              # rewrote every round (still weak)
+    assert len(rounds) == 3
+    assert out.revisions[-1]["change_type"] == "auto_sharpen"
+
+
+def test_qa_video_no_key_returns_empty(monkeypatch):
+    import gtm_engine.utils.media as media
+    monkeypatch.setattr(media, "GOOGLE_API_KEY", "")
+    assert media.qa_video("/nonexistent.mp4") == {}

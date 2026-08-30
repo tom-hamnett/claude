@@ -880,6 +880,25 @@ def _produce_review_panel(idea):
                                       passion=passion, own_hook=own_hook,
                                       look_id=(look_pick if char_looks else None))
 
+            # ── Auto-sharpen: Claude reviews + rewrites until the DNA check passes ──
+            if st.button("✨ Auto-sharpen (Claude reviews & rewrites until it passes)",
+                         key=f"sharp_{idea.id}", use_container_width=True):
+                from gtm_engine.video import auto_sharpen
+                _save()
+                with st.spinner("Claude is reviewing and sharpening the script…"):
+                    _, rounds = auto_sharpen(job.id)
+                passed = bool(rounds and rounds[-1]["fixed"])
+                fixed_labels = sorted({lbl for rd in rounds for lbl in rd["weak_before"]})
+                if passed and not fixed_labels:
+                    st.success("Already passed the content check — no changes needed.")
+                elif passed:
+                    st.success(f"Sharpened in {len(rounds)} round(s). Fixed: "
+                               + ", ".join(fixed_labels))
+                else:
+                    st.info(f"Improved over {len(rounds)} round(s); a couple of points are "
+                            "judgment calls — review and approve, or refine further.")
+                st.rerun()
+
             rc1, rc2, rc3 = st.columns(3)
             with rc1:
                 if st.button("Save", key=f"savdir_{idea.id}", use_container_width=True):
@@ -951,6 +970,32 @@ def _produce_review_panel(idea):
                 st.image(job.video_path, caption="Preview")
             else:
                 st.video(job.video_path)
+
+            # ── Gemini watches the finished reel (video-native QA) ──
+            from gtm_engine.config import GOOGLE_API_KEY
+            if GOOGLE_API_KEY and not job.video_path.lower().endswith((".png", ".jpg", ".jpeg")):
+                if st.button("🔍 QA this reel (Gemini watches it)", key=f"vqa_{idea.id}",
+                             use_container_width=True):
+                    from gtm_engine.utils.media import qa_video
+                    ctx = f"Product: {idea.product}. Hook: {job.hook_text}" if idea.product else job.hook_text
+                    with st.spinner("Gemini is watching the reel…"):
+                        verdict = qa_video(job.video_path, context=ctx)
+                    if not verdict:
+                        st.warning("Couldn't complete video QA (check the Google key / try again).")
+                    else:
+                        sc = verdict.get("score")
+                        col = C["green"] if (sc or 0) >= 75 else (C["gold"] if (sc or 0) >= 55 else C["hot"])
+                        st.markdown(f"<span style='color:{col};font-weight:600;'>Score {sc}/100</span> — "
+                                    f"{verdict.get('verdict','')}", unsafe_allow_html=True)
+                        for iss in verdict.get("issues", []):
+                            sev = iss.get("severity", "low")
+                            ic = {"high": C["hot"], "medium": C["gold"]}.get(sev, C["muted"])
+                            st.markdown(f"<span style='color:{ic};font-size:0.8rem;'>● "
+                                        f"<strong>{iss.get('area','')}</strong> — {iss.get('note','')}</span>",
+                                        unsafe_allow_html=True)
+                        if verdict.get("keep"):
+                            st.caption("Keep: " + verdict["keep"])
+
             note = st.text_area("Review note (free text)", key=f"vjn2_{idea.id}", height=60,
                                 placeholder="e.g. 'redo with a punchier hook'")
             if st.button("Request revision", key=f"vjrev2_{idea.id}", use_container_width=True,

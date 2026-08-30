@@ -493,6 +493,63 @@ def regenerate_script(job_id: int, refinement: str = "") -> VideoJob | None:
     return create_job_from_brief(job.idea_id)
 
 
+def auto_sharpen(job_id: int, max_rounds: int = 3) -> tuple["VideoJob | None", list[dict]]:
+    """Claude-driven pre-render self-review loop. Repeatedly evaluates the 5-point
+    content DNA and rewrites the script to fix weak points, until it passes (or
+    max_rounds is hit). Cheap (text only) — runs before any render is spent.
+
+    Returns (job, rounds) where rounds is a per-pass log:
+      [{"round", "weak_before":[labels], "fixed":bool, "note":<refinement sent>}]
+    """
+    from gtm_engine.hooks import evaluate_dna
+    from gtm_engine.producer import ProducerBriefLibrary
+
+    store = VideoJobStore()
+    job = store.get(job_id)
+    if not job:
+        return None, []
+
+    product = ""
+    try:
+        from gtm_engine.ideas import IdeaBank
+        idea = IdeaBank().get(job.idea_id)
+        product = (idea.product if idea else "") or ""
+    except Exception:
+        product = ""
+
+    rounds: list[dict] = []
+    for r in range(max_rounds):
+        brief = ProducerBriefLibrary().get_for_idea(job.idea_id)
+        full_script = (brief.spoken_script if brief else job.spoken_script) or job.spoken_script
+        dna = evaluate_dna(job.hook_text, job.bookend_text, full_script, product)
+        weak = [c for c in dna if not c["ok"]]
+        if not weak:
+            rounds.append({"round": r + 1, "weak_before": [], "fixed": True, "note": ""})
+            break
+        # Turn the weak points into a precise rewrite instruction for Claude.
+        fixes = "; ".join(f"{c['label']}: {c['note']}" for c in weak)
+        note = ("Sharpen the script so every content-DNA point is satisfied. "
+                f"Specifically fix — {fixes}. Keep it punchy and on-brand; "
+                "weave the product in once, lightly; keep the CTA soft.")
+        rounds.append({"round": r + 1, "weak_before": [c["label"] for c in weak],
+                       "fixed": False, "note": note})
+        regenerate_script(job.id, refinement=note)
+        job = store.get(job.id)
+        if not job:
+            break
+
+    if job:
+        job.revisions.append({
+            "note": "Auto-sharpen (Claude pre-render review)",
+            "change_type": "auto_sharpen",
+            "rationale": f"{len(rounds)} round(s); "
+                         f"{'passed' if rounds and rounds[-1]['fixed'] else 'best effort'}.",
+            "at": datetime.now(timezone.utc).isoformat(),
+        })
+        job.id = store.save(job)
+    return store.get(job.id) if job else None, rounds
+
+
 def attach_finished_video(job_id: int, video_bytes: bytes, filename: str) -> VideoJob | None:
     """Attach a video the user produced elsewhere (e.g. HeyGen app) to the job."""
     store = VideoJobStore()
