@@ -578,8 +578,16 @@ def _render_master_talkinghead(job, ctx: dict, segments: dict, out: Path) -> Pat
     if not ctx.get("image_key"):
         return None
     # Full narration = every segment's spoken line, in order (fallback to the job).
-    parts = [(segments.get(s, {}) or {}).get("spoken_text", "").strip() for s in SEG_ORDER]
-    full = " ".join(p for p in parts if p).strip() or job.spoken_script
+    # End each beat on terminal punctuation and break to a new line so the delivery
+    # PAUSES between thoughts instead of rolling straight through.
+    parts = []
+    for s in SEG_ORDER:
+        p = (segments.get(s, {}) or {}).get("spoken_text", "").strip()
+        if p:
+            if p[-1] not in ".!?…":
+                p += "."
+            parts.append(p)
+    full = "\n".join(parts).strip() or job.spoken_script
     req = RenderRequest(
         script=full, avatar_id=job.avatar_id, output_path=out.with_name(out.stem + "_raw.mp4"),
         voice_id=ctx.get("voice_id") or None, background=ctx.get("background", "#0a0a0f"),
@@ -593,25 +601,32 @@ def _render_master_talkinghead(job, ctx: dict, segments: dict, out: Path) -> Pat
 
 
 def _middle_cutaway(segments: dict, ctx: dict, seconds: float, out: Path,
-                    cinematic_middle: bool, include_broll: bool) -> tuple[Path | None, str]:
-    """Build ONE cutaway clip (cinematic YOU, else b-roll) for the middle window."""
+                    cinematic_middle: bool, include_broll: bool) -> tuple[Path | None, str, str]:
+    """Build ONE cutaway clip (cinematic YOU, else b-roll) for the middle window.
+    Returns (clip_or_None, method, error) — error explains why nothing was made."""
+    from gtm_engine.avatar import get_provider
     mids = [segments.get(s, {}) or {} for s in ("tension", "pivot", "proof")]
     vd = " ".join((m.get("visual_direction", "") or "").strip() for m in mids).strip()
     seg = {"visual_direction": vd, "text_overlay": "", "duration_seconds": max(4, int(seconds))}
     raw = out.with_name(out.stem + "_src.mp4")
-    if cinematic_middle and ctx.get("cinematic_look_ids"):
-        clip = _cinematic_segment(seg, ctx, raw)
-        if clip:
-            fit = _fit_clip(Path(clip), seconds, out)
-            if fit:
-                return fit, "cinematic"
+    err = ""
+    if cinematic_middle:
+        if not ctx.get("cinematic_look_ids"):
+            err = "Cinematic on but no avatar look id resolved (set the group id in Cast & Voice)."
+        else:
+            clip = _cinematic_segment(seg, ctx, raw)
+            if clip and _fit_clip(Path(clip), seconds, out):
+                return out, "cinematic", ""
+            err = getattr(get_provider(ctx["provider"]), "last_error", "") or \
+                "Cinematic render failed."
     if include_broll:
         clip = _broll_segment(seg, raw, narrate=False)
-        if clip:
-            fit = _fit_clip(Path(clip), seconds, out)
-            if fit:
-                return fit, "b-roll"
-    return None, ""
+        if clip and _fit_clip(Path(clip), seconds, out):
+            return out, "b-roll", ""
+        err = err or "B-roll (Veo) unavailable or failed — check the Google key."
+    if not cinematic_middle and not include_broll:
+        err = "No cutaway source enabled — turn on Cinematic YOU or B-roll."
+    return None, "", err
 
 
 def assemble_continuous(job_id: int, include_broll: bool = True, cinematic_middle: bool = False,
@@ -655,8 +670,8 @@ def assemble_continuous(job_id: int, include_broll: bool = True, cinematic_middl
     method = "talking-head (full)"
     if on_progress:
         on_progress(2, 4, "Filming your cutaway")
-    cutaway, cmethod = _middle_cutaway(segments, ctx, t2 - t1, sd / "cutaway.mp4",
-                                       cinematic_middle, include_broll)
+    cutaway, cmethod, cut_err = _middle_cutaway(segments, ctx, t2 - t1, sd / "cutaway.mp4",
+                                                cinematic_middle, include_broll)
     if cutaway:
         if on_progress:
             on_progress(3, 4, "Layering the cutaway over your voice")
@@ -664,6 +679,8 @@ def assemble_continuous(job_id: int, include_broll: bool = True, cinematic_middl
         if overlaid:
             final_src = overlaid
             method = f"talking-head + {cmethod} cutaway"
+        else:
+            cut_err = "Couldn't overlay the cutaway onto your take."
 
     if on_progress:
         on_progress(4, 4, "Finishing")
@@ -675,6 +692,10 @@ def assemble_continuous(job_id: int, include_broll: bool = True, cinematic_middl
     job.error = ""
     state = _load_state(job)
     state["methods"] = {"reel": method, "duration": round(dur, 1)}
+    if cut_err and cutaway is None:
+        state["cutaway_error"] = cut_err
+    else:
+        state.pop("cutaway_error", None)
     job.assembly_json = json.dumps(state)
     job.id = store.save(job)
     return store.get(job.id)

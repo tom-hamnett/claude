@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-01b · continuous voice + cinematic cutaway"
+BUILD_TAG = "2026-09-01c · cutaway diagnostics + pause cadence"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -773,9 +773,17 @@ def _auto_assemble_ui(idea, job):
             dur = methods.get("duration")
             st.caption(f"Built as — **{methods['reel']}**"
                        + (f"  ·  ~{dur:g}s" if dur else ""))
+            _cut_err = ""
+            try:
+                _cut_err = (_json.loads(job.assembly_json or "{}") or {}).get("cutaway_error", "")
+            except Exception:
+                _cut_err = ""
             if "talking-head (full)" == methods.get("reel"):
-                st.caption("Voice-over only (no cutaway this time). Turn on **Cinematic YOU** or "
-                           "**B-roll** to layer motion over the middle.")
+                if _cut_err:
+                    st.warning(f"No cutaway this time — {_cut_err}")
+                else:
+                    st.caption("Voice-over only (no cutaway this time). Turn on **Cinematic YOU** "
+                               "or **B-roll** to layer motion over the middle.")
         else:  # legacy per-segment model
             icon = {"avatar": "🧑 presenter", "cinematic": "🎬 cinematic you",
                     "b-roll": "🎞 b-roll", "card": "🅰 card"}

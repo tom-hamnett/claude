@@ -414,7 +414,7 @@ def test_continuous_overlays_cutaway_over_master(db, tmp_path, monkeypatch):
         subprocess.run([ff, "-y", "-f", "lavfi", "-i", f"color=c=red:s=720x1280:d={seconds}:r=30",
                         "-c:v", "libx264", "-pix_fmt", "yuv420p", "-an", str(out)],
                        capture_output=True)
-        return out, "cinematic"
+        return out, "cinematic", ""
     monkeypatch.setattr(asm, "_render_master_talkinghead", fake_master)
     monkeypatch.setattr(asm, "_middle_cutaway", fake_cut)
     segs = {s: {"spoken_text": "word word word", "text_overlay": "x", "duration_seconds": 4}
