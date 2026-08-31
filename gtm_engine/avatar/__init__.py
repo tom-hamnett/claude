@@ -66,6 +66,7 @@ class RenderRequest:
     aspect_ratio: str = "9:16"
     motion_prompt: str = ""
     expressiveness: float = 0.5              # 0..1
+    hd: bool = False                          # 1080p (more credits) vs 720p
     callback_url: str | None = None
 
 
@@ -639,10 +640,12 @@ class HeyGenProvider(AvatarProvider):
 
         import httpx
 
-        # 720p is the known-good HeyGen render size; the assembler upscales the
-        # canvas to 1080 and the high-quality x264 pass keeps it clean.
-        dims = {"9:16": (720, 1280), "16:9": (1280, 720), "1:1": (720, 720)}
-        width, height = dims.get(req.aspect_ratio, (720, 1280))
+        # 720p by default (cheaper credits); HD renders at full 1080p.
+        if req.hd:
+            dims = {"9:16": (1080, 1920), "16:9": (1920, 1080), "1:1": (1080, 1080)}
+        else:
+            dims = {"9:16": (720, 1280), "16:9": (1280, 720), "1:1": (720, 720)}
+        width, height = dims.get(req.aspect_ratio, dims["9:16"])
 
         # Full automation with the user's OWN trained avatar: a HeyGen template
         # (avatar/look/style baked in; we fill the script). Preferred path.

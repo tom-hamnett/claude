@@ -650,8 +650,10 @@ def _draft_master(job, ctx: dict, segments: dict, out: Path) -> Path | None:
                           audio=(vo if vo and Path(vo).exists() else None))
 
 
-def _render_master_talkinghead(job, ctx: dict, segments: dict, out: Path) -> Path | None:
-    """Render the FULL script as one continuous talking-head take (your voice)."""
+def _render_master_talkinghead(job, ctx: dict, segments: dict, out: Path,
+                               hd: bool = False) -> Path | None:
+    """Render the FULL script as one continuous talking-head take (your voice).
+    hd=True renders at 1080p (more HeyGen credits) instead of 720p."""
     from gtm_engine.avatar import RenderRequest, get_provider
     provider = get_provider(ctx["provider"])
     if not getattr(provider, "is_configured", lambda: False)():
@@ -663,7 +665,7 @@ def _render_master_talkinghead(job, ctx: dict, segments: dict, out: Path) -> Pat
         script=full, avatar_id=job.avatar_id, output_path=out.with_name(out.stem + "_raw.mp4"),
         voice_id=ctx.get("voice_id") or None, background=ctx.get("background", "#0a0a0f"),
         aspect_ratio="9:16", motion_prompt=ctx.get("motion_prompt", ""),
-        expressiveness=ctx.get("expressiveness", 0.5), image_key=ctx["image_key"],
+        expressiveness=ctx.get("expressiveness", 0.5), image_key=ctx["image_key"], hd=hd,
     )
     result = provider.render(req)
     if not result or not Path(result).exists():
@@ -938,7 +940,7 @@ def _shot_windows(shots: list[dict], dur: float, lead: float = 0.3) -> list[tupl
 
 
 def assemble_choreographed(job_id: int, target_seconds: int = 25, draft: bool = False,
-                           on_progress=None):
+                           hd: bool = False, on_progress=None):
     """The Reel Choreography Engine: one continuous take + a shot-by-shot timeline
     of presenter / your screenshots / auto-stock / cards, cut to the script.
     Uses the job's saved shot_list, or choreographs one with Claude."""
@@ -964,12 +966,12 @@ def assemble_choreographed(job_id: int, target_seconds: int = 25, draft: bool = 
         master = _draft_master(job, ctx, segments, sd / "draft_master.mp4")
     else:
         msig = _hash(full, ctx.get("voice_id", ""), ctx.get("image_key", ""),
-                     ctx.get("avatar_id", ""), ctx.get("motion_prompt", ""))
+                     ctx.get("avatar_id", ""), ctx.get("motion_prompt", ""), str(hd))
         mc = state.get("master_cache") or {}
         if mc.get("sig") == msig and Path(mc.get("path", "")).exists():
             master = Path(mc["path"])
         else:
-            master = _render_master_talkinghead(job, ctx, segments, sd / "master.mp4")
+            master = _render_master_talkinghead(job, ctx, segments, sd / "master.mp4", hd=hd)
             if master:
                 state["master_cache"] = {"sig": msig, "path": str(master)}
                 _save_state(job, state)
@@ -1056,7 +1058,7 @@ def assemble_choreographed(job_id: int, target_seconds: int = 25, draft: bool = 
     state = _load_state(job)
     state.pop("master_error", None)
     state["methods"] = {"reel": method, "duration": round(dur, 1)}
-    state["settings"] = {"choreographed": True, "draft": draft}
+    state["settings"] = {"choreographed": True, "draft": draft, "hd": hd}
     job.assembly_json = json.dumps(state)
     job.id = store.save(job)
     return store.get(job.id)
@@ -1099,9 +1101,10 @@ def _mark(job_id: int, status: str, error: str = "") -> None:
 
 def start_assemble(job_id: int, include_broll: bool = True,
                    narrate_middle: bool = False, cinematic_middle: bool = False,
-                   draft: bool = False) -> None:
+                   draft: bool = False, hd: bool = False) -> None:
     """Kick off a full-reel assembly on a background thread. No-op if one is
-    already running for this job. Returns immediately. draft=True = free preview."""
+    already running for this job. Returns immediately. draft=True = free preview;
+    hd=True renders the presenter at 1080p (more HeyGen credits)."""
     if is_running(job_id):
         return
 
@@ -1114,7 +1117,7 @@ def start_assemble(job_id: int, include_broll: bool = True,
         try:
             # Choreographed reel by default: one take + a shot-by-shot timeline of
             # presenter / your screenshots / stock / cards, cut to the script.
-            assemble_choreographed(job_id, draft=draft, on_progress=_prog)
+            assemble_choreographed(job_id, draft=draft, hd=hd, on_progress=_prog)
             try:
                 from gtm_engine.persistence import backup_quietly
                 backup_quietly()
@@ -1145,7 +1148,8 @@ def start_reassemble(job_id: int) -> None:
     except Exception:
         s = {}
     start_assemble(job_id, include_broll=bool(s.get("include_broll", False)),
-                   cinematic_middle=bool(s.get("cinematic_middle", True)))
+                   cinematic_middle=bool(s.get("cinematic_middle", True)),
+                   hd=bool(s.get("hd", False)))
 
 
 def save_qa(job_id: int, verdict: dict) -> None:

@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-05 · 1080p again, batched compositor (quality + safe)"
+BUILD_TAG = "2026-09-05b · HD presenter toggle (true 1080p HeyGen)"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -794,11 +794,16 @@ def _auto_assemble_ui(idea, job):
     st.caption("Draft = your script in a stand-in AI voice over your look, so you can nail the "
                "words, pacing and length **for free** before spending any HeyGen credits.")
 
+    hd = st.toggle(
+        "🎞 HD presenter — render you at 1080p (~2× HeyGen credits)",
+        value=False, key=f"hd_{idea.id}",
+        help="Off (720p): cheaper, fine for most. On: HeyGen renders your face at full "
+             "1080p to match your screenshots — sharper, but roughly double the credits per take.",
+    )
     lbl = "✨ Auto-assemble full reel (spends HeyGen credits)" if not job.video_path \
         else "✨ Re-assemble reel (spends HeyGen credits)"
     if st.button(lbl, key=f"asm_{idea.id}", use_container_width=True, type="primary"):
-        start_assemble(job.id, include_broll=broll, narrate_middle=narrate,
-                       cinematic_middle=cinematic)
+        start_assemble(job.id, draft=False, hd=hd)
         st.rerun()
 
     methods = {}
@@ -852,7 +857,7 @@ def _auto_assemble_ui(idea, job):
 def _shot_list_editor(idea, job):
     """Editable choreography table. Wrapped so no widget quirk can crash the app."""
     from gtm_engine.video import set_shot_list
-    from gtm_engine.video.assembler import start_assemble
+    from gtm_engine.video.assembler import start_reassemble
     with st.expander(f"🎬 Shot list — {len(job.shot_list)} shots (edit & re-cut, free)",
                      expanded=False):
         st.caption("Each row is a shot cut to your script. Change the visual, caption or stock "
@@ -888,13 +893,13 @@ def _shot_list_editor(idea, job):
                                 "media_index": (mnum if (vis == "screenshot" and mnum >= 0) else None),
                                 "caption": r.get("caption", "") or ""})
                 set_shot_list(job.id, new)
-                start_assemble(job.id)
+                start_reassemble(job.id)
                 st.rerun()
         with b2:
             if st.button("↻ Re-choreograph from script", key=f"shotredo_{idea.id}",
                          use_container_width=True):
                 set_shot_list(job.id, [])
-                start_assemble(job.id)
+                start_reassemble(job.id)
                 st.rerun()
 
 

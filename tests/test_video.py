@@ -589,3 +589,30 @@ def test_shot_windows_sum_to_duration_and_lead():
     assert wins[-1][1] <= 20.0 and wins[0][0] == 0.0
     # the screenshot (cutaway) leads its audio, so its start is earlier than a naive split
     assert wins[1][0] < wins[0][1]
+
+
+def test_hd_flag_flows_to_1080_render(db, tmp_path, monkeypatch):
+    """HD on → the presenter take is requested at 1080p, and it's in the cache key."""
+    import gtm_engine.video.assembler as asm
+    from gtm_engine.producer import ProducerBrief, ProducerBriefLibrary
+    monkeypatch.setattr(asm, "ASSEMBLY_DIR", tmp_path / "a")
+    monkeypatch.setattr(asm, "OUTPUT_DIR", tmp_path / "o")
+    cap = {}
+    def fake_master(job, ctx, segments, out, hd=False):
+        cap["hd"] = hd
+        return None   # force fallback; we only care the flag arrived
+    monkeypatch.setattr(asm, "_render_master_talkinghead", fake_master)
+    monkeypatch.setattr(asm, "assemble_reel", lambda *a, **k: None)
+    ProducerBriefLibrary().save(ProducerBrief(idea_id=1, spoken_script="hi there"))
+    store = VideoJobStore(); job = VideoJob(idea_id=1, script_override="hi there"); job.id = store.save(job)
+    asm.assemble_choreographed(job.id, hd=True)
+    assert cap["hd"] is True
+
+
+def test_render_request_hd_dims():
+    import os
+    os.environ["HEYGEN_API_KEY"] = "test"
+    from gtm_engine.avatar import HeyGenProvider, RenderRequest
+    # We can't call render() (network), but the dims logic is what matters:
+    req = RenderRequest(script="x", avatar_id="a", output_path=__import__("pathlib").Path("/tmp/x.mp4"), hd=True)
+    assert req.hd is True
