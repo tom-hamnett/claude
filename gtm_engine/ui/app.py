@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-01e · surface the real cinematic error"
+BUILD_TAG = "2026-09-01f · cinematic default on + credit top-up link"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -732,22 +732,24 @@ def _auto_assemble_ui(idea, job):
             "or two of The Analyst. That gives the tool the image it needs, and the reel will "
             "render in your face and your voice.")
 
-    broll = st.toggle(
-        "Cinematic B-roll for the middle beats (Veo — ~£1–2 per reel)",
-        value=bool(GOOGLE_API_KEY), key=f"broll_{idea.id}",
-        help="On: AI-generated cinematic B-roll for the tension/pivot/proof beats. "
-             "Off (or no Google key): clean branded text/data cards — free.",
-    )
+    # Cinematic YOU (Seedance) is the primary middle — default ON when available.
     _has_cine = bool(_ch and (_ch.cinematic_look_ids or _ch.avatar_group_id))
     cinematic = st.toggle(
         "🎬 Cinematic YOU in the middle (Seedance — ~60 HeyGen credits/beat)",
-        value=False, key=f"cine_{idea.id}", disabled=not _has_cine,
-        help="Casts your REAL digital twin into the middle beats — full-body motion + camera, "
-             "instead of faceless B-roll. Runs on your HeyGen credits.",
+        value=_has_cine, key=f"cine_{idea.id}", disabled=not _has_cine,
+        help="Casts your REAL digital twin into the middle beats — full-body motion + camera. "
+             "Runs on your HeyGen API credits.",
     )
     if not _has_cine:
         st.caption("💡 To unlock cinematic **you** in the middle, set your avatar group id in "
                    "**Cast & Voice → Cinematic (Seedance)**.")
+    # Veo b-roll is the fallback — default OFF now that cinematic is primary.
+    broll = st.toggle(
+        "Faceless B-roll fallback (Veo — ~£1–2 per reel)",
+        value=False, key=f"broll_{idea.id}",
+        help="A faceless cinematic b-roll fallback for the middle if cinematic YOU is off or "
+             "fails. Off: the middle uses a clean branded card instead.",
+    )
     narrate = st.toggle(
         "Narrate the middle with an AI voice",
         value=False, key=f"narr_{idea.id}",
@@ -781,6 +783,11 @@ def _auto_assemble_ui(idea, job):
             if "talking-head (full)" == methods.get("reel"):
                 if _cut_err:
                     st.warning(f"No cutaway this time — {_cut_err}")
+                    if "credit" in _cut_err.lower():
+                        st.markdown("💳 **[Top up your HeyGen API credits ↗]"
+                                    "(https://app.heygen.com/settings/subscriptions)** "
+                                    "(cinematic needs *API* credits — a separate pool from the "
+                                    "app), then re-assemble.")
                 else:
                     st.caption("Voice-over only (no cutaway this time). Turn on **Cinematic YOU** "
                                "or **B-roll** to layer motion over the middle.")
@@ -1474,6 +1481,9 @@ def _render_settings():
                 f"<span style='color:{C['muted']};font-size:0.75rem;'>· {envname}</span></div>",
                 unsafe_allow_html=True,
             )
+        st.markdown("💳 **[Top up HeyGen API credits ↗](https://app.heygen.com/settings/subscriptions)** "
+                    "— cinematic (Seedance) and avatar renders spend *API* credits, a separate "
+                    "pool from the HeyGen app. If a render says *insufficient_credit*, top up here.")
         st.markdown("")
         if st.button("Test Anthropic (live call)", key="test_anthropic"):
             with st.spinner("Pinging Claude..."):
