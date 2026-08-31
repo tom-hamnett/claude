@@ -729,6 +729,105 @@ class HeyGenProvider(AvatarProvider):
             logger.error("HeyGen render failed: %s", e)
             return None
 
+    # ── Cinematic Avatar (Seedance / "Avatar Shots") ──────────────────────────
+    def list_avatar_looks(self, group_id: str) -> list[dict]:
+        """List the looks in an avatar group so the user can pick look ids for
+        cinematic renders. Best-effort — returns [] if the endpoint shape differs."""
+        if not self.is_configured() or not group_id:
+            return []
+        try:
+            import httpx
+            r = httpx.get(f"{self.API_V2}/avatar_group/{group_id}/avatars",
+                          headers=self._headers(), timeout=20)
+            r.raise_for_status()
+            data = r.json().get("data", {}) or {}
+            looks = data.get("avatar_list", data.get("avatars", [])) if isinstance(data, dict) else []
+            out = []
+            for lk in looks:
+                lid = lk.get("id") or lk.get("avatar_id") or lk.get("look_id") or ""
+                if lid:
+                    out.append({"id": lid, "name": lk.get("name") or lk.get("avatar_name") or lid,
+                                "preview_url": lk.get("image_url") or lk.get("preview_image_url", "")})
+            return out
+        except Exception as e:
+            logger.error("HeyGen list_avatar_looks failed: %s", e)
+            return []
+
+    def generate_cinematic(self, prompt: str, look_ids: list[str], output_path: Path,
+                           aspect_ratio: str = "9:16", duration: int | None = None,
+                           resolution: str = "720p", title: str = "Cinematic reel") -> Path | None:
+        """Seedance 'Avatar Shots' — cast your verified digital twin in a cinematic
+        scene (full-body motion + camera work). POST /v3/videos type cinematic_avatar.
+        Runs on your HeyGen key/credits. Returns the downloaded mp4, or None."""
+        import httpx
+        self.last_error = ""
+        if not self.is_configured():
+            raise AvatarProviderError("HEYGEN_API_KEY not set")
+        ids = [i for i in (look_ids or []) if i][:3]
+        if not ids:
+            self.last_error = "No avatar look id set for cinematic render."
+            return None
+        payload = {
+            "type": "cinematic_avatar",
+            "prompt": (prompt or "").strip()[:10000] or "A confident professional presenter, cinematic.",
+            "avatar_id": ids,
+            "aspect_ratio": aspect_ratio,
+            "resolution": resolution,
+            "title": title[:100],
+        }
+        if duration:
+            payload["duration"] = max(4, min(15, int(duration)))
+        else:
+            payload["auto_duration"] = True
+        try:
+            r = httpx.post(f"{self.API_V3}/videos", headers=self._headers(),
+                           json=payload, timeout=30)
+            if r.status_code not in (200, 201):
+                self.last_error = f"HeyGen cinematic {r.status_code}: {r.text[:250]}"
+                return None
+            vid = (r.json().get("data", {}) or {}).get("video_id")
+            if not vid:
+                self.last_error = f"cinematic returned no video_id: {r.text[:200]}"
+                return None
+            result = self._poll_v3(vid, output_path)
+            if not result and not self.last_error:
+                self.last_error = "cinematic render didn't complete (timeout/failed)."
+            return result
+        except Exception as e:
+            self.last_error = f"cinematic exception: {e}"
+            return None
+
+    def _poll_v3(self, video_id: str, output_path: Path, max_wait: int = 900) -> Path | None:
+        """Poll GET /v3/videos/{id} until completed, then download video_url."""
+        import httpx
+        waited = 0
+        while waited < max_wait:
+            time.sleep(10)
+            waited += 10
+            try:
+                sr = httpx.get(f"{self.API_V3}/videos/{video_id}",
+                               headers=self._headers(), timeout=20)
+                if sr.status_code != 200:
+                    continue
+                sd = sr.json().get("data", {}) or {}
+                status = sd.get("status", "")
+                logger.info("HeyGen cinematic status (%ds): %s", waited, status)
+                if status == "completed":
+                    url = sd.get("video_url") or sd.get("video_url_caption")
+                    if not url:
+                        return None
+                    output_path.parent.mkdir(parents=True, exist_ok=True)
+                    dr = httpx.get(url, follow_redirects=True, timeout=300)
+                    dr.raise_for_status()
+                    output_path.write_bytes(dr.content)
+                    return output_path
+                if status == "failed":
+                    self.last_error = f"cinematic failed: {str(sd.get('error') or sd)[:250]}"
+                    return None
+            except Exception as e:
+                logger.error("HeyGen v3 poll error: %s", e)
+        return None
+
     def _poll_and_download(self, video_id: str, output_path: Path,
                            max_wait: int = 600) -> Path | None:
         import httpx

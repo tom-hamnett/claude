@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-08-31e · voice/avatar save guard + prompts"
+BUILD_TAG = "2026-09-01 · cinematic YOU in the middle (Seedance)"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -738,6 +738,16 @@ def _auto_assemble_ui(idea, job):
         help="On: AI-generated cinematic B-roll for the tension/pivot/proof beats. "
              "Off (or no Google key): clean branded text/data cards — free.",
     )
+    _has_cine = bool(_ch and (_ch.cinematic_look_ids or _ch.avatar_group_id))
+    cinematic = st.toggle(
+        "🎬 Cinematic YOU in the middle (Seedance — ~60 HeyGen credits/beat)",
+        value=False, key=f"cine_{idea.id}", disabled=not _has_cine,
+        help="Casts your REAL digital twin into the middle beats — full-body motion + camera, "
+             "instead of faceless B-roll. Runs on your HeyGen credits.",
+    )
+    if not _has_cine:
+        st.caption("💡 To unlock cinematic **you** in the middle, set your avatar group id in "
+                   "**Cast & Voice → Cinematic (Seedance)**.")
     narrate = st.toggle(
         "Narrate the middle with an AI voice",
         value=False, key=f"narr_{idea.id}",
@@ -749,7 +759,8 @@ def _auto_assemble_ui(idea, job):
         st.caption("🔊 Voice: only **you** (hook & bookend). The middle is captioned, no AI voice.")
     lbl = "✨ Auto-assemble full reel" if not job.video_path else "✨ Re-assemble reel"
     if st.button(lbl, key=f"asm_{idea.id}", use_container_width=True, type="primary"):
-        start_assemble(job.id, include_broll=broll, narrate_middle=narrate)
+        start_assemble(job.id, include_broll=broll, narrate_middle=narrate,
+                       cinematic_middle=cinematic)
         st.rerun()
 
     methods = {}
@@ -758,7 +769,8 @@ def _auto_assemble_ui(idea, job):
     except Exception:
         methods = {}
     if methods:
-        icon = {"avatar": "🧑 presenter", "b-roll": "🎬 b-roll", "card": "🅰 card"}
+        icon = {"avatar": "🧑 presenter", "cinematic": "🎬 cinematic you",
+                "b-roll": "🎞 b-roll", "card": "🅰 card"}
         chips = "  ·  ".join(f"{k}: {icon.get(v, v)}" for k, v in methods.items())
         st.caption("Built from — " + chips)
         cards = [k for k, v in methods.items() if v == "card"]
@@ -1698,6 +1710,34 @@ def _render_settings():
         ch_expr = st.slider("Expressiveness", 0.0, 1.0, float(ch.expressiveness), 0.05, key="ch_expr")
         ch_default = st.checkbox("Make this the default character", value=ch.is_default, key="ch_def")
 
+        # ── Cinematic (Seedance / Avatar Shots) — your twin in motion ──
+        st.markdown("**🎬 Cinematic (Seedance) — your digital twin in full-body scenes**")
+        st.caption("Casts your *real* avatar into cinematic scenes for the middle beats — full-body "
+                   "motion + camera. Runs on your HeyGen key/credits (~60 credits per clip). Paste "
+                   "your avatar group id; optionally pick specific looks.")
+        ch_group_id = st.text_input("HeyGen avatar group id", value=ch.avatar_group_id,
+                                    key="ch_group", placeholder="e.g. 3fd3e9a439eb4f6bac6133ce031bbe2d")
+        ch_cine_looks = ch.cinematic_look_ids
+        if ch_group_id.strip() and provider.is_configured():
+            if st.button("↻ Fetch my looks from this group", key="ch_fetch_looks"):
+                looks = provider.list_avatar_looks(ch_group_id.strip())
+                if looks:
+                    st.session_state["_fetched_looks"] = looks
+                    st.success(f"Found {len(looks)} looks.")
+                else:
+                    st.info("Couldn't list looks (the group id may render fine on its own — "
+                            "leave the look ids blank to use the group).")
+            fetched = st.session_state.get("_fetched_looks") or []
+            if fetched:
+                names = {l["id"]: l["name"] for l in fetched}
+                picked = st.multiselect("Cinematic looks to use", [l["id"] for l in fetched],
+                                        default=[x.strip() for x in ch_cine_looks.split(",") if x.strip()],
+                                        format_func=lambda i: names.get(i, i), key="ch_cine_pick")
+                ch_cine_looks = ",".join(picked)
+        ch_cine_looks = st.text_input("…or paste look ids (comma-separated, optional)",
+                                      value=ch_cine_looks, key="ch_cine_ids",
+                                      placeholder="leave blank to use the group id")
+
         b1, b2 = st.columns(2)
         with b1:
             if st.button("Save character", key="ch_save", use_container_width=True):
@@ -1707,6 +1747,7 @@ def _render_settings():
                     voice_name=ch_voice_name, cinematic_direction=ch_cine, expressiveness=ch_expr,
                     environment_id=ep, is_default=ch_default, photo_path=ch.photo_path,
                     image_key=ch.image_key, template_id=ch_template_id,
+                    avatar_group_id=ch_group_id.strip(), cinematic_look_ids=ch_cine_looks.strip(),
                 ))
                 cfg.provider = sel_provider
                 cfg_store.save(cfg)

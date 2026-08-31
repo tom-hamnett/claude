@@ -340,3 +340,39 @@ def test_qa_video_no_key_returns_empty(monkeypatch):
     import gtm_engine.utils.media as media
     monkeypatch.setattr(media, "GOOGLE_API_KEY", "")
     assert media.qa_video("/nonexistent.mp4") == {}
+
+
+def test_build_segment_prefers_cinematic_when_enabled(monkeypatch, tmp_path):
+    """A middle beat routes to cinematic YOU when enabled and look ids exist."""
+    import gtm_engine.video.assembler as asm
+    marker = tmp_path / "cine.mp4"; marker.write_bytes(b"x")
+    monkeypatch.setattr(asm, "_cinematic_segment", lambda seg, ctx, out: marker)
+    ctx = {"provider": "heygen", "cinematic_look_ids": ["fa0e383a"]}
+    clip, method = asm._build_segment("tension", {"visual_direction": "x", "duration_seconds": 4},
+                                      ctx, tmp_path / "o.mp4", include_broll=True,
+                                      cinematic_middle=True)
+    assert method == "cinematic" and clip == marker
+
+
+def test_build_segment_cinematic_off_uses_broll_or_card(monkeypatch, tmp_path):
+    """With cinematic off, a middle beat does not call cinematic."""
+    import gtm_engine.video.assembler as asm
+    called = {"n": 0}
+    monkeypatch.setattr(asm, "_cinematic_segment",
+                        lambda *a, **k: called.__setitem__("n", called["n"] + 1))
+    monkeypatch.setattr(asm, "_broll_segment", lambda *a, **k: None)  # force card fallback
+    ctx = {"provider": "heygen", "cinematic_look_ids": ["fa0e383a"]}
+    clip, method = asm._build_segment("tension", {"text_overlay": "T", "duration_seconds": 1},
+                                      ctx, tmp_path / "o2.mp4", include_broll=True,
+                                      cinematic_middle=False)
+    assert called["n"] == 0 and method == "card"
+
+
+def test_character_persists_cinematic_fields(tmp_path, monkeypatch):
+    monkeypatch.setattr("gtm_engine.config.SQLITE_PATH", tmp_path / "c.db")
+    from gtm_engine.casting import CastingStore, Character
+    cs = CastingStore(tmp_path / "c.db")
+    cid = cs.save_character(Character(name="X", avatar_group_id="grp1",
+                                      cinematic_look_ids="a,b"))
+    g = cs.get_character(cid)
+    assert g.avatar_group_id == "grp1" and g.cinematic_look_ids == "a,b"

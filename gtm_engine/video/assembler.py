@@ -291,8 +291,35 @@ def _broll_segment(seg: dict, out: Path, narrate: bool = False) -> Path | None:
                            overlay_png=overlay_png)
 
 
+def _cinematic_segment(seg: dict, ctx: dict, out: Path) -> Path | None:
+    """Cast the presenter's digital twin into a cinematic scene (Seedance) for a
+    middle beat — full-body motion + camera. Silent (captions carry it) so the
+    only voice in the reel stays the presenter's. None if unavailable → fallback."""
+    look_ids = ctx.get("cinematic_look_ids") or []
+    if not look_ids:
+        return None
+    from gtm_engine.avatar import get_provider
+    provider = get_provider(ctx["provider"])
+    if not getattr(provider, "is_configured", lambda: False)():
+        return None
+    seconds = int(seg.get("duration_seconds") or DEFAULT_SEG_SECONDS)
+    vd = seg.get("visual_direction", "").strip()
+    prompt = (f"{vd}. Vertical 9:16 cinematic shot, natural full-body motion, subtle "
+              "camera movement, premium documentary style, on-brand and professional.")
+    raw = out.with_name(out.stem + "_cine.mp4")
+    result = provider.generate_cinematic(prompt, look_ids, raw, aspect_ratio="9:16",
+                                         duration=max(4, seconds))
+    if not result or not Path(result).exists():
+        logger.info("cinematic segment fell back: %s", getattr(provider, "last_error", ""))
+        return None
+    overlay = seg.get("text_overlay", "").strip()
+    overlay_png = _render_overlay_png(overlay, out.with_name(out.stem + "_ov.png")) if overlay else None
+    return _video_finalize(Path(result), out, seconds=seconds, audio=None, overlay_png=overlay_png)
+
+
 def _build_segment(seg_id: str, seg: dict, ctx: dict, out: Path,
-                   include_broll: bool, narrate_middle: bool = False) -> tuple[Path | None, str]:
+                   include_broll: bool, narrate_middle: bool = False,
+                   cinematic_middle: bool = False) -> tuple[Path | None, str]:
     """Build one segment. Returns (clip_path, method). Falls back to a text card
     so a segment is ALWAYS produced."""
     seconds = int(seg.get("duration_seconds") or DEFAULT_SEG_SECONDS)
@@ -300,10 +327,16 @@ def _build_segment(seg_id: str, seg: dict, ctx: dict, out: Path,
         clip = _avatar_segment(seg, ctx, out)
         if clip:
             return clip, "avatar"
-    elif include_broll:
-        clip = _broll_segment(seg, out, narrate=narrate_middle)
-        if clip:
-            return clip, "b-roll"
+    else:
+        # Middle beats: cinematic YOU (Seedance) first if enabled, else B-roll.
+        if cinematic_middle and ctx.get("cinematic_look_ids"):
+            clip = _cinematic_segment(seg, ctx, out)
+            if clip:
+                return clip, "cinematic"
+        if include_broll:
+            clip = _broll_segment(seg, out, narrate=narrate_middle)
+            if clip:
+                return clip, "b-roll"
     # Fallback card: overlay for the headline, spoken line as subline.
     headline = seg.get("text_overlay", "").strip() or seg.get("spoken_text", "").strip()
     subline = seg.get("spoken_text", "").strip() if seg_id in AVATAR_SEGS else ""
@@ -314,7 +347,7 @@ def _build_segment(seg_id: str, seg: dict, ctx: dict, out: Path,
 # ── orchestrator ──────────────────────────────────────────────────────────────
 
 def assemble_reel(job_id: int, include_broll: bool = True, narrate_middle: bool = False,
-                  on_progress=None):
+                  cinematic_middle: bool = False, on_progress=None):
     """Assemble the full Core-Five reel for a job into one mp4.
 
     include_broll: generate cinematic Veo B-roll for the middle segments (costs
@@ -357,7 +390,9 @@ def assemble_reel(job_id: int, include_broll: bool = True, narrate_middle: bool 
     for i, seg_id in enumerate(seg_ids):
         seg = segments.get(seg_id, {}) or {}
         sig = _hash(seg_id, json.dumps(seg, sort_keys=True), str(include_broll),
-                    str(narrate_middle), ctx.get("image_key", ""), ctx.get("motion_prompt", ""))
+                    str(narrate_middle), str(cinematic_middle),
+                    ",".join(ctx.get("cinematic_look_ids", [])),
+                    ctx.get("image_key", ""), ctx.get("motion_prompt", ""))
         cached = state.get("segments", {}).get(seg_id)
         out = sd / f"{i}_{seg_id}_{sig}.mp4"
         if on_progress:
@@ -367,7 +402,8 @@ def assemble_reel(job_id: int, include_broll: bool = True, narrate_middle: bool 
             methods[seg_id] = cached.get("method", "card")
             continue
         clip, method = _build_segment(seg_id, seg, ctx, out, include_broll,
-                                      narrate_middle=narrate_middle)
+                                      narrate_middle=narrate_middle,
+                                      cinematic_middle=cinematic_middle)
         if not clip:  # last-ditch: a minimal card so the stitch never breaks
             clip = _text_card(seg.get("text_overlay", seg_id.title()), "",
                               int(seg.get("duration_seconds") or DEFAULT_SEG_SECONDS), out)
@@ -433,6 +469,7 @@ def _resolve_context(job) -> dict:
         "expressiveness": job.expressiveness or 0.5,
         "background": cfg.background,
         "image_key": "",
+        "cinematic_look_ids": [],
     }
     try:
         from gtm_engine.casting import CastingStore
@@ -442,6 +479,17 @@ def _resolve_context(job) -> dict:
             ctx["image_key"] = ch.image_key or ""
             ctx["avatar_id"] = ctx["avatar_id"] or ch.avatar_id
             ctx["voice_id"] = ctx["voice_id"] or ch.voice_id
+            # Cinematic (Seedance) look ids: explicit list, else resolve from the
+            # avatar group, else fall back to the raw group id.
+            if ch.cinematic_look_ids:
+                ctx["cinematic_look_ids"] = [x.strip() for x in ch.cinematic_look_ids.split(",") if x.strip()]
+            elif ch.avatar_group_id:
+                try:
+                    from gtm_engine.avatar import get_provider
+                    looks = get_provider("heygen").list_avatar_looks(ch.avatar_group_id)
+                    ctx["cinematic_look_ids"] = [l["id"] for l in looks[:1]] or [ch.avatar_group_id]
+                except Exception:
+                    ctx["cinematic_look_ids"] = [ch.avatar_group_id]
         # A per-reel cast look overrides the character's default image_key.
         if job.look_id:
             look = cs.get_look(job.look_id)
@@ -516,7 +564,7 @@ def _mark(job_id: int, status: str, error: str = "") -> None:
 
 
 def start_assemble(job_id: int, include_broll: bool = True,
-                   narrate_middle: bool = False) -> None:
+                   narrate_middle: bool = False, cinematic_middle: bool = False) -> None:
     """Kick off a full-reel assembly on a background thread. No-op if one is
     already running for this job. Returns immediately."""
     if is_running(job_id):
@@ -530,7 +578,8 @@ def start_assemble(job_id: int, include_broll: bool = True,
     def _run():
         try:
             assemble_reel(job_id, include_broll=include_broll,
-                          narrate_middle=narrate_middle, on_progress=_prog)
+                          narrate_middle=narrate_middle,
+                          cinematic_middle=cinematic_middle, on_progress=_prog)
             try:
                 from gtm_engine.persistence import backup_quietly
                 backup_quietly()
