@@ -310,7 +310,10 @@ def _cinematic_segment(seg: dict, ctx: dict, out: Path) -> Path | None:
     result = provider.generate_cinematic(prompt, look_ids, raw, aspect_ratio="9:16",
                                          duration=max(4, seconds))
     if not result or not Path(result).exists():
-        logger.info("cinematic segment fell back: %s", getattr(provider, "last_error", ""))
+        # Stash the REAL provider error so the caller can surface it (the provider
+        # instance here is the one that actually made the failing call).
+        ctx["_cinematic_error"] = getattr(provider, "last_error", "") or "cinematic render returned nothing"
+        logger.info("cinematic segment fell back: %s", ctx["_cinematic_error"])
         return None
     overlay = seg.get("text_overlay", "").strip()
     overlay_png = _render_overlay_png(overlay, out.with_name(out.stem + "_ov.png")) if overlay else None
@@ -608,7 +611,6 @@ def _middle_cutaway(segments: dict, ctx: dict, seconds: float, out: Path,
                     cinematic_middle: bool, include_broll: bool) -> tuple[Path | None, str, str]:
     """Build ONE cutaway clip (cinematic YOU, else b-roll) for the middle window.
     Returns (clip_or_None, method, error) — error explains why nothing was made."""
-    from gtm_engine.avatar import get_provider
     mids = [segments.get(s, {}) or {} for s in ("tension", "pivot", "proof")]
     vd = " ".join((m.get("visual_direction", "") or "").strip() for m in mids).strip()
     seg = {"visual_direction": vd, "text_overlay": "", "duration_seconds": max(4, int(seconds))}
@@ -621,8 +623,7 @@ def _middle_cutaway(segments: dict, ctx: dict, seconds: float, out: Path,
             clip = _cinematic_segment(seg, ctx, raw)
             if clip and _fit_clip(Path(clip), seconds, out):
                 return out, "cinematic", ""
-            err = getattr(get_provider(ctx["provider"]), "last_error", "") or \
-                "Cinematic render failed."
+            err = ctx.get("_cinematic_error") or "Cinematic render failed (no detail)."
     if include_broll:
         clip = _broll_segment(seg, raw, narrate=False)
         if clip and _fit_clip(Path(clip), seconds, out):

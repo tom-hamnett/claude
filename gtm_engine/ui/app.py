@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-01d · editable script + data vault (real numbers)"
+BUILD_TAG = "2026-09-01e · surface the real cinematic error"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
