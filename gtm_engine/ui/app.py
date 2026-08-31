@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-02 · 1080p, clean audio, cinematic direction, deeper QA"
+BUILD_TAG = "2026-09-02b · revisions read the QA + rebuild the full reel"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -1080,6 +1080,8 @@ def _produce_review_panel(idea):
                     if not verdict:
                         st.warning("Couldn't complete video QA (check the Google key / try again).")
                     else:
+                        from gtm_engine.video.assembler import save_qa
+                        save_qa(job.id, verdict)      # so a revision can reference it
                         sc = verdict.get("score")
                         col = C["green"] if (sc or 0) >= 75 else (C["gold"] if (sc or 0) >= 55 else C["hot"])
                         st.markdown(f"<span style='color:{col};font-weight:600;'>Score {sc}/100</span> — "
@@ -1093,13 +1095,39 @@ def _produce_review_panel(idea):
                         if verdict.get("keep"):
                             st.caption("Keep: " + verdict["keep"])
 
-            note = st.text_area("Review note (free text)", key=f"vjn2_{idea.id}", height=60,
-                                placeholder="e.g. 'redo with a punchier hook'")
-            if st.button("Request revision", key=f"vjrev2_{idea.id}", use_container_width=True,
-                         disabled=not note.strip()):
-                with st.spinner("Interpreting your note..."):
-                    apply_revision(job.id, note.strip())
+            # Whether Gemini QA has been stored on this reel.
+            import json as _json2
+            _has_qa = False
+            try:
+                _has_qa = bool((_json2.loads(job.assembly_json or "{}") or {}).get("qa"))
+            except Exception:
+                _has_qa = False
+
+            from gtm_engine.video import revise_from_notes
+            from gtm_engine.video.assembler import start_reassemble
+
+            if _has_qa:
+                if st.button("✨ Apply Gemini's QA notes & re-assemble", key=f"vjqa_apply_{idea.id}",
+                             use_container_width=True, type="primary"):
+                    with st.spinner("Claude is applying the QA feedback to the script…"):
+                        revise_from_notes(job.id, notes="", use_qa=True)
+                    start_reassemble(job.id)   # rebuilds the FULL reel (keeps the middle)
+                    from gtm_engine.persistence import backup_quietly
+                    backup_quietly()
                     st.rerun()
+
+            note = st.text_area("Your own revision note (free text)", key=f"vjn2_{idea.id}", height=60,
+                                placeholder="e.g. 'punchier hook, slower pacing, simpler middle shot'")
+            if st.button("Apply my note & re-assemble", key=f"vjrev2_{idea.id}",
+                         use_container_width=True, disabled=not note.strip()):
+                with st.spinner("Claude is applying your note to the script…"):
+                    revise_from_notes(job.id, notes=note.strip(), use_qa=_has_qa)
+                start_reassemble(job.id)
+                from gtm_engine.persistence import backup_quietly
+                backup_quietly()
+                st.rerun()
+            st.caption("Revisions rewrite the **script + cinematic direction** and rebuild the "
+                       "*whole* reel (your voice + the middle), not just the bookends.")
         return
 
 

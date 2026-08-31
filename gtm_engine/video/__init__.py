@@ -567,6 +567,74 @@ def auto_sharpen(job_id: int, max_rounds: int = 3) -> tuple["VideoJob | None", l
     return store.get(job.id) if job else None, rounds
 
 
+_REVISE_SYSTEM = """You improve a short vertical social-video script and its cinematic scene
+direction, based on (a) a reviewer's free-text note and (b) an automated QA review of the
+RENDERED reel. Keep it punchy, on-brand, spoken aloud, ~20–30 seconds total.
+
+Apply the feedback concretely:
+  - Pacing/cadence flagged → use SHORT sentences and put each beat on its own line
+    (a line break reads as a pause). Never one long run-on.
+  - Wording/hook flagged → tighten it; lead with the sharpest line.
+  - B-roll/cinematic flagged as too flashy/irrelevant → rewrite the cinematic scene to
+    be simpler and on-message.
+  - Keep any real numbers already in the script.
+
+Return ONLY JSON:
+{"script": "<full spoken script, newlines between beats for pauses>",
+ "cinematic_prompt": "<scene direction for the middle cutaway, or empty to keep current>",
+ "rationale": "<one short line on what you changed>"}"""
+
+
+def revise_from_notes(job_id: int, notes: str = "", use_qa: bool = True) -> VideoJob | None:
+    """Rewrite the script + cinematic direction from a reviewer note and/or the stored
+    Gemini QA of the rendered reel. Updates the job (no render) — the caller re-assembles."""
+    import json as _json
+    from gtm_engine.utils.ai_client import call_claude
+    from gtm_engine.producer import ProducerBriefLibrary
+
+    store = VideoJobStore()
+    job = store.get(job_id)
+    if not job:
+        return None
+    brief = ProducerBriefLibrary().get_for_idea(job.idea_id)
+    current = (job.script_override or (brief.spoken_script if brief else "") or job.spoken_script)
+
+    qa_block = ""
+    if use_qa:
+        try:
+            qa = (_json.loads(job.assembly_json or "{}") or {}).get("qa") or {}
+            if qa:
+                issues = "; ".join(f"[{i.get('severity')}] {i.get('area')}: {i.get('note')}"
+                                   for i in qa.get("issues", []))
+                qa_block = (f"\nAUTOMATED QA (score {qa.get('score')}): {qa.get('verdict','')}\n"
+                            f"QA ISSUES TO FIX: {issues}\n")
+        except Exception:
+            qa_block = ""
+
+    prompt = (
+        f"CURRENT SPOKEN SCRIPT:\n{current}\n\n"
+        f"CURRENT CINEMATIC SCENE: {job.cinematic_prompt or '(default)'}\n"
+        f"{qa_block}\n"
+        f"REVIEWER NOTE: {notes or '(none — just apply the QA feedback)'}\n\nReturn ONLY the JSON."
+    )
+    raw = call_claude(prompt, system=_REVISE_SYSTEM, max_tokens=1200)
+    s, e = raw.find("{"), raw.rfind("}")
+    try:
+        data = _json.loads(raw[s:e + 1]) if s != -1 and e != -1 else {}
+    except Exception:
+        data = {}
+    if data.get("script"):
+        job.script_override = data["script"].strip()
+    if data.get("cinematic_prompt"):
+        job.cinematic_prompt = data["cinematic_prompt"].strip()
+    job.revisions.append({
+        "note": notes or "Apply Gemini QA", "change_type": "revise_from_notes",
+        "rationale": data.get("rationale", ""), "at": datetime.now(timezone.utc).isoformat(),
+    })
+    job.id = store.save(job)
+    return store.get(job.id)
+
+
 def attach_finished_video(job_id: int, video_bytes: bytes, filename: str) -> VideoJob | None:
     """Attach a video the user produced elsewhere (e.g. HeyGen app) to the job."""
     store = VideoJobStore()

@@ -712,6 +712,9 @@ def assemble_continuous(job_id: int, include_broll: bool = True, cinematic_middl
     job.error = ""
     state = _load_state(job)
     state["methods"] = {"reel": method, "duration": round(dur, 1)}
+    # Remember how this reel was built so a QA-driven re-assemble keeps the same
+    # middle (cinematic / b-roll) instead of regressing to bookends.
+    state["settings"] = {"include_broll": include_broll, "cinematic_middle": cinematic_middle}
     if cut_err and cutaway is None:
         state["cutaway_error"] = cut_err
     else:
@@ -791,6 +794,36 @@ def start_assemble(job_id: int, include_broll: bool = True,
     with _BG_LOCK:
         _BG[job_id] = {"thread": th, "progress": (0, 1, "Starting…")}
     th.start()
+
+
+def start_reassemble(job_id: int) -> None:
+    """Re-assemble using the SAME settings the reel was last built with (so a
+    revision keeps its cinematic/b-roll middle instead of dropping to bookends)."""
+    from gtm_engine.video import VideoJobStore
+    job = VideoJobStore().get(job_id)
+    s = {}
+    try:
+        s = (json.loads(job.assembly_json or "{}") or {}).get("settings", {}) if job else {}
+    except Exception:
+        s = {}
+    start_assemble(job_id, include_broll=bool(s.get("include_broll", False)),
+                   cinematic_middle=bool(s.get("cinematic_middle", True)))
+
+
+def save_qa(job_id: int, verdict: dict) -> None:
+    """Persist a Gemini QA verdict on the job so a revision can reference it."""
+    from gtm_engine.video import VideoJobStore
+    store = VideoJobStore()
+    job = store.get(job_id)
+    if not job:
+        return
+    try:
+        state = json.loads(job.assembly_json or "{}") or {}
+    except Exception:
+        state = {}
+    state["qa"] = verdict
+    job.assembly_json = json.dumps(state)
+    store.save(job)
 
 
 def start_single_render(job_id: int) -> None:

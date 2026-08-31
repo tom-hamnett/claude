@@ -447,3 +447,40 @@ def test_script_override_persists_and_drives_master(db, tmp_path, monkeypatch):
            "motion_prompt": "", "expressiveness": 0.5, "background": "#000"}
     asm._render_master_talkinghead(store.get(job.id), ctx, {}, tmp_path / "m.mp4")
     assert captured["script"] == "MY EXACT WORDS.\nSecond line."
+
+
+def test_revise_from_notes_uses_qa_and_updates_script(db, monkeypatch):
+    """A revision reads the stored Gemini QA and rewrites script + cinematic direction."""
+    import json as _json
+    from gtm_engine.producer import ProducerBrief, ProducerBriefLibrary
+    from gtm_engine.video import revise_from_notes
+    ProducerBriefLibrary().save(ProducerBrief(idea_id=1, spoken_script="old flat script"))
+    store = VideoJobStore()
+    job = VideoJob(idea_id=1, assembly_json=_json.dumps(
+        {"qa": {"score": 55, "verdict": "rushed",
+                "issues": [{"severity": "high", "area": "cadence", "note": "no pauses"}]}}))
+    job.id = store.save(job)
+    captured = {}
+    def fake_claude(prompt, **k):
+        captured["prompt"] = prompt
+        return '{"script":"New line one.\\n\\nNew line two.","cinematic_prompt":"desk, calm","rationale":"added pauses"}'
+    monkeypatch.setattr("gtm_engine.utils.ai_client.call_claude", fake_claude)
+    out = revise_from_notes(job.id, notes="slower", use_qa=True)
+    assert "no pauses" in captured["prompt"]          # QA fed into the prompt
+    assert out.script_override.startswith("New line one")
+    assert out.cinematic_prompt == "desk, calm"
+    assert out.revisions[-1]["change_type"] == "revise_from_notes"
+
+
+def test_start_reassemble_reads_saved_settings(db, monkeypatch):
+    import json as _json
+    import gtm_engine.video.assembler as asm
+    store = VideoJobStore()
+    job = VideoJob(idea_id=1, assembly_json=_json.dumps(
+        {"settings": {"include_broll": True, "cinematic_middle": False}}))
+    job.id = store.save(job)
+    got = {}
+    monkeypatch.setattr(asm, "start_assemble",
+                        lambda jid, **k: got.update({"jid": jid, **k}))
+    asm.start_reassemble(job.id)
+    assert got == {"jid": job.id, "include_broll": True, "cinematic_middle": False}
