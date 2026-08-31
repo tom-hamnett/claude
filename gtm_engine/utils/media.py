@@ -408,6 +408,57 @@ def fetch_stock_video(query: str, output_path: Path, orientation: str = "portrai
         return None
 
 
+def generate_fal_video(prompt: str, output_path: Path, seconds: int = 5,
+                       aspect: str = "9:16", model_id: str = "") -> Path | None:
+    """Cheap generative b-roll via fal.ai (Hailuo/Kling/etc.) — ~pennies per clip.
+    Uses fal's queue REST API, tolerant of per-model response shapes. Returns the
+    downloaded mp4 or None. Needs FAL_KEY."""
+    from gtm_engine.config import FAL_KEY, FAL_VIDEO_MODEL
+    if not FAL_KEY or not (prompt or "").strip():
+        return None
+    import re
+    import httpx
+    model = model_id or FAL_VIDEO_MODEL
+    headers = {"Authorization": f"Key {FAL_KEY}", "Content-Type": "application/json"}
+    base = f"https://queue.fal.run/{model}"
+    # Try a rich body first; retry minimal if the model rejects extra fields.
+    for body in ({"prompt": prompt.strip(), "aspect_ratio": aspect, "duration": int(seconds)},
+                 {"prompt": prompt.strip()}):
+        try:
+            r = httpx.post(base, headers=headers, json=body, timeout=30)
+            if r.status_code not in (200, 201):
+                logger.error("fal submit %s: %s", r.status_code, r.text[:200])
+                continue
+            d = r.json()
+            rid = d.get("request_id")
+            status_url = d.get("status_url") or f"{base}/requests/{rid}/status"
+            resp_url = d.get("response_url") or f"{base}/requests/{rid}"
+            waited = 0
+            while waited < 300:
+                time.sleep(6); waited += 6
+                sr = httpx.get(status_url, headers=headers, timeout=20)
+                s = (sr.json().get("status", "") if sr.status_code == 200 else "").upper()
+                logger.info("fal status (%ds): %s", waited, s)
+                if s == "COMPLETED":
+                    break
+                if s in ("FAILED", "ERROR"):
+                    logger.error("fal failed: %s", sr.text[:250]); return None
+            rr = httpx.get(resp_url, headers=headers, timeout=30)
+            if rr.status_code != 200:
+                continue
+            m = re.search(r'https?://[^\s"\\]+\.mp4', rr.text)   # find the video url
+            if not m:
+                logger.error("fal: no video url in response: %s", rr.text[:250]); continue
+            dr = httpx.get(m.group(0), follow_redirects=True, timeout=180)
+            dr.raise_for_status()
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_bytes(dr.content)
+            return output_path if output_path.stat().st_size > 0 else None
+        except Exception as e:
+            logger.error("fal exception: %s", e)
+    return None
+
+
 def qa_video(video_path, context: str = "") -> dict:
     """Watch a finished reel with Gemini and return a structured QA verdict.
 

@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-06 · cutaways never blank + free Pexels stock nudge"
+BUILD_TAG = "2026-09-06b · cheap AI b-roll via fal.ai (Hailuo/Kling, ~pennies)"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -858,6 +858,13 @@ def _auto_assemble_ui(idea, job):
                     "([pexels.com/api](https://www.pexels.com/api/)) in **Settings → Connections** "
                     "and re-cut (free) to fill them with real video.")
 
+    if any((s.get("visual") == "generate") for s in (job.shot_list or [])):
+        from gtm_engine.config import FAL_KEY
+        if not FAL_KEY:
+            st.info("✨ A beat is set to **generate** a clip, but no fal.ai key is set — it's "
+                    "showing a card. Add a **FAL_KEY** ([fal.ai](https://fal.ai/)) in "
+                    "**Settings → Connections** to generate cheap AI b-roll (~7–15¢/clip).")
+
     # ── Shot list — the choreography, editable, re-cuts for FREE (take is cached) ──
     if job.shot_list:
         _shot_list_editor(idea, job)
@@ -869,9 +876,11 @@ def _shot_list_editor(idea, job):
     from gtm_engine.video.assembler import start_reassemble
     with st.expander(f"🎬 Shot list — {len(job.shot_list)} shots (edit & re-cut, free)",
                      expanded=False):
-        st.caption("Each row is a shot cut to your script. Change the visual, caption or stock "
-                   "search, then **Save & re-cut** — it reuses your cached take, so editing costs "
-                   "**no HeyGen credits**.")
+        st.caption("Each row is a shot cut to your script. **Visual** can be: `presenter` (you), "
+                   "`screenshot` (your upload — set the media #), `stock` (free Pexels — set the "
+                   "search), `generate` (cheap AI clip via fal.ai ~7–15¢ — set the search as the "
+                   "prompt), or `card` (branded text). Then **Save & re-cut** — it reuses your "
+                   "cached take, so editing costs **no HeyGen credits**.")
         rows = [{"spoken": s.get("spoken", ""), "seconds": float(s.get("seconds", 3) or 3),
                  "visual": s.get("visual", "presenter"),
                  "media #": (s.get("media_index") if s.get("media_index") is not None else -1),
@@ -1612,6 +1621,7 @@ def _render_settings():
             ("heygen", "HeyGen", "renders the avatar video", "HEYGEN_API_KEY"),
             ("google", "Google (Gemini)", "images, draft voice & QA", "GOOGLE_API_KEY"),
             ("pexels", "Pexels (free stock)", "auto b-roll for the middle — free", "PEXELS_API_KEY"),
+            ("fal", "fal.ai (cheap AI b-roll)", "generate a clip for a beat — ~7–15¢ each", "FAL_KEY"),
             ("supabase", "Supabase (backup)", "saves your setup so it survives redeploys",
              "SUPABASE_URL + SUPABASE_KEY"),
             ("runway", "Runway (advanced)", "performance transfer", "RUNWAY_API_KEY"),

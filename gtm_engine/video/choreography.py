@@ -24,7 +24,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-VISUALS = {"presenter", "screenshot", "stock", "card"}
+VISUALS = {"presenter", "screenshot", "stock", "card", "generate"}
 
 _SYSTEM = """You are a short-form video editor choreographing a vertical reel (TikTok/Reels/
 Shorts) shot-by-shot against a fixed narration. You do NOT change the words — you cut the

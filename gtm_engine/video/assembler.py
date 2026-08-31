@@ -1011,8 +1011,20 @@ def assemble_choreographed(job_id: int, target_seconds: int = 25, draft: bool = 
         if on_progress:
             on_progress(3, 5, "Gathering the visuals")
         visual_ovs, caption_ovs = [], []
+        vcache = state.get("visual_cache") or {}   # cache paid clips (stock/generate)
         for i, (sh, (t1, t2)) in enumerate(zip(shots, wins)):
             v, path, kind = sh.get("visual"), None, None
+            # Reuse a previously fetched/generated clip for the same query+window so
+            # editing/re-cutting never re-spends on Pexels or fal.ai.
+            vsig = (_hash(v, sh.get("stock_query", ""), str(round(t2 - t1)))
+                    if v in ("stock", "generate") else "")
+            if vsig and vcache.get(vsig) and Path(vcache[vsig]).exists():
+                visual_ovs.append({"path": vcache[vsig], "kind": "video", "t1": t1, "t2": t2})
+                cap0 = (sh.get("caption") or "").strip()
+                if cap0:
+                    caption_ovs.append({"path": str(_render_overlay_png(cap0, sd / f"cap{i}.png")),
+                                        "kind": "png", "t1": t1, "t2": t2})
+                continue
             try:
                 if v == "screenshot":
                     mi = sh.get("media_index")
@@ -1029,6 +1041,12 @@ def assemble_choreographed(job_id: int, target_seconds: int = 25, draft: bool = 
                     raw = fetch_stock_video(sh.get("stock_query", ""), sd / f"stk{i}_src.mp4")
                     if raw:
                         path, kind = _fit_clip(Path(raw), t2 - t1, sd / f"sv{i}.mp4"), "video"
+                elif v == "generate":
+                    from gtm_engine.utils.media import generate_fal_video
+                    raw = generate_fal_video(sh.get("stock_query", ""), sd / f"gen{i}_src.mp4",
+                                             seconds=max(4, int(t2 - t1)))
+                    if raw:
+                        path, kind = _fit_clip(Path(raw), t2 - t1, sd / f"sv{i}.mp4"), "video"
                 elif v == "card":
                     png = sd / f"card{i}.png"
                     _render_card_png(sh.get("caption") or (sh.get("spoken", "")[:40]), "", png)
@@ -1038,16 +1056,20 @@ def assemble_choreographed(job_id: int, target_seconds: int = 25, draft: bool = 
             # NEVER leave a cutaway blank: if the chosen visual couldn't be made
             # (no screenshot, no Pexels key, stock miss), show a clean branded CARD
             # of the point instead. Presenter beats keep showing you (no overlay).
-            if not (path and kind) and v in ("screenshot", "stock", "card"):
+            if not (path and kind) and v in ("screenshot", "stock", "card", "generate"):
                 fb = sd / f"fb{i}.png"
                 _render_card_png(sh.get("caption") or (sh.get("spoken", "")[:40]) or "…", "", fb)
                 path, kind = fb, "png"
             if path and kind:
                 visual_ovs.append({"path": str(path), "kind": kind, "t1": t1, "t2": t2})
+                if vsig and kind == "video":   # remember paid clips for free re-cuts
+                    vcache[vsig] = str(path)
             cap = (sh.get("caption") or "").strip()
             if cap:
                 cpng = _render_overlay_png(cap, sd / f"cap{i}.png")
                 caption_ovs.append({"path": str(cpng), "kind": "png", "t1": t1, "t2": t2})
+        state["visual_cache"] = vcache
+        _save_state(job, state)
         if on_progress:
             on_progress(4, 5, "Cutting the reel to the rhythm")
         final_src = _composite(master, visual_ovs + caption_ovs, sd / "choreo.mp4") or master

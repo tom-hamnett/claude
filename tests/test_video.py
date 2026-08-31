@@ -483,7 +483,7 @@ def test_start_reassemble_reads_saved_settings(db, monkeypatch):
     monkeypatch.setattr(asm, "start_assemble",
                         lambda jid, **k: got.update({"jid": jid, **k}))
     asm.start_reassemble(job.id)
-    assert got == {"jid": job.id, "include_broll": True, "cinematic_middle": False}
+    assert got == {"jid": job.id, "include_broll": True, "cinematic_middle": False, "hd": False}
 
 
 def test_master_take_is_cached_across_reassembles(db, tmp_path, monkeypatch):
@@ -616,3 +616,29 @@ def test_render_request_hd_dims():
     # We can't call render() (network), but the dims logic is what matters:
     req = RenderRequest(script="x", avatar_id="a", output_path=__import__("pathlib").Path("/tmp/x.mp4"), hd=True)
     assert req.hd is True
+
+
+def test_generate_visual_falls_back_to_card_without_fal(db, tmp_path, monkeypatch):
+    """A 'generate' beat with no fal key still produces something (a card), never blank."""
+    import subprocess, imageio_ffmpeg
+    from gtm_engine.producer import ProducerBrief, ProducerBriefLibrary
+    import gtm_engine.video.assembler as asm
+    ff = imageio_ffmpeg.get_ffmpeg_exe()
+    monkeypatch.setattr(asm, "ASSEMBLY_DIR", tmp_path / "a")
+    monkeypatch.setattr(asm, "OUTPUT_DIR", tmp_path / "o")
+    def fake_master(job, ctx, segments, out, hd=False):
+        subprocess.run([ff, "-y", "-f", "lavfi", "-i", f"color=c=navy:s={asm.W}x{asm.H}:d=8:r=30",
+                        "-f", "lavfi", "-i", "sine=frequency=200:duration=8",
+                        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", "-shortest",
+                        str(out)], capture_output=True)
+        return out
+    monkeypatch.setattr(asm, "_render_master_talkinghead", fake_master)
+    ProducerBriefLibrary().save(ProducerBrief(idea_id=1, spoken_script="a b c d e f"))
+    store = VideoJobStore()
+    job = VideoJob(idea_id=1, script_override="a b c d e f",
+                   shot_list=[{"spoken": "a b c", "seconds": 4, "visual": "presenter", "caption": "hi"},
+                              {"spoken": "d e f", "seconds": 4, "visual": "generate",
+                               "stock_query": "trading floor", "caption": "markets"}])
+    job.id = store.save(job)
+    out = asm.assemble_choreographed(job.id)   # no FAL_KEY → generate → card fallback
+    assert out.status == "ready" and Path(out.video_path).exists()

@@ -85,6 +85,10 @@ ANTHROPIC_API_KEY = _get("ANTHROPIC_API_KEY")
 OPENAI_API_KEY = _get("OPENAI_API_KEY")
 GOOGLE_API_KEY = _get("GOOGLE_API_KEY")
 PEXELS_API_KEY = _get("PEXELS_API_KEY")          # free stock video (choreography)
+FAL_KEY = _get("FAL_KEY")                         # cheap generative b-roll (fal.ai)
+# fal.ai model id for text→video. Default: Hailuo (cheapest). Override in Secrets
+# if the id changes, e.g. a Kling id, without a code change.
+FAL_VIDEO_MODEL = _get("FAL_VIDEO_MODEL", "fal-ai/minimax/hailuo-02/standard/text-to-video")
 DEFAULT_AI_MODEL = _get("DEFAULT_AI_MODEL", "claude-opus-5")
 
 # Database

@@ -24,6 +24,7 @@ def connection_status() -> dict:
         "heygen": bool(_get("HEYGEN_API_KEY")),          # avatar video
         "runway": bool(_get("RUNWAY_API_KEY")),          # performance transfer
         "pexels": bool(_get("PEXELS_API_KEY")),          # free stock footage
+        "fal": bool(_get("FAL_KEY")),                    # cheap generative b-roll
         "supabase": bool(_get("SUPABASE_URL") and _get("SUPABASE_KEY")),  # durable backup
     }
 
