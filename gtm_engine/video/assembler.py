@@ -992,12 +992,24 @@ def assemble_choreographed(job_id: int, target_seconds: int = 25, draft: bool = 
         on_progress(2, 5, "Choreographing the shots")
     shots = list(job.shot_list or [])
     if not shots:
+        # Data step: for a data-driven mode with a source attached but no charts yet,
+        # analyse the real data into charts + insight before choreographing.
+        try:
+            from gtm_engine.video.modes import profile as _mode_profile
+            if (_mode_profile(job.content_mode).get("data_step")
+                    and job.data_source_id and not job.data_charts):
+                from gtm_engine.video.data_insight import analyze_for_job
+                analyze_for_job(job.id)
+                job = store.get(job_id) or job      # reload with data_charts
+        except Exception as e:
+            logger.info("data step skipped: %s", e)
         try:
             from gtm_engine.video.choreography import choreograph
             from gtm_engine.ideas import IdeaBank
             idea = IdeaBank().get(job.idea_id)
             names = [Path(m).name for m in (job.middle_media or [])]
-            shots = choreograph(full, names, (idea.product if idea else "") or "", target_seconds)
+            shots = choreograph(full, names, (idea.product if idea else "") or "", target_seconds,
+                                mode=job.content_mode, data_charts=job.data_charts or [])
         except Exception as e:
             logger.error("choreograph failed: %s", e)
             shots = []

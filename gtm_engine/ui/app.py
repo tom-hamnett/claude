@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-07a · Data-viz B-roll — your numbers become the proof"
+BUILD_TAG = "2026-09-07b · Content modes + data→charts (upload a sheet, get proof visuals)"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -712,9 +712,69 @@ def _auto_assemble_ui(idea, job):
         return
 
     st.caption("The tool records your **full script as one continuous take** — your face, "
-               "your voice, never silent (~20–30s) — then lays the cinematic / b-roll over "
-               "the middle as a cutaway while your narration keeps going underneath. One "
-               "vertical video you just review.")
+               "your voice, never silent (~20–30s) — then lays proof visuals over the middle "
+               "as cutaways while your narration keeps going underneath. One vertical video "
+               "you just review.")
+
+    # ── 1 · Mode: the one choice that drives the whole B-roll strategy ──────────
+    from gtm_engine.video.modes import MODES
+    from gtm_engine.video.modes import profile as _mode_profile
+    from gtm_engine.video import set_content_mode
+    _mode_keys = list(MODES)
+    _cur_mode = job.content_mode if job.content_mode in MODES else "insight"
+    st.markdown("**1 · What kind of reel is this?**")
+    _picked = st.radio(
+        "Reel type", _mode_keys, index=_mode_keys.index(_cur_mode),
+        format_func=lambda k: f"{MODES[k]['icon']} {MODES[k]['label']}",
+        key=f"mode_{idea.id}", label_visibility="collapsed")
+    st.caption(MODES[_picked]["blurb"])
+    if _picked != _cur_mode:
+        set_content_mode(job.id, _picked)
+        st.rerun()
+    _prof = _mode_profile(_picked)
+
+    # ── Data → charts: attach a spreadsheet, the engine finds the insight ───────
+    if _prof.get("charts"):
+        _need = _prof.get("data_step")
+        with st.container(border=True):
+            st.markdown("**📊 Your data becomes the proof**"
+                        + ("" if _need else " _(optional)_"))
+            if job.data_charts:
+                st.success(f"✓ {len(job.data_charts)} proof chart(s) built from your data — "
+                           "they'll be cut into the reel automatically.")
+                _ins = ""
+                try:
+                    _ins = (_json.loads(job.assembly_json or "{}") or {}).get("data_insight", "")
+                except Exception:
+                    _ins = ""
+                if _ins:
+                    st.caption(f"Insight: {_ins}")
+            else:
+                st.caption("Upload the spreadsheet (CSV or XLSX) behind this reel — e.g. your "
+                           "ATLAS log. The engine reads the real cells, finds the insight, and "
+                           "builds on-brand charts from the actual numbers."
+                           + ("" if _need else " Skip it and the charts come from the numbers "
+                              "your script mentions."))
+            _df = st.file_uploader("Spreadsheet (CSV / XLSX)", type=["csv", "tsv", "xlsx", "xlsm"],
+                                   key=f"data_{idea.id}", accept_multiple_files=False)
+            if _df and st.button("📈 Analyse & build charts", key=f"datago_{idea.id}",
+                                 use_container_width=True):
+                from gtm_engine.video import attach_data_source
+                dd = OUTPUT_DIR / "uploads" / f"idea_{idea.id}_data"
+                dd.mkdir(parents=True, exist_ok=True)
+                fp = dd / _df.name
+                fp.write_bytes(_df.getbuffer())
+                with st.spinner("Reading your data and finding the insight…"):
+                    _j, _msg = attach_data_source(job.id, str(fp), name=_df.name)
+                (st.success if (_j and _j.data_charts) else st.info)(_msg)
+                from gtm_engine.persistence import backup_quietly
+                backup_quietly()
+                st.rerun()
+            if job.data_charts and st.button("✕ Clear data & charts", key=f"dataclr_{idea.id}"):
+                from gtm_engine.video import set_shot_list
+                _s = VideoJobStore().get(job.id)
+                _s.data_source_id, _s.data_charts, _s.shot_list = None, [], []
+                VideoJobStore().save(_s); st.rerun()
 
     # Pre-flight: can the presenter actually render as YOU? (Avatar IV needs an
     # uploaded photo's image_key — a trained-avatar id alone won't drive the API.)
@@ -762,59 +822,59 @@ def _auto_assemble_ui(idea, job):
         backup_quietly()
         st.success(f"Added {len(paths)} file(s) for the middle."); st.rerun()
 
-    # ── Cinematic YOU (Seedance) — now an OPTIONAL premium extra, default OFF ──
+    st.caption("🔊 Voice: only **you** (hook & bookend). The middle rides on captions over the "
+               "proof visuals — no mismatched AI voice.")
+
+    # ── Advanced — premium & quality knobs, collapsed (mode sets good defaults) ──
     _has_cine = bool(_ch and (_ch.cinematic_look_ids or _ch.avatar_group_id))
-    cinematic = st.toggle(
-        "🎬 Cinematic YOU in the middle (Seedance — premium, ~60 HeyGen credits)",
-        value=False, key=f"cine_{idea.id}", disabled=not _has_cine,
-        help="OPTIONAL. Casts your real digital twin into the middle — costs HeyGen credits. "
-             "Leave OFF and use your own footage above (free) for most reels.",
-    )
-    # Veo b-roll is the fallback — default OFF now that cinematic is primary.
-    broll = st.toggle(
-        "Faceless B-roll fallback (Veo — ~£1–2 per reel)",
-        value=False, key=f"broll_{idea.id}",
-        help="A faceless cinematic b-roll fallback for the middle if cinematic YOU is off or "
-             "fails. Off: the middle uses a clean branded card instead.",
-    )
-    narrate = st.toggle(
-        "Narrate the middle with an AI voice",
-        value=False, key=f"narr_{idea.id}",
-        help="Off (recommended): the middle rides on captions, so the ONLY voice in the "
-             "reel is YOURS on the hook & bookend. On: adds an AI voiceover to the middle "
-             "— note it won't match your cloned voice.",
-    )
-    if not narrate:
-        st.caption("🔊 Voice: only **you** (hook & bookend). The middle is captioned, no AI voice.")
-    # FREE draft first — perfect the words/pacing for £0, then pay once for the real one.
+    with st.expander("⚙️ Advanced — quality & premium options", expanded=False):
+        hd = st.toggle(
+            "🎞 HD presenter — render you at 1080p (~2× HeyGen credits)",
+            value=False, key=f"hd_{idea.id}",
+            help="Off (720p): cheaper, fine for most. On: HeyGen renders your face at full "
+                 "1080p to match your screenshots — sharper, but roughly double the credits per take.",
+        )
+        cinematic = st.toggle(
+            "🎬 Cinematic YOU (Seedance — premium, ~60 HeyGen credits)",
+            value=False, key=f"cine_{idea.id}", disabled=not _has_cine,
+            help="OPTIONAL. Casts your real digital twin into the middle — costs HeyGen credits. "
+                 "Leave OFF and use your own footage / data-viz (free) for most reels.",
+        )
+        broll = st.toggle(
+            "Faceless B-roll fallback (Veo — ~£1–2 per reel)",
+            value=False, key=f"broll_{idea.id}",
+            help="A faceless cinematic b-roll fallback. Off: the middle uses your data-viz and "
+                 "screenshots instead.",
+        )
+        narrate = st.toggle(
+            "Narrate the middle with an AI voice",
+            value=False, key=f"narr_{idea.id}",
+            help="Off (recommended): only YOUR voice, over captions. On: adds an AI voiceover "
+                 "to the middle — it won't match your cloned voice.",
+        )
+        # AI b-roll model picker (only when fal.ai is connected). Saves globally.
+        from gtm_engine.config import FAL_KEY as _FAL
+        if _FAL:
+            from gtm_engine.avatar import AvatarConfigStore as _ACS
+            from gtm_engine.utils.media import FAL_MODELS
+            _cs2 = _ACS(); _cfg2 = _cs2.load()
+            _names = list(FAL_MODELS)
+            _cur = next((n for n, i in FAL_MODELS.items() if i == _cfg2.fal_model), _names[0])
+            _pick = st.selectbox("🤖 AI b-roll model (for `generate` beats)", _names,
+                                 index=_names.index(_cur), key=f"falm_{idea.id}",
+                                 help="Which fal.ai model makes generated clips. Hailuo is cheapest; "
+                                      "Kling is a touch better.")
+            if FAL_MODELS[_pick] != _cfg2.fal_model:
+                _cfg2.fal_model = FAL_MODELS[_pick]; _cs2.save(_cfg2)
+
+    # ── 2 · Generate: free draft first, then the paid reel ──────────────────────
+    st.markdown("**2 · Generate**")
     if st.button("🆓 Free draft (AI voice, no HeyGen credits)", key=f"draft_{idea.id}",
                  use_container_width=True):
         start_assemble(job.id, draft=True)
         st.rerun()
     st.caption("Draft = your script in a stand-in AI voice over your look, so you can nail the "
                "words, pacing and length **for free** before spending any HeyGen credits.")
-
-    # AI b-roll model picker (only when fal.ai is connected). Saves globally.
-    from gtm_engine.config import FAL_KEY as _FAL
-    if _FAL:
-        from gtm_engine.avatar import AvatarConfigStore as _ACS
-        from gtm_engine.utils.media import FAL_MODELS
-        _cs2 = _ACS(); _cfg2 = _cs2.load()
-        _names = list(FAL_MODELS)
-        _cur = next((n for n, i in FAL_MODELS.items() if i == _cfg2.fal_model), _names[0])
-        _pick = st.selectbox("🤖 AI b-roll model (for `generate` beats)", _names,
-                             index=_names.index(_cur), key=f"falm_{idea.id}",
-                             help="Which fal.ai model makes generated clips. Hailuo is cheapest; "
-                                  "Kling is a touch better. Applies to every 'generate' beat.")
-        if FAL_MODELS[_pick] != _cfg2.fal_model:
-            _cfg2.fal_model = FAL_MODELS[_pick]; _cs2.save(_cfg2)
-
-    hd = st.toggle(
-        "🎞 HD presenter — render you at 1080p (~2× HeyGen credits)",
-        value=False, key=f"hd_{idea.id}",
-        help="Off (720p): cheaper, fine for most. On: HeyGen renders your face at full "
-             "1080p to match your screenshots — sharper, but roughly double the credits per take.",
-    )
     lbl = "✨ Auto-assemble full reel (spends HeyGen credits)" if not job.video_path \
         else "✨ Re-assemble reel (spends HeyGen credits)"
     if st.button(lbl, key=f"asm_{idea.id}", use_container_width=True, type="primary"):

@@ -85,6 +85,9 @@ CREATE TABLE IF NOT EXISTS video_jobs (
     cinematic_prompt TEXT DEFAULT '',
     middle_media TEXT DEFAULT '[]',
     shot_list TEXT DEFAULT '[]',
+    content_mode TEXT DEFAULT 'insight',
+    data_source_id INTEGER,
+    data_charts TEXT DEFAULT '[]',
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
@@ -110,6 +113,9 @@ _JOB_MIGRATIONS = {
     "cinematic_prompt": "TEXT DEFAULT ''",
     "middle_media": "TEXT DEFAULT '[]'",
     "shot_list": "TEXT DEFAULT '[]'",
+    "content_mode": "TEXT DEFAULT 'insight'",
+    "data_source_id": "INTEGER",
+    "data_charts": "TEXT DEFAULT '[]'",
 }
 
 
@@ -149,6 +155,9 @@ class VideoJob(BaseModel):
     cinematic_prompt: str = ""           # per-reel cinematic scene direction (Seedance)
     middle_media: list[str] = Field(default_factory=list)  # your own footage/screenshots for the middle
     shot_list: list[dict] = Field(default_factory=list)    # choreographed shots (timeline)
+    content_mode: str = "insight"        # insight | story | explainer — drives B-roll + data step
+    data_source_id: int | None = None    # Data Vault source analysed for this reel (insight mode)
+    data_charts: list[dict] = Field(default_factory=list)  # analysed charts: [{id, spec, insight}]
     created_at: str = ""
     updated_at: str = ""
 
@@ -194,6 +203,7 @@ class VideoJobStore:
             job.hook_type, job.tone, job.passion, job.own_hook, job.error,
             job.look_id, job.assembly_json, job.script_override, job.cinematic_prompt,
             json.dumps(job.middle_media), json.dumps(job.shot_list),
+            job.content_mode, job.data_source_id, json.dumps(job.data_charts),
             job.created_at, job.updated_at,
         )
         with self._connect() as conn:
@@ -206,7 +216,8 @@ class VideoJobStore:
                        driving_video_path=?, character_image_path=?, engine=?,
                        environment_id=?, camera_note=?, hook_type=?, tone=?, passion=?, own_hook=?,
                        error=?, look_id=?, assembly_json=?, script_override=?, cinematic_prompt=?,
-                       middle_media=?, shot_list=?, created_at=?, updated_at=? WHERE id=?""",
+                       middle_media=?, shot_list=?, content_mode=?, data_source_id=?, data_charts=?,
+                       created_at=?, updated_at=? WHERE id=?""",
                     (*cols, job.id),
                 )
                 conn.commit()
@@ -218,8 +229,9 @@ class VideoJobStore:
                    script_approved, driving_video_path, character_image_path, engine,
                    environment_id, camera_note, hook_type, tone, passion, own_hook, error,
                    look_id, assembly_json, script_override, cinematic_prompt,
-                   middle_media, shot_list, created_at, updated_at)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                   middle_media, shot_list, content_mode, data_source_id, data_charts,
+                   created_at, updated_at)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 cols,
             )
             conn.commit()
@@ -269,6 +281,9 @@ class VideoJobStore:
             cinematic_prompt=g("cinematic_prompt", "") or "",
             middle_media=json.loads(g("middle_media", "[]") or "[]"),
             shot_list=json.loads(g("shot_list", "[]") or "[]"),
+            content_mode=g("content_mode", "insight") or "insight",
+            data_source_id=g("data_source_id", None),
+            data_charts=json.loads(g("data_charts", "[]") or "[]"),
             created_at=row["created_at"], updated_at=row["updated_at"],
         )
 
@@ -616,6 +631,45 @@ def set_middle_media(job_id: int, paths: list[str]) -> VideoJob | None:
     job.middle_media = [p for p in (paths or []) if p]
     job.id = store.save(job)
     return store.get(job.id)
+
+
+def set_content_mode(job_id: int, mode: str) -> VideoJob | None:
+    """Set the reel's content mode (insight/story/explainer). Changing it invalidates
+    the shot list so the next assemble re-choreographs under the new mode's B-roll rules."""
+    from gtm_engine.video.modes import MODES, DEFAULT_MODE
+    store = VideoJobStore()
+    job = store.get(job_id)
+    if not job:
+        return None
+    new = mode if mode in MODES else DEFAULT_MODE
+    if new != job.content_mode:
+        job.content_mode = new
+        job.shot_list = []          # re-choreograph under the new mode
+        job.id = store.save(job)
+    return store.get(job.id)
+
+
+def attach_data_source(job_id: int, file_path: str, name: str = "") -> tuple[VideoJob | None, str]:
+    """Ingest an uploaded spreadsheet into the Data Vault, link it to the reel, and run
+    the analysis (insight + charts). Returns (job, message). Clears the shot list so the
+    next cut binds to the new charts."""
+    from gtm_engine.video.data_insight import ingest_data_file, analyze_for_job
+    store = VideoJobStore()
+    job = store.get(job_id)
+    if not job:
+        return None, "job not found"
+    sid = ingest_data_file(file_path, name=name)
+    if not sid:
+        return store.get(job_id), "Couldn't read that file — is it a CSV or XLSX with a header row?"
+    job.data_source_id = sid
+    job.data_charts = []
+    job.shot_list = []
+    job.id = store.save(job)
+    res = analyze_for_job(job.id)
+    if not res or not res.get("n_charts"):
+        return store.get(job.id), "Data attached, but no clear charts were found. You can still cut the reel."
+    return store.get(job.id), (f"Analysed — {res['n_charts']} proof chart(s) ready. "
+                               f"Insight: {res.get('insight', '')}")
 
 
 def revise_from_notes(job_id: int, notes: str = "", use_qa: bool = True) -> VideoJob | None:

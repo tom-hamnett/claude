@@ -73,15 +73,39 @@ The concatenation of every "spoken" in order MUST equal the full script. Aim for
 
 
 def choreograph(full_script: str, media_names: list[str], product: str = "",
-                target_seconds: int = 25) -> list[dict]:
-    """Ask Claude to choreograph the script into a shot list. Returns [] on failure."""
+                target_seconds: int = 25, mode: str = "insight",
+                data_charts: list[dict] | None = None) -> list[dict]:
+    """Ask Claude to choreograph the script into a shot list, steered by the content
+    mode (insight/story/explainer) and bound to any pre-analysed data charts.
+    Returns [] on failure."""
     from gtm_engine.utils.ai_client import call_claude
+    from gtm_engine.video.dataviz import clean_spec
+    from gtm_engine.video.modes import profile
+    prof = profile(mode)
+    stock_cap = int(prof.get("stock_cap", 1))
+    data_charts = data_charts or []
+    by_id = {c.get("id"): c.get("spec") for c in data_charts if c.get("id") and c.get("spec")}
+
     media_block = ("\n".join(f"  media_index {i}: {n}" for i, n in enumerate(media_names))
-                   if media_names else "  (none uploaded — use stock or cards for proof beats)")
+                   if media_names else "  (none uploaded)")
+    if by_id:
+        chart_lines = "\n".join(
+            f"  chart_id {c['id']}: {_chart_desc(c['spec'])}" for c in data_charts if c.get("id"))
+        chart_block = ("READY DATA CHARTS (from analysing the real data — bind a proof beat to one "
+                       "with visual=\"chart\" and \"chart_id\":\"<id>\"; do NOT rewrite the numbers):\n"
+                       + chart_lines)
+    else:
+        chart_block = ("READY DATA CHARTS: none pre-built. For a number/result beat, emit "
+                       "visual=\"chart\" with a \"data_spec\" built from the figure in the script.")
+
     prompt = (
         f"PRODUCT: {product or 'a data product'}\n"
+        f"CONTENT MODE: {prof.get('label', mode)} — {prof.get('broll_note', '')}\n"
+        f"STOCK BUDGET: at most {stock_cap} stock clip(s) in the whole reel.\n"
+        f"PRESENTER SHARE: about {int(prof.get('presenter_ratio', 0.55) * 100)}% of beats on the presenter.\n"
         f"TARGET LENGTH: ~{target_seconds}s, a cut every ~2–4s.\n"
         f"AVAILABLE SCREENSHOTS/FOOTAGE (map number/product beats to these):\n{media_block}\n\n"
+        f"{chart_block}\n\n"
         f"FULL SCRIPT (do not change the words):\n{full_script}\n\nReturn ONLY the JSON."
     )
     raw = call_claude(prompt, system=_SYSTEM, max_tokens=2000)
@@ -90,23 +114,39 @@ def choreograph(full_script: str, media_names: list[str], product: str = "",
         data = json.loads(raw[s:e + 1]) if s != -1 and e != -1 else {}
     except Exception:
         return []
-    from gtm_engine.video.dataviz import clean_spec
     shots = data.get("shots") or []
     cleaned, stock_used = [], 0
     for sh in shots:
         if not (sh.get("spoken") or "").strip():
             continue
+        # Bind a referenced ready-chart to its stored spec before validation.
+        if sh.get("visual") == "chart" and sh.get("chart_id") in by_id:
+            sh["data_spec"] = by_id[sh["chart_id"]]
         c = _clean(sh, len(media_names))
-        # Cap stock at one clip for the whole reel — extra stock beats become a chart
-        # (if the model gave numbers for it) or a card. Stock is texture, not the show.
+        # Enforce the mode's stock budget — extra stock beats become a chart
+        # (if the model gave numbers) or a card. Stock is texture, not the show.
         if c["visual"] == "stock":
-            if stock_used >= 1:
+            if stock_used >= stock_cap:
                 spec = clean_spec(sh.get("data_spec"))
                 c["visual"], c["data_spec"] = ("chart", spec) if spec else ("card", None)
             else:
                 stock_used += 1
         cleaned.append(c)
     return cleaned
+
+
+def _chart_desc(spec: dict) -> str:
+    """One-line human description of a ready chart, for the choreographer prompt."""
+    ct = spec.get("chart_type")
+    if ct == "stat":
+        return f"stat — {spec.get('value','')} {spec.get('label','')}".strip()
+    if ct == "bar":
+        return "bar — " + " vs ".join(str(b.get("label", "")) for b in (spec.get("bars") or [])[:3])
+    if ct == "line":
+        return f"line — {spec.get('title','')} ({len(spec.get('series') or [])} pts)"
+    if ct == "table":
+        return f"table — {spec.get('title','')} ({len(spec.get('rows') or [])} rows)"
+    return ct or "chart"
 
 
 def _clean(sh: dict, n_media: int) -> dict:

@@ -13,6 +13,7 @@ tenacity>=9.0.0
 rich>=13.9.0
 Pillow>=10.0.0
 imageio-ffmpeg>=0.5.1   # bundled ffmpeg binary — extract audio from uploaded video
+openpyxl>=3.1.0         # read uploaded .xlsx spreadsheets for the data-analysis step
 
 # These are only needed for CLI deployment features (not the UI):
 # praw>=7.7.0          # Reddit

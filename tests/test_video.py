@@ -562,7 +562,8 @@ def test_choreograph_cleans_and_validates(monkeypatch):
            '"caption":"x"},{"spoken":"Close","seconds":3,"visual":"stock","stock_query":"markets",'
            '"caption":"y"}]}')
     monkeypatch.setattr("gtm_engine.utils.ai_client.call_claude", lambda *a, **k: raw)
-    shots = ch.choreograph("Hook line Close", media_names=[], product="Atlas")
+    # explainer mode allows one stock clip (insight mode would demote it to a card)
+    shots = ch.choreograph("Hook line Close", media_names=[], product="Atlas", mode="explainer")
     assert len(shots) == 2
     # media_index 5 with 0 media → downgraded to a card; seconds clamped to <=6
     assert shots[0]["visual"] == "card" and shots[0]["seconds"] <= 6
@@ -710,8 +711,85 @@ def test_choreograph_caps_stock_at_one(monkeypatch):
     ]}
     import gtm_engine.utils.ai_client as aic
     monkeypatch.setattr(aic, "call_claude", lambda *a, **k: json.dumps(shots))
-    out = ch.choreograph("one two three four five", [], "ATLAS", 25)
+    # explainer mode caps stock at 1; insight (default) would cap at 0
+    out = ch.choreograph("one two three four five", [], "ATLAS", 25, mode="explainer")
     visuals = [s["visual"] for s in out]
     assert visuals.count("stock") == 1                 # only the first stock survives
     assert out[3]["visual"] == "chart"                 # extra stock w/ numbers → chart
     assert out[2]["visual"] == "card"                  # extra stock w/o numbers → card
+
+
+def test_choreograph_insight_mode_demotes_all_stock(monkeypatch):
+    import gtm_engine.video.choreography as ch
+    import gtm_engine.utils.ai_client as aic
+    shots = {"shots": [
+        {"spoken": "hook", "visual": "presenter", "role": "hook"},
+        {"spoken": "floor", "visual": "stock", "stock_query": "trading floor", "role": "example"},
+        {"spoken": "cta", "visual": "presenter", "role": "cta"},
+    ]}
+    monkeypatch.setattr(aic, "call_claude", lambda *a, **k: json.dumps(shots))
+    out = ch.choreograph("hook floor cta", [], "ATLAS", 25, mode="insight")
+    assert [s["visual"] for s in out].count("stock") == 0   # insight: no stock at all
+
+
+def test_choreograph_binds_ready_chart_by_id(monkeypatch):
+    import gtm_engine.video.choreography as ch
+    import gtm_engine.utils.ai_client as aic
+    spec = {"chart_type": "stat", "value": "-11.4%", "label": "Drawdown"}
+    charts = [{"id": "d0", "spec": spec}]
+    shots = {"shots": [
+        {"spoken": "we drew down", "visual": "chart", "chart_id": "d0", "role": "number"},
+        {"spoken": "the end", "visual": "presenter", "role": "cta"},
+    ]}
+    monkeypatch.setattr(aic, "call_claude", lambda *a, **k: json.dumps(shots))
+    out = ch.choreograph("we drew down the end", [], "ATLAS", 25,
+                         mode="insight", data_charts=charts)
+    assert out[0]["visual"] == "chart" and out[0]["data_spec"] == spec
+
+
+def test_content_mode_and_data_charts_persist(db):
+    from gtm_engine.video import VideoJob, VideoJobStore
+    store = VideoJobStore()
+    charts = [{"id": "d0", "spec": {"chart_type": "stat", "value": "34%", "label": "Return"}}]
+    job = VideoJob(idea_id=1, content_mode="story", data_source_id=7, data_charts=charts)
+    job.id = store.save(job)
+    got = store.get(job.id)
+    assert got.content_mode == "story" and got.data_source_id == 7
+    assert got.data_charts == charts
+
+
+def test_analyze_table_returns_insight_and_clean_charts(monkeypatch):
+    from gtm_engine.video import data_insight as di
+    payload = {
+        "insight": "ATLAS recovered its 11% drawdown in six weeks.",
+        "headline": "Down 11%, back in 6 weeks",
+        "angle": "Open on the drawdown, not the return.",
+        "charts": [
+            {"chart_type": "stat", "value": "-11.4%", "label": "Max drawdown"},
+            {"chart_type": "bar", "bars": [{"label": "x", "value": 1}]},   # invalid → dropped
+            {"chart_type": "line", "title": "Equity", "series": [100, 108, 121]},
+        ],
+    }
+    monkeypatch.setattr("gtm_engine.utils.ai_client.call_claude",
+                        lambda *a, **k: json.dumps(payload))
+    res = di.analyze_table("week,pnl\n1,2.3\n2,-1.1", product="ATLAS")
+    assert res["insight"].startswith("ATLAS recovered")
+    assert len(res["charts"]) == 2                      # the invalid bar was dropped
+    assert res["charts"][0]["id"] == "d0"
+    assert res["charts"][0]["spec"]["chart_type"] == "stat"
+
+
+def test_analyze_for_job_stores_charts(db, monkeypatch, tmp_path):
+    from gtm_engine.video import VideoJob, VideoJobStore, data_insight as di
+    from gtm_engine.data_vault import DataVault, DataSource
+    sid = DataVault().create(DataSource(name="log", source_type="dataset",
+                                        content="week,pnl\n1,2.3\n2,-1.1\n3,3.8"))
+    store = VideoJobStore()
+    job = VideoJob(idea_id=1, content_mode="insight", data_source_id=sid)
+    job.id = store.save(job)
+    monkeypatch.setattr(di, "analyze_table", lambda *a, **k: {
+        "insight": "i", "headline": "h", "angle": "a",
+        "charts": [{"id": "d0", "spec": {"chart_type": "stat", "value": "3%", "label": "x"}}]})
+    out = di.analyze_for_job(job.id)
+    assert out["n_charts"] == 1
+    assert store.get(job.id).data_charts[0]["spec"]["value"] == "3%"
