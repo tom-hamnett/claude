@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-05b · HD presenter toggle (true 1080p HeyGen)"
+BUILD_TAG = "2026-09-06 · cutaways never blank + free Pexels stock nudge"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -848,6 +848,15 @@ def _auto_assemble_ui(idea, job):
             st.caption("Built from — " + chips)
     if job.status == "failed" and job.error:
         st.error(job.error)
+
+    # Nudge to add the FREE Pexels key when stock beats would otherwise be cards.
+    if any((s.get("visual") == "stock") for s in (job.shot_list or [])):
+        from gtm_engine.config import PEXELS_API_KEY
+        if not PEXELS_API_KEY:
+            st.info("🎞 Some beats want **stock footage** to illustrate the point, but no Pexels "
+                    "key is set — they're showing text cards for now. Add a **free** key "
+                    "([pexels.com/api](https://www.pexels.com/api/)) in **Settings → Connections** "
+                    "and re-cut (free) to fill them with real video.")
 
     # ── Shot list — the choreography, editable, re-cuts for FREE (take is cached) ──
     if job.shot_list:

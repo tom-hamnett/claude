@@ -1034,7 +1034,14 @@ def assemble_choreographed(job_id: int, target_seconds: int = 25, draft: bool = 
                     _render_card_png(sh.get("caption") or (sh.get("spoken", "")[:40]), "", png)
                     path, kind = png, "png"
             except Exception as e:
-                logger.info("shot %d visual failed (%s) — presenter shows instead", i, e)
+                logger.info("shot %d visual failed (%s)", i, e)
+            # NEVER leave a cutaway blank: if the chosen visual couldn't be made
+            # (no screenshot, no Pexels key, stock miss), show a clean branded CARD
+            # of the point instead. Presenter beats keep showing you (no overlay).
+            if not (path and kind) and v in ("screenshot", "stock", "card"):
+                fb = sd / f"fb{i}.png"
+                _render_card_png(sh.get("caption") or (sh.get("spoken", "")[:40]) or "…", "", fb)
+                path, kind = fb, "png"
             if path and kind:
                 visual_ovs.append({"path": str(path), "kind": kind, "t1": t1, "t2": t2})
             cap = (sh.get("caption") or "").strip()

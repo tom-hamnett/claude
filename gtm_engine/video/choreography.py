@@ -41,6 +41,11 @@ Rules grounded in what actually holds attention:
       • an example/mood/place → "stock" (write a 2–5 word stock search query)
       • a claim with no asset → "card" (the caption carries it) or back to "presenter"
   - Prefer the user's OWN screenshots for proof beats when the media list has them.
+  - If NO screenshots are available: illustrate example/mood/place/claim beats with
+    "stock" and write a concrete 2–5 word visual query (e.g. "rising stock chart",
+    "trading desk dark", "city skyline dusk"); put specific numbers/results on a
+    "card" (the caption shows the figure). Don't leave an illustrative beat as bare
+    presenter unless it's the hook or CTA.
   - Caption: a SHORT muted-friendly line (≤ 8 words) — not the whole sentence.
 
 Return ONLY JSON: {"shots":[ {shot}, ... ]}. Each shot:
