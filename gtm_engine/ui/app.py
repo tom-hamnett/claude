@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-04 · Reel Choreography Engine (shot-by-shot, auto stock)"
+BUILD_TAG = "2026-09-04b · choreography: memory-safe compositor (Cloud fix)"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -846,49 +846,56 @@ def _auto_assemble_ui(idea, job):
 
     # ── Shot list — the choreography, editable, re-cuts for FREE (take is cached) ──
     if job.shot_list:
-        from gtm_engine.video import set_shot_list
-        with st.expander(f"🎬 Shot list — {len(job.shot_list)} shots (edit & re-cut, free)",
-                         expanded=False):
-            st.caption("Each row is a shot cut to your script. Change the visual, the caption, or "
-                       "the stock search, then **Save & re-cut** — it reuses your cached take, so "
-                       "editing costs **no HeyGen credits**.")
-            rows = [{"spoken": s.get("spoken", ""), "seconds": float(s.get("seconds", 3)),
-                     "visual": s.get("visual", "presenter"),
-                     "media #": (s.get("media_index") if s.get("media_index") is not None else -1),
-                     "stock search": s.get("stock_query", ""),
-                     "caption": s.get("caption", "")} for s in job.shot_list]
-            edited = st.data_editor(
-                rows, key=f"shots_{idea.id}", use_container_width=True, hide_index=True,
-                column_config={
-                    "spoken": st.column_config.TextColumn("Spoken (words)", disabled=True, width="medium"),
-                    "seconds": st.column_config.NumberColumn("Secs", min_value=1.5, max_value=6.0, step=0.5, width="small"),
-                    "visual": st.column_config.SelectboxColumn(
-                        "Visual", options=["presenter", "screenshot", "stock", "card"], width="small"),
-                    "media #": st.column_config.NumberColumn("Screenshot #", min_value=-1, step=1, width="small",
-                        help="Which uploaded file (0,1,2…) for a 'screenshot' shot; -1 = none"),
-                    "stock search": st.column_config.TextColumn("Stock search", width="medium"),
-                    "caption": st.column_config.TextColumn("Caption", width="medium"),
-                })
-            b1, b2 = st.columns(2)
-            with b1:
-                if st.button("Save & re-cut (free)", key=f"shotsave_{idea.id}", use_container_width=True):
-                    new = []
-                    for r in edited:
-                        mi = int(r["media #"]) if r["media #"] is not None and int(r["media #"]) >= 0 else None
-                        new.append({"spoken": r["spoken"], "seconds": float(r["seconds"]),
-                                    "role": "", "visual": r["visual"],
-                                    "stock_query": r["stock search"] or "",
-                                    "media_index": mi if r["visual"] == "screenshot" else None,
-                                    "caption": r["caption"] or ""})
-                    set_shot_list(job.id, new)
-                    start_assemble(job.id)   # reuses cached take → no HeyGen spend
-                    st.rerun()
-            with b2:
-                if st.button("↻ Re-choreograph from script", key=f"shotredo_{idea.id}",
-                             use_container_width=True):
-                    set_shot_list(job.id, [])   # clear → next assemble regenerates it
-                    start_assemble(job.id)
-                    st.rerun()
+        _shot_list_editor(idea, job)
+
+
+def _shot_list_editor(idea, job):
+    """Editable choreography table. Wrapped so no widget quirk can crash the app."""
+    from gtm_engine.video import set_shot_list
+    from gtm_engine.video.assembler import start_assemble
+    with st.expander(f"🎬 Shot list — {len(job.shot_list)} shots (edit & re-cut, free)",
+                     expanded=False):
+        st.caption("Each row is a shot cut to your script. Change the visual, caption or stock "
+                   "search, then **Save & re-cut** — it reuses your cached take, so editing costs "
+                   "**no HeyGen credits**.")
+        rows = [{"spoken": s.get("spoken", ""), "seconds": float(s.get("seconds", 3) or 3),
+                 "visual": s.get("visual", "presenter"),
+                 "media #": (s.get("media_index") if s.get("media_index") is not None else -1),
+                 "stock search": s.get("stock_query", ""),
+                 "caption": s.get("caption", "")} for s in job.shot_list]
+        edited = rows
+        try:
+            edited = st.data_editor(rows, key=f"shots_{idea.id}",
+                                    use_container_width=True, hide_index=True)
+        except Exception:
+            for r in rows:      # read-only fallback if the editor widget isn't available
+                st.markdown(f"- **{r['visual']}** · {r['seconds']}s — _{r['spoken']}_"
+                            + (f" · 📷#{r['media #']}" if r['visual'] == 'screenshot' else "")
+                            + (f" · 🔎 {r['stock search']}" if r['visual'] == 'stock' else ""))
+            st.caption("(Editing table unavailable here — use **Re-choreograph** to regenerate.)")
+        b1, b2 = st.columns(2)
+        with b1:
+            if st.button("Save & re-cut (free)", key=f"shotsave_{idea.id}", use_container_width=True):
+                new = []
+                for r in edited:
+                    try:
+                        mnum = int(r.get("media #", -1))
+                    except (TypeError, ValueError):
+                        mnum = -1
+                    vis = r.get("visual", "presenter")
+                    new.append({"spoken": r.get("spoken", ""), "seconds": float(r.get("seconds", 3) or 3),
+                                "role": "", "visual": vis, "stock_query": r.get("stock search", "") or "",
+                                "media_index": (mnum if (vis == "screenshot" and mnum >= 0) else None),
+                                "caption": r.get("caption", "") or ""})
+                set_shot_list(job.id, new)
+                start_assemble(job.id)
+                st.rerun()
+        with b2:
+            if st.button("↻ Re-choreograph from script", key=f"shotredo_{idea.id}",
+                         use_container_width=True):
+                set_shot_list(job.id, [])
+                start_assemble(job.id)
+                st.rerun()
 
 
 def _produce_review_panel(idea):

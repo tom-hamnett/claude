@@ -36,10 +36,12 @@ from gtm_engine.config import OUTPUT_DIR
 logger = logging.getLogger(__name__)
 
 # Uniform spec every segment is normalised to, so the final stitch is clean.
-# 1080x1920 (full-HD vertical) + high-quality x264 to kill grain; audio is copied
+# 720x1280 vertical — matches HeyGen's render size and stays light on memory
+# (Streamlit Cloud is ~1GB). High-quality x264 keeps it clean; audio is copied
 # through untouched wherever possible so the voice never degrades.
-W, H, FPS = 1080, 1920, 30
-VQ = ["-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p"]
+W, H, FPS = 720, 1280, 30
+VQ = ["-c:v", "libx264", "-preset", "veryfast", "-crf", "19", "-pix_fmt", "yuv420p",
+      "-threads", "2"]
 AQ = ["-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-ac", "2"]
 BG_HEX = "0x0a0a0f"          # brand dark
 ACCENT = "0xffffff"
@@ -869,37 +871,44 @@ def assemble_continuous(job_id: int, include_broll: bool = True, cinematic_middl
 
 # ── Choreographed compositor (many shots over one continuous take) ─────────────
 
+def _overlay_one(base: Path, ov: dict, out: Path, dur: float) -> Path | None:
+    """Overlay ONE visual on `base` during its window, keeping base audio. Only two
+    inputs per pass — memory-light enough for Streamlit Cloud (~1GB)."""
+    ff = _ffmpeg()
+    t1, t2 = float(ov["t1"]), float(ov["t2"])
+    en = f"enable='between(t,{t1:.3f},{t2:.3f})'"
+    if ov["kind"] == "video":
+        fc = (f"[1:v]scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},"
+              f"setpts=PTS-STARTPTS+{t1:.3f}/TB[v];[0:v][v]overlay=0:0:{en}[o]")
+        head = [ff, "-y", "-i", str(base), "-i", str(ov["path"])]
+    else:  # png (already W×H) — loop as a static layer for the window
+        fc = f"[0:v][1:v]overlay=0:0:{en}[o]"
+        head = [ff, "-y", "-i", str(base), "-loop", "1", "-t", f"{dur + 1:.2f}", "-i", str(ov["path"])]
+    tail = ["-filter_complex", fc, "-map", "[o]", "-map", "0:a?", "-t", f"{dur:.3f}", *VQ]
+    if _run(head + tail + ["-c:a", "copy", str(out)], timeout=300) and out.exists():
+        return out
+    return out if _run(head + tail + [*AQ, str(out)], timeout=300) and out.exists() else None
+
+
 def _composite(master: Path, overlays: list[dict], out: Path) -> Path | None:
-    """Lay many visuals over the master in ONE pass. Each overlay:
-      {"path", "kind": "video"|"png", "t1", "t2"}.
-    Video overlays are time-shifted to their window; pngs are shown static during
-    it. The master AUDIO is copied through untouched. Overlays are drawn in list
-    order (put captions last so they sit on top)."""
+    """Lay many visuals over the master, ONE overlay per ffmpeg pass (low memory).
+    Each overlay: {"path", "kind": "video"|"png", "t1", "t2"}. The master AUDIO is
+    copied through untouched. Overlays are drawn in list order (captions last)."""
     if not overlays:
         return master
-    ff = _ffmpeg()
     dur = _probe_duration(master) or 30.0
-    parts, prev = [], "0:v"
-    for k, ov in enumerate(overlays, start=1):
-        t1, t2 = float(ov["t1"]), float(ov["t2"])
-        outlab = f"o{k}"
-        if ov["kind"] == "video":
-            parts.append(f"[{k}:v]scale={W}:{H}:force_original_aspect_ratio=increase,"
-                         f"crop={W}:{H},setpts=PTS-STARTPTS+{t1:.3f}/TB[v{k}]")
-            parts.append(f"[{prev}][v{k}]overlay=0:0:enable='between(t,{t1:.3f},{t2:.3f})'[{outlab}]")
-        else:  # png (already W×H)
-            parts.append(f"[{prev}][{k}:v]overlay=0:0:enable='between(t,{t1:.3f},{t2:.3f})'[{outlab}]")
-        prev = outlab
-    fc = ";".join(parts)
-    head = [ff, "-y", "-i", str(master)]
-    for ov in overlays:
-        head += (["-loop", "1", "-t", f"{dur + 1:.2f}", "-i", str(ov["path"])]
-                 if ov["kind"] == "png" else ["-i", str(ov["path"])])
-    base = head + ["-filter_complex", fc, "-map", f"[{prev}]", "-map", "0:a?",
-                   "-t", f"{dur:.3f}", *VQ]   # -t caps to the master length (drop png tail)
-    if _run(base + ["-c:a", "copy", str(out)], timeout=420) and out.exists():
-        return out
-    return out if _run(base + [*AQ, str(out)], timeout=420) and out.exists() else None
+    base = master
+    for i, ov in enumerate(overlays):
+        try:
+            res = _overlay_one(base, ov, out.with_name(f"{out.stem}_c{i}.mp4"), dur)
+        except Exception as e:
+            logger.info("overlay %d skipped: %s", i, e)
+            res = None
+        if res:
+            base = res
+    if Path(base) != out:
+        out.write_bytes(Path(base).read_bytes())
+    return out
 
 
 def _shot_windows(shots: list[dict], dur: float, lead: float = 0.3) -> list[tuple]:
