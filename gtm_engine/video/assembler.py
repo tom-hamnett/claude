@@ -446,6 +446,21 @@ def _resolve_context(job) -> dict:
             look = cs.get_look(job.look_id)
             if look and look.image_key:
                 ctx["image_key"] = look.image_key
+        # No explicit look cast AND no character default photo → auto-cast from the
+        # Look Library so the presenter still renders (e.g. a reel approved before
+        # any looks were uploaded). Best-fit if we can, else the first keyed look.
+        if not ctx["image_key"] and ch and ch.id:
+            keyed = [lk for lk in cs.list_looks(ch.id) if lk.image_key]
+            if keyed:
+                chosen = keyed[0]
+                try:
+                    from gtm_engine.video import suggest_look
+                    lid, _ = suggest_look(job, keyed)
+                    chosen = next((lk for lk in keyed if lk.id == lid), keyed[0])
+                except Exception:
+                    pass
+                ctx["image_key"] = chosen.image_key
+                job.look_id = chosen.id   # record it (persisted when the job saves)
     except Exception:
         pass
     return ctx
