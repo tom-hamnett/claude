@@ -528,6 +528,158 @@ def _save_state(job, state: dict) -> None:
     VideoJobStore().save(job)
 
 
+# ── Continuous-voice assembly (talking head + cutaways over one VO) ────────────
+# The reel is your full script spoken continuously as ONE talking-head take (your
+# face, your voice, lip-synced, never silent). The cinematic/b-roll plays as a
+# cutaway OVER the middle window while your narration keeps going underneath —
+# documentary style. This is what makes it feel like a real ~20-30s piece.
+
+def _probe_duration(path: Path) -> float:
+    """Duration of a media file in seconds (parsed from ffmpeg), 0.0 on failure."""
+    import re
+    try:
+        r = subprocess.run([_ffmpeg(), "-i", str(path)], capture_output=True, text=True)
+        m = re.search(r"Duration: (\d+):(\d+):(\d+\.\d+)", r.stderr or "")
+        if m:
+            h, mi, s = m.groups()
+            return int(h) * 3600 + int(mi) * 60 + float(s)
+    except Exception:
+        pass
+    return 0.0
+
+
+def _fit_clip(src: Path, seconds: float, out: Path) -> Path | None:
+    """Video-only clip of exactly `seconds`, filling 9:16 (loop if short, trim if long)."""
+    ff = _ffmpeg()
+    vf = (f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},"
+          f"fps={FPS},setsar=1")
+    cmd = [ff, "-y", "-stream_loop", "-1", "-i", str(src), "-t", f"{max(seconds,0.5):.3f}",
+           "-an", "-vf", vf, "-c:v", "libx264", "-pix_fmt", "yuv420p", str(out)]
+    return out if _run(cmd) and out.exists() else None
+
+
+def _overlay_window(master: Path, cutaway: Path, t1: float, t2: float, out: Path) -> Path | None:
+    """Show `cutaway` full-frame over `master` during [t1,t2]; keep master audio."""
+    ff = _ffmpeg()
+    fc = (f"[1:v]setpts=PTS-STARTPTS+{t1:.3f}/TB[cut];"
+          f"[0:v][cut]overlay=0:0:enable='between(t,{t1:.3f},{t2:.3f})'[v]")
+    cmd = [ff, "-y", "-i", str(master), "-i", str(cutaway),
+           "-filter_complex", fc, "-map", "[v]", "-map", "0:a?",
+           "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", "-shortest", str(out)]
+    return out if _run(cmd) and out.exists() else None
+
+
+def _render_master_talkinghead(job, ctx: dict, segments: dict, out: Path) -> Path | None:
+    """Render the FULL script as one continuous talking-head take (your voice)."""
+    from gtm_engine.avatar import RenderRequest, get_provider
+    provider = get_provider(ctx["provider"])
+    if not getattr(provider, "is_configured", lambda: False)():
+        return None
+    if not ctx.get("image_key"):
+        return None
+    # Full narration = every segment's spoken line, in order (fallback to the job).
+    parts = [(segments.get(s, {}) or {}).get("spoken_text", "").strip() for s in SEG_ORDER]
+    full = " ".join(p for p in parts if p).strip() or job.spoken_script
+    req = RenderRequest(
+        script=full, avatar_id=job.avatar_id, output_path=out.with_name(out.stem + "_raw.mp4"),
+        voice_id=ctx.get("voice_id") or None, background=ctx.get("background", "#0a0a0f"),
+        aspect_ratio="9:16", motion_prompt=ctx.get("motion_prompt", ""),
+        expressiveness=ctx.get("expressiveness", 0.5), image_key=ctx["image_key"],
+    )
+    result = provider.render(req)
+    if not result or not Path(result).exists():
+        return None
+    return _video_finalize(Path(result), out, audio="keep")
+
+
+def _middle_cutaway(segments: dict, ctx: dict, seconds: float, out: Path,
+                    cinematic_middle: bool, include_broll: bool) -> tuple[Path | None, str]:
+    """Build ONE cutaway clip (cinematic YOU, else b-roll) for the middle window."""
+    mids = [segments.get(s, {}) or {} for s in ("tension", "pivot", "proof")]
+    vd = " ".join((m.get("visual_direction", "") or "").strip() for m in mids).strip()
+    seg = {"visual_direction": vd, "text_overlay": "", "duration_seconds": max(4, int(seconds))}
+    raw = out.with_name(out.stem + "_src.mp4")
+    if cinematic_middle and ctx.get("cinematic_look_ids"):
+        clip = _cinematic_segment(seg, ctx, raw)
+        if clip:
+            fit = _fit_clip(Path(clip), seconds, out)
+            if fit:
+                return fit, "cinematic"
+    if include_broll:
+        clip = _broll_segment(seg, raw, narrate=False)
+        if clip:
+            fit = _fit_clip(Path(clip), seconds, out)
+            if fit:
+                return fit, "b-roll"
+    return None, ""
+
+
+def assemble_continuous(job_id: int, include_broll: bool = True, cinematic_middle: bool = False,
+                        on_progress=None):
+    """Assemble a continuous-voice reel: one talking-head narration of the full
+    script, with a cinematic/b-roll cutaway over the middle. Falls back to the
+    segment assembler if a talking-head master can't be produced."""
+    from gtm_engine.video import VideoJobStore
+    from gtm_engine.producer import ProducerBriefLibrary
+
+    store = VideoJobStore()
+    job = store.get(job_id)
+    if not job:
+        return None
+    brief = ProducerBriefLibrary().get_for_idea(job.idea_id)
+    segments = (brief.segments_json if brief else {}) or {}
+    ctx = _resolve_context(job)
+    sd = _seg_dir(job_id)
+
+    if on_progress:
+        on_progress(1, 4, "Recording your continuous take")
+    master = _render_master_talkinghead(job, ctx, segments, sd / "master.mp4")
+    if not master:
+        # No talking-head master possible → fall back to the segment stitch.
+        logger.info("continuous: no master talking head; falling back to segment assembly")
+        return assemble_reel(job_id, include_broll=include_broll,
+                             cinematic_middle=cinematic_middle, on_progress=on_progress)
+
+    dur = _probe_duration(master) or 20.0
+    # Middle window by spoken-word proportions (so cutaway sits over the middle beats).
+    wc = {s: len((segments.get(s, {}) or {}).get("spoken_text", "").split()) for s in SEG_ORDER}
+    total = sum(wc.values()) or 1
+    hook_frac = wc["hook"] / total
+    mid_frac = (wc["tension"] + wc["pivot"] + wc["proof"]) / total
+    t1 = max(1.0, dur * hook_frac)
+    t2 = min(dur - 0.8, dur * (hook_frac + mid_frac))
+    if t2 - t1 < 2.0:  # ensure a sensible cutaway window
+        t1, t2 = dur * 0.30, dur * 0.75
+
+    final_src = master
+    method = "talking-head (full)"
+    if on_progress:
+        on_progress(2, 4, "Filming your cutaway")
+    cutaway, cmethod = _middle_cutaway(segments, ctx, t2 - t1, sd / "cutaway.mp4",
+                                       cinematic_middle, include_broll)
+    if cutaway:
+        if on_progress:
+            on_progress(3, 4, "Layering the cutaway over your voice")
+        overlaid = _overlay_window(master, cutaway, t1, t2, sd / "overlaid.mp4")
+        if overlaid:
+            final_src = overlaid
+            method = f"talking-head + {cmethod} cutaway"
+
+    if on_progress:
+        on_progress(4, 4, "Finishing")
+    final = OUTPUT_DIR / "videos" / f"idea_{job.idea_id}_reel.mp4"
+    final.parent.mkdir(parents=True, exist_ok=True)
+    final.write_bytes(Path(final_src).read_bytes())
+    job.video_path = str(final)
+    job.status = "ready"
+    job.error = ""
+    state = _load_state(job)
+    state["methods"] = {"reel": method, "duration": round(dur, 1)}
+    job.assembly_json = json.dumps(state)
+    job.id = store.save(job)
+    return store.get(job.id)
+
+
 # ── Background runner ──────────────────────────────────────────────────────────
 # Rendering must survive the client disconnecting (mobile browsers kill long
 # in-page runs). So we run the work on a daemon thread in the app's own process
@@ -577,9 +729,10 @@ def start_assemble(job_id: int, include_broll: bool = True,
 
     def _run():
         try:
-            assemble_reel(job_id, include_broll=include_broll,
-                          narrate_middle=narrate_middle,
-                          cinematic_middle=cinematic_middle, on_progress=_prog)
+            # Continuous-voice reel by default (talking head + cutaways over one VO);
+            # it falls back to the segment stitch if a master take can't be made.
+            assemble_continuous(job_id, include_broll=include_broll,
+                                cinematic_middle=cinematic_middle, on_progress=_prog)
             try:
                 from gtm_engine.persistence import backup_quietly
                 backup_quietly()

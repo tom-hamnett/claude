@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-01 · cinematic YOU in the middle (Seedance)"
+BUILD_TAG = "2026-09-01b · continuous voice + cinematic cutaway"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -711,10 +711,10 @@ def _auto_assemble_ui(idea, job):
             st.rerun()
         return
 
-    st.caption("The tool builds the **whole reel** — your presenter on the hook & bookend, "
-               "the data/proof beats in the middle, captions — and stitches one vertical "
-               "video you just review. Any beat it can't render richly becomes a clean "
-               "branded card, so you always get a complete reel.")
+    st.caption("The tool records your **full script as one continuous take** — your face, "
+               "your voice, never silent (~20–30s) — then lays the cinematic / b-roll over "
+               "the middle as a cutaway while your narration keeps going underneath. One "
+               "vertical video you just review.")
 
     # Pre-flight: can the presenter actually render as YOU? (Avatar IV needs an
     # uploaded photo's image_key — a trained-avatar id alone won't drive the API.)
@@ -769,15 +769,18 @@ def _auto_assemble_ui(idea, job):
     except Exception:
         methods = {}
     if methods:
-        icon = {"avatar": "🧑 presenter", "cinematic": "🎬 cinematic you",
-                "b-roll": "🎞 b-roll", "card": "🅰 card"}
-        chips = "  ·  ".join(f"{k}: {icon.get(v, v)}" for k, v in methods.items())
-        st.caption("Built from — " + chips)
-        cards = [k for k, v in methods.items() if v == "card"]
-        if cards:
-            st.caption("Cards stood in where richer media wasn't available. To upgrade: add "
-                       "**looks** (Cast & Voice) so the presenter renders on the hook/bookend, "
-                       "and switch **B-roll on** for the middle. Beats on cards: " + ", ".join(cards))
+        if "reel" in methods:  # continuous-voice model
+            dur = methods.get("duration")
+            st.caption(f"Built as — **{methods['reel']}**"
+                       + (f"  ·  ~{dur:g}s" if dur else ""))
+            if "talking-head (full)" == methods.get("reel"):
+                st.caption("Voice-over only (no cutaway this time). Turn on **Cinematic YOU** or "
+                           "**B-roll** to layer motion over the middle.")
+        else:  # legacy per-segment model
+            icon = {"avatar": "🧑 presenter", "cinematic": "🎬 cinematic you",
+                    "b-roll": "🎞 b-roll", "card": "🅰 card"}
+            chips = "  ·  ".join(f"{k}: {icon.get(v, v)}" for k, v in methods.items())
+            st.caption("Built from — " + chips)
     if job.status == "failed" and job.error:
         st.error(job.error)
 

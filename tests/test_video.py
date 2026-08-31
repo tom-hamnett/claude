@@ -376,3 +376,53 @@ def test_character_persists_cinematic_fields(tmp_path, monkeypatch):
                                       cinematic_look_ids="a,b"))
     g = cs.get_character(cid)
     assert g.avatar_group_id == "grp1" and g.cinematic_look_ids == "a,b"
+
+
+def test_continuous_falls_back_when_no_master(db, tmp_path, monkeypatch):
+    """With no talking-head master possible, continuous falls back to segment stitch."""
+    from gtm_engine.producer import ProducerBrief, ProducerBriefLibrary
+    import gtm_engine.video.assembler as asm
+    monkeypatch.setattr(asm, "ASSEMBLY_DIR", tmp_path / "a")
+    monkeypatch.setattr(asm, "OUTPUT_DIR", tmp_path / "o")
+    monkeypatch.setattr(asm, "_render_master_talkinghead", lambda *a, **k: None)
+    segs = {s: {"spoken_text": f"line {s}", "text_overlay": s.title(), "duration_seconds": 1,
+                "visual_type": "character_in_scene" if s in ("hook", "bookend") else "d"}
+            for s in ["hook", "tension", "pivot", "proof", "bookend"]}
+    ProducerBriefLibrary().save(ProducerBrief(idea_id=1, spoken_script="x", segments_json=segs))
+    store = VideoJobStore(); job = VideoJob(idea_id=1); job.id = store.save(job)
+    out = asm.assemble_continuous(job.id, include_broll=False)
+    assert out.status == "ready" and out.video_path and Path(out.video_path).exists()
+
+
+def test_continuous_overlays_cutaway_over_master(db, tmp_path, monkeypatch):
+    """A talking-head master + a middle cutaway → one continuous reel (master audio kept)."""
+    import subprocess, imageio_ffmpeg
+    from gtm_engine.producer import ProducerBrief, ProducerBriefLibrary
+    import gtm_engine.video.assembler as asm
+    ff = imageio_ffmpeg.get_ffmpeg_exe()
+    monkeypatch.setattr(asm, "ASSEMBLY_DIR", tmp_path / "a")
+    monkeypatch.setattr(asm, "OUTPUT_DIR", tmp_path / "o")
+    (tmp_path / "a").mkdir(parents=True, exist_ok=True)
+
+    def fake_master(job, ctx, segments, out):
+        subprocess.run([ff, "-y", "-f", "lavfi", "-i", "color=c=navy:s=720x1280:d=6:r=30",
+                        "-f", "lavfi", "-i", "sine=frequency=300:duration=6",
+                        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", "-shortest",
+                        str(out)], capture_output=True)
+        return out
+    def fake_cut(segments, ctx, seconds, out, cinematic_middle, include_broll):
+        subprocess.run([ff, "-y", "-f", "lavfi", "-i", f"color=c=red:s=720x1280:d={seconds}:r=30",
+                        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-an", str(out)],
+                       capture_output=True)
+        return out, "cinematic"
+    monkeypatch.setattr(asm, "_render_master_talkinghead", fake_master)
+    monkeypatch.setattr(asm, "_middle_cutaway", fake_cut)
+    segs = {s: {"spoken_text": "word word word", "text_overlay": "x", "duration_seconds": 4}
+            for s in ["hook", "tension", "pivot", "proof", "bookend"]}
+    ProducerBriefLibrary().save(ProducerBrief(idea_id=1, spoken_script="x", segments_json=segs))
+    store = VideoJobStore(); job = VideoJob(idea_id=1); job.id = store.save(job)
+    out = asm.assemble_continuous(job.id, cinematic_middle=True, include_broll=True)
+    assert out.status == "ready"
+    assert asm._probe_duration(Path(out.video_path)) > 5.0  # full master length kept
+    import json as _j
+    assert "cutaway" in _j.loads(out.assembly_json)["methods"]["reel"]
