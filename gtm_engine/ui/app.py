@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-08-31d · background rendering (survives disconnect)"
+BUILD_TAG = "2026-08-31e · voice/avatar save guard + prompts"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -1569,6 +1569,10 @@ def _render_settings():
             ch_avatar_id = f"tp:{ch_avatar_id}"
         elif not is_photo and str(ch_avatar_id).startswith("tp:"):
             ch_avatar_id = ch_avatar_id[3:]
+        # Guard: the HeyGen avatar dropdown often doesn't list a pasted Avatar IV
+        # id, so it resets to "(none)" — don't let that silently wipe a saved id.
+        if not ch_avatar_id and ch.avatar_id and not paste_id.strip():
+            ch_avatar_id, ch_avatar_name = ch.avatar_id, ch.avatar_name
 
         # ── HeyGen Template (full automation with YOUR avatar — recommended) ──
         st.markdown("**🚀 HeyGen Template — full automation (recommended)**")
@@ -1677,6 +1681,12 @@ def _render_settings():
             ch_voice_id, ch_voice_name = v_ids[vp], (v_names[vp] if vp else "")
         else:
             ch_voice_id = st.text_input("Voice id (optional)", value=ch_voice_id, key="ch_vo_txt")
+        # Guard: don't let an empty selection wipe a saved voice.
+        if not ch_voice_id and ch.voice_id:
+            ch_voice_id, ch_voice_name = ch.voice_id, ch.voice_name
+        if not ch_voice_id:
+            st.caption("⚠️ No voice selected — renders use a default HeyGen voice, not yours. "
+                       "Pick your cloned voice above so the reel speaks in your voice.")
 
         if env_ids:
             cur_env = ch.environment_id if ch.environment_id in env_ids else env_ids[0]
