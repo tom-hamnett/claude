@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-02d · cache the take & cutaway (re-runs don't re-spend)"
+BUILD_TAG = "2026-09-03 · FREE draft mode (perfect it before you pay)"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -759,7 +759,16 @@ def _auto_assemble_ui(idea, job):
     )
     if not narrate:
         st.caption("🔊 Voice: only **you** (hook & bookend). The middle is captioned, no AI voice.")
-    lbl = "✨ Auto-assemble full reel" if not job.video_path else "✨ Re-assemble reel"
+    # FREE draft first — perfect the words/pacing for £0, then pay once for the real one.
+    if st.button("🆓 Free draft (AI voice, no HeyGen credits)", key=f"draft_{idea.id}",
+                 use_container_width=True):
+        start_assemble(job.id, draft=True)
+        st.rerun()
+    st.caption("Draft = your script in a stand-in AI voice over your look, so you can nail the "
+               "words, pacing and length **for free** before spending any HeyGen credits.")
+
+    lbl = "✨ Auto-assemble full reel (spends HeyGen credits)" if not job.video_path \
+        else "✨ Re-assemble reel (spends HeyGen credits)"
     if st.button(lbl, key=f"asm_{idea.id}", use_container_width=True, type="primary"):
         start_assemble(job.id, include_broll=broll, narrate_middle=narrate,
                        cinematic_middle=cinematic)

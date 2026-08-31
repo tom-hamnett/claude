@@ -511,3 +511,23 @@ def test_master_take_is_cached_across_reassembles(db, tmp_path, monkeypatch):
     asm.assemble_continuous(job.id, cinematic_middle=False)
     asm.assemble_continuous(job.id, cinematic_middle=False)  # same script → cache hit
     assert calls["n"] == 1  # master rendered once, reused the second time
+
+
+def test_draft_mode_never_calls_heygen(db, tmp_path, monkeypatch):
+    """Free draft mode must NOT call the HeyGen talking-head render (no credits)."""
+    from gtm_engine.producer import ProducerBrief, ProducerBriefLibrary
+    import gtm_engine.video.assembler as asm
+    monkeypatch.setattr(asm, "ASSEMBLY_DIR", tmp_path / "a")
+    monkeypatch.setattr(asm, "OUTPUT_DIR", tmp_path / "o")
+    called = {"heygen": 0}
+    monkeypatch.setattr(asm, "_render_master_talkinghead",
+                        lambda *a, **k: called.__setitem__("heygen", called["heygen"] + 1))
+    segs = {s: {"spoken_text": "word", "text_overlay": "x", "duration_seconds": 2}
+            for s in ["hook", "tension", "pivot", "proof", "bookend"]}
+    ProducerBriefLibrary().save(ProducerBrief(idea_id=1, spoken_script="x", segments_json=segs))
+    store = VideoJobStore(); job = VideoJob(idea_id=1, hook_text="Hi"); job.id = store.save(job)
+    out = asm.assemble_continuous(job.id, draft=True)
+    assert called["heygen"] == 0          # HeyGen never touched
+    assert out.status == "ready" and Path(out.video_path).exists()
+    import json as _j
+    assert "draft" in _j.loads(out.assembly_json)["methods"]["reel"]

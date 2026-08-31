@@ -480,6 +480,7 @@ def _resolve_context(job) -> dict:
         "expressiveness": job.expressiveness or 0.5,
         "background": cfg.background,
         "image_key": "",
+        "look_photo": "",
         "cinematic_look_ids": [],
         "cinematic_prompt": (job.cinematic_prompt or "").strip(),
     }
@@ -502,11 +503,14 @@ def _resolve_context(job) -> dict:
                     ctx["cinematic_look_ids"] = [l["id"] for l in looks[:1]] or [ch.avatar_group_id]
                 except Exception:
                     ctx["cinematic_look_ids"] = [ch.avatar_group_id]
+            ctx["look_photo"] = ch.photo_path or ""
         # A per-reel cast look overrides the character's default image_key.
         if job.look_id:
             look = cs.get_look(job.look_id)
             if look and look.image_key:
                 ctx["image_key"] = look.image_key
+            if look and look.photo_path:
+                ctx["look_photo"] = look.photo_path
         # No explicit look cast AND no character default photo → auto-cast from the
         # Look Library so the presenter still renders (e.g. a reel approved before
         # any looks were uploaded). Best-fit if we can, else the first keyed look.
@@ -603,6 +607,46 @@ def _full_script(job, segments: dict) -> str:
     return "\n\n".join(parts).strip() or job.spoken_script
 
 
+def _cover_fit(im, w: int, h: int):
+    """Scale+crop a PIL image to exactly w×h (cover)."""
+    sw, sh = im.size
+    scale = max(w / sw, h / sh)
+    im = im.resize((max(1, int(sw * scale)), max(1, int(sh * scale))))
+    x, y = (im.width - w) // 2, (im.height - h) // 2
+    return im.crop((x, y, x + w, y + h))
+
+
+def _draft_master(job, ctx: dict, segments: dict, out: Path) -> Path | None:
+    """FREE preview take: Gemini TTS of the full script (a stand-in voice, ~free)
+    over a still of your look. NO HeyGen credits — for perfecting the words, pacing
+    and length before you spend on the real render."""
+    from gtm_engine.config import GOOGLE_API_KEY
+    full = _full_script(job, segments)
+    vo = None
+    if GOOGLE_API_KEY:
+        try:
+            from gtm_engine.utils.media import generate_voiceover
+            vo = generate_voiceover(full, output_path=out.with_name(out.stem + "_dvo.wav"))
+        except Exception:
+            vo = None
+    from PIL import Image
+    still = out.with_suffix(".still.png")
+    photo = ctx.get("look_photo", "")
+    made = False
+    if photo and Path(photo).exists():
+        try:
+            _cover_fit(Image.open(photo).convert("RGB"), W, H).save(still)
+            made = True
+        except Exception:
+            made = False
+    if not made:
+        _render_card_png(job.hook_text or "DRAFT PREVIEW",
+                         "AI-voice draft — no HeyGen credits", still)
+    seconds = _probe_duration(vo) if (vo and Path(vo).exists()) else 20.0
+    return _still_to_clip(still, int(seconds) + 1, out,
+                          audio=(vo if vo and Path(vo).exists() else None))
+
+
 def _render_master_talkinghead(job, ctx: dict, segments: dict, out: Path) -> Path | None:
     """Render the FULL script as one continuous talking-head take (your voice)."""
     from gtm_engine.avatar import RenderRequest, get_provider
@@ -654,7 +698,7 @@ def _middle_cutaway(segments: dict, ctx: dict, seconds: float, out: Path,
 
 
 def assemble_continuous(job_id: int, include_broll: bool = True, cinematic_middle: bool = False,
-                        on_progress=None):
+                        draft: bool = False, on_progress=None):
     """Assemble a continuous-voice reel: one talking-head narration of the full
     script, with a cinematic/b-roll cutaway over the middle. Falls back to the
     segment assembler if a talking-head master can't be produced."""
@@ -672,23 +716,28 @@ def assemble_continuous(job_id: int, include_broll: bool = True, cinematic_middl
     state = _load_state(job)
 
     if on_progress:
-        on_progress(1, 4, "Recording your continuous take")
-    # Cache the (expensive) talking-head take: only re-render — and re-spend HeyGen
-    # credits — when the script/voice/look actually changed. A re-assemble that only
-    # tweaks the cutaway reuses the saved take for free.
-    full = _full_script(job, segments)
-    msig = _hash(full, ctx.get("voice_id", ""), ctx.get("image_key", ""),
-                 ctx.get("avatar_id", ""), ctx.get("motion_prompt", ""))
-    mpath = sd / "master.mp4"
-    mc = state.get("master_cache") or {}
-    if mc.get("sig") == msig and Path(mc.get("path", "")).exists():
-        master = Path(mc["path"])
-        logger.info("continuous: reusing cached master take (no credit spend)")
+        on_progress(1, 4, "Free draft (AI voice)" if draft else "Recording your continuous take")
+    if draft:
+        # FREE preview — no HeyGen. AI voice over a still of your look, cards in the
+        # middle. Perfect the words/pacing here, then pay once for the real render.
+        include_broll = False
+        cinematic_middle = False
+        master = _draft_master(job, ctx, segments, sd / "draft_master.mp4")
     else:
-        master = _render_master_talkinghead(job, ctx, segments, mpath)
-        if master:
-            state["master_cache"] = {"sig": msig, "path": str(master)}
-            _save_state(job, state)
+        # Cache the (expensive) talking-head take: only re-render — and re-spend
+        # HeyGen credits — when the script/voice/look actually changed.
+        full = _full_script(job, segments)
+        msig = _hash(full, ctx.get("voice_id", ""), ctx.get("image_key", ""),
+                     ctx.get("avatar_id", ""), ctx.get("motion_prompt", ""))
+        mc = state.get("master_cache") or {}
+        if mc.get("sig") == msig and Path(mc.get("path", "")).exists():
+            master = Path(mc["path"])
+            logger.info("continuous: reusing cached master take (no credit spend)")
+        else:
+            master = _render_master_talkinghead(job, ctx, segments, sd / "master.mp4")
+            if master:
+                state["master_cache"] = {"sig": msig, "path": str(master)}
+                _save_state(job, state)
     if not master:
         # No talking-head master → fall back to the segment stitch (cards), but
         # RECORD why so the UI can say it instead of silently shipping cards.
@@ -716,9 +765,9 @@ def assemble_continuous(job_id: int, include_broll: bool = True, cinematic_middl
         t1, t2 = dur * 0.30, dur * 0.75
 
     final_src = master
-    method = "talking-head (full)"
+    method = "🆓 draft (AI-voice preview — no HeyGen)" if draft else "talking-head (full)"
     if on_progress:
-        on_progress(2, 4, "Filming your cutaway")
+        on_progress(2, 4, "Finishing draft" if draft else "Filming your cutaway")
     # Cache the cutaway too (Seedance is ~60 credits): reuse when the scene, looks
     # and window are unchanged.
     mid_vd = " ".join((segments.get(s, {}) or {}).get("visual_direction", "")
@@ -805,9 +854,10 @@ def _mark(job_id: int, status: str, error: str = "") -> None:
 
 
 def start_assemble(job_id: int, include_broll: bool = True,
-                   narrate_middle: bool = False, cinematic_middle: bool = False) -> None:
+                   narrate_middle: bool = False, cinematic_middle: bool = False,
+                   draft: bool = False) -> None:
     """Kick off a full-reel assembly on a background thread. No-op if one is
-    already running for this job. Returns immediately."""
+    already running for this job. Returns immediately. draft=True = free preview."""
     if is_running(job_id):
         return
 
@@ -821,7 +871,8 @@ def start_assemble(job_id: int, include_broll: bool = True,
             # Continuous-voice reel by default (talking head + cutaways over one VO);
             # it falls back to the segment stitch if a master take can't be made.
             assemble_continuous(job_id, include_broll=include_broll,
-                                cinematic_middle=cinematic_middle, on_progress=_prog)
+                                cinematic_middle=cinematic_middle, draft=draft,
+                                on_progress=_prog)
             try:
                 from gtm_engine.persistence import backup_quietly
                 backup_quietly()
