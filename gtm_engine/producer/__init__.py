@@ -375,9 +375,15 @@ def generate_producer_brief(idea_id: int, character=None,
     all_data = vault.list_all(verified_only=False)[:20]
     data_context = ""
     if all_data:
-        data_context = "\n## AVAILABLE DATA SOURCES\n"
+        data_context = ("\n## AVAILABLE DATA SOURCES (cite these REAL figures — never invent numbers)\n"
+                        "Use the actual values below in the Proof/Pivot beats and on-screen text. "
+                        "If a needed number isn't here, say so via data_references rather than making one up.\n")
         for d in all_data:
-            data_context += f"- id: `{d.id}` | **{d.name}** ({d.source_type}) | {d.description[:150]}\n"
+            body = (d.content or "").strip()
+            snippet = f"\n  data:\n  ```\n{body[:800]}\n```\n" if body else ""
+            verified = " ✓verified" if getattr(d, "verified", False) else ""
+            data_context += (f"- id: `{d.id}` | **{d.name}** ({d.source_type}){verified} | "
+                             f"{d.description[:150]}{snippet}")
 
     presenter_block = ""
     if character:

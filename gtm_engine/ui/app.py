@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-01c · cutaway diagnostics + pause cadence"
+BUILD_TAG = "2026-09-01d · editable script + data vault (real numbers)"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -850,6 +850,25 @@ def _produce_review_panel(idea):
             st.markdown(f"<span style='color:{C['gold']};font-size:0.72rem;'>⚠ {qi}</span>",
                         unsafe_allow_html=True)
 
+        # ── Edit the exact spoken script (verbatim override) ──
+        from gtm_engine.video import update_job_production as _ujp
+        _default_script = job.script_override or (brief.spoken_script if brief else "") or job.spoken_script
+        with st.expander("✍️ Edit the exact script (spoken verbatim)",
+                         expanded=bool(job.script_override)):
+            st.caption("Hand-edit the words your presenter says. New line = a pause between "
+                       "thoughts. This overrides the generated script and is used for the render.")
+            _edited = st.text_area("Spoken script", value=_default_script, height=180,
+                                   key=f"scr_{idea.id}", label_visibility="collapsed")
+            sc1, sc2 = st.columns(2)
+            with sc1:
+                if st.button("Save script", key=f"scrsave_{idea.id}", use_container_width=True):
+                    _ujp(job.id, script_override=_edited.strip())
+                    st.success("Script saved — used on the next assemble."); st.rerun()
+            with sc2:
+                if job.script_override and st.button("↺ Revert to generated", key=f"scrrev_{idea.id}",
+                                                     use_container_width=True):
+                    _ujp(job.id, script_override=""); st.rerun()
+
         # ── 5-point DNA check (advisory — flags, never blocks) ──
         from gtm_engine.hooks import evaluate_dna
         full_script = (brief.spoken_script if brief else job.spoken_script) or job.spoken_script
@@ -1289,11 +1308,25 @@ def _render_create():
                                     key="dv_type")
             new_content = st.text_area("The actual data (paste text / CSV / numbers)", height=90,
                                        key="dv_content", placeholder="Paste the real data...")
+            up = st.file_uploader("…or upload a file (CSV / JSON / TXT / MD)",
+                                  type=["csv", "json", "txt", "md", "tsv"], key="dv_file")
+            file_text = ""
+            if up is not None:
+                try:
+                    file_text = up.getvalue().decode("utf-8", errors="replace")
+                    st.caption(f"📎 {up.name} · {len(file_text):,} chars ready to save.")
+                    if not new_name:
+                        new_name = Path(up.name).stem
+                except Exception:
+                    st.warning("Couldn't read that file as text.")
+            content_to_save = (new_content.strip() or file_text.strip())
             if st.button("Save to Data Vault", key="dv_save",
-                         disabled=not (new_name and new_content)):
-                vault.create(DataSource(name=new_name, source_type=new_type, content=new_content))
+                         disabled=not (new_name and content_to_save)):
+                vault.create(DataSource(name=new_name, source_type=new_type,
+                                        content=content_to_save,
+                                        source_url=(up.name if up is not None else "")))
                 backup_quietly()
-                st.success(f"Added '{new_name}'.")
+                st.success(f"Added '{new_name}'. Regenerate a script and it'll cite these numbers.")
                 st.rerun()
 
     with col_sl:

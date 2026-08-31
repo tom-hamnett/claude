@@ -426,3 +426,24 @@ def test_continuous_overlays_cutaway_over_master(db, tmp_path, monkeypatch):
     assert asm._probe_duration(Path(out.video_path)) > 5.0  # full master length kept
     import json as _j
     assert "cutaway" in _j.loads(out.assembly_json)["methods"]["reel"]
+
+
+def test_script_override_persists_and_drives_master(db, tmp_path, monkeypatch):
+    """A hand-edited script overrides the generated one and is what gets rendered."""
+    import gtm_engine.video.assembler as asm
+    from gtm_engine.video import update_job_production
+    store = VideoJobStore()
+    job = VideoJob(idea_id=1, hook_text="gen hook", bookend_text="gen end")
+    job.id = store.save(job)
+    update_job_production(job.id, script_override="MY EXACT WORDS.\nSecond line.")
+    assert store.get(job.id).script_override.startswith("MY EXACT WORDS")
+
+    captured = {}
+    class FakeProv:
+        def is_configured(self): return True
+        def render(self, req): captured["script"] = req.script; return None
+    monkeypatch.setattr("gtm_engine.avatar.get_provider", lambda p: FakeProv())
+    ctx = {"provider": "heygen", "image_key": "k", "voice_id": "v",
+           "motion_prompt": "", "expressiveness": 0.5, "background": "#000"}
+    asm._render_master_talkinghead(store.get(job.id), ctx, {}, tmp_path / "m.mp4")
+    assert captured["script"] == "MY EXACT WORDS.\nSecond line."

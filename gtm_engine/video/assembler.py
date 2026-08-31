@@ -577,17 +577,21 @@ def _render_master_talkinghead(job, ctx: dict, segments: dict, out: Path) -> Pat
         return None
     if not ctx.get("image_key"):
         return None
-    # Full narration = every segment's spoken line, in order (fallback to the job).
-    # End each beat on terminal punctuation and break to a new line so the delivery
-    # PAUSES between thoughts instead of rolling straight through.
-    parts = []
-    for s in SEG_ORDER:
-        p = (segments.get(s, {}) or {}).get("spoken_text", "").strip()
-        if p:
-            if p[-1] not in ".!?…":
-                p += "."
-            parts.append(p)
-    full = "\n".join(parts).strip() or job.spoken_script
+    # A hand-edited script (from the review panel) wins verbatim.
+    if (job.script_override or "").strip():
+        full = job.script_override.strip()
+    else:
+        # Full narration = every segment's spoken line, in order (fallback to job).
+        # End each beat on terminal punctuation and break to a new line so the
+        # delivery PAUSES between thoughts instead of rolling straight through.
+        parts = []
+        for s in SEG_ORDER:
+            p = (segments.get(s, {}) or {}).get("spoken_text", "").strip()
+            if p:
+                if p[-1] not in ".!?…":
+                    p += "."
+                parts.append(p)
+        full = "\n".join(parts).strip() or job.spoken_script
     req = RenderRequest(
         script=full, avatar_id=job.avatar_id, output_path=out.with_name(out.stem + "_raw.mp4"),
         voice_id=ctx.get("voice_id") or None, background=ctx.get("background", "#0a0a0f"),
