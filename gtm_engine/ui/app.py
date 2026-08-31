@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-03 · FREE draft mode (perfect it before you pay)"
+BUILD_TAG = "2026-09-03b · cut in your own footage/screenshots (free middle)"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -733,16 +733,43 @@ def _auto_assemble_ui(idea, job):
             "render in your face and your voice.")
 
     # Cinematic YOU (Seedance) is the primary middle — default ON when available.
+    # ── Your own footage / screenshots for the middle (FREE — best 'proof') ──
+    st.markdown("**🎞 Cut in your own footage / screenshots (free)**")
+    st.caption("This is the cheapest and best middle — show the real ATLAS dashboard, a chart, "
+               "a screen recording. Images become a slideshow; a clip is used as-is. Plays over "
+               "your continuous voice.")
+    _media = list(job.middle_media or [])
+    if _media:
+        st.caption("Using: " + ", ".join(Path(m).name for m in _media))
+        if st.button("✕ Clear my media", key=f"clrmed_{idea.id}"):
+            from gtm_engine.video import set_middle_media
+            set_middle_media(job.id, []); st.rerun()
+    up = st.file_uploader("Upload images / video for the middle", key=f"med_{idea.id}",
+                          type=["png", "jpg", "jpeg", "webp", "mp4", "mov", "webm"],
+                          accept_multiple_files=True)
+    if up and st.button("Use these in the middle", key=f"medadd_{idea.id}",
+                        use_container_width=True):
+        from gtm_engine.video import set_middle_media
+        updir = OUTPUT_DIR / "uploads" / f"idea_{idea.id}_media"
+        updir.mkdir(parents=True, exist_ok=True)
+        paths = []
+        for f in up:
+            p = updir / f.name
+            p.write_bytes(f.getbuffer())
+            paths.append(str(p))
+        set_middle_media(job.id, paths)
+        from gtm_engine.persistence import backup_quietly
+        backup_quietly()
+        st.success(f"Added {len(paths)} file(s) for the middle."); st.rerun()
+
+    # ── Cinematic YOU (Seedance) — now an OPTIONAL premium extra, default OFF ──
     _has_cine = bool(_ch and (_ch.cinematic_look_ids or _ch.avatar_group_id))
     cinematic = st.toggle(
-        "🎬 Cinematic YOU in the middle (Seedance — ~60 HeyGen credits/beat)",
-        value=_has_cine, key=f"cine_{idea.id}", disabled=not _has_cine,
-        help="Casts your REAL digital twin into the middle beats — full-body motion + camera. "
-             "Runs on your HeyGen API credits.",
+        "🎬 Cinematic YOU in the middle (Seedance — premium, ~60 HeyGen credits)",
+        value=False, key=f"cine_{idea.id}", disabled=not _has_cine,
+        help="OPTIONAL. Casts your real digital twin into the middle — costs HeyGen credits. "
+             "Leave OFF and use your own footage above (free) for most reels.",
     )
-    if not _has_cine:
-        st.caption("💡 To unlock cinematic **you** in the middle, set your avatar group id in "
-                   "**Cast & Voice → Cinematic (Seedance)**.")
     # Veo b-roll is the fallback — default OFF now that cinematic is primary.
     broll = st.toggle(
         "Faceless B-roll fallback (Veo — ~£1–2 per reel)",

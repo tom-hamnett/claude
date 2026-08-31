@@ -83,6 +83,7 @@ CREATE TABLE IF NOT EXISTS video_jobs (
     assembly_json TEXT DEFAULT '{}',
     script_override TEXT DEFAULT '',
     cinematic_prompt TEXT DEFAULT '',
+    middle_media TEXT DEFAULT '[]',
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
@@ -106,6 +107,7 @@ _JOB_MIGRATIONS = {
     "assembly_json": "TEXT DEFAULT '{}'",
     "script_override": "TEXT DEFAULT ''",
     "cinematic_prompt": "TEXT DEFAULT ''",
+    "middle_media": "TEXT DEFAULT '[]'",
 }
 
 
@@ -143,6 +145,7 @@ class VideoJob(BaseModel):
     assembly_json: str = "{}"            # auto-assembler state (segment clips/methods)
     script_override: str = ""            # hand-edited full narration (verbatim), optional
     cinematic_prompt: str = ""           # per-reel cinematic scene direction (Seedance)
+    middle_media: list[str] = Field(default_factory=list)  # your own footage/screenshots for the middle
     created_at: str = ""
     updated_at: str = ""
 
@@ -187,7 +190,7 @@ class VideoJobStore:
             job.character_image_path, job.engine, job.environment_id, job.camera_note,
             job.hook_type, job.tone, job.passion, job.own_hook, job.error,
             job.look_id, job.assembly_json, job.script_override, job.cinematic_prompt,
-            job.created_at, job.updated_at,
+            json.dumps(job.middle_media), job.created_at, job.updated_at,
         )
         with self._connect() as conn:
             if job.id:
@@ -199,7 +202,7 @@ class VideoJobStore:
                        driving_video_path=?, character_image_path=?, engine=?,
                        environment_id=?, camera_note=?, hook_type=?, tone=?, passion=?, own_hook=?,
                        error=?, look_id=?, assembly_json=?, script_override=?, cinematic_prompt=?,
-                       created_at=?, updated_at=? WHERE id=?""",
+                       middle_media=?, created_at=?, updated_at=? WHERE id=?""",
                     (*cols, job.id),
                 )
                 conn.commit()
@@ -211,8 +214,8 @@ class VideoJobStore:
                    script_approved, driving_video_path, character_image_path, engine,
                    environment_id, camera_note, hook_type, tone, passion, own_hook, error,
                    look_id, assembly_json, script_override, cinematic_prompt,
-                   created_at, updated_at)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                   middle_media, created_at, updated_at)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 cols,
             )
             conn.commit()
@@ -260,6 +263,7 @@ class VideoJobStore:
             assembly_json=g("assembly_json", "{}") or "{}",
             script_override=g("script_override", "") or "",
             cinematic_prompt=g("cinematic_prompt", "") or "",
+            middle_media=json.loads(g("middle_media", "[]") or "[]"),
             created_at=row["created_at"], updated_at=row["updated_at"],
         )
 
@@ -583,6 +587,17 @@ Return ONLY JSON:
 {"script": "<full spoken script, newlines between beats for pauses>",
  "cinematic_prompt": "<scene direction for the middle cutaway, or empty to keep current>",
  "rationale": "<one short line on what you changed>"}"""
+
+
+def set_middle_media(job_id: int, paths: list[str]) -> VideoJob | None:
+    """Set (or clear) the user's own footage/screenshots used for the middle cutaway."""
+    store = VideoJobStore()
+    job = store.get(job_id)
+    if not job:
+        return None
+    job.middle_media = [p for p in (paths or []) if p]
+    job.id = store.save(job)
+    return store.get(job.id)
 
 
 def revise_from_notes(job_id: int, notes: str = "", use_qa: bool = True) -> VideoJob | None:

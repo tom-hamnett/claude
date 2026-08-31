@@ -410,7 +410,7 @@ def test_continuous_overlays_cutaway_over_master(db, tmp_path, monkeypatch):
                         "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", "-shortest",
                         str(out)], capture_output=True)
         return out
-    def fake_cut(segments, ctx, seconds, out, cinematic_middle, include_broll):
+    def fake_cut(segments, ctx, seconds, out, cinematic_middle, include_broll, media=None):
         subprocess.run([ff, "-y", "-f", "lavfi", "-i", f"color=c=red:s=720x1280:d={seconds}:r=30",
                         "-c:v", "libx264", "-pix_fmt", "yuv420p", "-an", str(out)],
                        capture_output=True)
@@ -531,3 +531,26 @@ def test_draft_mode_never_calls_heygen(db, tmp_path, monkeypatch):
     assert out.status == "ready" and Path(out.video_path).exists()
     import json as _j
     assert "draft" in _j.loads(out.assembly_json)["methods"]["reel"]
+
+
+def test_uploaded_media_is_preferred_and_free(db, tmp_path, monkeypatch):
+    """Uploaded footage is used for the middle (no Seedance/HeyGen call)."""
+    from PIL import Image
+    import gtm_engine.video.assembler as asm
+    img = tmp_path / "dash.png"; Image.new("RGB", (1200, 800), (10, 20, 40)).save(img)
+    called = {"cine": 0}
+    monkeypatch.setattr(asm, "_cinematic_segment",
+                        lambda *a, **k: called.__setitem__("cine", called["cine"] + 1))
+    clip, method, err = asm._middle_cutaway({}, {"provider": "heygen", "cinematic_look_ids": ["x"]},
+                                            5.0, tmp_path / "cut.mp4",
+                                            cinematic_middle=True, include_broll=True,
+                                            media=[str(img)])
+    assert method == "your media" and called["cine"] == 0 and Path(clip).exists()
+
+
+def test_middle_media_round_trips(db):
+    store = VideoJobStore()
+    from gtm_engine.video import set_middle_media
+    job = VideoJob(idea_id=1); job.id = store.save(job)
+    set_middle_media(job.id, ["/a/x.png", "/a/y.mp4", ""])
+    assert store.get(job.id).middle_media == ["/a/x.png", "/a/y.mp4"]

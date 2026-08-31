@@ -670,8 +670,49 @@ def _render_master_talkinghead(job, ctx: dict, segments: dict, out: Path) -> Pat
     return _video_finalize(Path(result), out, audio="keep")
 
 
+IMG_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+VID_EXTS = {".mp4", ".mov", ".webm", ".m4v", ".mkv"}
+
+
+def _uploaded_cutaway(media: list[str], seconds: float, out: Path) -> Path | None:
+    """Build the middle cutaway from the user's OWN footage/screenshots — FREE.
+    A video is fitted to the window; images become an even slideshow. Silent, so
+    the presenter's voice keeps playing underneath."""
+    from PIL import Image
+    paths = [Path(p) for p in (media or []) if Path(p).exists()]
+    if not paths:
+        return None
+    vids = [p for p in paths if p.suffix.lower() in VID_EXTS]
+    imgs = [p for p in paths if p.suffix.lower() in IMG_EXTS]
+    if vids:
+        return _fit_clip(vids[0], seconds, out)          # first clip, fitted to the window
+    if not imgs:
+        return None
+    # Slideshow of stills — cover-fit each, equal share of the window, concat, fit.
+    per = max(1.0, seconds / len(imgs))
+    parts = []
+    for i, p in enumerate(imgs):
+        png = out.with_name(out.stem + f"_img{i}.png")
+        try:
+            _cover_fit(Image.open(p).convert("RGB"), W, H).save(png)
+        except Exception:
+            continue
+        clip = _still_to_clip(png, int(per) + 1, out.with_name(out.stem + f"_s{i}.mp4"))
+        if clip:
+            parts.append(str(clip))
+    if not parts:
+        return None
+    joined = out.with_name(out.stem + "_slides.mp4")
+    if len(parts) == 1:
+        joined = Path(parts[0])
+    elif not _concat(parts, joined):
+        joined = Path(parts[0])
+    return _fit_clip(joined, seconds, out)
+
+
 def _middle_cutaway(segments: dict, ctx: dict, seconds: float, out: Path,
-                    cinematic_middle: bool, include_broll: bool) -> tuple[Path | None, str, str]:
+                    cinematic_middle: bool, include_broll: bool,
+                    media: list[str] | None = None) -> tuple[Path | None, str, str]:
     """Build ONE cutaway clip (cinematic YOU, else b-roll) for the middle window.
     Returns (clip_or_None, method, error) — error explains why nothing was made."""
     mids = [segments.get(s, {}) or {} for s in ("tension", "pivot", "proof")]
@@ -679,6 +720,13 @@ def _middle_cutaway(segments: dict, ctx: dict, seconds: float, out: Path,
     seg = {"visual_direction": vd, "text_overlay": "", "duration_seconds": max(4, int(seconds))}
     raw = out.with_name(out.stem + "_src.mp4")
     err = ""
+    # Your OWN uploaded footage/screenshots win — free, and better proof than a
+    # generic cinematic clip.
+    if media:
+        clip = _uploaded_cutaway(media, seconds, out)
+        if clip:
+            return out, "your media", ""
+        err = "Couldn't build a cutaway from your uploaded media."
     if cinematic_middle:
         if not ctx.get("cinematic_look_ids"):
             err = "Cinematic on but no avatar look id resolved (set the group id in Cast & Voice)."
@@ -772,16 +820,17 @@ def assemble_continuous(job_id: int, include_broll: bool = True, cinematic_middl
     # and window are unchanged.
     mid_vd = " ".join((segments.get(s, {}) or {}).get("visual_direction", "")
                       for s in ("tension", "pivot", "proof"))
+    media = list(job.middle_media or [])
     csig = _hash(ctx.get("cinematic_prompt", "") or mid_vd,
                  ",".join(ctx.get("cinematic_look_ids", [])), str(round(t2 - t1)),
-                 str(cinematic_middle), str(include_broll))
+                 str(cinematic_middle), str(include_broll), "|".join(media))
     cc = state.get("cutaway_cache") or {}
     if cc.get("sig") == csig and Path(cc.get("path", "")).exists():
         cutaway, cmethod, cut_err = Path(cc["path"]), cc.get("method", "cinematic"), ""
         logger.info("continuous: reusing cached cutaway (no credit spend)")
     else:
         cutaway, cmethod, cut_err = _middle_cutaway(segments, ctx, t2 - t1, sd / "cutaway.mp4",
-                                                    cinematic_middle, include_broll)
+                                                    cinematic_middle, include_broll, media=media)
         if cutaway:
             state["cutaway_cache"] = {"sig": csig, "path": str(cutaway), "method": cmethod}
             _save_state(job, state)
