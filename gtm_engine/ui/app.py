@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-06c · Hailuo/Kling model picker in the UI"
+BUILD_TAG = "2026-09-07a · Data-viz B-roll — your numbers become the proof"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -885,6 +885,24 @@ def _auto_assemble_ui(idea, job):
         _shot_list_editor(idea, job)
 
 
+def _spec_summary(spec) -> str:
+    """One-line, read-only preview of a chart shot's data (shown in the shot table)."""
+    if not isinstance(spec, dict):
+        return ""
+    ct = spec.get("chart_type")
+    if ct == "stat":
+        return f"stat: {spec.get('value','')} {spec.get('label','')}".strip()
+    if ct == "bar":
+        return "bars: " + ", ".join(f"{b.get('label','')} {b.get('value','')}"
+                                    for b in (spec.get("bars") or [])[:3])
+    if ct == "line":
+        s = spec.get("series") or []
+        return f"line: {len(s)} pts ({spec.get('title','')})".strip()
+    if ct == "table":
+        return f"table: {len(spec.get('rows') or [])} rows"
+    return ""
+
+
 def _shot_list_editor(idea, job):
     """Editable choreography table. Wrapped so no widget quirk can crash the app."""
     from gtm_engine.video import set_shot_list
@@ -892,14 +910,17 @@ def _shot_list_editor(idea, job):
     with st.expander(f"🎬 Shot list — {len(job.shot_list)} shots (edit & re-cut, free)",
                      expanded=False):
         st.caption("Each row is a shot cut to your script. **Visual** can be: `presenter` (you), "
-                   "`screenshot` (your upload — set the media #), `stock` (free Pexels — set the "
-                   "search), `generate` (cheap AI clip via fal.ai ~7–15¢ — set the search as the "
-                   "prompt), or `card` (branded text). Then **Save & re-cut** — it reuses your "
-                   "cached take, so editing costs **no HeyGen credits**.")
+                   "`screenshot` (your upload — set the media #), `chart` (auto data-viz built from "
+                   "the numbers in your script — the default proof visual), `stock` (free Pexels — "
+                   "set the search), `generate` (cheap AI clip via fal.ai ~7–15¢), or `card` "
+                   "(branded text). Then **Save & re-cut** — it reuses your cached take, so editing "
+                   "costs **no HeyGen credits**. (Chart data is generated from your script; use "
+                   "**Re-choreograph** to rebuild it.)")
         rows = [{"spoken": s.get("spoken", ""), "seconds": float(s.get("seconds", 3) or 3),
                  "visual": s.get("visual", "presenter"),
                  "media #": (s.get("media_index") if s.get("media_index") is not None else -1),
                  "stock search": s.get("stock_query", ""),
+                 "data": _spec_summary(s.get("data_spec")),
                  "caption": s.get("caption", "")} for s in job.shot_list]
         edited = rows
         try:
@@ -909,21 +930,28 @@ def _shot_list_editor(idea, job):
             for r in rows:      # read-only fallback if the editor widget isn't available
                 st.markdown(f"- **{r['visual']}** · {r['seconds']}s — _{r['spoken']}_"
                             + (f" · 📷#{r['media #']}" if r['visual'] == 'screenshot' else "")
+                            + (f" · 📊 {r['data']}" if r['visual'] == 'chart' and r.get('data') else "")
                             + (f" · 🔎 {r['stock search']}" if r['visual'] == 'stock' else ""))
             st.caption("(Editing table unavailable here — use **Re-choreograph** to regenerate.)")
         b1, b2 = st.columns(2)
         with b1:
             if st.button("Save & re-cut (free)", key=f"shotsave_{idea.id}", use_container_width=True):
                 new = []
-                for r in edited:
+                for idx, r in enumerate(edited):
                     try:
                         mnum = int(r.get("media #", -1))
                     except (TypeError, ValueError):
                         mnum = -1
                     vis = r.get("visual", "presenter")
+                    # Preserve the chart's data_spec positionally (the table can't edit the
+                    # nested numbers; Re-choreograph rebuilds them from the script).
+                    spec = None
+                    if vis == "chart" and idx < len(job.shot_list):
+                        spec = job.shot_list[idx].get("data_spec")
                     new.append({"spoken": r.get("spoken", ""), "seconds": float(r.get("seconds", 3) or 3),
                                 "role": "", "visual": vis, "stock_query": r.get("stock search", "") or "",
                                 "media_index": (mnum if (vis == "screenshot" and mnum >= 0) else None),
+                                "data_spec": spec,
                                 "caption": r.get("caption", "") or ""})
                 set_shot_list(job.id, new)
                 start_reassemble(job.id)

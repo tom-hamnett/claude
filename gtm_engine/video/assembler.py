@@ -1037,6 +1037,11 @@ def assemble_choreographed(job_id: int, target_seconds: int = 25, draft: bool = 
                             png = sd / f"sv{i}.png"
                             _cover_fit(Image.open(src).convert("RGB"), W, H).save(png)
                             path, kind = png, "png"
+                elif v == "chart":
+                    from gtm_engine.video.dataviz import render_dataviz
+                    png = sd / f"chart{i}.png"
+                    if render_dataviz(sh.get("data_spec") or {}, png, W, H):
+                        path, kind = png, "png"
                 elif v == "stock":
                     from gtm_engine.utils.media import fetch_stock_video
                     raw = fetch_stock_video(sh.get("stock_query", ""), sd / f"stk{i}_src.mp4")
@@ -1058,7 +1063,7 @@ def assemble_choreographed(job_id: int, target_seconds: int = 25, draft: bool = 
             # NEVER leave a cutaway blank: if the chosen visual couldn't be made
             # (no screenshot, no Pexels key, stock miss), show a clean branded CARD
             # of the point instead. Presenter beats keep showing you (no overlay).
-            if not (path and kind) and v in ("screenshot", "stock", "card", "generate"):
+            if not (path and kind) and v in ("screenshot", "chart", "stock", "card", "generate"):
                 fb = sd / f"fb{i}.png"
                 _render_card_png(sh.get("caption") or (sh.get("spoken", "")[:40]) or "…", "", fb)
                 path, kind = fb, "png"
@@ -1075,8 +1080,17 @@ def assemble_choreographed(job_id: int, target_seconds: int = 25, draft: bool = 
         if on_progress:
             on_progress(4, 5, "Cutting the reel to the rhythm")
         final_src = _composite(master, visual_ovs + caption_ovs, sd / "choreo.mp4") or master
-        n_cut = sum(1 for s in shots if s.get("visual") != "presenter")
-        method = f"choreographed · {len(shots)} shots · {n_cut} cutaways"
+        from collections import Counter
+        mix = Counter(s.get("visual") for s in shots)
+        proof = mix.get("screenshot", 0) + mix.get("chart", 0)
+        bits = [f"{mix.get('presenter', 0)} presenter", f"{proof} proof visuals"]
+        if mix.get("chart"):
+            bits.append(f"{mix['chart']} data-viz")
+        if mix.get("stock"):
+            bits.append(f"{mix['stock']} stock")
+        if mix.get("card"):
+            bits.append(f"{mix['card']} cards")
+        method = f"choreographed · {len(shots)} shots · " + ", ".join(bits)
 
     if on_progress:
         on_progress(5, 5, "Finishing")

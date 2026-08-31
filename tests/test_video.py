@@ -642,3 +642,76 @@ def test_generate_visual_falls_back_to_card_without_fal(db, tmp_path, monkeypatc
     job.id = store.save(job)
     out = asm.assemble_choreographed(job.id)   # no FAL_KEY → generate → card fallback
     assert out.status == "ready" and Path(out.video_path).exists()
+
+
+# ── Data-viz B-roll (the "proof, not stock" engine) ────────────────────────────
+
+def test_dataviz_renders_all_chart_types(tmp_path):
+    from PIL import Image
+    from gtm_engine.video.dataviz import render_dataviz, clean_spec
+    specs = [
+        {"chart_type": "stat", "value": "-11.4%", "label": "Max drawdown", "sub": "52-week test"},
+        {"chart_type": "bar", "title": "Return vs benchmark", "unit": "%",
+         "bars": [{"label": "ATLAS", "value": 34.2}, {"label": "S&P 500", "value": 11.0}]},
+        {"chart_type": "line", "title": "Equity curve", "series": [100, 103, 101, 108, 115]},
+        {"chart_type": "table", "title": "The log",
+         "rows": [["Week 12", "+2.3%"], ["Week 13", "-1.1%"]]},
+    ]
+    for s in specs:
+        assert clean_spec(s) is not None
+        out = render_dataviz(s, tmp_path / f"{s['chart_type']}.png")
+        assert out and out.exists()
+        w, h = Image.open(out).size
+        assert (w, h) == (1080, 1920)
+
+
+def test_dataviz_clean_spec_rejects_bad():
+    from gtm_engine.video.dataviz import clean_spec
+    assert clean_spec({"chart_type": "stat"}) is None            # no value
+    assert clean_spec({"chart_type": "bar", "bars": [{"label": "x", "value": 1}]}) is None  # <2
+    assert clean_spec({"chart_type": "line", "series": [1]}) is None            # too short
+    assert clean_spec({"chart_type": "nope"}) is None
+    assert clean_spec("garbage") is None
+
+
+def test_choreography_chart_without_spec_downgrades_to_card():
+    from gtm_engine.video.choreography import _clean
+    c = _clean({"spoken": "we drew down eleven percent", "visual": "chart",
+                "role": "number", "caption": "−11.4%"}, n_media=0)
+    assert c["visual"] == "card" and c["data_spec"] is None
+
+
+def test_choreography_chart_with_spec_kept():
+    from gtm_engine.video.choreography import _clean
+    spec = {"chart_type": "stat", "value": "-11.4%", "label": "Drawdown"}
+    c = _clean({"spoken": "eleven percent", "visual": "chart", "data_spec": spec,
+                "role": "number", "caption": "−11.4%"}, n_media=0)
+    assert c["visual"] == "chart" and c["data_spec"] == spec
+
+
+def test_choreography_missing_screenshot_becomes_chart_when_spec():
+    from gtm_engine.video.choreography import _clean
+    spec = {"chart_type": "stat", "value": "34%", "label": "Return"}
+    # asked for screenshot #3 we don't have, but gave chart data → chart, not card
+    c = _clean({"spoken": "up thirty four percent", "visual": "screenshot",
+                "media_index": 3, "data_spec": spec}, n_media=0)
+    assert c["visual"] == "chart" and c["data_spec"] == spec
+
+
+def test_choreograph_caps_stock_at_one(monkeypatch):
+    import gtm_engine.video.choreography as ch
+    shots = {"shots": [
+        {"spoken": "one", "visual": "presenter", "role": "hook"},
+        {"spoken": "two", "visual": "stock", "stock_query": "trading floor", "role": "example"},
+        {"spoken": "three", "visual": "stock", "stock_query": "city skyline", "role": "example"},
+        {"spoken": "four", "visual": "stock", "stock_query": "desk", "role": "number",
+         "data_spec": {"chart_type": "stat", "value": "5%", "label": "x"}},
+        {"spoken": "five", "visual": "presenter", "role": "cta"},
+    ]}
+    import gtm_engine.utils.ai_client as aic
+    monkeypatch.setattr(aic, "call_claude", lambda *a, **k: json.dumps(shots))
+    out = ch.choreograph("one two three four five", [], "ATLAS", 25)
+    visuals = [s["visual"] for s in out]
+    assert visuals.count("stock") == 1                 # only the first stock survives
+    assert out[3]["visual"] == "chart"                 # extra stock w/ numbers → chart
+    assert out[2]["visual"] == "card"                  # extra stock w/o numbers → card
