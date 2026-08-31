@@ -36,7 +36,11 @@ from gtm_engine.config import OUTPUT_DIR
 logger = logging.getLogger(__name__)
 
 # Uniform spec every segment is normalised to, so the final stitch is clean.
-W, H, FPS = 720, 1280, 30
+# 1080x1920 (full-HD vertical) + high-quality x264 to kill grain; audio is copied
+# through untouched wherever possible so the voice never degrades.
+W, H, FPS = 1080, 1920, 30
+VQ = ["-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p"]
+AQ = ["-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-ac", "2"]
 BG_HEX = "0x0a0a0f"          # brand dark
 ACCENT = "0xffffff"
 SEG_ORDER = ["hook", "tension", "pivot", "proof", "bookend"]
@@ -117,19 +121,19 @@ def _render_card_png(headline: str, subline: str, out_png: Path) -> Path:
     from PIL import Image, ImageDraw
     img = Image.new("RGB", (W, H), (10, 10, 15))
     d = ImageDraw.Draw(img)
-    hf = _font(66)
+    hf = _font(int(W * 0.092))          # scales with frame width (≈100px @1080)
     lines = _wrap_to_width(d, headline.strip() or "…", hf, int(W * 0.82))
     lh = int(hf.size * 1.24)
     block_h = lh * len(lines)
-    y = (H - block_h) // 2 - (40 if subline.strip() else 0)
+    y = (H - block_h) // 2 - (60 if subline.strip() else 0)
     for ln in lines:
         w = d.textlength(ln, font=hf)
         d.text(((W - w) / 2, y), ln, font=hf, fill=(245, 245, 245))
         y += lh
     if subline.strip():
-        sf = _font(34)
+        sf = _font(int(W * 0.047))
         slines = _wrap_to_width(d, subline.strip(), sf, int(W * 0.8))
-        sy = H - 300
+        sy = H - 440
         for ln in slines:
             w = d.textlength(ln, font=sf)
             d.text(((W - w) / 2, sy), ln, font=sf, fill=(255, 209, 102))
@@ -143,10 +147,10 @@ def _render_overlay_png(text: str, out_png: Path) -> Path:
     from PIL import Image, ImageDraw
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    f = _font(52)
+    f = _font(int(W * 0.05))
     lines = _wrap_to_width(d, text.strip(), f, int(W * 0.86))
     lh = int(f.size * 1.25)
-    y = H - 360
+    y = H - 520
     for ln in lines:
         w = d.textlength(ln, font=f)
         x = (W - w) / 2
@@ -167,9 +171,7 @@ def _still_to_clip(png: Path, seconds: int, out: Path, audio: Path | None = None
         cmd += ["-i", str(audio)]
     else:
         cmd += ["-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=44100"]
-    cmd += ["-t", str(seconds), "-r", str(FPS),
-            "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", "-ar", "44100",
-            "-ac", "2", "-shortest", str(out)]
+    cmd += ["-t", str(seconds), "-r", str(FPS), *VQ, *AQ, "-shortest", str(out)]
     return out if _run(cmd) and out.exists() else None
 
 
@@ -203,17 +205,21 @@ def _video_finalize(src: Path, out: Path, seconds: int | None = None,
     else:
         cmd += ["-vf", scale, "-map", "0:v:0"]
         audio_idx = 1
+    keep_audio = False
     if ext_audio and Path(audio).exists():
         cmd += ["-map", f"{audio_idx}:a:0", "-shortest"]
     elif audio is None:
         cmd += ["-map", f"{audio_idx}:a:0", "-shortest"]
-    else:  # keep source audio
+    else:  # keep source audio — COPY it through untouched (no re-encode = no artefacts)
         cmd += ["-map", "0:a:0?"]
+        keep_audio = True
     if seconds:
         cmd += ["-t", str(seconds)]
-    cmd += ["-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", "-ar", "44100",
-            "-ac", "2", str(out)]
-    return out if _run(cmd) and out.exists() else None
+    # Try copying the source audio first (best quality); fall back to a clean encode.
+    for acodec in ([["-c:a", "copy"], AQ] if keep_audio else [AQ]):
+        if _run(cmd + [*VQ, *acodec, str(out)]) and out.exists():
+            return out
+    return None
 
 
 def _normalize(src: Path, out: Path, seconds: int | None = None) -> Path | None:
@@ -303,9 +309,12 @@ def _cinematic_segment(seg: dict, ctx: dict, out: Path) -> Path | None:
     if not getattr(provider, "is_configured", lambda: False)():
         return None
     seconds = int(seg.get("duration_seconds") or DEFAULT_SEG_SECONDS)
-    vd = seg.get("visual_direction", "").strip()
-    prompt = (f"{vd}. Vertical 9:16 cinematic shot, natural full-body motion, subtle "
-              "camera movement, premium documentary style, on-brand and professional.")
+    # Your per-reel cinematic direction wins; otherwise fall back to the beat's
+    # visual direction. Keep the style restrained by default (not flashy).
+    scene = ctx.get("cinematic_prompt") or seg.get("visual_direction", "").strip() \
+        or "the presenter speaking to camera in a clean, modern setting"
+    prompt = (f"{scene}. Vertical 9:16, restrained and professional — minimal, slow camera "
+              "movement, natural realistic motion, no gimmicks, clean modern lighting.")
     raw = out.with_name(out.stem + "_cine.mp4")
     result = provider.generate_cinematic(prompt, look_ids, raw, aspect_ratio="9:16",
                                          duration=max(4, seconds))
@@ -455,8 +464,7 @@ def _concat(clips: list[str], out: Path) -> bool:
     n = len(clips)
     streams = "".join(f"[{i}:v:0][{i}:a:0]" for i in range(n))
     cmd += ["-filter_complex", f"{streams}concat=n={n}:v=1:a=1[v][a]",
-            "-map", "[v]", "-map", "[a]",
-            "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", str(out)]
+            "-map", "[v]", "-map", "[a]", *VQ, *AQ, str(out)]
     return _run(cmd, timeout=300)
 
 
@@ -473,6 +481,7 @@ def _resolve_context(job) -> dict:
         "background": cfg.background,
         "image_key": "",
         "cinematic_look_ids": [],
+        "cinematic_prompt": (job.cinematic_prompt or "").strip(),
     }
     try:
         from gtm_engine.casting import CastingStore
@@ -557,7 +566,7 @@ def _fit_clip(src: Path, seconds: float, out: Path) -> Path | None:
     vf = (f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},"
           f"fps={FPS},setsar=1")
     cmd = [ff, "-y", "-stream_loop", "-1", "-i", str(src), "-t", f"{max(seconds,0.5):.3f}",
-           "-an", "-vf", vf, "-c:v", "libx264", "-pix_fmt", "yuv420p", str(out)]
+           "-an", "-vf", vf, *VQ, str(out)]
     return out if _run(cmd) and out.exists() else None
 
 
@@ -566,9 +575,15 @@ def _overlay_window(master: Path, cutaway: Path, t1: float, t2: float, out: Path
     ff = _ffmpeg()
     fc = (f"[1:v]setpts=PTS-STARTPTS+{t1:.3f}/TB[cut];"
           f"[0:v][cut]overlay=0:0:enable='between(t,{t1:.3f},{t2:.3f})'[v]")
+    # Only the VIDEO is changed; the master AUDIO is copied through bit-for-bit so
+    # the voice never degrades and there's no join/artefact in the sound.
     cmd = [ff, "-y", "-i", str(master), "-i", str(cutaway),
            "-filter_complex", fc, "-map", "[v]", "-map", "0:a?",
-           "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", "-shortest", str(out)]
+           *VQ, "-c:a", "copy", str(out)]
+    if _run(cmd) and out.exists():
+        return out
+    cmd = [ff, "-y", "-i", str(master), "-i", str(cutaway),
+           "-filter_complex", fc, "-map", "[v]", "-map", "0:a?", *VQ, *AQ, str(out)]
     return out if _run(cmd) and out.exists() else None
 
 
@@ -594,7 +609,7 @@ def _render_master_talkinghead(job, ctx: dict, segments: dict, out: Path) -> Pat
                 if p[-1] not in ".!?…":
                     p += "."
                 parts.append(p)
-        full = "\n".join(parts).strip() or job.spoken_script
+        full = "\n\n".join(parts).strip() or job.spoken_script
     req = RenderRequest(
         script=full, avatar_id=job.avatar_id, output_path=out.with_name(out.stem + "_raw.mp4"),
         voice_id=ctx.get("voice_id") or None, background=ctx.get("background", "#0a0a0f"),

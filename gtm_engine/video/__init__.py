@@ -82,6 +82,7 @@ CREATE TABLE IF NOT EXISTS video_jobs (
     look_id INTEGER,
     assembly_json TEXT DEFAULT '{}',
     script_override TEXT DEFAULT '',
+    cinematic_prompt TEXT DEFAULT '',
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
@@ -104,6 +105,7 @@ _JOB_MIGRATIONS = {
     "look_id": "INTEGER",
     "assembly_json": "TEXT DEFAULT '{}'",
     "script_override": "TEXT DEFAULT ''",
+    "cinematic_prompt": "TEXT DEFAULT ''",
 }
 
 
@@ -140,6 +142,7 @@ class VideoJob(BaseModel):
     look_id: int | None = None           # chosen look (character's Look Library)
     assembly_json: str = "{}"            # auto-assembler state (segment clips/methods)
     script_override: str = ""            # hand-edited full narration (verbatim), optional
+    cinematic_prompt: str = ""           # per-reel cinematic scene direction (Seedance)
     created_at: str = ""
     updated_at: str = ""
 
@@ -183,7 +186,7 @@ class VideoJobStore:
             1 if job.script_approved else 0, job.driving_video_path,
             job.character_image_path, job.engine, job.environment_id, job.camera_note,
             job.hook_type, job.tone, job.passion, job.own_hook, job.error,
-            job.look_id, job.assembly_json, job.script_override,
+            job.look_id, job.assembly_json, job.script_override, job.cinematic_prompt,
             job.created_at, job.updated_at,
         )
         with self._connect() as conn:
@@ -195,7 +198,7 @@ class VideoJobStore:
                        dry_run_request=?, qa_issues=?, revisions=?, script_approved=?,
                        driving_video_path=?, character_image_path=?, engine=?,
                        environment_id=?, camera_note=?, hook_type=?, tone=?, passion=?, own_hook=?,
-                       error=?, look_id=?, assembly_json=?, script_override=?,
+                       error=?, look_id=?, assembly_json=?, script_override=?, cinematic_prompt=?,
                        created_at=?, updated_at=? WHERE id=?""",
                     (*cols, job.id),
                 )
@@ -207,8 +210,9 @@ class VideoJobStore:
                    audio_asset_id, video_path, dry_run_request, qa_issues, revisions,
                    script_approved, driving_video_path, character_image_path, engine,
                    environment_id, camera_note, hook_type, tone, passion, own_hook, error,
-                   look_id, assembly_json, script_override, created_at, updated_at)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                   look_id, assembly_json, script_override, cinematic_prompt,
+                   created_at, updated_at)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 cols,
             )
             conn.commit()
@@ -255,6 +259,7 @@ class VideoJobStore:
             look_id=g("look_id", None),
             assembly_json=g("assembly_json", "{}") or "{}",
             script_override=g("script_override", "") or "",
+            cinematic_prompt=g("cinematic_prompt", "") or "",
             created_at=row["created_at"], updated_at=row["updated_at"],
         )
 
@@ -455,7 +460,8 @@ def update_job_production(job_id: int, motion_prompt: str | None = None,
                           passion: float | None = None,
                           own_hook: str | None = None,
                           look_id: int | None = None,
-                          script_override: str | None = None) -> VideoJob | None:
+                          script_override: str | None = None,
+                          cinematic_prompt: str | None = None) -> VideoJob | None:
     """Save per-reel direction (motion, environment, camera, hook, tone, passion,
     own-hook, look, hand-edited script). Only provided fields are updated. Pass
     look_id=0 to clear the look back to Auto; script_override='' to clear it."""
@@ -481,6 +487,8 @@ def update_job_production(job_id: int, motion_prompt: str | None = None,
         job.look_id = look_id or None
     if script_override is not None:
         job.script_override = script_override
+    if cinematic_prompt is not None:
+        job.cinematic_prompt = cinematic_prompt
     job.id = store.save(job)
     return store.get(job.id)
 

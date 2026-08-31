@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-01f · cinematic default on + credit top-up link"
+BUILD_TAG = "2026-09-02 · 1080p, clean audio, cinematic direction, deeper QA"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -937,6 +937,11 @@ def _produce_review_panel(idea):
                     key=f"env_{idea.id}")
                 camera = st.text_input("Camera direction", value=job.camera_note, key=f"cam_{idea.id}",
                                        placeholder="'slow push-in on the hook' (used in the edit)")
+                cine_prompt = st.text_area(
+                    "🎬 Cinematic scene (the middle cutaway — what you're doing on screen)",
+                    value=job.cinematic_prompt, key=f"cine_p_{idea.id}", height=68,
+                    placeholder="e.g. 'sitting at a desk reviewing the ATLAS dashboard, calm, "
+                                "minimal camera movement' — leave blank to use the beat's default")
 
             # ── Look override (from the character's Look Library) ──
             _char = CastingStore().get_default_character()
@@ -969,7 +974,8 @@ def _produce_review_panel(idea):
                 update_job_production(job.id, motion_prompt=motion, environment_id=env_pick,
                                       camera_note=camera, hook_type=hook_type, tone=tone,
                                       passion=passion, own_hook=own_hook,
-                                      look_id=(look_pick if char_looks else None))
+                                      look_id=(look_pick if char_looks else None),
+                                      cinematic_prompt=cine_prompt)
 
             # ── Auto-sharpen: Claude reviews + rewrites until the DNA check passes ──
             if st.button("✨ Auto-sharpen (Claude reviews & rewrites until it passes)",

@@ -396,14 +396,27 @@ def qa_video(video_path, context: str = "") -> dict:
         if getattr(f, "state", None) and str(f.state).endswith("FAILED"):
             return {}
         prompt = (
-            "You are a sharp social-video QA reviewer. Watch this vertical reel and judge it "
-            "as a scroll-stopping social post. " + (f"Context: {context}. " if context else "") +
-            "Check: (1) does the first ~2s hook actually stop the scroll; (2) lip-sync / does the "
-            "presenter look natural; (3) framing & headroom; (4) are on-screen captions legible and "
-            "well-timed; (5) pacing / dead air; (6) any visual glitch or artefact; (7) does it land "
-            "one clear takeaway. Score 0-100 for overall readiness.\n"
+            "You are a sharp social-video QA reviewer with a good ear and eye. Watch AND LISTEN to "
+            "this vertical reel and judge it as a scroll-stopping social post. "
+            + (f"Context: {context}. " if context else "") +
+            "Check every dimension:\n"
+            "1. HOOK — does the first ~2s stop the scroll?\n"
+            "2. AUDIO QUALITY — is the voice clean and clear? Flag any background noise/hiss/"
+            "interference, muffled or low-bitrate sound, clipping, or volume changes.\n"
+            "3. AUDIO CONTINUITY — any audible join, cut, click, or seam where the audio changes "
+            "(e.g. at a scene/b-roll transition)? The voice should be one continuous take.\n"
+            "4. CADENCE & PAUSES — does the delivery breathe naturally with pauses between "
+            "sentences, or is it rushed/stilted/run-on with no gaps? Flag robotic or too-fast pacing.\n"
+            "5. LIP-SYNC & presenter naturalness.\n"
+            "6. VIDEO QUALITY — is it sharp, or grainy/soft/low-resolution/compressed/pixelated?\n"
+            "7. B-ROLL FIT — do the cutaways suit the message, or are they too flashy/gimmicky/"
+            "irrelevant/distracting? Are transitions smooth?\n"
+            "8. CAPTIONS — legible and well-timed?\n"
+            "9. FRAMING & headroom.  10. Does it land one clear takeaway?\n"
+            "Score 0-100 for overall readiness to post.\n"
             'Return ONLY JSON: {"score": <0-100>, "verdict": "<one line>", '
-            '"issues": [{"severity":"high|medium|low","area":"<hook|sync|framing|captions|pacing|glitch|payoff>","note":"<what & how to fix>"}], '
+            '"issues": [{"severity":"high|medium|low","area":"<hook|audio-quality|audio-join|cadence|'
+            'sync|video-quality|broll|captions|framing|payoff>","note":"<what & how to fix>"}], '
             '"keep": "<one thing that works>"}'
         )
         r = client.models.generate_content(model="gemini-2.5-flash", contents=[f, prompt])
