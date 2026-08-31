@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-08-31c · av4 video_title fix (presenter renders)"
+BUILD_TAG = "2026-08-31d · background rendering (survives disconnect)"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -694,8 +694,22 @@ def _auto_assemble_ui(idea, job):
     """The 'agent builds it for me' path — assemble the whole Core-Five reel into
     one vertical mp4 (presenter hook/bookend + data/proof middle + captions)."""
     import json as _json
-    from gtm_engine.video import assemble_reel
+    from gtm_engine.video.assembler import start_assemble, is_running, progress_of
     from gtm_engine.config import GOOGLE_API_KEY
+
+    # If a render/assembly is already running on the server, show progress only.
+    # The work survives you closing the tab — it keeps going server-side.
+    if is_running(job.id):
+        p = progress_of(job.id) or (0, 1, "working")
+        st.progress(min(p[0] / max(p[1], 1), 1.0),
+                    text=f"Building on the server… {p[2]} ({p[0]}/{p[1]})")
+        st.info("This runs on the server — you can lock your phone or close the tab. "
+                "The finished reel appears in **4 · REVIEW** below when it's done. "
+                "Tap **Check progress** every minute or so.")
+        if st.button("↻ Check progress", key=f"chk_{idea.id}", use_container_width=True,
+                     type="primary"):
+            st.rerun()
+        return
 
     st.caption("The tool builds the **whole reel** — your presenter on the hook & bookend, "
                "the data/proof beats in the middle, captions — and stitches one vertical "
@@ -735,15 +749,7 @@ def _auto_assemble_ui(idea, job):
         st.caption("🔊 Voice: only **you** (hook & bookend). The middle is captioned, no AI voice.")
     lbl = "✨ Auto-assemble full reel" if not job.video_path else "✨ Re-assemble reel"
     if st.button(lbl, key=f"asm_{idea.id}", use_container_width=True, type="primary"):
-        prog = st.progress(0.0, text="Starting…")
-
-        def _p(i, t, label):
-            prog.progress(min(i / max(t, 1), 1.0), text=f"{label} ({i}/{t})")
-
-        with st.spinner("Building your reel — the middle/avatar beats can take a few minutes…"):
-            assemble_reel(job.id, include_broll=broll, narrate_middle=narrate, on_progress=_p)
-        from gtm_engine.persistence import backup_quietly
-        backup_quietly()
+        start_assemble(job.id, include_broll=broll, narrate_middle=narrate)
         st.rerun()
 
     methods = {}
@@ -775,7 +781,11 @@ def _produce_review_panel(idea):
     store = VideoJobStore()
     job = store.get_for_idea(idea.id)
 
-    with st.expander("🎬 Video", expanded=False):
+    # Keep the panel open while a render is in flight or a reel is ready to review,
+    # so a rerun (e.g. checking progress) doesn't collapse it out from under you.
+    from gtm_engine.video.assembler import is_running as _bg_running
+    _open = bool(job and (job.status in ("rendering", "ready") or _bg_running(job.id)))
+    with st.expander("🎬 Video", expanded=_open):
         if not job:
             st.caption("This card has no script yet.")
             if st.button("Create video job", key=f"vjmk_{idea.id}", use_container_width=True):
@@ -1051,6 +1061,16 @@ def _api_generate_controls(idea, job, cfg, is_transfer, render_job, resolve_audi
         take_file = st.file_uploader("Your take (video/audio)", type=take_types,
                                      key=f"vjtake_{idea.id}")
     label = "Transpose onto my character" if is_transfer else "Generate via API"
+    # The common av4 case (no upload) renders on a background thread so it
+    # survives the phone disconnecting; upload-driven modes stay inline.
+    if not wants_upload:
+        if st.button(label, key=f"vjr_{idea.id}", use_container_width=True):
+            from gtm_engine.video.assembler import start_single_render
+            start_single_render(job.id)
+            st.rerun()
+        if job.status == "failed" and job.error:
+            st.error(f"Render failed: {job.error}")
+        return
     if st.button(label, key=f"vjr_{idea.id}", use_container_width=True):
         audio_path = driving_path = None
         fail = None

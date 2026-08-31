@@ -28,6 +28,7 @@ import json
 import logging
 import subprocess
 import textwrap
+import threading
 from pathlib import Path
 
 from gtm_engine.config import OUTPUT_DIR
@@ -477,3 +478,101 @@ def _save_state(job, state: dict) -> None:
     from gtm_engine.video import VideoJobStore
     job.assembly_json = json.dumps(state)
     VideoJobStore().save(job)
+
+
+# ── Background runner ──────────────────────────────────────────────────────────
+# Rendering must survive the client disconnecting (mobile browsers kill long
+# in-page runs). So we run the work on a daemon thread in the app's own process
+# and the UI just polls the job's status. Progress lives in a process-local dict
+# shared between the worker thread and the UI reruns.
+
+_BG: dict[int, dict] = {}          # job_id -> {"thread", "progress":(i,t,label)}
+_BG_LOCK = threading.Lock()
+
+
+def is_running(job_id: int) -> bool:
+    """True while a background render/assembly for this job is still working."""
+    with _BG_LOCK:
+        e = _BG.get(job_id)
+        return bool(e and e["thread"].is_alive())
+
+
+def progress_of(job_id: int):
+    """Latest (step, total, label) for a running job, or None."""
+    with _BG_LOCK:
+        e = _BG.get(job_id)
+        return e["progress"] if e else None
+
+
+def _mark(job_id: int, status: str, error: str = "") -> None:
+    from gtm_engine.video import VideoJobStore
+    store = VideoJobStore()
+    job = store.get(job_id)
+    if job:
+        job.status = status
+        if error:
+            job.error = error[:250]
+        store.save(job)
+
+
+def start_assemble(job_id: int, include_broll: bool = True,
+                   narrate_middle: bool = False) -> None:
+    """Kick off a full-reel assembly on a background thread. No-op if one is
+    already running for this job. Returns immediately."""
+    if is_running(job_id):
+        return
+
+    def _prog(i, t, label):
+        with _BG_LOCK:
+            if job_id in _BG:
+                _BG[job_id]["progress"] = (i, t, label)
+
+    def _run():
+        try:
+            assemble_reel(job_id, include_broll=include_broll,
+                          narrate_middle=narrate_middle, on_progress=_prog)
+            try:
+                from gtm_engine.persistence import backup_quietly
+                backup_quietly()
+            except Exception:
+                pass
+        except Exception as e:
+            logger.error("Background assembly crashed for job %d: %s", job_id, e)
+            _mark(job_id, "failed", f"Assembly crashed: {e}")
+        finally:
+            with _BG_LOCK:
+                _BG.pop(job_id, None)
+
+    _mark(job_id, "rendering")   # so the UI shows in-progress across reruns
+    th = threading.Thread(target=_run, name=f"assemble-{job_id}", daemon=True)
+    with _BG_LOCK:
+        _BG[job_id] = {"thread": th, "progress": (0, 1, "Starting…")}
+    th.start()
+
+
+def start_single_render(job_id: int) -> None:
+    """Kick off a single avatar-clip render (render_job) on a background thread."""
+    if is_running(job_id):
+        return
+
+    def _run():
+        try:
+            from gtm_engine.video import render_job
+            render_job(job_id)
+            try:
+                from gtm_engine.persistence import backup_quietly
+                backup_quietly()
+            except Exception:
+                pass
+        except Exception as e:
+            logger.error("Background render crashed for job %d: %s", job_id, e)
+            _mark(job_id, "failed", f"Render crashed: {e}")
+        finally:
+            with _BG_LOCK:
+                _BG.pop(job_id, None)
+
+    _mark(job_id, "rendering")
+    th = threading.Thread(target=_run, name=f"render-{job_id}", daemon=True)
+    with _BG_LOCK:
+        _BG[job_id] = {"thread": th, "progress": (0, 1, "Rendering…")}
+    th.start()
