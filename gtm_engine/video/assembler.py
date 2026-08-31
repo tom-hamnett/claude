@@ -618,6 +618,8 @@ def _render_master_talkinghead(job, ctx: dict, segments: dict, out: Path) -> Pat
     )
     result = provider.render(req)
     if not result or not Path(result).exists():
+        ctx["_master_error"] = getattr(provider, "last_error", "") or "presenter take returned nothing"
+        logger.info("master talking-head failed: %s", ctx["_master_error"])
         return None
     return _video_finalize(Path(result), out, audio="keep")
 
@@ -670,10 +672,19 @@ def assemble_continuous(job_id: int, include_broll: bool = True, cinematic_middl
         on_progress(1, 4, "Recording your continuous take")
     master = _render_master_talkinghead(job, ctx, segments, sd / "master.mp4")
     if not master:
-        # No talking-head master possible → fall back to the segment stitch.
-        logger.info("continuous: no master talking head; falling back to segment assembly")
-        return assemble_reel(job_id, include_broll=include_broll,
-                             cinematic_middle=cinematic_middle, on_progress=on_progress)
+        # No talking-head master → fall back to the segment stitch (cards), but
+        # RECORD why so the UI can say it instead of silently shipping cards.
+        merr = ctx.get("_master_error", "") or "presenter take failed"
+        logger.info("continuous: no master talking head (%s); falling back to segments", merr)
+        assemble_reel(job_id, include_broll=include_broll,
+                      cinematic_middle=cinematic_middle, on_progress=on_progress)
+        j = store.get(job_id)
+        if j:
+            st = _load_state(j)
+            st["master_error"] = merr
+            j.assembly_json = json.dumps(st)
+            store.save(j)
+        return store.get(job_id)
 
     dur = _probe_duration(master) or 20.0
     # Middle window by spoken-word proportions (so cutaway sits over the middle beats).
@@ -711,6 +722,7 @@ def assemble_continuous(job_id: int, include_broll: bool = True, cinematic_middl
     job.status = "ready"
     job.error = ""
     state = _load_state(job)
+    state.pop("master_error", None)   # this run produced a real take
     state["methods"] = {"reel": method, "duration": round(dur, 1)}
     # Remember how this reel was built so a QA-driven re-assemble keeps the same
     # middle (cinematic / b-roll) instead of regressing to bookends.

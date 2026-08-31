@@ -639,9 +639,10 @@ class HeyGenProvider(AvatarProvider):
 
         import httpx
 
-        # Full-HD by default so the talking head isn't grainy.
-        dims = {"9:16": (1080, 1920), "16:9": (1920, 1080), "1:1": (1080, 1080)}
-        width, height = dims.get(req.aspect_ratio, (1080, 1920))
+        # 720p is the known-good HeyGen render size; the assembler upscales the
+        # canvas to 1080 and the high-quality x264 pass keeps it clean.
+        dims = {"9:16": (720, 1280), "16:9": (1280, 720), "1:1": (720, 720)}
+        width, height = dims.get(req.aspect_ratio, (720, 1280))
 
         # Full automation with the user's OWN trained avatar: a HeyGen template
         # (avatar/look/style baked in; we fill the script). Preferred path.

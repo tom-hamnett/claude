@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-02b · revisions read the QA + rebuild the full reel"
+BUILD_TAG = "2026-09-02c · revert av4 to 720p + surface why cards fell back"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -766,10 +766,19 @@ def _auto_assemble_ui(idea, job):
         st.rerun()
 
     methods = {}
+    _state = {}
     try:
-        methods = (_json.loads(job.assembly_json or "{}") or {}).get("methods") or {}
+        _state = _json.loads(job.assembly_json or "{}") or {}
+        methods = _state.get("methods") or {}
     except Exception:
         methods = {}
+    # The presenter take failed → the reel fell back to cards. Say why, loudly.
+    if _state.get("master_error"):
+        me = _state["master_error"]
+        st.error(f"⚠️ Your presenter take didn't render, so the reel fell back to cards — {me}")
+        if "credit" in me.lower():
+            st.markdown("💳 **[Top up HeyGen API credits ↗](https://app.heygen.com/settings/subscriptions)** "
+                        "then re-assemble.")
     if methods:
         if "reel" in methods:  # continuous-voice model
             dur = methods.get("duration")
