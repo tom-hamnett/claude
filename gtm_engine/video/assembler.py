@@ -486,6 +486,7 @@ def _resolve_context(job) -> dict:
         "look_photo": "",
         "cinematic_look_ids": [],
         "cinematic_prompt": (job.cinematic_prompt or "").strip(),
+        "fal_model": getattr(cfg, "fal_model", "") or "",
     }
     try:
         from gtm_engine.casting import CastingStore
@@ -1044,7 +1045,8 @@ def assemble_choreographed(job_id: int, target_seconds: int = 25, draft: bool = 
                 elif v == "generate":
                     from gtm_engine.utils.media import generate_fal_video
                     raw = generate_fal_video(sh.get("stock_query", ""), sd / f"gen{i}_src.mp4",
-                                             seconds=max(4, int(t2 - t1)))
+                                             seconds=max(4, int(t2 - t1)),
+                                             model_id=ctx.get("fal_model", ""))
                     if raw:
                         path, kind = _fit_clip(Path(raw), t2 - t1, sd / f"sv{i}.mp4"), "video"
                 elif v == "card":

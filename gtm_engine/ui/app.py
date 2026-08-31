@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-06b · cheap AI b-roll via fal.ai (Hailuo/Kling, ~pennies)"
+BUILD_TAG = "2026-09-06c · Hailuo/Kling model picker in the UI"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -793,6 +793,21 @@ def _auto_assemble_ui(idea, job):
         st.rerun()
     st.caption("Draft = your script in a stand-in AI voice over your look, so you can nail the "
                "words, pacing and length **for free** before spending any HeyGen credits.")
+
+    # AI b-roll model picker (only when fal.ai is connected). Saves globally.
+    from gtm_engine.config import FAL_KEY as _FAL
+    if _FAL:
+        from gtm_engine.avatar import AvatarConfigStore as _ACS
+        from gtm_engine.utils.media import FAL_MODELS
+        _cs2 = _ACS(); _cfg2 = _cs2.load()
+        _names = list(FAL_MODELS)
+        _cur = next((n for n, i in FAL_MODELS.items() if i == _cfg2.fal_model), _names[0])
+        _pick = st.selectbox("🤖 AI b-roll model (for `generate` beats)", _names,
+                             index=_names.index(_cur), key=f"falm_{idea.id}",
+                             help="Which fal.ai model makes generated clips. Hailuo is cheapest; "
+                                  "Kling is a touch better. Applies to every 'generate' beat.")
+        if FAL_MODELS[_pick] != _cfg2.fal_model:
+            _cfg2.fal_model = FAL_MODELS[_pick]; _cs2.save(_cfg2)
 
     hd = st.toggle(
         "🎞 HD presenter — render you at 1080p (~2× HeyGen credits)",

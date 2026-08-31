@@ -408,6 +408,13 @@ def fetch_stock_video(query: str, output_path: Path, orientation: str = "portrai
         return None
 
 
+# fal.ai text→video models offered in the UI picker (name → fal model id).
+FAL_MODELS = {
+    "Hailuo (cheapest ~7¢)": "fal-ai/minimax/hailuo-02/standard/text-to-video",
+    "Kling (better ~12¢)": "fal-ai/kling-video/v2/standard/text-to-video",
+}
+
+
 def generate_fal_video(prompt: str, output_path: Path, seconds: int = 5,
                        aspect: str = "9:16", model_id: str = "") -> Path | None:
     """Cheap generative b-roll via fal.ai (Hailuo/Kling/etc.) — ~pennies per clip.

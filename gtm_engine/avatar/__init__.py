@@ -889,6 +889,7 @@ CREATE TABLE IF NOT EXISTS avatar_config (
     character_image_path TEXT DEFAULT '',
     character_description TEXT DEFAULT '',
     gesture INTEGER DEFAULT 1,
+    fal_model TEXT DEFAULT '',
     updated_at TEXT
 );
 """
@@ -898,6 +899,7 @@ _CONFIG_MIGRATIONS = {
     "character_image_path": "TEXT DEFAULT ''",
     "character_description": "TEXT DEFAULT ''",
     "gesture": "INTEGER DEFAULT 1",
+    "fal_model": "TEXT DEFAULT ''",
 }
 
 
@@ -916,6 +918,7 @@ class AvatarConfig(BaseModel):
     character_image_path: str = ""
     character_description: str = ""
     gesture: bool = True
+    fal_model: str = ""                   # fal.ai text→video model id for generated b-roll
     updated_at: str = ""
 
     def is_ready(self) -> bool:
@@ -975,6 +978,7 @@ class AvatarConfigStore:
                 character_image_path=(row["character_image_path"] if "character_image_path" in keys else "") or "",
                 character_description=(row["character_description"] if "character_description" in keys else "") or "",
                 gesture=bool(row["gesture"]) if "gesture" in keys and row["gesture"] is not None else True,
+                fal_model=(row["fal_model"] if "fal_model" in keys else "") or "",
                 updated_at=row["updated_at"] or "",
             )
 
@@ -986,8 +990,8 @@ class AvatarConfigStore:
                 INSERT INTO avatar_config (
                     id, provider, avatar_id, avatar_name, voice_id, voice_name,
                     mode, motion_prompt, expressiveness, background, aspect_ratio,
-                    character_image_path, character_description, gesture, updated_at
-                ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    character_image_path, character_description, gesture, fal_model, updated_at
+                ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
                     provider=excluded.provider, avatar_id=excluded.avatar_id,
                     avatar_name=excluded.avatar_name, voice_id=excluded.voice_id,
@@ -996,12 +1000,13 @@ class AvatarConfigStore:
                     background=excluded.background, aspect_ratio=excluded.aspect_ratio,
                     character_image_path=excluded.character_image_path,
                     character_description=excluded.character_description,
-                    gesture=excluded.gesture, updated_at=excluded.updated_at
+                    gesture=excluded.gesture, fal_model=excluded.fal_model,
+                    updated_at=excluded.updated_at
                 """,
                 (cfg.provider, cfg.avatar_id, cfg.avatar_name, cfg.voice_id, cfg.voice_name,
                  cfg.mode, cfg.motion_prompt, cfg.expressiveness, cfg.background,
                  cfg.aspect_ratio, cfg.character_image_path, cfg.character_description,
-                 1 if cfg.gesture else 0, cfg.updated_at),
+                 1 if cfg.gesture else 0, cfg.fal_model, cfg.updated_at),
             )
             conn.commit()
 
