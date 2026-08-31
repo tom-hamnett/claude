@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-02c · revert av4 to 720p + surface why cards fell back"
+BUILD_TAG = "2026-09-02d · cache the take & cutaway (re-runs don't re-spend)"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {

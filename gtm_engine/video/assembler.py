@@ -587,6 +587,22 @@ def _overlay_window(master: Path, cutaway: Path, t1: float, t2: float, out: Path
     return out if _run(cmd) and out.exists() else None
 
 
+def _full_script(job, segments: dict) -> str:
+    """The full spoken narration: a hand-edited override wins verbatim; otherwise
+    every segment's line in order, each ending on punctuation with a blank line
+    between beats so the delivery PAUSES between thoughts."""
+    if (job.script_override or "").strip():
+        return job.script_override.strip()
+    parts = []
+    for s in SEG_ORDER:
+        p = (segments.get(s, {}) or {}).get("spoken_text", "").strip()
+        if p:
+            if p[-1] not in ".!?…":
+                p += "."
+            parts.append(p)
+    return "\n\n".join(parts).strip() or job.spoken_script
+
+
 def _render_master_talkinghead(job, ctx: dict, segments: dict, out: Path) -> Path | None:
     """Render the FULL script as one continuous talking-head take (your voice)."""
     from gtm_engine.avatar import RenderRequest, get_provider
@@ -595,21 +611,7 @@ def _render_master_talkinghead(job, ctx: dict, segments: dict, out: Path) -> Pat
         return None
     if not ctx.get("image_key"):
         return None
-    # A hand-edited script (from the review panel) wins verbatim.
-    if (job.script_override or "").strip():
-        full = job.script_override.strip()
-    else:
-        # Full narration = every segment's spoken line, in order (fallback to job).
-        # End each beat on terminal punctuation and break to a new line so the
-        # delivery PAUSES between thoughts instead of rolling straight through.
-        parts = []
-        for s in SEG_ORDER:
-            p = (segments.get(s, {}) or {}).get("spoken_text", "").strip()
-            if p:
-                if p[-1] not in ".!?…":
-                    p += "."
-                parts.append(p)
-        full = "\n\n".join(parts).strip() or job.spoken_script
+    full = _full_script(job, segments)
     req = RenderRequest(
         script=full, avatar_id=job.avatar_id, output_path=out.with_name(out.stem + "_raw.mp4"),
         voice_id=ctx.get("voice_id") or None, background=ctx.get("background", "#0a0a0f"),
@@ -667,10 +669,26 @@ def assemble_continuous(job_id: int, include_broll: bool = True, cinematic_middl
     segments = (brief.segments_json if brief else {}) or {}
     ctx = _resolve_context(job)
     sd = _seg_dir(job_id)
+    state = _load_state(job)
 
     if on_progress:
         on_progress(1, 4, "Recording your continuous take")
-    master = _render_master_talkinghead(job, ctx, segments, sd / "master.mp4")
+    # Cache the (expensive) talking-head take: only re-render — and re-spend HeyGen
+    # credits — when the script/voice/look actually changed. A re-assemble that only
+    # tweaks the cutaway reuses the saved take for free.
+    full = _full_script(job, segments)
+    msig = _hash(full, ctx.get("voice_id", ""), ctx.get("image_key", ""),
+                 ctx.get("avatar_id", ""), ctx.get("motion_prompt", ""))
+    mpath = sd / "master.mp4"
+    mc = state.get("master_cache") or {}
+    if mc.get("sig") == msig and Path(mc.get("path", "")).exists():
+        master = Path(mc["path"])
+        logger.info("continuous: reusing cached master take (no credit spend)")
+    else:
+        master = _render_master_talkinghead(job, ctx, segments, mpath)
+        if master:
+            state["master_cache"] = {"sig": msig, "path": str(master)}
+            _save_state(job, state)
     if not master:
         # No talking-head master → fall back to the segment stitch (cards), but
         # RECORD why so the UI can say it instead of silently shipping cards.
@@ -701,8 +719,23 @@ def assemble_continuous(job_id: int, include_broll: bool = True, cinematic_middl
     method = "talking-head (full)"
     if on_progress:
         on_progress(2, 4, "Filming your cutaway")
-    cutaway, cmethod, cut_err = _middle_cutaway(segments, ctx, t2 - t1, sd / "cutaway.mp4",
-                                                cinematic_middle, include_broll)
+    # Cache the cutaway too (Seedance is ~60 credits): reuse when the scene, looks
+    # and window are unchanged.
+    mid_vd = " ".join((segments.get(s, {}) or {}).get("visual_direction", "")
+                      for s in ("tension", "pivot", "proof"))
+    csig = _hash(ctx.get("cinematic_prompt", "") or mid_vd,
+                 ",".join(ctx.get("cinematic_look_ids", [])), str(round(t2 - t1)),
+                 str(cinematic_middle), str(include_broll))
+    cc = state.get("cutaway_cache") or {}
+    if cc.get("sig") == csig and Path(cc.get("path", "")).exists():
+        cutaway, cmethod, cut_err = Path(cc["path"]), cc.get("method", "cinematic"), ""
+        logger.info("continuous: reusing cached cutaway (no credit spend)")
+    else:
+        cutaway, cmethod, cut_err = _middle_cutaway(segments, ctx, t2 - t1, sd / "cutaway.mp4",
+                                                    cinematic_middle, include_broll)
+        if cutaway:
+            state["cutaway_cache"] = {"sig": csig, "path": str(cutaway), "method": cmethod}
+            _save_state(job, state)
     if cutaway:
         if on_progress:
             on_progress(3, 4, "Layering the cutaway over your voice")

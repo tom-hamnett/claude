@@ -484,3 +484,30 @@ def test_start_reassemble_reads_saved_settings(db, monkeypatch):
                         lambda jid, **k: got.update({"jid": jid, **k}))
     asm.start_reassemble(job.id)
     assert got == {"jid": job.id, "include_broll": True, "cinematic_middle": False}
+
+
+def test_master_take_is_cached_across_reassembles(db, tmp_path, monkeypatch):
+    """Re-assembling with the SAME script reuses the master take (no re-render)."""
+    import subprocess, imageio_ffmpeg
+    from gtm_engine.producer import ProducerBrief, ProducerBriefLibrary
+    import gtm_engine.video.assembler as asm
+    ff = imageio_ffmpeg.get_ffmpeg_exe()
+    monkeypatch.setattr(asm, "ASSEMBLY_DIR", tmp_path / "a")
+    monkeypatch.setattr(asm, "OUTPUT_DIR", tmp_path / "o")
+    calls = {"n": 0}
+    def fake_master(job, ctx, segments, out):
+        calls["n"] += 1
+        subprocess.run([ff, "-y", "-f", "lavfi", "-i", "color=c=navy:s=1080x1920:d=6:r=30",
+                        "-f", "lavfi", "-i", "sine=frequency=300:duration=6",
+                        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", "-shortest",
+                        str(out)], capture_output=True)
+        return out
+    monkeypatch.setattr(asm, "_render_master_talkinghead", fake_master)
+    monkeypatch.setattr(asm, "_middle_cutaway", lambda *a, **k: (None, "", "off"))
+    segs = {s: {"spoken_text": "word word", "text_overlay": "x", "duration_seconds": 4}
+            for s in ["hook", "tension", "pivot", "proof", "bookend"]}
+    ProducerBriefLibrary().save(ProducerBrief(idea_id=1, spoken_script="x", segments_json=segs))
+    store = VideoJobStore(); job = VideoJob(idea_id=1); job.id = store.save(job)
+    asm.assemble_continuous(job.id, cinematic_middle=False)
+    asm.assemble_continuous(job.id, cinematic_middle=False)  # same script → cache hit
+    assert calls["n"] == 1  # master rendered once, reused the second time
