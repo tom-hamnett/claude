@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-08-30 · full-reel + two-model QA"
+BUILD_TAG = "2026-08-31 · one-voice reel + presenter check"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -701,12 +701,38 @@ def _auto_assemble_ui(idea, job):
                "the data/proof beats in the middle, captions — and stitches one vertical "
                "video you just review. Any beat it can't render richly becomes a clean "
                "branded card, so you always get a complete reel.")
+
+    # Pre-flight: can the presenter actually render as YOU? (Avatar IV needs an
+    # uploaded photo's image_key — a trained-avatar id alone won't drive the API.)
+    from gtm_engine.casting import CastingStore
+    _cs = CastingStore()
+    _ch = _cs.get_default_character()
+    _looks = _cs.list_looks(_ch.id) if (_ch and _ch.id) else []
+    _has_photo = bool(_ch and (_ch.image_key or any(l.image_key for l in _looks)))
+    _has_classic = bool(_ch and _ch.avatar_id and not _ch.avatar_id.startswith("tp:"))
+    if not (_has_photo or _has_classic):
+        st.warning(
+            "⚠️ Your presenter can't render yet, so the hook & bookend will use text "
+            "cards — not you. HeyGen's API can't drive a *trained* avatar. To get **you** "
+            "on screen: go to **Settings → Cast & Voice → Look Library** and upload a photo "
+            "or two of The Analyst. That gives the tool the image it needs, and the reel will "
+            "render in your face and your voice.")
+
     broll = st.toggle(
         "Cinematic B-roll for the middle beats (Veo — ~£1–2 per reel)",
         value=bool(GOOGLE_API_KEY), key=f"broll_{idea.id}",
         help="On: AI-generated cinematic B-roll for the tension/pivot/proof beats. "
              "Off (or no Google key): clean branded text/data cards — free.",
     )
+    narrate = st.toggle(
+        "Narrate the middle with an AI voice",
+        value=False, key=f"narr_{idea.id}",
+        help="Off (recommended): the middle rides on captions, so the ONLY voice in the "
+             "reel is YOURS on the hook & bookend. On: adds an AI voiceover to the middle "
+             "— note it won't match your cloned voice.",
+    )
+    if not narrate:
+        st.caption("🔊 Voice: only **you** (hook & bookend). The middle is captioned, no AI voice.")
     lbl = "✨ Auto-assemble full reel" if not job.video_path else "✨ Re-assemble reel"
     if st.button(lbl, key=f"asm_{idea.id}", use_container_width=True, type="primary"):
         prog = st.progress(0.0, text="Starting…")
@@ -715,7 +741,7 @@ def _auto_assemble_ui(idea, job):
             prog.progress(min(i / max(t, 1), 1.0), text=f"{label} ({i}/{t})")
 
         with st.spinner("Building your reel — the middle/avatar beats can take a few minutes…"):
-            assemble_reel(job.id, include_broll=broll, on_progress=_p)
+            assemble_reel(job.id, include_broll=broll, narrate_middle=narrate, on_progress=_p)
         from gtm_engine.persistence import backup_quietly
         backup_quietly()
         st.rerun()

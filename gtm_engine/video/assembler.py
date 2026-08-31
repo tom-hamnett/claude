@@ -253,9 +253,13 @@ def _avatar_segment(seg: dict, ctx: dict, out: Path) -> Path | None:
     return _normalize(Path(result), out)
 
 
-def _broll_segment(seg: dict, out: Path) -> Path | None:
-    """Cinematic B-roll (Veo, no people) + Gemini voiceover + burnt overlay for a
-    middle segment. Returns None if Veo/TTS unavailable (→ card fallback)."""
+def _broll_segment(seg: dict, out: Path, narrate: bool = False) -> Path | None:
+    """Cinematic B-roll (Veo, no people) for a middle segment, with a burnt caption.
+
+    By default the B-roll is SILENT — captions carry the message and the only voice
+    in the finished reel is the presenter's (on the hook/bookend). Set narrate=True
+    to add an AI voiceover (note: it won't match the presenter's cloned voice).
+    Returns None if Veo is unavailable (→ card fallback)."""
     from gtm_engine.config import GOOGLE_API_KEY
     if not GOOGLE_API_KEY:
         return None
@@ -272,9 +276,10 @@ def _broll_segment(seg: dict, out: Path) -> Path | None:
                           aspect_ratio="9:16")
     if not clip or not Path(clip).exists():
         return None
-    # Voiceover of the spoken line (optional — silent B-roll still fine).
+    # Voiceover only if explicitly asked for (it won't match the presenter's voice).
     spoken = seg.get("spoken_text", "").strip()
-    vo = generate_voiceover(spoken, output_path=out.with_name(out.stem + "_vo.wav")) if spoken else None
+    vo = (generate_voiceover(spoken, output_path=out.with_name(out.stem + "_vo.wav"))
+          if (narrate and spoken) else None)
     overlay = seg.get("text_overlay", "").strip()
     overlay_png = None
     if overlay:
@@ -286,7 +291,7 @@ def _broll_segment(seg: dict, out: Path) -> Path | None:
 
 
 def _build_segment(seg_id: str, seg: dict, ctx: dict, out: Path,
-                   include_broll: bool) -> tuple[Path | None, str]:
+                   include_broll: bool, narrate_middle: bool = False) -> tuple[Path | None, str]:
     """Build one segment. Returns (clip_path, method). Falls back to a text card
     so a segment is ALWAYS produced."""
     seconds = int(seg.get("duration_seconds") or DEFAULT_SEG_SECONDS)
@@ -295,7 +300,7 @@ def _build_segment(seg_id: str, seg: dict, ctx: dict, out: Path,
         if clip:
             return clip, "avatar"
     elif include_broll:
-        clip = _broll_segment(seg, out)
+        clip = _broll_segment(seg, out, narrate=narrate_middle)
         if clip:
             return clip, "b-roll"
     # Fallback card: overlay for the headline, spoken line as subline.
@@ -307,12 +312,16 @@ def _build_segment(seg_id: str, seg: dict, ctx: dict, out: Path,
 
 # ── orchestrator ──────────────────────────────────────────────────────────────
 
-def assemble_reel(job_id: int, include_broll: bool = True, on_progress=None):
+def assemble_reel(job_id: int, include_broll: bool = True, narrate_middle: bool = False,
+                  on_progress=None):
     """Assemble the full Core-Five reel for a job into one mp4.
 
     include_broll: generate cinematic Veo B-roll for the middle segments (costs
     a little per clip). When False (or Veo unavailable) middle segments are clean
     branded text cards — free, still a complete reel.
+    narrate_middle: add an AI voiceover to the middle B-roll. Default False so the
+    ONLY voice in the reel is the presenter's (on hook/bookend) — the middle rides
+    on captions. Enable only if you accept a non-presenter voice in the middle.
     on_progress(step:int, total:int, label:str): optional UI callback.
 
     Returns the updated VideoJob (video_path set, status 'ready' on success).
@@ -347,7 +356,7 @@ def assemble_reel(job_id: int, include_broll: bool = True, on_progress=None):
     for i, seg_id in enumerate(seg_ids):
         seg = segments.get(seg_id, {}) or {}
         sig = _hash(seg_id, json.dumps(seg, sort_keys=True), str(include_broll),
-                    ctx.get("image_key", ""), ctx.get("motion_prompt", ""))
+                    str(narrate_middle), ctx.get("image_key", ""), ctx.get("motion_prompt", ""))
         cached = state.get("segments", {}).get(seg_id)
         out = sd / f"{i}_{seg_id}_{sig}.mp4"
         if on_progress:
@@ -356,7 +365,8 @@ def assemble_reel(job_id: int, include_broll: bool = True, on_progress=None):
             clips.append(cached["path"])
             methods[seg_id] = cached.get("method", "card")
             continue
-        clip, method = _build_segment(seg_id, seg, ctx, out, include_broll)
+        clip, method = _build_segment(seg_id, seg, ctx, out, include_broll,
+                                      narrate_middle=narrate_middle)
         if not clip:  # last-ditch: a minimal card so the stitch never breaks
             clip = _text_card(seg.get("text_overlay", seg_id.title()), "",
                               int(seg.get("duration_seconds") or DEFAULT_SEG_SECONDS), out)
