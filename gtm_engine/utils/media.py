@@ -372,6 +372,42 @@ def describe_look(image_path) -> str:
         return ""
 
 
+def fetch_stock_video(query: str, output_path: Path, orientation: str = "portrait") -> Path | None:
+    """Search Pexels' FREE video API for a vertical stock clip and download it.
+    Returns the saved mp4 path, or None. Needs PEXELS_API_KEY (free)."""
+    from gtm_engine.config import PEXELS_API_KEY
+    if not PEXELS_API_KEY or not (query or "").strip():
+        return None
+    try:
+        import httpx
+        r = httpx.get("https://api.pexels.com/videos/search",
+                      params={"query": query.strip(), "orientation": orientation,
+                              "per_page": 8, "size": "medium"},
+                      headers={"Authorization": PEXELS_API_KEY}, timeout=25)
+        r.raise_for_status()
+        vids = (r.json().get("videos") or [])
+        best_url, best_h = "", 0
+        for v in vids:
+            for f in (v.get("video_files") or []):
+                h = f.get("height") or 0
+                # Prefer a portrait-ish HD file, capped so downloads stay quick.
+                if f.get("link") and 700 <= h <= 1920 and h > best_h:
+                    best_url, best_h = f["link"], h
+        if not best_url and vids:  # fall back to the first file available
+            files = vids[0].get("video_files") or []
+            best_url = files[0].get("link", "") if files else ""
+        if not best_url:
+            return None
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        dr = httpx.get(best_url, follow_redirects=True, timeout=120)
+        dr.raise_for_status()
+        output_path.write_bytes(dr.content)
+        return output_path if output_path.stat().st_size > 0 else None
+    except Exception as e:
+        logger.error("fetch_stock_video failed for %r: %s", query, e)
+        return None
+
+
 def qa_video(video_path, context: str = "") -> dict:
     """Watch a finished reel with Gemini and return a structured QA verdict.
 

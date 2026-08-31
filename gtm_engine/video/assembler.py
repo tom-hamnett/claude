@@ -867,6 +867,182 @@ def assemble_continuous(job_id: int, include_broll: bool = True, cinematic_middl
     return store.get(job.id)
 
 
+# ── Choreographed compositor (many shots over one continuous take) ─────────────
+
+def _composite(master: Path, overlays: list[dict], out: Path) -> Path | None:
+    """Lay many visuals over the master in ONE pass. Each overlay:
+      {"path", "kind": "video"|"png", "t1", "t2"}.
+    Video overlays are time-shifted to their window; pngs are shown static during
+    it. The master AUDIO is copied through untouched. Overlays are drawn in list
+    order (put captions last so they sit on top)."""
+    if not overlays:
+        return master
+    ff = _ffmpeg()
+    dur = _probe_duration(master) or 30.0
+    parts, prev = [], "0:v"
+    for k, ov in enumerate(overlays, start=1):
+        t1, t2 = float(ov["t1"]), float(ov["t2"])
+        outlab = f"o{k}"
+        if ov["kind"] == "video":
+            parts.append(f"[{k}:v]scale={W}:{H}:force_original_aspect_ratio=increase,"
+                         f"crop={W}:{H},setpts=PTS-STARTPTS+{t1:.3f}/TB[v{k}]")
+            parts.append(f"[{prev}][v{k}]overlay=0:0:enable='between(t,{t1:.3f},{t2:.3f})'[{outlab}]")
+        else:  # png (already W×H)
+            parts.append(f"[{prev}][{k}:v]overlay=0:0:enable='between(t,{t1:.3f},{t2:.3f})'[{outlab}]")
+        prev = outlab
+    fc = ";".join(parts)
+    head = [ff, "-y", "-i", str(master)]
+    for ov in overlays:
+        head += (["-loop", "1", "-t", f"{dur + 1:.2f}", "-i", str(ov["path"])]
+                 if ov["kind"] == "png" else ["-i", str(ov["path"])])
+    base = head + ["-filter_complex", fc, "-map", f"[{prev}]", "-map", "0:a?",
+                   "-t", f"{dur:.3f}", *VQ]   # -t caps to the master length (drop png tail)
+    if _run(base + ["-c:a", "copy", str(out)], timeout=420) and out.exists():
+        return out
+    return out if _run(base + [*AQ, str(out)], timeout=420) and out.exists() else None
+
+
+def _shot_windows(shots: list[dict], dur: float, lead: float = 0.3) -> list[tuple]:
+    """Map each shot to a [t1,t2] window by spoken-word proportion of the take.
+    Cutaways get a small lead so the picture lands just before the words."""
+    counts = [max(1, len((s.get("spoken") or "").split())) for s in shots]
+    total = sum(counts) or 1
+    wins, t = [], 0.0
+    for i, c in enumerate(shots):
+        seg = dur * counts[i] / total
+        t1, t2 = t, min(dur, t + seg)
+        if c.get("visual") != "presenter":       # cutaways lead audio slightly
+            t1 = max(0.0, t1 - lead)
+        wins.append((round(t1, 3), round(t2, 3)))
+        t += seg
+    return wins
+
+
+def assemble_choreographed(job_id: int, target_seconds: int = 25, draft: bool = False,
+                           on_progress=None):
+    """The Reel Choreography Engine: one continuous take + a shot-by-shot timeline
+    of presenter / your screenshots / auto-stock / cards, cut to the script.
+    Uses the job's saved shot_list, or choreographs one with Claude."""
+    from gtm_engine.video import VideoJobStore
+    from gtm_engine.producer import ProducerBriefLibrary
+    from PIL import Image
+
+    store = VideoJobStore()
+    job = store.get(job_id)
+    if not job:
+        return None
+    brief = ProducerBriefLibrary().get_for_idea(job.idea_id)
+    segments = (brief.segments_json if brief else {}) or {}
+    ctx = _resolve_context(job)
+    sd = _seg_dir(job_id)
+    state = _load_state(job)
+    full = _full_script(job, segments)
+
+    # 1 · the continuous take (cached), or the free AI-voice draft.
+    if on_progress:
+        on_progress(1, 5, "Free draft (AI voice)" if draft else "Recording your take")
+    if draft:
+        master = _draft_master(job, ctx, segments, sd / "draft_master.mp4")
+    else:
+        msig = _hash(full, ctx.get("voice_id", ""), ctx.get("image_key", ""),
+                     ctx.get("avatar_id", ""), ctx.get("motion_prompt", ""))
+        mc = state.get("master_cache") or {}
+        if mc.get("sig") == msig and Path(mc.get("path", "")).exists():
+            master = Path(mc["path"])
+        else:
+            master = _render_master_talkinghead(job, ctx, segments, sd / "master.mp4")
+            if master:
+                state["master_cache"] = {"sig": msig, "path": str(master)}
+                _save_state(job, state)
+    if not master:
+        merr = ctx.get("_master_error", "") or "presenter take failed"
+        assemble_reel(job_id, include_broll=False, cinematic_middle=False, on_progress=on_progress)
+        j = store.get(job_id)
+        if j:
+            st = _load_state(j); st["master_error"] = merr
+            j.assembly_json = json.dumps(st); store.save(j)
+        return store.get(job_id)
+
+    dur = _probe_duration(master) or float(target_seconds)
+
+    # 2 · the shot list (saved, else choreograph with Claude).
+    if on_progress:
+        on_progress(2, 5, "Choreographing the shots")
+    shots = list(job.shot_list or [])
+    if not shots:
+        try:
+            from gtm_engine.video.choreography import choreograph
+            from gtm_engine.ideas import IdeaBank
+            idea = IdeaBank().get(job.idea_id)
+            names = [Path(m).name for m in (job.middle_media or [])]
+            shots = choreograph(full, names, (idea.product if idea else "") or "", target_seconds)
+        except Exception as e:
+            logger.error("choreograph failed: %s", e)
+            shots = []
+        if shots:
+            job.shot_list = shots
+            job.id = store.save(job)
+
+    if not shots:
+        final_src, method = master, "talking-head (full)"
+    else:
+        wins = _shot_windows(shots, dur)
+        if on_progress:
+            on_progress(3, 5, "Gathering the visuals")
+        visual_ovs, caption_ovs = [], []
+        for i, (sh, (t1, t2)) in enumerate(zip(shots, wins)):
+            v, path, kind = sh.get("visual"), None, None
+            try:
+                if v == "screenshot":
+                    mi = sh.get("media_index")
+                    if isinstance(mi, int) and 0 <= mi < len(job.middle_media):
+                        src = Path(job.middle_media[mi])
+                        if src.exists() and src.suffix.lower() in VID_EXTS:
+                            path, kind = _fit_clip(src, t2 - t1, sd / f"sv{i}.mp4"), "video"
+                        elif src.exists():
+                            png = sd / f"sv{i}.png"
+                            _cover_fit(Image.open(src).convert("RGB"), W, H).save(png)
+                            path, kind = png, "png"
+                elif v == "stock":
+                    from gtm_engine.utils.media import fetch_stock_video
+                    raw = fetch_stock_video(sh.get("stock_query", ""), sd / f"stk{i}_src.mp4")
+                    if raw:
+                        path, kind = _fit_clip(Path(raw), t2 - t1, sd / f"sv{i}.mp4"), "video"
+                elif v == "card":
+                    png = sd / f"card{i}.png"
+                    _render_card_png(sh.get("caption") or (sh.get("spoken", "")[:40]), "", png)
+                    path, kind = png, "png"
+            except Exception as e:
+                logger.info("shot %d visual failed (%s) — presenter shows instead", i, e)
+            if path and kind:
+                visual_ovs.append({"path": str(path), "kind": kind, "t1": t1, "t2": t2})
+            cap = (sh.get("caption") or "").strip()
+            if cap:
+                cpng = _render_overlay_png(cap, sd / f"cap{i}.png")
+                caption_ovs.append({"path": str(cpng), "kind": "png", "t1": t1, "t2": t2})
+        if on_progress:
+            on_progress(4, 5, "Cutting the reel to the rhythm")
+        final_src = _composite(master, visual_ovs + caption_ovs, sd / "choreo.mp4") or master
+        n_cut = sum(1 for s in shots if s.get("visual") != "presenter")
+        method = f"choreographed · {len(shots)} shots · {n_cut} cutaways"
+
+    if on_progress:
+        on_progress(5, 5, "Finishing")
+    final = OUTPUT_DIR / "videos" / f"idea_{job.idea_id}_reel.mp4"
+    final.parent.mkdir(parents=True, exist_ok=True)
+    final.write_bytes(Path(final_src).read_bytes())
+    job.video_path = str(final)
+    job.status = "ready"
+    job.error = ""
+    state = _load_state(job)
+    state.pop("master_error", None)
+    state["methods"] = {"reel": method, "duration": round(dur, 1)}
+    state["settings"] = {"choreographed": True, "draft": draft}
+    job.assembly_json = json.dumps(state)
+    job.id = store.save(job)
+    return store.get(job.id)
+
+
 # ── Background runner ──────────────────────────────────────────────────────────
 # Rendering must survive the client disconnecting (mobile browsers kill long
 # in-page runs). So we run the work on a daemon thread in the app's own process
@@ -917,11 +1093,9 @@ def start_assemble(job_id: int, include_broll: bool = True,
 
     def _run():
         try:
-            # Continuous-voice reel by default (talking head + cutaways over one VO);
-            # it falls back to the segment stitch if a master take can't be made.
-            assemble_continuous(job_id, include_broll=include_broll,
-                                cinematic_middle=cinematic_middle, draft=draft,
-                                on_progress=_prog)
+            # Choreographed reel by default: one take + a shot-by-shot timeline of
+            # presenter / your screenshots / stock / cards, cut to the script.
+            assemble_choreographed(job_id, draft=draft, on_progress=_prog)
             try:
                 from gtm_engine.persistence import backup_quietly
                 backup_quietly()

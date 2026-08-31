@@ -554,3 +554,38 @@ def test_middle_media_round_trips(db):
     job = VideoJob(idea_id=1); job.id = store.save(job)
     set_middle_media(job.id, ["/a/x.png", "/a/y.mp4", ""])
     assert store.get(job.id).middle_media == ["/a/x.png", "/a/y.mp4"]
+
+
+def test_choreograph_cleans_and_validates(monkeypatch):
+    from gtm_engine.video import choreography as ch
+    raw = ('{"shots":[{"spoken":"Hook line","seconds":9,"visual":"screenshot","media_index":5,'
+           '"caption":"x"},{"spoken":"Close","seconds":3,"visual":"stock","stock_query":"markets",'
+           '"caption":"y"}]}')
+    monkeypatch.setattr("gtm_engine.utils.ai_client.call_claude", lambda *a, **k: raw)
+    shots = ch.choreograph("Hook line Close", media_names=[], product="Atlas")
+    assert len(shots) == 2
+    # media_index 5 with 0 media → downgraded to a card; seconds clamped to <=6
+    assert shots[0]["visual"] == "card" and shots[0]["seconds"] <= 6
+    assert shots[1]["visual"] == "stock" and shots[1]["stock_query"] == "markets"
+
+
+def test_shot_list_cleared_when_script_changes(db):
+    from gtm_engine.video import update_job_production, set_shot_list
+    store = VideoJobStore()
+    job = VideoJob(idea_id=1, script_override="old"); job.id = store.save(job)
+    set_shot_list(job.id, [{"spoken": "old", "visual": "presenter"}])
+    assert len(store.get(job.id).shot_list) == 1
+    update_job_production(job.id, script_override="new words")
+    assert store.get(job.id).shot_list == []   # invalidated → re-choreograph
+
+
+def test_shot_windows_sum_to_duration_and_lead():
+    import gtm_engine.video.assembler as asm
+    shots = [{"spoken": "a b c", "visual": "presenter"},
+             {"spoken": "d e f g", "visual": "screenshot"},
+             {"spoken": "h i", "visual": "presenter"}]
+    wins = asm._shot_windows(shots, 20.0)
+    assert len(wins) == 3
+    assert wins[-1][1] <= 20.0 and wins[0][0] == 0.0
+    # the screenshot (cutaway) leads its audio, so its start is earlier than a naive split
+    assert wins[1][0] < wins[0][1]

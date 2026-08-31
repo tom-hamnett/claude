@@ -84,6 +84,7 @@ CREATE TABLE IF NOT EXISTS video_jobs (
     script_override TEXT DEFAULT '',
     cinematic_prompt TEXT DEFAULT '',
     middle_media TEXT DEFAULT '[]',
+    shot_list TEXT DEFAULT '[]',
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
@@ -108,6 +109,7 @@ _JOB_MIGRATIONS = {
     "script_override": "TEXT DEFAULT ''",
     "cinematic_prompt": "TEXT DEFAULT ''",
     "middle_media": "TEXT DEFAULT '[]'",
+    "shot_list": "TEXT DEFAULT '[]'",
 }
 
 
@@ -146,6 +148,7 @@ class VideoJob(BaseModel):
     script_override: str = ""            # hand-edited full narration (verbatim), optional
     cinematic_prompt: str = ""           # per-reel cinematic scene direction (Seedance)
     middle_media: list[str] = Field(default_factory=list)  # your own footage/screenshots for the middle
+    shot_list: list[dict] = Field(default_factory=list)    # choreographed shots (timeline)
     created_at: str = ""
     updated_at: str = ""
 
@@ -190,7 +193,8 @@ class VideoJobStore:
             job.character_image_path, job.engine, job.environment_id, job.camera_note,
             job.hook_type, job.tone, job.passion, job.own_hook, job.error,
             job.look_id, job.assembly_json, job.script_override, job.cinematic_prompt,
-            json.dumps(job.middle_media), job.created_at, job.updated_at,
+            json.dumps(job.middle_media), json.dumps(job.shot_list),
+            job.created_at, job.updated_at,
         )
         with self._connect() as conn:
             if job.id:
@@ -202,7 +206,7 @@ class VideoJobStore:
                        driving_video_path=?, character_image_path=?, engine=?,
                        environment_id=?, camera_note=?, hook_type=?, tone=?, passion=?, own_hook=?,
                        error=?, look_id=?, assembly_json=?, script_override=?, cinematic_prompt=?,
-                       middle_media=?, created_at=?, updated_at=? WHERE id=?""",
+                       middle_media=?, shot_list=?, created_at=?, updated_at=? WHERE id=?""",
                     (*cols, job.id),
                 )
                 conn.commit()
@@ -214,8 +218,8 @@ class VideoJobStore:
                    script_approved, driving_video_path, character_image_path, engine,
                    environment_id, camera_note, hook_type, tone, passion, own_hook, error,
                    look_id, assembly_json, script_override, cinematic_prompt,
-                   middle_media, created_at, updated_at)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                   middle_media, shot_list, created_at, updated_at)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 cols,
             )
             conn.commit()
@@ -264,6 +268,7 @@ class VideoJobStore:
             script_override=g("script_override", "") or "",
             cinematic_prompt=g("cinematic_prompt", "") or "",
             middle_media=json.loads(g("middle_media", "[]") or "[]"),
+            shot_list=json.loads(g("shot_list", "[]") or "[]"),
             created_at=row["created_at"], updated_at=row["updated_at"],
         )
 
@@ -490,9 +495,22 @@ def update_job_production(job_id: int, motion_prompt: str | None = None,
     if look_id is not None:
         job.look_id = look_id or None
     if script_override is not None:
+        if script_override != job.script_override:
+            job.shot_list = []          # words changed → re-choreograph next assemble
         job.script_override = script_override
     if cinematic_prompt is not None:
         job.cinematic_prompt = cinematic_prompt
+    job.id = store.save(job)
+    return store.get(job.id)
+
+
+def set_shot_list(job_id: int, shots: list[dict]) -> VideoJob | None:
+    """Save a hand-edited shot list (from the choreography editor)."""
+    store = VideoJobStore()
+    job = store.get(job_id)
+    if not job:
+        return None
+    job.shot_list = shots or []
     job.id = store.save(job)
     return store.get(job.id)
 
@@ -639,7 +657,10 @@ def revise_from_notes(job_id: int, notes: str = "", use_qa: bool = True) -> Vide
     except Exception:
         data = {}
     if data.get("script"):
-        job.script_override = data["script"].strip()
+        new_script = data["script"].strip()
+        if new_script != job.script_override:
+            job.shot_list = []           # words changed → re-choreograph
+        job.script_override = new_script
     if data.get("cinematic_prompt"):
         job.cinematic_prompt = data["cinematic_prompt"].strip()
     job.revisions.append({

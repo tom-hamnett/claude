@@ -84,6 +84,7 @@ def _migrate_legacy_single_tenant() -> None:
 ANTHROPIC_API_KEY = _get("ANTHROPIC_API_KEY")
 OPENAI_API_KEY = _get("OPENAI_API_KEY")
 GOOGLE_API_KEY = _get("GOOGLE_API_KEY")
+PEXELS_API_KEY = _get("PEXELS_API_KEY")          # free stock video (choreography)
 DEFAULT_AI_MODEL = _get("DEFAULT_AI_MODEL", "claude-opus-5")
 
 # Database
