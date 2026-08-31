@@ -36,11 +36,12 @@ from gtm_engine.config import OUTPUT_DIR
 logger = logging.getLogger(__name__)
 
 # Uniform spec every segment is normalised to, so the final stitch is clean.
-# 720x1280 vertical — matches HeyGen's render size and stays light on memory
-# (Streamlit Cloud is ~1GB). High-quality x264 keeps it clean; audio is copied
-# through untouched wherever possible so the voice never degrades.
-W, H, FPS = 720, 1280, 30
-VQ = ["-c:v", "libx264", "-preset", "veryfast", "-crf", "19", "-pix_fmt", "yuv420p",
+# 1080x1920 (full-HD vertical). To stay within Streamlit Cloud's ~1GB the
+# compositor works in SMALL BATCHES (a few layers per ffmpeg pass) rather than one
+# giant graph — enough quality, bounded memory. Audio is copied through untouched.
+W, H, FPS = 1080, 1920, 30
+COMPOSITE_BATCH = 4        # overlays per ffmpeg pass (peak inputs = BATCH+1)
+VQ = ["-c:v", "libx264", "-preset", "fast", "-crf", "18", "-pix_fmt", "yuv420p",
       "-threads", "2"]
 AQ = ["-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-ac", "2"]
 BG_HEX = "0x0a0a0f"          # brand dark
@@ -871,38 +872,47 @@ def assemble_continuous(job_id: int, include_broll: bool = True, cinematic_middl
 
 # ── Choreographed compositor (many shots over one continuous take) ─────────────
 
-def _overlay_one(base: Path, ov: dict, out: Path, dur: float) -> Path | None:
-    """Overlay ONE visual on `base` during its window, keeping base audio. Only two
-    inputs per pass — memory-light enough for Streamlit Cloud (~1GB)."""
+def _composite_batch(base: Path, overlays: list[dict], out: Path, dur: float) -> Path | None:
+    """Overlay a SMALL group of visuals (≤ COMPOSITE_BATCH) in one ffmpeg pass,
+    keeping base audio. Peak inputs = len(overlays)+1 — bounded so memory stays low."""
     ff = _ffmpeg()
-    t1, t2 = float(ov["t1"]), float(ov["t2"])
-    en = f"enable='between(t,{t1:.3f},{t2:.3f})'"
-    if ov["kind"] == "video":
-        fc = (f"[1:v]scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},"
-              f"setpts=PTS-STARTPTS+{t1:.3f}/TB[v];[0:v][v]overlay=0:0:{en}[o]")
-        head = [ff, "-y", "-i", str(base), "-i", str(ov["path"])]
-    else:  # png (already W×H) — loop as a static layer for the window
-        fc = f"[0:v][1:v]overlay=0:0:{en}[o]"
-        head = [ff, "-y", "-i", str(base), "-loop", "1", "-t", f"{dur + 1:.2f}", "-i", str(ov["path"])]
-    tail = ["-filter_complex", fc, "-map", "[o]", "-map", "0:a?", "-t", f"{dur:.3f}", *VQ]
-    if _run(head + tail + ["-c:a", "copy", str(out)], timeout=300) and out.exists():
+    head = [ff, "-y", "-i", str(base)]
+    for ov in overlays:
+        head += (["-loop", "1", "-t", f"{dur + 1:.2f}", "-i", str(ov["path"])]
+                 if ov["kind"] == "png" else ["-i", str(ov["path"])])
+    parts, prev = [], "0:v"
+    for k, ov in enumerate(overlays, start=1):
+        t1, t2 = float(ov["t1"]), float(ov["t2"])
+        en = f"enable='between(t,{t1:.3f},{t2:.3f})'"
+        lab = f"o{k}"
+        if ov["kind"] == "video":
+            parts.append(f"[{k}:v]scale={W}:{H}:force_original_aspect_ratio=increase,"
+                         f"crop={W}:{H},setpts=PTS-STARTPTS+{t1:.3f}/TB[v{k}]")
+            parts.append(f"[{prev}][v{k}]overlay=0:0:{en}[{lab}]")
+        else:
+            parts.append(f"[{prev}][{k}:v]overlay=0:0:{en}[{lab}]")
+        prev = lab
+    tail = ["-filter_complex", ";".join(parts), "-map", f"[{prev}]", "-map", "0:a?",
+            "-t", f"{dur:.3f}", *VQ]
+    if _run(head + tail + ["-c:a", "copy", str(out)], timeout=360) and out.exists():
         return out
-    return out if _run(head + tail + [*AQ, str(out)], timeout=300) and out.exists() else None
+    return out if _run(head + tail + [*AQ, str(out)], timeout=360) and out.exists() else None
 
 
 def _composite(master: Path, overlays: list[dict], out: Path) -> Path | None:
-    """Lay many visuals over the master, ONE overlay per ffmpeg pass (low memory).
-    Each overlay: {"path", "kind": "video"|"png", "t1", "t2"}. The master AUDIO is
-    copied through untouched. Overlays are drawn in list order (captions last)."""
+    """Lay many visuals over the master in BATCHES (a few layers per pass) so peak
+    memory is bounded on Streamlit Cloud, while keeping the number of full re-encodes
+    low. Each overlay: {"path","kind":"video|png","t1","t2"}. Captions come last."""
     if not overlays:
         return master
     dur = _probe_duration(master) or 30.0
     base = master
-    for i, ov in enumerate(overlays):
+    for gi in range(0, len(overlays), COMPOSITE_BATCH):
+        group = overlays[gi:gi + COMPOSITE_BATCH]
         try:
-            res = _overlay_one(base, ov, out.with_name(f"{out.stem}_c{i}.mp4"), dur)
+            res = _composite_batch(base, group, out.with_name(f"{out.stem}_g{gi}.mp4"), dur)
         except Exception as e:
-            logger.info("overlay %d skipped: %s", i, e)
+            logger.info("composite batch @%d skipped: %s", gi, e)
             res = None
         if res:
             base = res
