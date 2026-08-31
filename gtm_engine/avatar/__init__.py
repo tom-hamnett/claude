@@ -597,6 +597,7 @@ class HeyGenProvider(AvatarProvider):
             voices = self.list_voices()
             voice_id = voices[0]["id"] if voices else ""
         payload = {
+            "video_title": (req.script or "GTM reel").strip()[:60] or "GTM reel",
             "script": req.script,
             "voice_id": voice_id,
             "dimension": {"width": width, "height": height},

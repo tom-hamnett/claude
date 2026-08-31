@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-08-31b · auto-cast look on hook/bookend"
+BUILD_TAG = "2026-08-31c · av4 video_title fix (presenter renders)"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
