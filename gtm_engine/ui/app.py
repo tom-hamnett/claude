@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-07b · Content modes + data→charts (upload a sheet, get proof visuals)"
+BUILD_TAG = "2026-09-07c · Ideas are framed as capability/process demos, not presentations"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {

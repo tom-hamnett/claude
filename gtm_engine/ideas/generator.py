@@ -46,6 +46,22 @@ and uncomfortable-truth-telling you must match. Generic GTM advice is
 forbidden. Every idea must have a concrete subject, a specific claim,
 and an arguable perspective.
 
+WHAT THESE IDEAS ARE — DEMOS, NOT PRESENTATIONS:
+These ideas become short vertical reels that DEMONSTRATE the capability
+and the process — the machine working, the method in motion, the receipts
+on screen. They are NOT business presentations, market theses, or
+thought-leadership essays. The proof is the product doing the thing, live:
+a diagnostic running, a losing week being logged and adversarially reviewed,
+the 5-source validation reconciling, an equity curve building trade by trade.
+Frame every idea as "watch this work" / "here's exactly how it does it" /
+"here's what it just produced" — show, don't argue. A viewer should come away
+thinking "I want to see that run on MY thing," not "interesting take."
+Every idea MUST have something concrete to SHOW on screen — a real output, a
+step of the process, a screen, a number, an artefact. If there is nothing to
+demonstrate, it is an essay, not a reel: do not generate it. The uncomfortable
+truth and POV still matter — but they are carried BY the demonstration, not
+delivered as a lecture over stock footage.
+
 VOICE GUARANTEES:
 - Sharp, transparent, anti-guru. Quiet authority.
 - Edginess 6-9 (vary within the batch).
@@ -96,8 +112,14 @@ OUTPUT REQUIREMENTS:
 
 Return a JSON array. Each idea object must have:
   - title: internal label (not the published headline)
-  - hook: exact scroll-stopper line, max 12 words
+  - hook: exact scroll-stopper line, max 12 words — framed as a demo ("Watch…",
+    "Here's exactly how…", "This is what it produced…"), not a thesis statement
   - angle: the specific argument or POV in 1-2 sentences
+  - demonstrates: what the viewer LITERALLY watches happen on screen — the
+    capability or process step being shown (e.g. "Analyst's Edge producing a
+    company diagnostic from just a URL", "ATLAS's adversarial layer vetoing a
+    trade", "PRISM reconciling an org chart against 5 sources"). Concrete and
+    visual — never an abstraction. This is the spine of the reel.
   - data_requirement: what concrete data/source this needs, or "none"
   - funnel_level: umbrella | product | feature | proof
   - product: "" if umbrella, or PRISM / Analyst's Edge / APEX / ATLAS
@@ -416,11 +438,13 @@ def generate_idea_batch(
             f"## TASK\n\n"
             f"Generate exactly {count} content ideas at the {funnel_level} funnel level.\n\n"
             f"Each idea MUST:\n"
-            f"1. Name a specific product or worldview angle (no generic advice)\n"
-            f"2. Connect to one of the uncomfortable truths or POV statements above\n"
-            f"3. Feel like it belongs in the same body of work as MA-001\n"
-            f"4. Include the narrative_anchor field explaining which canon thread it extends\n"
-            f"5. Vary across the available segment_types (hook / tension / pivot / proof / "
+            f"1. Be a DEMO — name in `demonstrates` what the viewer watches the product/process "
+            f"   do on screen (no essays; if there's nothing to show, don't generate it)\n"
+            f"2. Name a specific product or worldview angle (no generic advice)\n"
+            f"3. Connect to one of the uncomfortable truths or POV statements above\n"
+            f"4. Feel like it belongs in the same body of work as MA-001\n"
+            f"5. Include the narrative_anchor field explaining which canon thread it extends\n"
+            f"6. Vary across the available segment_types (hook / tension / pivot / proof / "
             f"   bookend / standalone) — not all standalone posts\n\n"
             f"Return ONLY a JSON array. No preamble, no explanation."
         )
@@ -447,6 +471,9 @@ def generate_idea_batch(
                 notes = item.get("notes", "")
                 anchor = item.get("narrative_anchor", "")
                 pillar_id = item.get("pillar_id", "")
+                demonstrates = item.get("demonstrates", "")
+                if demonstrates:
+                    notes = (notes + f"\n[Demonstrates: {demonstrates}]").strip()
                 if anchor:
                     notes = (notes + f"\n[Anchor: {anchor}]").strip()
                 if pillar_id:
@@ -540,6 +567,9 @@ def generate_for_pillar(pillar_id: str, n: int = 5) -> list[int]:
         item["pillar_id"] = pillar.id  # force pillar id
         notes = item.get("notes", "")
         anchor = item.get("narrative_anchor", "")
+        demonstrates = item.get("demonstrates", "")
+        if demonstrates:
+            notes = (notes + f"\n[Demonstrates: {demonstrates}]").strip()
         if anchor:
             notes = (notes + f"\n[Anchor: {anchor}]").strip()
         notes = (notes + f"\n[Pillar: {pillar.id}]").strip()
