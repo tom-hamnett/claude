@@ -921,3 +921,30 @@ def test_dataviz_static_still_works_at_progress():
     p = Path(tempfile.mkdtemp()) / "s.png"
     assert render_dataviz(spec, p, 1080, 1920, p=0.5)   # mid-build still renders
     assert p.exists()
+
+
+def test_choreographed_marks_failed_when_presenter_render_fails(db, tmp_path, monkeypatch):
+    """If the master (presenter voice) can't render, the reel is BROKEN — it must be
+    marked failed with a reason, never presented as a finished 'ready' reel."""
+    import gtm_engine.video.assembler as asm
+    from gtm_engine.producer import ProducerBrief, ProducerBriefLibrary
+    monkeypatch.setattr(asm, "ASSEMBLY_DIR", tmp_path / "a")
+    monkeypatch.setattr(asm, "OUTPUT_DIR", tmp_path / "o")
+    # master render returns nothing (simulates HeyGen failure / out of credits)
+    def fail_master(job, ctx, segments, out, hd=False):
+        ctx["_master_error"] = "HeyGen av4 402: MOVIO_PAYMENT_INSUFFICIENT_CREDIT"
+        return None
+    monkeypatch.setattr(asm, "_render_master_talkinghead", fail_master)
+    segs = {s: {"spoken_text": f"line {s}", "text_overlay": s.title(), "duration_seconds": 1,
+                "visual_type": "character_in_scene" if s in ("hook", "bookend") else "data"}
+            for s in ["hook", "tension", "pivot", "proof", "bookend"]}
+    ProducerBriefLibrary().save(ProducerBrief(idea_id=1, spoken_script="a b c", segments_json=segs))
+    store = VideoJobStore()
+    job = VideoJob(idea_id=1, script_override="a b c", hook_text="a", bookend_text="b")
+    job.id = store.save(job)
+    out = asm.assemble_choreographed(job.id)
+    assert out.status == "failed"                       # not 'ready'
+    assert "did" in out.error.lower() or "credit" in out.error.lower()
+    st = json.loads(out.assembly_json)
+    assert st.get("presenter_failed") is True
+    assert "credit" in st.get("master_error", "").lower()

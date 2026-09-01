@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-07i · Audio de-fuzz mastering + framed graphics + tidy captions + slower pace"
+BUILD_TAG = "2026-09-07j · A broken reel now FAILS loudly with the reason (no more silent-card reels shown as done)"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -1319,6 +1319,25 @@ def _produce_review_panel(idea):
         # ── Other generation options (advanced) ──
         with st.expander("Other generation options (advanced)"):
             _api_generate_controls(idea, job, cfg, is_transfer, render_job, resolve_audio_take)
+
+        # ── Broken reel: presenter (your voice) didn't render → silent cards ──
+        _pf_state = {}
+        try:
+            _pf_state = _json.loads(job.assembly_json or "{}") or {}
+        except Exception:
+            _pf_state = {}
+        if job.status == "failed" and _pf_state.get("presenter_failed"):
+            _me = _pf_state.get("master_error", "")
+            st.error("⛔️ **This reel is BROKEN — your presenter (voice) didn't render, so it's "
+                     "just silent text cards. Do NOT post it.**\n\nReason: " + (_me or "unknown"))
+            if "credit" in _me.lower() or "payment" in _me.lower() or "402" in _me:
+                st.markdown("💳 You're out of **HeyGen API credits** — "
+                            "**[top up here ↗](https://app.heygen.com/settings/subscriptions)** "
+                            "then hit Auto-assemble again. (Use the **free draft** to keep "
+                            "perfecting the words/visuals meanwhile — it costs no credits.)")
+            if job.video_path and Path(job.video_path).exists():
+                with st.expander("See the broken fallback anyway"):
+                    st.video(job.video_path)
 
         # ── Step 4: Result + review ──
         if job.status == "ready" and job.video_path and Path(job.video_path).exists():

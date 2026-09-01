@@ -1025,12 +1025,22 @@ def assemble_choreographed(job_id: int, target_seconds: int = 25, draft: bool = 
                 state["master_cache"] = {"sig": msig, "path": str(master)}
                 _save_state(job, state)
     if not master:
+        # The presenter (your voice) didn't render → the reel is BROKEN, not done.
+        # Build the silent-card fallback so there's something to look at, but flag it
+        # hard and mark the job FAILED so the UI can't present it as a finished reel.
         merr = ctx.get("_master_error", "") or "presenter take failed"
+        logger.error("master render failed for job %d: %s", job_id, merr)
         assemble_reel(job_id, include_broll=False, cinematic_middle=False, on_progress=on_progress)
         j = store.get(job_id)
         if j:
-            st = _load_state(j); st["master_error"] = merr
-            j.assembly_json = json.dumps(st); store.save(j)
+            st = _load_state(j)
+            st["master_error"] = merr
+            st["presenter_failed"] = True
+            j.assembly_json = json.dumps(st)
+            j.status = "failed"
+            j.error = ("Your presenter (voice) didn't render, so the reel is just silent text "
+                       f"cards — do not post it. Reason: {merr}")
+            store.save(j)
         return store.get(job_id)
 
     dur = _probe_duration(master) or float(target_seconds)
