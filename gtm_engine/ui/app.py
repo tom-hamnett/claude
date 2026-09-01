@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-07g · Animated infographics — count-ups, growing bars, line draw-on, row reveals"
+BUILD_TAG = "2026-09-07h · Draft voice paced + labelled as stand-in; cadence cache-key bug fixed"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -1329,6 +1329,23 @@ def _produce_review_panel(idea):
             else:
                 st.video(job.video_path)
 
+            # Say plainly which voice this is — the free draft uses a STAND-IN AI
+            # voice at preview quality; your real cloned voice + full audio quality
+            # only appear in the paid HeyGen render.
+            _is_draft = False
+            try:
+                _is_draft = bool((_json.loads(job.assembly_json or "{}") or {})
+                                 .get("settings", {}).get("draft"))
+            except Exception:
+                _is_draft = False
+            if _is_draft:
+                st.warning("🔊 **This is the free draft — a stand-in AI voice at preview "
+                           "quality, not your cloned voice.** Judge the *words, pacing, length "
+                           "and visuals* here — not the sound. Your real voice and full audio "
+                           "quality come only from the paid **Auto-assemble** render above.")
+            else:
+                st.caption("🔊 Your cloned voice · full audio quality (paid render).")
+
             # ── Gemini watches the finished reel (video-native QA) ──
             from gtm_engine.config import GOOGLE_API_KEY
             if GOOGLE_API_KEY and not job.video_path.lower().endswith((".png", ".jpg", ".jpeg")):
@@ -1337,6 +1354,10 @@ def _produce_review_panel(idea):
                     from gtm_engine.utils.media import qa_video
                     # Give Gemini the FACTS so it can verify, not just vibe-check.
                     _facts = [f"Product: {idea.product}"] if idea.product else []
+                    if _is_draft:
+                        _facts.append("This is a DRAFT with a STAND-IN AI voice — do NOT judge "
+                                      "voice timbre or audio fidelity; assess words, pacing, "
+                                      "length and visuals only")
                     if job.hook_text:
                         _facts.append(f"Intended hook: {job.hook_text}")
                     try:

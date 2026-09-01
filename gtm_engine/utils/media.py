@@ -152,11 +152,14 @@ def generate_voiceover(
     text: str,
     output_path: Path | None = None,
     voice_name: str = "Zephyr",
+    style: str = "",
 ) -> Path | None:
     """Generate a voiceover audio file using Google TTS.
 
-    Uses gemini-2.5-flash-preview-tts for consistent British-style voice.
-    Returns the path to the saved WAV file.
+    Uses gemini-2.5-flash-preview-tts for consistent British-style voice. `style` is
+    a natural-language delivery instruction (e.g. "Read slowly, pausing between
+    sentences") — Gemini TTS interprets the text before the colon as direction, not
+    speech. Returns the path to the saved WAV file.
     """
     if not GOOGLE_API_KEY:
         logger.warning("GOOGLE_API_KEY not set -- skipping TTS")
@@ -171,10 +174,13 @@ def generate_voiceover(
 
     logger.info("Generating voiceover (%d words): %s...", len(text.split()), text[:60])
 
+    # A style directive before the colon steers delivery without being spoken.
+    contents = f"{style.strip()}: {text}" if style.strip() else text
+
     try:
         response = client.models.generate_content(
             model="gemini-2.5-flash-preview-tts",
-            contents=text,
+            contents=contents,
             config=types.GenerateContentConfig(
                 response_modalities=["AUDIO"],
                 speech_config=types.SpeechConfig(

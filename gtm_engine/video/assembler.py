@@ -631,7 +631,10 @@ def _draft_master(job, ctx: dict, segments: dict, out: Path) -> Path | None:
     if GOOGLE_API_KEY:
         try:
             from gtm_engine.utils.media import generate_voiceover
-            vo = generate_voiceover(full, output_path=out.with_name(out.stem + "_dvo.wav"))
+            vo = generate_voiceover(
+                full, output_path=out.with_name(out.stem + "_dvo.wav"),
+                style="Read this in a calm, measured, confident voice — slow down and "
+                      "pause clearly between each sentence, never rushed")
         except Exception:
             vo = None
     from PIL import Image
@@ -784,7 +787,8 @@ def assemble_continuous(job_id: int, include_broll: bool = True, cinematic_middl
         # HeyGen credits — when the script/voice/look actually changed.
         full = _full_script(job, segments)
         msig = _hash(full, ctx.get("voice_id", ""), ctx.get("image_key", ""),
-                     ctx.get("avatar_id", ""), ctx.get("motion_prompt", ""))
+                     ctx.get("avatar_id", ""), ctx.get("motion_prompt", ""),
+                     str(ctx.get("voice_speed", 0.9)))
         mc = state.get("master_cache") or {}
         if mc.get("sig") == msig and Path(mc.get("path", "")).exists():
             master = Path(mc["path"])
@@ -989,7 +993,8 @@ def assemble_choreographed(job_id: int, target_seconds: int = 25, draft: bool = 
         master = _draft_master(job, ctx, segments, sd / "draft_master.mp4")
     else:
         msig = _hash(full, ctx.get("voice_id", ""), ctx.get("image_key", ""),
-                     ctx.get("avatar_id", ""), ctx.get("motion_prompt", ""), str(hd))
+                     ctx.get("avatar_id", ""), ctx.get("motion_prompt", ""), str(hd),
+                     str(ctx.get("voice_speed", 0.9)))
         mc = state.get("master_cache") or {}
         if mc.get("sig") == msig and Path(mc.get("path", "")).exists():
             master = Path(mc["path"])
