@@ -34,6 +34,8 @@ class Idea(BaseModel):
     hook: str  # The one-line pattern interrupt
     angle: str  # The specific argument or POV
     data_requirement: str = ""  # What data/source this needs (or "none")
+    content_mode: str = "insight"  # insight | story | explainer — the demo type (drives the reel)
+    data_source_id: int | None = None  # Data Vault source tagged to this idea (feeds the script)
     funnel_level: str  # umbrella | product | feature | proof
     product: str = ""  # "" for umbrella, or PRISM / Analyst's Edge / APEX / ATLAS
     target_segment: str = ""  # which customer segment
@@ -82,6 +84,8 @@ CREATE TABLE IF NOT EXISTS ideas (
     hook TEXT NOT NULL,
     angle TEXT NOT NULL,
     data_requirement TEXT,
+    content_mode TEXT DEFAULT 'insight',
+    data_source_id INTEGER,
     funnel_level TEXT NOT NULL,
     product TEXT,
     target_segment TEXT,
@@ -121,7 +125,12 @@ class IdeaBank:
     """SQLite-backed idea bank with CRUD + query operations."""
 
     def __init__(self, db_path: Path | None = None):
-        self.db_path = db_path or SQLITE_PATH
+        # Resolve the default lazily from config so a test (or runtime) that
+        # repoints SQLITE_PATH is honoured — matches VideoJobStore/DataVault.
+        if db_path is None:
+            from gtm_engine.config import SQLITE_PATH as _CONFIG_PATH
+            db_path = _CONFIG_PATH
+        self.db_path = db_path
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_schema()
 
@@ -138,6 +147,12 @@ class IdeaBank:
     def _init_schema(self) -> None:
         with self._connect() as conn:
             conn.executescript(SCHEMA_SQL)
+            # Idempotent migrations for columns added after ideas first shipped.
+            existing = {r[1] for r in conn.execute("PRAGMA table_info(ideas)").fetchall()}
+            for col, decl in (("content_mode", "TEXT DEFAULT 'insight'"),
+                              ("data_source_id", "INTEGER")):
+                if col not in existing:
+                    conn.execute(f"ALTER TABLE ideas ADD COLUMN {col} {decl}")
             conn.commit()
 
     # --- CRUD ---
@@ -153,14 +168,15 @@ class IdeaBank:
             cursor = conn.execute(
                 """
                 INSERT INTO ideas (
-                    title, hook, angle, data_requirement, funnel_level,
-                    product, target_segment, segment_type, strategic_objective,
+                    title, hook, angle, data_requirement, content_mode, data_source_id,
+                    funnel_level, product, target_segment, segment_type, strategic_objective,
                     edginess_score, estimated_reach, tags, notes, status,
                     created_at, updated_at, content_piece_ids
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     idea.title, idea.hook, idea.angle, idea.data_requirement,
+                    idea.content_mode, idea.data_source_id,
                     idea.funnel_level, idea.product, idea.target_segment,
                     idea.segment_type, idea.strategic_objective, idea.edginess_score,
                     idea.estimated_reach, json.dumps(idea.tags), idea.notes,
@@ -202,6 +218,26 @@ class IdeaBank:
                 """,
                 (str(idea_id), from_state, status, reason, now),
             )
+            conn.commit()
+
+    def set_demo_setup(self, idea_id: int, content_mode: str | None = None,
+                       data_source_id: int | None = None, clear_data: bool = False) -> None:
+        """Tag the demo type and/or the Data Vault source onto an idea (before the
+        script is written). Only the provided fields change."""
+        now = datetime.now(timezone.utc).isoformat()
+        sets, params = [], []
+        if content_mode is not None:
+            sets.append("content_mode = ?"); params.append(content_mode)
+        if clear_data:
+            sets.append("data_source_id = ?"); params.append(None)
+        elif data_source_id is not None:
+            sets.append("data_source_id = ?"); params.append(data_source_id)
+        if not sets:
+            return
+        sets.append("updated_at = ?"); params.append(now)
+        params.append(idea_id)
+        with self._connect() as conn:
+            conn.execute(f"UPDATE ideas SET {', '.join(sets)} WHERE id = ?", params)
             conn.commit()
 
     def bulk_update_status(self, idea_ids: list[int], status: str, reason: str = "") -> int:
@@ -284,12 +320,15 @@ class IdeaBank:
             return {row["funnel_level"]: row["n"] for row in rows}
 
     def _row_to_idea(self, row: sqlite3.Row) -> Idea:
+        keys = row.keys()
         return Idea(
             id=row["id"],
             title=row["title"],
             hook=row["hook"],
             angle=row["angle"],
             data_requirement=row["data_requirement"] or "",
+            content_mode=(row["content_mode"] if "content_mode" in keys and row["content_mode"] else "insight"),
+            data_source_id=(row["data_source_id"] if "data_source_id" in keys else None),
             funnel_level=row["funnel_level"],
             product=row["product"] or "",
             target_segment=row["target_segment"] or "",

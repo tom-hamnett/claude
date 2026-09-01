@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-07c · Ideas are framed as capability/process demos, not presentations"
+BUILD_TAG = "2026-09-07d · Data + demo-type tagged to the idea (before the script); reel inherits"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -749,6 +749,9 @@ def _auto_assemble_ui(idea, job):
                     _ins = ""
                 if _ins:
                     st.caption(f"Insight: {_ins}")
+            elif job.data_source_id:
+                st.info("📎 Data **inherited from the idea** — the charts build automatically when "
+                        "you generate the reel. Upload below only to override it.")
             else:
                 st.caption("Upload the spreadsheet (CSV or XLSX) behind this reel — e.g. your "
                            "ATLAS log. The engine reads the real cells, finds the insight, and "
@@ -1407,6 +1410,48 @@ def _api_generate_controls(idea, job, cfg, is_transfer, render_job, resolve_audi
         st.code(job.dry_run_request, language="json")
 
 
+def _idea_demo_setup(idea):
+    """Tag the demo type + the data to an IDEA, BEFORE the script is written.
+    The script is then built from this data, and the reel inherits it."""
+    from gtm_engine.video.modes import MODES
+    from gtm_engine.ideas import IdeaBank
+    with st.expander("🎬 Demo setup — what this reel shows (set before the script)",
+                     expanded=False):
+        st.caption("Tag this idea with what it demonstrates and the data behind it. The **script "
+                   "is written from this**, and the reel inherits it — so you set it once, here.")
+        _keys = list(MODES)
+        _cur = idea.content_mode if idea.content_mode in MODES else "insight"
+        _pick = st.radio("Demo type", _keys, index=_keys.index(_cur),
+                         format_func=lambda k: f"{MODES[k]['icon']} {MODES[k]['label']}",
+                         key=f"imode_{idea.id}", label_visibility="collapsed")
+        st.caption(MODES[_pick]["blurb"])
+        if _pick != _cur:
+            IdeaBank().set_demo_setup(idea.id, content_mode=_pick)
+            st.rerun()
+        if MODES[_pick].get("charts"):
+            if idea.data_source_id:
+                st.success("✓ Data tagged to this idea — the script will be built from it.")
+                if st.button("✕ Clear data", key=f"idataclr_{idea.id}"):
+                    IdeaBank().set_demo_setup(idea.id, clear_data=True); st.rerun()
+            else:
+                _df = st.file_uploader("Data behind this reel (CSV / XLSX)",
+                                       type=["csv", "tsv", "xlsx", "xlsm"],
+                                       key=f"idata_{idea.id}", accept_multiple_files=False)
+                if _df and st.button("📎 Tag this data to the idea", key=f"idatago_{idea.id}",
+                                     use_container_width=True):
+                    from gtm_engine.video.data_insight import attach_data_to_idea
+                    dd = OUTPUT_DIR / "uploads" / f"idea_{idea.id}_data"
+                    dd.mkdir(parents=True, exist_ok=True)
+                    fp = dd / _df.name
+                    fp.write_bytes(_df.getbuffer())
+                    with st.spinner("Reading your data…"):
+                        _sid, _msg = attach_data_to_idea(idea.id, str(fp), name=_df.name)
+                    (st.success if _sid else st.error)(_msg)
+                    from gtm_engine.persistence import backup_quietly
+                    backup_quietly()
+                    st.rerun()
+
+
 def _render_kanban_card(idea, status):
     """One content card + its stage-appropriate actions (full width)."""
     pillar_tag = ""
@@ -1431,6 +1476,7 @@ def _render_kanban_card(idea, status):
             from gtm_engine.approval import approve_idea
             approve_idea(idea.id); st.rerun()
     elif status == "idea_approved":
+        _idea_demo_setup(idea)
         if st.button("Producer Brief", key=f"pb_{idea.id}", use_container_width=True):
             with st.spinner("Writing the script (Claude)..."):
                 from gtm_engine.producer import generate_producer_brief

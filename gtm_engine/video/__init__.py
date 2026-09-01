@@ -434,6 +434,20 @@ def create_job_from_brief(idea_id: int) -> VideoJob | None:
     job.bookend_text = bookend_text
     job.engine = "transfer" if (cfg.provider == "runway" or cfg.mode == "transfer") else "audio"
 
+    # Inherit the demo type + tagged data from the IDEA (set upstream, before the
+    # script). The reel builds its charts from this source. Don't clobber a data
+    # source the user attached directly on an existing reel.
+    try:
+        from gtm_engine.ideas import IdeaBank
+        _idea = IdeaBank().get(idea_id)
+        if _idea:
+            if not (existing and existing.content_mode and existing.content_mode != "insight"):
+                job.content_mode = _idea.content_mode or job.content_mode
+            if _idea.data_source_id and not (existing and existing.data_source_id):
+                job.data_source_id = _idea.data_source_id
+    except Exception:
+        pass
+
     if character:
         job.avatar_id = character.avatar_id or cfg.avatar_id
         job.voice_id = character.voice_id or cfg.voice_id

@@ -87,6 +87,35 @@ def ingest_data_file(path: str, name: str = "", related_products: list[str] | No
     return DataVault().create(src)
 
 
+def attach_data_to_idea(idea_id: int, file_path: str, name: str = "") -> tuple[int | None, str]:
+    """Ingest a spreadsheet into the Data Vault and tag it to an IDEA (upstream of the
+    script). Returns (source_id, message). The script generator then builds from it,
+    and the reel inherits the source to make its charts."""
+    from gtm_engine.ideas import IdeaBank
+    sid = ingest_data_file(file_path, name=name)
+    if not sid:
+        return None, "Couldn't read that file — is it a CSV or XLSX with a header row?"
+    IdeaBank().set_demo_setup(idea_id, data_source_id=sid)
+    return sid, "Data tagged to this idea — the script will be written from these real numbers."
+
+
+def idea_data_text(idea_id: int, max_rows: int = 40) -> str:
+    """The tagged data source's table text for an idea, bounded for a prompt. '' if none."""
+    from gtm_engine.ideas import IdeaBank
+    from gtm_engine.data_vault import DataVault
+    idea = IdeaBank().get(idea_id)
+    if not idea or not idea.data_source_id:
+        return ""
+    src = DataVault().get(idea.data_source_id)
+    if not src or not (src.content or "").strip():
+        return ""
+    # src.content is already table-shaped text; trim to a bounded number of lines.
+    lines = src.content.splitlines()
+    if len(lines) > max_rows + 2:
+        lines = lines[:max_rows] + ["…", lines[-1]]
+    return "\n".join(lines)
+
+
 _SYSTEM = """You are a data analyst preparing PROOF VISUALS for a short vertical video about a
 data product. You are given a real table. Find the most compelling, honest insight in it and
 express it as a small set of chart specs bound to the REAL numbers in the table. Transparency

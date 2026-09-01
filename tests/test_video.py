@@ -793,3 +793,46 @@ def test_analyze_for_job_stores_charts(db, monkeypatch, tmp_path):
     out = di.analyze_for_job(job.id)
     assert out["n_charts"] == 1
     assert store.get(job.id).data_charts[0]["spec"]["value"] == "3%"
+
+
+def test_idea_demo_fields_persist_and_migrate(db):
+    from gtm_engine.ideas import Idea, IdeaBank
+    bank = IdeaBank(db)
+    iid = bank.create(Idea(title="t", hook="h", angle="a", funnel_level="product",
+                           content_mode="story"))
+    got = bank.get(iid)
+    assert got.content_mode == "story" and got.data_source_id is None
+    bank.set_demo_setup(iid, content_mode="insight", data_source_id=42)
+    got = bank.get(iid)
+    assert got.content_mode == "insight" and got.data_source_id == 42
+    bank.set_demo_setup(iid, clear_data=True)
+    assert bank.get(iid).data_source_id is None
+
+
+def test_attach_data_to_idea_links_source(db):
+    from gtm_engine.ideas import Idea, IdeaBank
+    from gtm_engine.video.data_insight import attach_data_to_idea, idea_data_text
+    bank = IdeaBank(db)
+    iid = bank.create(Idea(title="t", hook="h", angle="a", funnel_level="product"))
+    p = db.parent / "log.csv"
+    p.write_text("week,pnl\n1,2.3\n2,-1.1\n3,3.8\n")
+    sid, msg = attach_data_to_idea(iid, str(p), name="ATLAS log")
+    assert sid and "tagged" in msg.lower()
+    assert bank.get(iid).data_source_id == sid
+    txt = idea_data_text(iid)
+    assert "week" in txt and "pnl" in txt
+
+
+def test_create_job_inherits_mode_and_data_from_idea(db):
+    from gtm_engine.ideas import Idea, IdeaBank
+    from gtm_engine.producer import ProducerBrief, ProducerBriefLibrary
+    from gtm_engine.video import create_job_from_brief, VideoJobStore
+    bank = IdeaBank(db)
+    iid = bank.create(Idea(title="t", hook="Hook here", angle="a", funnel_level="product",
+                           status="idea_approved", content_mode="explainer"))
+    bank.set_demo_setup(iid, data_source_id=99)
+    ProducerBriefLibrary(db).save(ProducerBrief(idea_id=iid, spoken_script="One two three."))
+    job = create_job_from_brief(iid)
+    assert job is not None
+    assert job.content_mode == "explainer"      # inherited demo type
+    assert job.data_source_id == 99             # inherited tagged data

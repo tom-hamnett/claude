@@ -385,6 +385,26 @@ def generate_producer_brief(idea_id: int, character=None,
             data_context += (f"- id: `{d.id}` | **{d.name}** ({d.source_type}){verified} | "
                              f"{d.description[:150]}{snippet}")
 
+    # Data tagged to THIS idea (upstream of the script) — build the script FROM it.
+    demo_block = ""
+    if getattr(idea, "data_source_id", None):
+        tagged = vault.get(idea.data_source_id)
+        if tagged and (tagged.content or "").strip():
+            try:
+                from gtm_engine.video.modes import profile as _mp
+                mode_label = _mp(idea.content_mode).get("label", idea.content_mode)
+            except Exception:
+                mode_label = idea.content_mode
+            demo_block = (
+                f"## THIS REEL IS A DEMO — BUILD THE SCRIPT FROM THIS DATA\n\n"
+                f"Demo type: **{mode_label}**. This reel DEMONSTRATES the capability/process "
+                f"behind the real numbers below — show the machine working, don't lecture. "
+                f"Structure the spoken script AROUND these figures: open on the most striking "
+                f"one, walk the viewer through what it shows, let the data carry the point. Use "
+                f"ONLY these numbers — never invent.\n\n"
+                f"**{tagged.name}** ({tagged.source_type}):\n```\n{(tagged.content or '')[:1500]}\n```\n\n"
+            )
+
     presenter_block = ""
     if character:
         presenter_block = (
@@ -428,6 +448,7 @@ def generate_producer_brief(idea_id: int, character=None,
         f"**Edginess:** {idea.edginess_score}/10\n"
         f"**Data requirement:** {idea.data_requirement or 'none stated'}\n"
         f"**Notes:** {idea.notes}\n\n"
+        f"{demo_block}"
         f"{presenter_block}"
         f"{direction_block}"
         f"{refine_block}"
