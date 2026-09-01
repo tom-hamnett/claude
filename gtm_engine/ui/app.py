@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-07d · Data + demo-type tagged to the idea (before the script); reel inherits"
+BUILD_TAG = "2026-09-07e · Pre-flight QA gate (free) + fixed caption overlap, naked cards, length, cadence"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -878,8 +878,42 @@ def _auto_assemble_ui(idea, job):
         st.rerun()
     st.caption("Draft = your script in a stand-in AI voice over your look, so you can nail the "
                "words, pacing and length **for free** before spending any HeyGen credits.")
+
+    # ── Pre-flight QA (FREE, no API) — catch faults before paying ──────────────
+    pf_ready = True
+    if job.shot_list or job.video_path:
+        try:
+            from gtm_engine.video.reel_qa import preflight
+            pf = preflight(job)
+            pf_ready = pf["ready"]
+            _sc = pf["score"]
+            _col = C["green"] if _sc >= 85 else (C["gold"] if _sc >= 65 else C["hot"])
+            with st.container(border=True):
+                st.markdown(f"**✅ Pre-flight check (free)** — "
+                            f"<span style='color:{_col};font-weight:600;'>{_sc}/100</span>",
+                            unsafe_allow_html=True)
+                for c in pf["checks"]:
+                    if c["severity"] == "info" and c["ok"]:
+                        continue   # keep the list to what needs attention
+                    icon = "🟢" if c["ok"] else ("⛔️" if c["severity"] == "block" else "🟡")
+                    st.markdown(f"<span style='font-size:0.82rem;'>{icon} **{c['name']}** — "
+                                f"{c['detail']}</span>", unsafe_allow_html=True)
+                if pf["ready"] and _sc >= 85:
+                    st.caption("Looks clean — safe to spend a credit.")
+                elif pf["ready"]:
+                    st.caption("No blockers, but tidy the ⚠️ items (edit the script / shot list) "
+                               "and re-draft for free first.")
+                else:
+                    st.caption("⛔️ Blockers above will waste your credit — fix them and re-draft "
+                               "(free) before assembling.")
+        except Exception:
+            pass   # preflight is advisory — never let it break the panel
+
     lbl = "✨ Auto-assemble full reel (spends HeyGen credits)" if not job.video_path \
         else "✨ Re-assemble reel (spends HeyGen credits)"
+    if not pf_ready:
+        st.warning("Pre-flight found blockers — assembling now will likely waste the credit. "
+                   "Fix them and run a free draft first.")
     if st.button(lbl, key=f"asm_{idea.id}", use_container_width=True, type="primary"):
         start_assemble(job.id, draft=False, hd=hd)
         st.rerun()
@@ -1301,7 +1335,22 @@ def _produce_review_panel(idea):
                 if st.button("🔍 QA this reel (Gemini watches it)", key=f"vqa_{idea.id}",
                              use_container_width=True):
                     from gtm_engine.utils.media import qa_video
-                    ctx = f"Product: {idea.product}. Hook: {job.hook_text}" if idea.product else job.hook_text
+                    # Give Gemini the FACTS so it can verify, not just vibe-check.
+                    _facts = [f"Product: {idea.product}"] if idea.product else []
+                    if job.hook_text:
+                        _facts.append(f"Intended hook: {job.hook_text}")
+                    try:
+                        from gtm_engine.video.assembler import _probe_duration
+                        _d = _probe_duration(Path(job.video_path))
+                        if _d:
+                            _facts.append(f"Duration is {_d:.0f}s (target 20-32s)")
+                    except Exception:
+                        pass
+                    if job.shot_list:
+                        from collections import Counter as _Ctr
+                        _mix = _Ctr(s.get("visual") for s in job.shot_list)
+                        _facts.append("Shot plan: " + ", ".join(f"{n}×{v}" for v, n in _mix.items()))
+                    ctx = ". ".join(_facts)
                     with st.spinner("Gemini is watching the reel…"):
                         verdict = qa_video(job.video_path, context=ctx)
                     if not verdict:

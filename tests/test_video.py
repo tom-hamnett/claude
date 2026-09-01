@@ -836,3 +836,64 @@ def test_create_job_inherits_mode_and_data_from_idea(db):
     assert job is not None
     assert job.content_mode == "explainer"      # inherited demo type
     assert job.data_source_id == 99             # inherited tagged data
+
+
+# ── Pre-render QA gate (catch faults before spending a credit) ─────────────────
+
+def _pf_job(**kw):
+    from gtm_engine.video import VideoJob
+    base = dict(idea_id=1, content_mode="insight")
+    base.update(kw)
+    return VideoJob(**base)
+
+
+def test_preflight_blocks_short_flat_no_proof():
+    from gtm_engine.video.reel_qa import preflight
+    job = _pf_job(shot_list=[
+        {"spoken": "Nobody ever publishes their losing weeks online, which is the whole reason "
+                   "you honestly cannot trust a single track record anyone shows you anywhere",
+         "visual": "presenter", "caption": ""},
+        {"spoken": "Cherry-picked screenshots", "visual": "card", "caption": "Cherry-picked screenshots"},
+    ])
+    pf = preflight(job)
+    assert pf["ready"] is False
+    names = {c["name"]: c for c in pf["checks"]}
+    assert names["Script length"]["ok"] is False       # too short
+    assert names["Proof visuals"]["ok"] is False        # no chart/screenshot in insight mode
+    assert names["Captions"]["ok"] is False             # caption duplicates spoken
+    assert pf["score"] < 60
+
+
+def test_preflight_passes_a_good_plan():
+    from gtm_engine.video.reel_qa import preflight
+    shots = [
+        {"spoken": "Nobody publishes their losing weeks.", "visual": "presenter", "caption": ""},
+        {"spoken": "We logged all fifty two.", "visual": "chart",
+         "data_spec": {"chart_type": "stat", "value": "-11.4%", "label": "Drawdown"},
+         "caption": "-11.4% drawdown"},
+        {"spoken": "The worst drawdown was eleven percent.", "visual": "presenter", "caption": ""},
+        {"spoken": "It recovered inside six weeks.", "visual": "chart",
+         "data_spec": {"chart_type": "line", "title": "Equity", "series": [100, 108, 121]},
+         "caption": "back in 6 weeks"},
+        {"spoken": "Judge the losses first. Then the system.", "visual": "presenter", "caption": ""},
+        {"spoken": "That is the whole point. See it run.", "visual": "presenter", "caption": ""},
+        {"spoken": "Real numbers, not a highlight reel, every single week.", "visual": "presenter",
+         "caption": ""},
+    ]
+    pf = preflight(_pf_job(shot_list=shots))
+    assert pf["ready"] is True                       # no blockers
+    assert not [c for c in pf["checks"] if not c["ok"] and c["severity"] == "block"]
+    assert any(c["name"] == "Proof visuals" and c["ok"] for c in pf["checks"])
+
+
+def test_preflight_flags_placeholder_text():
+    from gtm_engine.video.reel_qa import preflight
+    job = _pf_job(shot_list=[
+        {"spoken": "Here is the [PLACEHOLDER] we need to replace before this ever goes out live",
+         "visual": "presenter", "caption": "[TODO caption]"},
+        {"spoken": "Second line to reach a reasonable length for the reel here now okay",
+         "visual": "chart", "data_spec": {"chart_type": "stat", "value": "3%", "label": "x"}},
+    ])
+    pf = preflight(job)
+    assert any(c["name"] == "Placeholder text" and not c["ok"] for c in pf["checks"])
+    assert pf["ready"] is False

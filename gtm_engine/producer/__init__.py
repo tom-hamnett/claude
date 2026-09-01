@@ -87,8 +87,16 @@ The spoken_text is performed aloud, so it must SOUND natural, not read like a po
   - No jargon walls, no clause pile-ups, no reading out URLs mid-sentence.
   - Punctuation IS the pacing: use full stops for beats, an em dash for a pause,
     the occasional one-word sentence for emphasis.
-  - Say it out loud in your head — if you'd stumble, rewrite it.
-  - Each on-screen segment's spoken_text is ~4 seconds ≈ 8-12 words. Keep Hook and
+  - WRITE IT TO BREATHE. A clear pause between every sentence — short sentences,
+    one idea each. Prefer 8-12 short sentences over 4 long ones. End sentences with
+    a full stop, not a comma, so the voice lands and takes a breath. If two ideas
+    are in one sentence, split them.
+  - Say it out loud in your head — if you'd stumble, or if you run out of breath, rewrite it.
+  - LENGTH IS A HARD REQUIREMENT: the full spoken_script must run 24-30 seconds when
+    read aloud UNHURRIED with pauses — that is about 70-85 words. NEVER under 65 words.
+    A 13-second reel is a FAILURE. If your draft is short, add a concrete beat (a second
+    proof point, a "here's what that means" line), don't pad with filler.
+  - Each on-screen segment's spoken_text is ~4-5 seconds ≈ 10-15 words. Keep Hook and
     Bookend especially tight and punchy.
   - Honour the PRESENTER persona and the CINEMATIC DIRECTION for tone and delivery.
 
@@ -153,7 +161,7 @@ YOUR OUTPUT: A JSON object with these fields:
 {
   "hook_scene_id": "id of the scene for Hook AND Bookend (same scene)",
   "bookend_scene_id": "MUST match hook_scene_id",
-  "spoken_script": "EXACT spoken text, one continuous paragraph, 50-60 words",
+  "spoken_script": "EXACT spoken text, 70-85 words (24-30s read UNHURRIED with pauses), short sentences that breathe",
   "segments": {
     "hook": {
       "duration_seconds": 4,

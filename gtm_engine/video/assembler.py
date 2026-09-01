@@ -1072,19 +1072,19 @@ def assemble_choreographed(job_id: int, target_seconds: int = 25, draft: bool = 
                     path, kind = png, "png"
             except Exception as e:
                 logger.info("shot %d visual failed (%s)", i, e)
-            # NEVER leave a cutaway blank: if the chosen visual couldn't be made
-            # (no screenshot, no Pexels key, stock miss), show a clean branded CARD
-            # of the point instead. Presenter beats keep showing you (no overlay).
-            if not (path and kind) and v in ("screenshot", "chart", "stock", "card", "generate"):
-                fb = sd / f"fb{i}.png"
-                _render_card_png(sh.get("caption") or (sh.get("spoken", "")[:40]) or "…", "", fb)
-                path, kind = fb, "png"
+            # If a cutaway's visual couldn't be made (no screenshot, no stock, a
+            # failed chart), DON'T dump a naked text card — just let the presenter
+            # (the continuous take underneath) show through. Cards are only for a
+            # beat the choreographer DELIBERATELY set to "card".
             if path and kind:
                 visual_ovs.append({"path": str(path), "kind": kind, "t1": t1, "t2": t2})
                 if vsig and kind == "video":   # remember paid clips for free re-cuts
                     vcache[vsig] = str(path)
+            # Caption overlay ONLY over footage that needs labelling (screenshot /
+            # stock / generate) or the presenter. Cards and charts are self-labelling
+            # — a caption over them double-prints the text and collides with the chart.
             cap = (sh.get("caption") or "").strip()
-            if cap:
+            if cap and v not in ("card", "chart"):
                 cpng = _render_overlay_png(cap, sd / f"cap{i}.png")
                 caption_ovs.append({"path": str(cpng), "kind": "png", "t1": t1, "t2": t2})
         state["visual_cache"] = vcache

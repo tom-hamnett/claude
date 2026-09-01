@@ -490,28 +490,31 @@ def qa_video(video_path, context: str = "") -> dict:
         if getattr(f, "state", None) and str(f.state).endswith("FAILED"):
             return {}
         prompt = (
-            "You are a sharp social-video QA reviewer with a good ear and eye. Watch AND LISTEN to "
-            "this vertical reel and judge it as a scroll-stopping social post. "
-            + (f"Context: {context}. " if context else "") +
-            "Check every dimension:\n"
-            "1. HOOK — does the first ~2s stop the scroll?\n"
-            "2. AUDIO QUALITY — is the voice clean and clear? Flag any background noise/hiss/"
-            "interference, muffled or low-bitrate sound, clipping, or volume changes.\n"
-            "3. AUDIO CONTINUITY — any audible join, cut, click, or seam where the audio changes "
-            "(e.g. at a scene/b-roll transition)? The voice should be one continuous take.\n"
-            "4. CADENCE & PAUSES — does the delivery breathe naturally with pauses between "
-            "sentences, or is it rushed/stilted/run-on with no gaps? Flag robotic or too-fast pacing.\n"
-            "5. LIP-SYNC & presenter naturalness.\n"
-            "6. VIDEO QUALITY — is it sharp, or grainy/soft/low-resolution/compressed/pixelated?\n"
-            "7. B-ROLL FIT — do the cutaways suit the message, or are they too flashy/gimmicky/"
-            "irrelevant/distracting? Are transitions smooth?\n"
-            "8. CAPTIONS — legible and well-timed?\n"
-            "9. FRAMING & headroom.  10. Does it land one clear takeaway?\n"
-            "Score 0-100 for overall readiness to post.\n"
-            'Return ONLY JSON: {"score": <0-100>, "verdict": "<one line>", '
+            "You are a DEMANDING social-video QA reviewer — a tough editor, not a cheerleader. "
+            "Your job is to catch what's wrong BEFORE money is spent, so err toward criticism. "
+            "Watch AND LISTEN to this vertical reel end to end. "
+            + (f"KNOWN FACTS (verify against them): {context}. " if context else "") +
+            "\n\nSCORING IS STRICT. Start at 100 and DEDUCT:\n"
+            "  • any TEXT that overlaps/collides, is cut off, duplicated, or looks like a placeholder → −25 and a HIGH issue\n"
+            "  • duration outside 20-32s → −20 and a HIGH issue\n"
+            "  • flat/robotic/rushed delivery with no pauses to breathe → −20\n"
+            "  • audio hiss/interference, or an audible join/seam mid-voice → −15 each\n"
+            "  • static/dull/'naff' graphics, or b-roll that doesn't earn its place → −10\n"
+            "  • grainy/soft/low-res video, weak hook, no clear takeaway → −10 each\n"
+            "RULES: any HIGH-severity issue caps the score at 60. A genuinely post-ready reel with "
+            "zero visible faults is rare — most first drafts land 55-80. Do NOT give 90+ unless you "
+            "can find NOTHING to improve. NEVER give 100 unless it is flawless in every dimension. "
+            "Be specific and concrete in every note (what, where, how to fix).\n\n"
+            "Check: 1 HOOK (first ~2s) · 2 AUDIO QUALITY (noise/hiss/clipping) · 3 AUDIO CONTINUITY "
+            "(joins/seams) · 4 CADENCE & PAUSES (does it breathe, or flat/rushed?) · 5 LIP-SYNC · "
+            "6 VIDEO QUALITY (sharp vs grainy) · 7 ON-SCREEN TEXT (overlap, cut-off, duplicated, "
+            "placeholder, legible, well-timed) · 8 GRAPHICS (do the charts/infographics look "
+            "polished and purposeful, or static and naff?) · 9 B-ROLL FIT · 10 DURATION vs 20-32s · "
+            "11 FRAMING · 12 one clear takeaway.\n"
+            'Return ONLY JSON: {"score": <0-100>, "verdict": "<one blunt line>", '
             '"issues": [{"severity":"high|medium|low","area":"<hook|audio-quality|audio-join|cadence|'
-            'sync|video-quality|broll|captions|framing|payoff>","note":"<what & how to fix>"}], '
-            '"keep": "<one thing that works>"}'
+            'sync|video-quality|on-screen-text|graphics|broll|duration|framing|payoff>",'
+            '"note":"<what & where & how to fix>"}], "keep": "<one thing that works>"}'
         )
         r = client.models.generate_content(model="gemini-2.5-flash", contents=[f, prompt])
         raw = (getattr(r, "text", "") or "").strip()
