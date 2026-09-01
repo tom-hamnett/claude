@@ -146,19 +146,28 @@ def _render_card_png(headline: str, subline: str, out_png: Path) -> Path:
 
 
 def _render_overlay_png(text: str, out_png: Path) -> Path:
-    """Transparent lower-third caption to composite over B-roll (RGBA)."""
+    """A clean lower-third caption band (RGBA), centred in the safe area — one rounded
+    panel behind all lines (not a patchy box per line), composited last so it sits on top."""
     from PIL import Image, ImageDraw
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
     f = _font(int(W * 0.05))
-    lines = _wrap_to_width(d, text.strip(), f, int(W * 0.86))
-    lh = int(f.size * 1.25)
-    y = H - 520
+    lines = _wrap_to_width(d, text.strip(), f, int(W * 0.74))[:2]   # 2 lines max
+    lh = int(f.size * 1.28)
+    pad_x, pad_y = int(W * 0.04), int(W * 0.03)
+    widest = max((d.textlength(ln, font=f) for ln in lines), default=0)
+    bx0 = (W - widest) / 2 - pad_x
+    bx1 = (W + widest) / 2 + pad_x
+    by0 = int(H * 0.79)                       # safe band, clear of the platform's UI
+    by1 = by0 + lh * len(lines) + pad_y * 2
+    try:
+        d.rounded_rectangle([bx0, by0, bx1, by1], radius=int(W * 0.028), fill=(8, 15, 12, 210))
+    except Exception:
+        d.rectangle([bx0, by0, bx1, by1], fill=(8, 15, 12, 210))
+    y = by0 + pad_y
     for ln in lines:
         w = d.textlength(ln, font=f)
-        x = (W - w) / 2
-        d.rectangle([x - 18, y - 8, x + w + 18, y + f.size + 10], fill=(0, 0, 0, 140))
-        d.text((x, y), ln, font=f, fill=(255, 255, 255, 255))
+        d.text(((W - w) / 2, y), ln, font=f, fill=(255, 255, 255, 255))
         y += lh
     img.save(out_png)
     return out_png
@@ -487,7 +496,7 @@ def _resolve_context(job) -> dict:
         "cinematic_look_ids": [],
         "cinematic_prompt": (job.cinematic_prompt or "").strip(),
         "fal_model": getattr(cfg, "fal_model", "") or "",
-        "voice_speed": getattr(cfg, "voice_speed", 0.9) or 0.9,  # <1 = breathes
+        "voice_speed": getattr(cfg, "voice_speed", 0.85) or 0.85,  # <1 = breathes
     }
     try:
         from gtm_engine.casting import CastingStore
@@ -671,7 +680,7 @@ def _render_master_talkinghead(job, ctx: dict, segments: dict, out: Path,
         voice_id=ctx.get("voice_id") or None, background=ctx.get("background", "#0a0a0f"),
         aspect_ratio="9:16", motion_prompt=ctx.get("motion_prompt", ""),
         expressiveness=ctx.get("expressiveness", 0.5), image_key=ctx["image_key"], hd=hd,
-        speed=ctx.get("voice_speed", 0.9),   # a touch slower so the delivery breathes
+        speed=ctx.get("voice_speed", 0.85),   # a touch slower so the delivery breathes
     )
     result = provider.render(req)
     if not result or not Path(result).exists():
@@ -788,7 +797,7 @@ def assemble_continuous(job_id: int, include_broll: bool = True, cinematic_middl
         full = _full_script(job, segments)
         msig = _hash(full, ctx.get("voice_id", ""), ctx.get("image_key", ""),
                      ctx.get("avatar_id", ""), ctx.get("motion_prompt", ""),
-                     str(ctx.get("voice_speed", 0.9)))
+                     str(ctx.get("voice_speed", 0.85)))
         mc = state.get("master_cache") or {}
         if mc.get("sig") == msig and Path(mc.get("path", "")).exists():
             master = Path(mc["path"])
@@ -908,19 +917,31 @@ def _composite_batch(base: Path, overlays: list[dict], out: Path, dur: float) ->
     return out if _run(head + tail + [str(out)], timeout=360) and out.exists() else None
 
 
+# A light mastering chain on the voice: a high-pass strips low-frequency rumble/hum
+# (the usual "background fuzz"), loudnorm evens the level. One clean pass — the video
+# is copied untouched, so this only ever touches audio, once, with a purpose.
+_AUDIO_MASTER = "highpass=f=80,loudnorm=I=-16:TP=-1.5:LRA=11"
+_AQ_HI = ["-c:a", "aac", "-b:a", "256k", "-ar", "48000", "-ac", "2"]
+
+
 def _mux_audio(video: Path, audio_src: Path, out: Path) -> Path | None:
-    """Lay the ORIGINAL master audio back onto the composited (silent) video without
-    re-encoding either stream — the voice stays byte-identical to HeyGen's render."""
+    """Lay the master voice back onto the composited (silent) video, video COPIED
+    untouched. The audio gets one light mastering pass (de-rumble + normalise) to
+    clear background fuzz; if that fails, fall back to a straight copy."""
     ff = _ffmpeg()
-    cmd = [ff, "-y", "-i", str(video), "-i", str(audio_src),
-           "-map", "0:v:0", "-map", "1:a:0?", "-c:v", "copy", "-c:a", "copy",
-           "-shortest", str(out)]
-    if _run(cmd) and out.exists():
+    mastered = [ff, "-y", "-i", str(video), "-i", str(audio_src),
+                "-map", "0:v:0", "-map", "1:a:0?", "-c:v", "copy",
+                "-af", _AUDIO_MASTER, *_AQ_HI, "-shortest", str(out)]
+    if _run(mastered) and out.exists():
         return out
-    # Fallback: some containers won't stream-copy cleanly — re-encode audio only, once.
-    cmd = [ff, "-y", "-i", str(video), "-i", str(audio_src),
-           "-map", "0:v:0", "-map", "1:a:0?", "-c:v", "copy", *AQ, "-shortest", str(out)]
-    return out if _run(cmd) and out.exists() else None
+    # Fallbacks: plain re-encode, then a pure stream copy.
+    for acodec in ([*_AQ_HI], ["-c:a", "copy"]):
+        cmd = [ff, "-y", "-i", str(video), "-i", str(audio_src),
+               "-map", "0:v:0", "-map", "1:a:0?", "-c:v", "copy", *acodec,
+               "-shortest", str(out)]
+        if _run(cmd) and out.exists():
+            return out
+    return None
 
 
 def _composite(master: Path, overlays: list[dict], out: Path) -> Path | None:
@@ -994,7 +1015,7 @@ def assemble_choreographed(job_id: int, target_seconds: int = 25, draft: bool = 
     else:
         msig = _hash(full, ctx.get("voice_id", ""), ctx.get("image_key", ""),
                      ctx.get("avatar_id", ""), ctx.get("motion_prompt", ""), str(hd),
-                     str(ctx.get("voice_speed", 0.9)))
+                     str(ctx.get("voice_speed", 0.85)))
         mc = state.get("master_cache") or {}
         if mc.get("sig") == msig and Path(mc.get("path", "")).exists():
             master = Path(mc["path"])

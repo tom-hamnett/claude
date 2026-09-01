@@ -107,6 +107,7 @@ def render_dataviz(spec: dict, out_png: Path, W: int = 1080, H: int = 1920,
     from PIL import Image, ImageDraw
     img = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(img)
+    _safe_frame(d, W, H)
     try:
         if ct == "stat":
             _draw_stat(d, spec, W, H, p)
@@ -145,6 +146,7 @@ def render_dataviz_clip(spec: dict, out_mp4: Path, W: int = 1080, H: int = 1920,
             p = 1.0 if i >= build_frames else i / build_frames
             img = Image.new("RGB", (W, H), BG)
             d = ImageDraw.Draw(img)
+            _safe_frame(d, W, H)
             drawer = {"stat": _draw_stat, "bar": _draw_bar, "line": _draw_line,
                       "table": _draw_table}[ct]
             drawer(d, spec, W, H, p)
@@ -176,6 +178,17 @@ def render_dataviz_clip(spec: dict, out_mp4: Path, W: int = 1080, H: int = 1920,
 def _center(d, text, font, y, W, fill):
     w = d.textlength(text, font=font)
     d.text(((W - w) / 2, y), text, font=font, fill=fill)
+
+
+def _safe_frame(d, W, H):
+    """A subtle rounded frame inset from the edges — signals the safe area so no
+    content spills to the screen edge (or under the platform's own UI)."""
+    m = int(W * 0.05)
+    try:
+        d.rounded_rectangle([m, int(H * 0.06), W - m, int(H * 0.94)],
+                            radius=int(W * 0.03), outline=GRID, width=2)
+    except Exception:
+        pass
 
 
 def _draw_stat(d, spec, W, H, p=1.0):
@@ -244,11 +257,14 @@ def _draw_bar(d, spec, W, H, p=1.0):
     vals = [_num(b.get("value")) for b in bars]
     mx = max([abs(v) for v in vals] + [1.0])
     best = max(range(len(vals)), key=lambda i: vals[i]) if vals else -1
-    x0 = int(W * 0.09)
-    bar_w_max = int(W * 0.72)
+    x0 = int(W * 0.11)                       # inside the safe frame
+    right = int(W * 0.89)
+    vf = _font(int(W * 0.05), bold=True)
+    # Reserve room for the longest value label so a full bar + its number never spill.
+    val_reserve = max(int(d.textlength(f"{v:g}{unit}", font=vf)) for v in vals) + int(W * 0.03)
+    bar_w_max = max(int(W * 0.3), (right - x0) - val_reserve)
     row_h = min(int(H * 0.14), int((H * 0.62) / max(1, len(bars))))
     lf = _font(int(W * 0.044), bold=True)
-    vf = _font(int(W * 0.05), bold=True)
     e = _ease(p)
     y = top + int(H * 0.03)
     for i, b in enumerate(bars):
@@ -262,7 +278,8 @@ def _draw_bar(d, spec, W, H, p=1.0):
                             radius=int(row_h * 0.10), fill=col)
         dp = 1 if (b.get("value") is not None and "." in str(b.get("value"))) else 0
         vtxt = _fmt_num(v, p, dp) + unit                        # counts up
-        d.text((x0 + w + int(W * 0.02), yb - int(row_h * 0.02)), vtxt, font=vf, fill=col)
+        vx = min(x0 + w + int(W * 0.02), right - int(d.textlength(vtxt, font=vf)))
+        d.text((vx, yb - int(row_h * 0.02)), vtxt, font=vf, fill=col)
         y += row_h
 
 
@@ -301,8 +318,9 @@ def _draw_line(d, spec, W, H, p=1.0):
     d.ellipse([ex - r, ey - r, ex + r, ey + r], fill=ACCENT)    # leading dot
     if p > 0.97:                                                # value lands at the end
         ef = _font(int(W * 0.05), bold=True)
-        d.text((min(ex + int(W * 0.02), W - int(W * 0.22)), ey - int(ef.size)),
-               f"{series[-1]:g}", font=ef, fill=ACCENT)
+        vtxt = f"{series[-1]:g}"
+        vx = min(ex + int(W * 0.02), int(W * 0.89) - int(d.textlength(vtxt, font=ef)))
+        d.text((vx, ey - int(ef.size)), vtxt, font=ef, fill=ACCENT)
     note = str(spec.get("note") or "")
     if note:
         nf = _font(int(W * 0.038), bold=False)
