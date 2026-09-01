@@ -487,6 +487,7 @@ def _resolve_context(job) -> dict:
         "cinematic_look_ids": [],
         "cinematic_prompt": (job.cinematic_prompt or "").strip(),
         "fal_model": getattr(cfg, "fal_model", "") or "",
+        "voice_speed": getattr(cfg, "voice_speed", 0.9) or 0.9,  # <1 = breathes
     }
     try:
         from gtm_engine.casting import CastingStore
@@ -667,6 +668,7 @@ def _render_master_talkinghead(job, ctx: dict, segments: dict, out: Path,
         voice_id=ctx.get("voice_id") or None, background=ctx.get("background", "#0a0a0f"),
         aspect_ratio="9:16", motion_prompt=ctx.get("motion_prompt", ""),
         expressiveness=ctx.get("expressiveness", 0.5), image_key=ctx["image_key"], hd=hd,
+        speed=ctx.get("voice_speed", 0.9),   # a touch slower so the delivery breathes
     )
     result = provider.render(req)
     if not result or not Path(result).exists():
@@ -876,8 +878,10 @@ def assemble_continuous(job_id: int, include_broll: bool = True, cinematic_middl
 # ── Choreographed compositor (many shots over one continuous take) ─────────────
 
 def _composite_batch(base: Path, overlays: list[dict], out: Path, dur: float) -> Path | None:
-    """Overlay a SMALL group of visuals (≤ COMPOSITE_BATCH) in one ffmpeg pass,
-    keeping base audio. Peak inputs = len(overlays)+1 — bounded so memory stays low."""
+    """Overlay a SMALL group of visuals (≤ COMPOSITE_BATCH) in one ffmpeg pass.
+    VIDEO ONLY — audio is dropped here and the master's pristine track is muxed back
+    at the very end (so the voice is never re-encoded, never seamed). Peak inputs =
+    len(overlays)+1 — bounded so memory stays low."""
     ff = _ffmpeg()
     head = [ff, "-y", "-i", str(base)]
     for ov in overlays:
@@ -895,17 +899,32 @@ def _composite_batch(base: Path, overlays: list[dict], out: Path, dur: float) ->
         else:
             parts.append(f"[{prev}][{k}:v]overlay=0:0:{en}[{lab}]")
         prev = lab
-    tail = ["-filter_complex", ";".join(parts), "-map", f"[{prev}]", "-map", "0:a?",
+    tail = ["-filter_complex", ";".join(parts), "-map", f"[{prev}]", "-an",
             "-t", f"{dur:.3f}", *VQ]
-    if _run(head + tail + ["-c:a", "copy", str(out)], timeout=360) and out.exists():
+    return out if _run(head + tail + [str(out)], timeout=360) and out.exists() else None
+
+
+def _mux_audio(video: Path, audio_src: Path, out: Path) -> Path | None:
+    """Lay the ORIGINAL master audio back onto the composited (silent) video without
+    re-encoding either stream — the voice stays byte-identical to HeyGen's render."""
+    ff = _ffmpeg()
+    cmd = [ff, "-y", "-i", str(video), "-i", str(audio_src),
+           "-map", "0:v:0", "-map", "1:a:0?", "-c:v", "copy", "-c:a", "copy",
+           "-shortest", str(out)]
+    if _run(cmd) and out.exists():
         return out
-    return out if _run(head + tail + [*AQ, str(out)], timeout=360) and out.exists() else None
+    # Fallback: some containers won't stream-copy cleanly — re-encode audio only, once.
+    cmd = [ff, "-y", "-i", str(video), "-i", str(audio_src),
+           "-map", "0:v:0", "-map", "1:a:0?", "-c:v", "copy", *AQ, "-shortest", str(out)]
+    return out if _run(cmd) and out.exists() else None
 
 
 def _composite(master: Path, overlays: list[dict], out: Path) -> Path | None:
     """Lay many visuals over the master in BATCHES (a few layers per pass) so peak
-    memory is bounded on Streamlit Cloud, while keeping the number of full re-encodes
-    low. Each overlay: {"path","kind":"video|png","t1","t2"}. Captions come last."""
+    memory is bounded on Streamlit Cloud. All batches are VIDEO ONLY; the master's
+    pristine audio is muxed back in ONE final pass — so no matter how many video
+    re-encodes happen, the voice is never touched (no fuzz, no seams). Each overlay:
+    {"path","kind":"video|png","t1","t2"}. Captions come last."""
     if not overlays:
         return master
     dur = _probe_duration(master) or 30.0
@@ -919,6 +938,9 @@ def _composite(master: Path, overlays: list[dict], out: Path) -> Path | None:
             res = None
         if res:
             base = res
+    # Lay the original voice back over the silent composited video, untouched.
+    if _mux_audio(Path(base), master, out):
+        return out
     if Path(base) != out:
         out.write_bytes(Path(base).read_bytes())
     return out

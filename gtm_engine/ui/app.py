@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-07e · Pre-flight QA gate (free) + fixed caption overlap, naked cards, length, cadence"
+BUILD_TAG = "2026-09-07f · Pristine audio (no re-encode) + slower cadence + one-click 'fix it all'"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -1382,28 +1382,25 @@ def _produce_review_panel(idea):
             from gtm_engine.video import revise_from_notes
             from gtm_engine.video.assembler import start_reassemble
 
-            if _has_qa:
-                if st.button("✨ Apply Gemini's QA notes & re-assemble", key=f"vjqa_apply_{idea.id}",
-                             use_container_width=True, type="primary"):
-                    with st.spinner("Claude is applying the QA feedback to the script…"):
-                        revise_from_notes(job.id, notes="", use_qa=True)
-                    start_reassemble(job.id)   # rebuilds the FULL reel (keeps the middle)
-                    from gtm_engine.persistence import backup_quietly
-                    backup_quietly()
-                    st.rerun()
+            note = st.text_area(
+                "Anything to add? (optional — Gemini's feedback is applied either way)",
+                key=f"vjn2_{idea.id}", height=60,
+                placeholder="e.g. 'punchier hook, keep the drawdown chart longer'")
 
-            note = st.text_area("Your own revision note (free text)", key=f"vjn2_{idea.id}", height=60,
-                                placeholder="e.g. 'punchier hook, slower pacing, simpler middle shot'")
-            if st.button("Apply my note & re-assemble", key=f"vjrev2_{idea.id}",
-                         use_container_width=True, disabled=not note.strip()):
-                with st.spinner("Claude is applying your note to the script…"):
+            # ── One button: say yes, sort it all out ──────────────────────────
+            _yes_label = ("✅ Yes — apply Gemini's fixes & rebuild" if _has_qa
+                          else "✅ Apply my note & rebuild")
+            if st.button(_yes_label, key=f"vjfix_{idea.id}", use_container_width=True,
+                         type="primary", disabled=not (_has_qa or note.strip())):
+                with st.spinner("Claude is applying the feedback to the script + direction…"):
                     revise_from_notes(job.id, notes=note.strip(), use_qa=_has_qa)
-                start_reassemble(job.id)
+                start_reassemble(job.id)   # rebuilds the whole reel in your voice
                 from gtm_engine.persistence import backup_quietly
                 backup_quietly()
                 st.rerun()
-            st.caption("Revisions rewrite the **script + cinematic direction** and rebuild the "
-                       "*whole* reel (your voice + the middle), not just the bookends.")
+            st.caption("Rewrites the **script + direction** from Gemini's QA (and your note), then "
+                       "rebuilds the *whole* reel. Audio is now laid back untouched (no fuzz/joins) "
+                       "and the delivery is paced to breathe.")
         return
 
 

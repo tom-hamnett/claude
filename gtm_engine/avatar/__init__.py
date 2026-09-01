@@ -66,6 +66,7 @@ class RenderRequest:
     aspect_ratio: str = "9:16"
     motion_prompt: str = ""
     expressiveness: float = 0.5              # 0..1
+    speed: float = 1.0                        # voice pace (0.5–1.5); <1 = slower, breathes
     hd: bool = False                          # 1080p (more credits) vs 720p
     callback_url: str | None = None
 
@@ -672,6 +673,13 @@ class HeyGenProvider(AvatarProvider):
                 voices = self.list_voices()
                 voice_id = voices[0]["id"] if voices else ""
             voice_block = {"type": "text", "input_text": req.script, "voice_id": voice_id}
+            # Speed <1 slows the delivery so it breathes (HeyGen accepts 0.5–1.5).
+            try:
+                sp = round(float(req.speed), 2)
+                if 0.5 <= sp <= 1.5 and sp != 1.0:
+                    voice_block["speed"] = sp
+            except (TypeError, ValueError):
+                pass
 
         # A "tp:" prefix marks a photo avatar (Avatar IV — expressive), which
         # uses the talking_photo character type; otherwise a studio avatar.
