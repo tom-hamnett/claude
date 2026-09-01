@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-07f · Pristine audio (no re-encode) + slower cadence + one-click 'fix it all'"
+BUILD_TAG = "2026-09-07g · Animated infographics — count-ups, growing bars, line draw-on, row reveals"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {

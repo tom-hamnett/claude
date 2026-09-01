@@ -897,3 +897,27 @@ def test_preflight_flags_placeholder_text():
     pf = preflight(job)
     assert any(c["name"] == "Placeholder text" and not c["ok"] for c in pf["checks"])
     assert pf["ready"] is False
+
+
+def test_dataviz_animated_clip_renders(tmp_path):
+    import subprocess, imageio_ffmpeg
+    from gtm_engine.video.dataviz import render_dataviz_clip
+    spec = {"chart_type": "line", "title": "Equity", "series": [100, 108, 104, 121, 128]}
+    out = render_dataviz_clip(spec, tmp_path / "c.mp4", 1080, 1920, seconds=2.5, fps=24)
+    assert out and out.exists() and out.stat().st_size > 0
+    # frames dir is cleaned up
+    assert not (tmp_path / "c_frames").exists()
+    ff = imageio_ffmpeg.get_ffmpeg_exe()
+    info = subprocess.run([ff, "-i", str(out)], capture_output=True, text=True).stderr
+    assert "Video:" in info
+
+
+def test_dataviz_static_still_works_at_progress():
+    from gtm_engine.video.dataviz import render_dataviz
+    import tempfile, os
+    from pathlib import Path
+    spec = {"chart_type": "bar", "unit": "%",
+            "bars": [{"label": "A", "value": 34.2}, {"label": "B", "value": 11}]}
+    p = Path(tempfile.mkdtemp()) / "s.png"
+    assert render_dataviz(spec, p, 1080, 1920, p=0.5)   # mid-build still renders
+    assert p.exists()

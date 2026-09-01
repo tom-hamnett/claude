@@ -1072,10 +1072,15 @@ def assemble_choreographed(job_id: int, target_seconds: int = 25, draft: bool = 
                             _cover_fit(Image.open(src).convert("RGB"), W, H).save(png)
                             path, kind = png, "png"
                 elif v == "chart":
-                    from gtm_engine.video.dataviz import render_dataviz
-                    png = sd / f"chart{i}.png"
-                    if render_dataviz(sh.get("data_spec") or {}, png, W, H):
-                        path, kind = png, "png"
+                    from gtm_engine.video.dataviz import render_dataviz, render_dataviz_clip
+                    spec = sh.get("data_spec") or {}
+                    clip = render_dataviz_clip(spec, sd / f"chart{i}.mp4", W, H, seconds=t2 - t1)
+                    if clip:
+                        path, kind = clip, "video"          # animated: count-up / grow / draw-on
+                    else:                                    # fall back to a clean static frame
+                        png = sd / f"chart{i}.png"
+                        if render_dataviz(spec, png, W, H):
+                            path, kind = png, "png"
                 elif v == "stock":
                     from gtm_engine.utils.media import fetch_stock_video
                     raw = fetch_stock_video(sh.get("stock_query", ""), sd / f"stk{i}_src.mp4")
