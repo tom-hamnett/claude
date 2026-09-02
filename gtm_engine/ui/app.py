@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-08l · Carousel takeaway text wraps within safe area + brand-aware footer handle"
+BUILD_TAG = "2026-09-08m · Reel data scoped to tagged source (no cross-idea bleed) + remove a Data Vault source"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -2066,9 +2066,18 @@ def _render_create():
             vault = DataVault()
             sources = vault.list_all()
             st.caption("When a script says 'NEEDS DATA', add the real thing here — "
-                       "then it cites your numbers, not a placeholder.")
-            for src in sources[:8]:
-                st.markdown(f"• **{src.name}** ({src.source_type})")
+                       "then it cites your numbers, not a placeholder. A reel only uses "
+                       "the source you tag to it, never the others.")
+            for src in sources[:12]:
+                row, act = st.columns([5, 1])
+                row.markdown(f"• **{src.name}** ({src.source_type})")
+                if act.button("🗑", key=f"dv_del_{src.id}", help=f"Remove '{src.name}' from the vault"):
+                    vault.delete(src.id)
+                    backup_quietly()
+                    st.toast(f"Removed '{src.name}'.")
+                    st.rerun()
+            if not sources:
+                st.caption("_No data sources yet._")
             new_name = st.text_input("Name", placeholder="e.g. ATLAS 52-week performance log",
                                      key="dv_name")
             new_type = st.selectbox("Type",
