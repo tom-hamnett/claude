@@ -378,20 +378,17 @@ def generate_producer_brief(idea_id: int, character=None,
         for s in all_scenes
     )
 
-    # Pull any data sources mentioned by id in the idea notes (optional enrichment)
+    # A reel's data comes ONLY from the source tagged to THIS idea (demo_block, below).
+    # We deliberately do NOT dump the whole vault here: doing so used to hand every
+    # unrelated dataset to the model with an instruction to "cite these REAL figures",
+    # so a business/strategy reel would borrow numbers from, say, an old ATLAS trading
+    # dataset and fuse the two. Numbers must belong to the idea, never leak between ideas.
     vault = DataVault()
-    all_data = vault.list_all(verified_only=False)[:20]
-    data_context = ""
-    if all_data:
-        data_context = ("\n## AVAILABLE DATA SOURCES (cite these REAL figures — never invent numbers)\n"
-                        "Use the actual values below in the Proof/Pivot beats and on-screen text. "
-                        "If a needed number isn't here, say so via data_references rather than making one up.\n")
-        for d in all_data:
-            body = (d.content or "").strip()
-            snippet = f"\n  data:\n  ```\n{body[:800]}\n```\n" if body else ""
-            verified = " ✓verified" if getattr(d, "verified", False) else ""
-            data_context += (f"- id: `{d.id}` | **{d.name}** ({d.source_type}){verified} | "
-                             f"{d.description[:150]}{snippet}")
+    data_context = ("\n## DATA DISCIPLINE\n"
+                    "Use ONLY figures that belong to THIS idea — the notes above, or the "
+                    "tagged demo data if a demo block is present. Do NOT borrow numbers from "
+                    "any other topic or dataset. If a number you need isn't provided, say so "
+                    "via data_references rather than inventing or importing one.\n")
 
     # Data tagged to THIS idea (upstream of the script) — build the script FROM it.
     demo_block = ""
