@@ -120,5 +120,43 @@
       "Content claiming specific returns or outcomes",
       "White-label partner communications"
     ]
+  },
+  "positioning": {
+    "persona": "The Rational Strategist",
+    "publication": "The Complexity Tax",
+    "tagline": "The real economics of getting things done — minus the frameworks.",
+    "enemy": "Strategy theatre — big consulting that sells rigour by the deck, bills for the complexity it creates, then leaves before anything ships.",
+    "thesis": "Complexity is a hidden tax on a business, and much of it was sold by the people who profit from it. The edge is pragmatism that actually ships, grounded in the real economics of how companies grow — not academic frameworks.",
+    "audience": "Operators, founders and leaders who have to actually deliver — done paying for confident opinions with no evidence behind them.",
+    "pillars": [
+      {
+        "id": "complexity_tax",
+        "name": "The Complexity Tax",
+        "desc": "Where hidden complexity quietly costs money and speed — how to spot and cut it."
+      },
+      {
+        "id": "real_economics",
+        "name": "Real economics of growth",
+        "desc": "What actually moves a business versus what gets billed for."
+      },
+      {
+        "id": "decks_vs_done",
+        "name": "Decks vs Done",
+        "desc": "The gap between strategy theatre and execution; pragmatism that ships."
+      },
+      {
+        "id": "show_the_working",
+        "name": "Show the working",
+        "desc": "Transparent teardowns with the data attached — proof over posturing."
+      }
+    ],
+    "never_name": true,
+    "punch_at": [
+      "big consulting",
+      "strategy theatre",
+      "the framework industrial complex",
+      "the academic approach",
+      "the old way"
+    ]
   }
 }

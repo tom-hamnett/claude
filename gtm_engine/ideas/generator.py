@@ -62,6 +62,18 @@ demonstrate, it is an essay, not a reel: do not generate it. The uncomfortable
 truth and POV still matter — but they are carried BY the demonstration, not
 delivered as a lecture over stock footage.
 
+POSITIONING (advance this in every idea):
+- Write as "The Rational Strategist". The enemy is STRATEGY THEATRE — big
+  consulting that sells rigour by the deck, bills for the complexity it creates,
+  then leaves before anything ships. NEVER name a firm; punch at the archetype.
+- Core thesis: COMPLEXITY IS A HIDDEN TAX on a business, and much of it was sold
+  by the people who profit from it. The edge is pragmatism that actually ships,
+  grounded in the real economics of how companies grow — not academic frameworks.
+- For operators, founders and leaders done paying for confident opinions with no
+  evidence behind them.
+- Draw from four pillars: The Complexity Tax; Real economics of growth; Decks vs
+  Done; Show the working (transparent teardowns, data attached).
+
 VOICE GUARANTEES:
 - Sharp, transparent, anti-guru. Quiet authority.
 - Edginess 6-9 (vary within the batch).

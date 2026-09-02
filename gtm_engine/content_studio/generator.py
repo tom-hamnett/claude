@@ -66,7 +66,9 @@ def _extract_json(raw: str, array: bool = False):
 
 
 def _brand_voice() -> str:
-    """A short brand-voice line for the prompts (from brand standards if present)."""
+    """The brand voice + POSITIONING for the prompts, from brand standards. This is
+    what makes every batch come out on-position (persona, enemy, thesis, pillars)
+    instead of the user steering it each time."""
     try:
         from gtm_engine.config import DATA_DIR
         from gtm_engine.utils.file_io import load_json
@@ -74,15 +76,28 @@ def _brand_voice() -> str:
         if bp.exists():
             bs = load_json(bp) or {}
             voice = bs.get("voice", {}) or {}
+            pos = bs.get("positioning", {}) or {}
             tone = ", ".join(voice.get("tone_descriptors", [])[:6])
-            forbidden = ", ".join(voice.get("forbidden_phrases", [])[:8])
-            if tone or forbidden:
-                return (f"Voice: {tone or 'sharp, transparent, anti-guru'}. "
-                        + (f"Never use: {forbidden}." if forbidden else ""))
+            forbidden = ", ".join(voice.get("forbidden_phrases", [])[:10])
+            parts = []
+            if pos:
+                pillars = "; ".join(f"{p.get('name')} ({p.get('desc')})"
+                                    for p in pos.get("pillars", [])[:4])
+                parts.append(
+                    f"WRITE AS: {pos.get('persona', 'The Rational Strategist')}. "
+                    f"POSITION AGAINST (never name it — punch at the archetype): {pos.get('enemy', '')} "
+                    f"THESIS to advance in everything: {pos.get('thesis', '')} "
+                    f"FOR: {pos.get('audience', '')} "
+                    + (f"PILLARS to draw from: {pillars}. " if pillars else ""))
+            parts.append(
+                f"VOICE: {tone or 'sharp, transparent, anti-guru'}. Teach and demonstrate, never "
+                f"pitch. NEVER name real companies or competitors — challenge the category, not a "
+                f"brand. " + (f"Never use these words: {forbidden}." if forbidden else ""))
+            return " ".join(parts)
     except Exception:
         pass
     return ("Voice: sharp, transparent, anti-guru. Teach and demonstrate, never pitch. "
-            "No hype words (game-changer, revolutionary, unlock).")
+            "No hype words (game-changer, revolutionary, unlock). Never name competitors.")
 
 
 def _data_text(data_source_id) -> str:
