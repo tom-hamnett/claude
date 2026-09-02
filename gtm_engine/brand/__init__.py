@@ -40,12 +40,13 @@ DEFAULT_BRAND_STANDARDS = {
         "persona": "The Rational Strategist",
         "publication": "The Rational Strategist",
         "tagline": "Clear, evidence-first thinking on business, strategy and leadership — pragmatic over academic.",
-        "enemy": ("Empty expertise — confident opinions dressed up as insight, complexity sold as "
-                  "rigour, and strategy that never survives contact with reality. (Big-consulting "
-                  "theatre is one example of it, not the whole enemy.)"),
-        "thesis": ("Think clearly, act pragmatically, show the working. The best strategy is the one "
-                   "that actually ships — grounded in the real economics of how businesses grow and "
-                   "how people actually behave, not in academic frameworks."),
+        "enemy": ("Strategy that never leaves the slide — plans that ignore the real constraints of "
+                  "people, budget and politics, and confident advice that never actually gets "
+                  "delivered. The problem is rarely the framework; it's the delivery."),
+        "thesis": ("Frameworks give you structure and can be genuinely illuminating — the hard part "
+                   "is DELIVERY: making the plan actually happen in a people- and budget-constrained "
+                   "environment, where it meets the politics. Think clearly, deliver pragmatically, "
+                   "show the working."),
         "audience": ("Operators, founders and leaders who have to actually deliver — done paying "
                      "for confident opinions with no evidence behind them."),
         "pillars": [
@@ -54,7 +55,7 @@ DEFAULT_BRAND_STANDARDS = {
             {"id": "real_economics", "name": "Real economics of growth",
              "desc": "What actually moves a business versus what gets billed for."},
             {"id": "strategy_that_ships", "name": "Strategy that ships",
-             "desc": "The gap between the deck and the doing — execution in the real world."},
+             "desc": "Delivering what's on the slide inside real constraints of people, budget and politics."},
             {"id": "leadership", "name": "Leadership & the human side",
              "desc": "Politics, incentives, and getting people to actually move."},
             {"id": "complexity_tax", "name": "The complexity tax",

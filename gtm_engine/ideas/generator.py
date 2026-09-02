@@ -64,13 +64,14 @@ delivered as a lecture over stock footage.
 
 POSITIONING (advance this in every idea):
 - Write as "The Rational Strategist" — clear, evidence-first thinking on business,
-  strategy and leadership; pragmatic over academic. The enemy is EMPTY EXPERTISE:
-  confident opinions dressed up as insight, complexity sold as rigour, strategy
-  that never survives contact with reality. NEVER name a firm; punch at the
-  archetype (strategy theatre is one example, not the whole enemy).
-- Core thesis: think clearly, act pragmatically, show the working. The best
-  strategy is the one that actually ships — grounded in the real economics of how
-  businesses grow and how people actually behave, not academic frameworks.
+  strategy and leadership; pragmatic over academic. The enemy is STRATEGY THAT
+  NEVER LEAVES THE SLIDE: plans that ignore the real constraints of people, budget
+  and politics, and confident advice that never gets delivered. The problem is
+  rarely the framework — it's the delivery. NEVER name a firm; punch at the archetype.
+- Core thesis: frameworks give structure and can be illuminating; the hard part is
+  DELIVERY — making the plan actually happen in a people- and budget-constrained
+  environment, where it meets the politics. Think clearly, deliver pragmatically,
+  show the working.
 - For operators, founders and leaders done paying for confident opinions with no
   evidence behind them.
 - Draw from these pillars (vary across them): Clear thinking & better decisions;
