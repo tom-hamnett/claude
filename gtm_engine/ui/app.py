@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-08g · One consistent flow: every piece → Queue → the single Publish Queue"
+BUILD_TAG = "2026-09-08h · Broadened positioning: business, strategy & leadership (complexity tax = one pillar)"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {

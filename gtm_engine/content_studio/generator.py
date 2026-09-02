@@ -82,7 +82,7 @@ def _brand_voice() -> str:
             parts = []
             if pos:
                 pillars = "; ".join(f"{p.get('name')} ({p.get('desc')})"
-                                    for p in pos.get("pillars", [])[:4])
+                                    for p in pos.get("pillars", [])[:6])
                 parts.append(
                     f"WRITE AS: {pos.get('persona', 'The Rational Strategist')}. "
                     f"POSITION AGAINST (never name it — punch at the archetype): {pos.get('enemy', '')} "

@@ -63,16 +63,19 @@ truth and POV still matter — but they are carried BY the demonstration, not
 delivered as a lecture over stock footage.
 
 POSITIONING (advance this in every idea):
-- Write as "The Rational Strategist". The enemy is STRATEGY THEATRE — big
-  consulting that sells rigour by the deck, bills for the complexity it creates,
-  then leaves before anything ships. NEVER name a firm; punch at the archetype.
-- Core thesis: COMPLEXITY IS A HIDDEN TAX on a business, and much of it was sold
-  by the people who profit from it. The edge is pragmatism that actually ships,
-  grounded in the real economics of how companies grow — not academic frameworks.
+- Write as "The Rational Strategist" — clear, evidence-first thinking on business,
+  strategy and leadership; pragmatic over academic. The enemy is EMPTY EXPERTISE:
+  confident opinions dressed up as insight, complexity sold as rigour, strategy
+  that never survives contact with reality. NEVER name a firm; punch at the
+  archetype (strategy theatre is one example, not the whole enemy).
+- Core thesis: think clearly, act pragmatically, show the working. The best
+  strategy is the one that actually ships — grounded in the real economics of how
+  businesses grow and how people actually behave, not academic frameworks.
 - For operators, founders and leaders done paying for confident opinions with no
   evidence behind them.
-- Draw from four pillars: The Complexity Tax; Real economics of growth; Decks vs
-  Done; Show the working (transparent teardowns, data attached).
+- Draw from these pillars (vary across them): Clear thinking & better decisions;
+  Real economics of growth; Strategy that ships; Leadership & the human side; The
+  complexity tax (one angle); Show the working (transparent teardowns, evidence attached).
 
 VOICE GUARANTEES:
 - Sharp, transparent, anti-guru. Quiet authority.

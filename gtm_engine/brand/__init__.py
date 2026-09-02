@@ -38,27 +38,32 @@ DEFAULT_BRAND_STANDARDS = {
     },
     "positioning": {
         "persona": "The Rational Strategist",
-        "publication": "The Complexity Tax",
-        "tagline": "The real economics of getting things done — minus the frameworks.",
-        "enemy": ("Strategy theatre — big consulting that sells rigour by the deck, bills for the "
-                  "complexity it creates, then leaves before anything ships."),
-        "thesis": ("Complexity is a hidden tax on a business, and much of it was sold by the people "
-                   "who profit from it. The edge is pragmatism that actually ships, grounded in the "
-                   "real economics of how companies grow — not academic frameworks."),
+        "publication": "The Rational Strategist",
+        "tagline": "Clear, evidence-first thinking on business, strategy and leadership — pragmatic over academic.",
+        "enemy": ("Empty expertise — confident opinions dressed up as insight, complexity sold as "
+                  "rigour, and strategy that never survives contact with reality. (Big-consulting "
+                  "theatre is one example of it, not the whole enemy.)"),
+        "thesis": ("Think clearly, act pragmatically, show the working. The best strategy is the one "
+                   "that actually ships — grounded in the real economics of how businesses grow and "
+                   "how people actually behave, not in academic frameworks."),
         "audience": ("Operators, founders and leaders who have to actually deliver — done paying "
                      "for confident opinions with no evidence behind them."),
         "pillars": [
-            {"id": "complexity_tax", "name": "The Complexity Tax",
-             "desc": "Where hidden complexity quietly costs money and speed — how to spot and cut it."},
+            {"id": "clear_thinking", "name": "Clear thinking & better decisions",
+             "desc": "Mental models, judgement, and avoiding smart-sounding mistakes."},
             {"id": "real_economics", "name": "Real economics of growth",
              "desc": "What actually moves a business versus what gets billed for."},
-            {"id": "decks_vs_done", "name": "Decks vs Done",
-             "desc": "The gap between strategy theatre and execution; pragmatism that ships."},
+            {"id": "strategy_that_ships", "name": "Strategy that ships",
+             "desc": "The gap between the deck and the doing — execution in the real world."},
+            {"id": "leadership", "name": "Leadership & the human side",
+             "desc": "Politics, incentives, and getting people to actually move."},
+            {"id": "complexity_tax", "name": "The complexity tax",
+             "desc": "Where hidden complexity quietly costs money and speed — one angle, not the whole story."},
             {"id": "show_the_working", "name": "Show the working",
-             "desc": "Transparent teardowns with the data attached — proof over posturing."},
+             "desc": "Transparent teardowns with the evidence attached — proof over posturing."},
         ],
         "never_name": True,
-        "punch_at": ["big consulting", "strategy theatre", "the framework industrial complex",
+        "punch_at": ["empty expertise", "strategy theatre", "the framework industry",
                      "the academic approach", "the old way"],
     },
     "edginess": {
