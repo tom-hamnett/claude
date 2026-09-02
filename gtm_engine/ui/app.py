@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-08f · Fix carousel/reel button crash (bare ternary tripped Streamlit magic)"
+BUILD_TAG = "2026-09-08g · One consistent flow: every piece → Queue → the single Publish Queue"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -1681,8 +1681,17 @@ def _studio_queue(store):
         for p in queued:
             kind = {"blog": "📝 Blog", "article": f"📄 {_chan_label(p.channel)}",
                     "social": ("🎬 Reel" if p.format == "reel" else "🖼 Carousel")}.get(p.kind, p.kind)
+            # A one-line state hint so it's obvious what's left to do before posting.
+            if p.kind == "social" and p.format == "reel":
+                hint = "🎬 producing in CREATE" if p.video_job_id else "⏳ make it in CREATE first"
+            elif p.kind == "social" and (p.meta or {}).get("slides"):
+                hint = "🖼 slides ready to post"
+            else:
+                hint = "✅ ready to copy & post"
             c1, c2 = st.columns([5, 1.2])
-            c1.markdown(f"{kind} · **{p.title or p.caption or '(untitled)'}**")
+            c1.markdown(f"{kind} · **{p.title or p.caption or '(untitled)'}**  \n"
+                        f"<span style='color:{C['muted']};font-size:0.76rem;'>{hint}</span>",
+                        unsafe_allow_html=True)
             if c2.button("Remove", key=f"unq_{p.id}", use_container_width=True):
                 p.status = "draft"; store.save_piece(p); st.rerun()
 
@@ -1905,7 +1914,8 @@ def _studio_social_row(store, s, make_reel_from_piece):
             imgs = [p for p in slides if Path(p).exists()]
             if imgs:
                 st.image(imgs, width=200)
-            _queue_button(store, s, st.container(), key=f"carq_{s.id}")
+    # Every social piece queues the SAME way (the Publish Queue is the one shelf).
+    _queue_button(store, s, st.container(), key=f"soq_{s.id}")
 
 
 # ═══════════════════════════════════════════════════════════════════════════
