@@ -197,3 +197,29 @@ def test_queue_listing(db):
     store.add_piece(ContentPiece(batch_id=bid, kind="article", status="draft"))
     q = store.list_queued()
     assert len(q) == 1 and q[0].id == p1
+
+
+def test_publish_helper_formats_and_composers():
+    from types import SimpleNamespace
+    from gtm_engine.content_studio.publish import channels_for, format_for, composer
+    blog = SimpleNamespace(kind="blog", title="Strategy that ships", channel="",
+                           body="# Strategy that ships\n\nMost plans die in the meeting. **Delivery** is hard.",
+                           caption="", format="long_form", meta={})
+    assert channels_for(blog) == ["substack", "linkedin", "x", "reddit"]
+    # title printed once (leading H1 stripped), markdown kept for substack
+    sub = format_for(blog, "substack")
+    assert sub.count("Strategy that ships") == 1 and sub.startswith("# ")
+    # linkedin strips markdown
+    li = format_for(blog, "linkedin")
+    assert "**" not in li and "Delivery is hard" in li
+    # x is a numbered thread, first tweet prefilled in the composer url
+    _, xurl = composer(blog, "x")
+    assert xurl.startswith("https://twitter.com/intent/tweet?text=")
+    # reddit composer prefills the title
+    _, rurl = composer(blog, "reddit")
+    assert "reddit.com/submit?title=" in rurl
+    # a reel posts as media + caption, native channel first
+    reel = SimpleNamespace(kind="social", title="", channel="social", body="angle",
+                           caption="Nobody logs their losses", format="reel", meta={})
+    assert channels_for(reel)[0] == "linkedin"
+    assert "Attach your rendered video" in format_for(reel, "linkedin")

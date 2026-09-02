@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-08j · Positioning: delivery gap, respect rigour (not others lack evidence)"
+BUILD_TAG = "2026-09-08k · Publish Helper — format + copy + open composer per channel (Substack/X/LinkedIn/Reddit)"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -1681,19 +1681,40 @@ def _studio_queue(store):
         for p in queued:
             kind = {"blog": "📝 Blog", "article": f"📄 {_chan_label(p.channel)}",
                     "social": ("🎬 Reel" if p.format == "reel" else "🖼 Carousel")}.get(p.kind, p.kind)
-            # A one-line state hint so it's obvious what's left to do before posting.
             if p.kind == "social" and p.format == "reel":
                 hint = "🎬 producing in CREATE" if p.video_job_id else "⏳ make it in CREATE first"
             elif p.kind == "social" and (p.meta or {}).get("slides"):
                 hint = "🖼 slides ready to post"
             else:
                 hint = "✅ ready to copy & post"
-            c1, c2 = st.columns([5, 1.2])
-            c1.markdown(f"{kind} · **{p.title or p.caption or '(untitled)'}**  \n"
-                        f"<span style='color:{C['muted']};font-size:0.76rem;'>{hint}</span>",
-                        unsafe_allow_html=True)
-            if c2.button("Remove", key=f"unq_{p.id}", use_container_width=True):
-                p.status = "draft"; store.save_piece(p); st.rerun()
+            with st.expander(f"{kind} · {p.title or p.caption or '(untitled)'}"):
+                st.caption(hint)
+                _publish_helper(p)
+                if st.button("Remove from queue", key=f"unq_{p.id}"):
+                    p.status = "draft"; store.save_piece(p); st.rerun()
+
+
+def _publish_helper(piece):
+    """Format the piece for each channel, with a one-click copy + open-composer link.
+    No API needed — the honest hand-off: copy → open → paste → publish (~15s)."""
+    from gtm_engine.content_studio.publish import channels_for, format_for, composer, CHANNELS
+    chans = channels_for(piece)
+    tabs = st.tabs([CHANNELS[c] for c in chans])
+    for tab, c in zip(tabs, chans):
+        with tab:
+            text = format_for(piece, c)
+            note = {"substack": "Paste into a new Substack post.",
+                    "linkedin": "Paste into a LinkedIn post (markdown is stripped — plain text).",
+                    "x": "Each block is one tweet in the thread; the first is pre-filled.",
+                    "reddit": "Pick your subreddit; the title is pre-filled, paste the body."}.get(c, "")
+            if note:
+                st.caption(note)
+            st.code(text, language=None)          # st.code has a built-in copy button
+            label, url = composer(piece, c)
+            try:
+                st.link_button(label, url, use_container_width=True)
+            except Exception:
+                st.markdown(f"[{label}]({url})")
 
 
 def _studio_rotation(store):
