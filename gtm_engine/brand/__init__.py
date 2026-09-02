@@ -39,6 +39,7 @@ DEFAULT_BRAND_STANDARDS = {
     "positioning": {
         "persona": "The Rational Strategist",
         "publication": "The Rational Strategist",
+        "handle": "The Rational Strategist",
         "tagline": "Clear, evidence-first thinking on business, strategy and leadership — pragmatic over academic.",
         "enemy": ("Strategy that never leaves the slide — plans that ignore the real constraints of "
                   "people, budget and politics, and confident advice that never actually gets "

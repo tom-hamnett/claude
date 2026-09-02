@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-08k · Publish Helper — format + copy + open composer per channel (Substack/X/LinkedIn/Reddit)"
+BUILD_TAG = "2026-09-08l · Carousel takeaway text wraps within safe area + brand-aware footer handle"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {

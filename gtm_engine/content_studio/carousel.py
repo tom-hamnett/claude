@@ -20,12 +20,30 @@ logger = logging.getLogger(__name__)
 
 SW = SH = 1080                      # square
 N_MIN, N_MAX = 5, 7
-_HANDLE = "quantumtools.ai"
+
+
+def _handle() -> str:
+    """The footer handle — from brand positioning (a 'handle', else the persona),
+    so it follows the brand rather than being hard-coded."""
+    try:
+        from functools import lru_cache
+    except Exception:
+        pass
+    try:
+        from gtm_engine.config import DATA_DIR
+        from gtm_engine.utils.file_io import load_json
+        bp = DATA_DIR / "brand_standards.json"
+        if bp.exists():
+            pos = (load_json(bp) or {}).get("positioning", {}) or {}
+            return pos.get("handle") or pos.get("persona") or "quantumtools.ai"
+    except Exception:
+        pass
+    return "quantumtools.ai"
 
 
 def _footer(d, idx: int, total: int):
     f = _font(int(SW * 0.028), bold=True)
-    d.text((int(SW * 0.07), int(SH * 0.92)), _HANDLE, font=f, fill=MUTED)
+    d.text((int(SW * 0.07), int(SH * 0.92)), _handle(), font=f, fill=MUTED)
     pg = f"{idx + 1} / {total}"
     w = d.textlength(pg, font=f)
     d.text((SW - int(SW * 0.07) - w, int(SH * 0.92)), pg, font=f, fill=MUTED)
@@ -105,9 +123,15 @@ def _slide_cta(d, s, idx, total):
     for ln in _wrap(d, s.get("title", ""), tf, int(SW * 0.84))[:4]:
         d.text((int(SW * 0.08), y), ln, font=tf, fill=INK)
         y += int(tf.size * 1.16)
-    hf = _font(int(SW * 0.05), bold=True)
-    d.text((int(SW * 0.08), int(SH * 0.78)), s.get("body") or f"See it run · {_HANDLE}",
-           font=hf, fill=ACCENT)
+    # The green sub-line WRAPS within the safe width (this is the bug fix — long
+    # takeaways were running off the right edge).
+    hf = _font(int(SW * 0.045), bold=True)
+    body = (s.get("body") or f"See it run · {_handle()}").strip()
+    lines = _wrap(d, body, hf, int(SW * 0.84))[:3]
+    y2 = int(SH * 0.86) - int(hf.size * 1.3) * len(lines)      # bottom-anchored, above footer
+    for ln in lines:
+        d.text((int(SW * 0.08), y2), ln, font=hf, fill=ACCENT)
+        y2 += int(hf.size * 1.3)
     _footer(d, idx, total)
 
 
