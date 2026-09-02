@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-08a · Persistence banner + auto-save, New project at the bottom, Start-fresh, phone home-screen"
+BUILD_TAG = "2026-09-08b · STUDIO — one brief → 1 blog · 5 articles · 10 social concepts → reels/carousels"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -78,11 +78,13 @@ def main():
     # Persistence status + one-tap save — front and centre so it's never a surprise.
     _persistence_bar()
 
-    # Three-tab navigation
-    plan_tab, create_tab, perform_tab, settings_tab = st.tabs([
-        "PLAN", "CREATE", "PERFORM", "SETTINGS"
+    # Navigation — STUDIO is the front door (new content starts here).
+    studio_tab, plan_tab, create_tab, perform_tab, settings_tab = st.tabs([
+        "STUDIO", "PLAN", "CREATE", "PERFORM", "SETTINGS"
     ])
 
+    with studio_tab:
+        _render_studio()
     with plan_tab:
         _render_plan()
     with create_tab:
@@ -1642,6 +1644,169 @@ def _render_kanban_card(idea, status):
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+#  STUDIO TAB — one brief → 1 blog · 5 articles · 10 social concepts
+# ═══════════════════════════════════════════════════════════════════════════
+
+def _render_studio():
+    from gtm_engine.content_studio import ContentStudioStore
+    store = ContentStudioStore()
+    st.markdown("## Studio")
+    st.caption("New content starts here. One brief → **1 blog · 5 articles · 10 social concepts** — "
+               "then send a concept to the reel engine or a carousel. Pillar → atomise → distribute.")
+
+    _studio_rotation(store)
+
+    have_batches = bool(store.list_batches(limit=1))
+    with st.expander("＋ New content batch", expanded=not have_batches):
+        _studio_intake(store)
+
+    st.markdown("---")
+    st.markdown("#### Your batches")
+    batches = store.list_batches(limit=50)
+    if not batches:
+        st.info("No batches yet — create your first one above.")
+    for b in batches:
+        _studio_batch_card(store, b)
+
+
+def _studio_rotation(store):
+    from gtm_engine.content_studio import CONTENT_TYPES
+    counts = store.counts_by_type()
+    pc = store.piece_counts()
+    with st.container(border=True):
+        st.markdown("**Content rotation** — aim to cover a spread of types over time.")
+        cols = st.columns(4)
+        for i, t in enumerate(CONTENT_TYPES):
+            n = counts.get(t["id"], 0)
+            with cols[i % 4]:
+                dot = "🟢" if n else "⚪️"
+                st.markdown(f"{t['icon']} **{t['label']}**  \n{dot} {n}", help=t["blurb"])
+        st.caption(f"Produced: **{pc.get('blog', 0)}** blogs · **{pc.get('article', 0)}** articles · "
+                   f"**{pc.get('social', 0)}** social concepts")
+    with st.container(border=True):
+        st.markdown("**📈 Performance** &nbsp; _(coming soon — placeholder)_")
+        m = st.columns(4)
+        m[0].metric("Views", "—"); m[1].metric("Views / day", "—")
+        m[2].metric("Click-through", "—"); m[3].metric("ROI", "—")
+        st.caption("Analytics integration (views over time, click-through, ROI) will wire in here.")
+
+
+def _studio_intake(store):
+    from gtm_engine.content_studio import ContentBatch, CONTENT_TYPES
+    from gtm_engine.content_studio.generator import start_batch
+    from gtm_engine.content_studio.templates import template_choices
+    title = st.text_input("Topic / big idea", key="sb_title",
+                          placeholder="e.g. Why a published track record can't be trusted")
+    st.caption("What kind of content is this? (one or more)")
+    picked = []
+    cols = st.columns(2)
+    for i, t in enumerate(CONTENT_TYPES):
+        with cols[i % 2]:
+            if st.checkbox(f"{t['icon']} {t['label']}", key=f"sb_ct_{t['id']}", help=t["blurb"]):
+                picked.append(t["id"])
+    background = st.text_area("Background & detail — the substance to work from", key="sb_bg",
+                             height=140, placeholder="What's the point? The facts, the story, the "
+                             "argument, the proof. The more you give, the better the batch.")
+    tc = dict(template_choices())
+    tmpl = st.selectbox("Blog structure", list(tc.keys()), format_func=lambda k: tc[k], key="sb_tmpl")
+    examples = st.text_area("Emulate an example (optional) — paste a blog/post whose structure & "
+                            "tone you like", key="sb_ex", height=90)
+    dfile = st.file_uploader("Attach data (optional) — CSV/XLSX to ground the numbers",
+                             type=["csv", "tsv", "xlsx", "xlsm"], key="sb_data")
+    if st.button("✨ Generate batch  ·  1 blog · 5 articles · 10 social",
+                 type="primary", use_container_width=True, disabled=not title.strip()):
+        data_source_id = None
+        if dfile:
+            dd = OUTPUT_DIR / "uploads" / "studio"
+            dd.mkdir(parents=True, exist_ok=True)
+            fp = dd / dfile.name
+            fp.write_bytes(dfile.getbuffer())
+            from gtm_engine.video.data_insight import ingest_data_file
+            data_source_id = ingest_data_file(str(fp), name=dfile.name)
+        b = ContentBatch(title=title.strip(), topic=title.strip()[:80],
+                         content_types=picked or ["insight"], background=background.strip(),
+                         data_source_id=data_source_id, template_id=tmpl, examples=examples.strip())
+        bid = store.create_batch(b)
+        start_batch(bid)
+        st.success("Generating your batch — it runs on the server, so you can close the tab. "
+                   "It'll appear below when it's done.")
+        st.rerun()
+
+
+def _chan_label(cid: str) -> str:
+    from gtm_engine.content_studio import ARTICLE_CHANNELS
+    return next((c["label"] for c in ARTICLE_CHANNELS if c["id"] == cid), cid or "Article")
+
+
+def _studio_batch_card(store, b):
+    from gtm_engine.content_studio.generator import (is_generating, progress_of, start_batch,
+                                                     make_reel_from_piece)
+    running = is_generating(b.id) or b.status == "generating"
+    icon = {"generated": "✅", "generating": "⏳", "failed": "⛔️", "draft": "•"}.get(b.status, "•")
+    with st.expander(f"{icon}  {b.title}  ·  {b.status}",
+                     expanded=running or b.status == "generated"):
+        if running:
+            p = progress_of(b.id) or (0, 3, "working")
+            st.progress(min(p[0] / max(p[1], 1), 1.0), text=f"{p[2]} ({p[0]}/{p[1]})")
+            st.caption("Runs on the server — you can close the tab. Tap to refresh.")
+            if st.button("↻ Check progress", key=f"bchk_{b.id}", type="primary"):
+                st.rerun()
+            return
+        if b.status == "failed":
+            st.error(f"Generation failed: {b.error}")
+            if st.button("↻ Retry", key=f"bretry_{b.id}"):
+                start_batch(b.id); st.rerun()
+            return
+
+        pieces = store.list_pieces(b.id)
+        blog = next((p for p in pieces if p.kind == "blog"), None)
+        arts = [p for p in pieces if p.kind == "article"]
+        socs = [p for p in pieces if p.kind == "social"]
+
+        if blog:
+            st.markdown(f"**📝 Blog — {blog.title}**")
+            with st.expander("Read / copy the blog"):
+                st.markdown(blog.body)
+        if arts:
+            st.markdown(f"**📄 Articles ({len(arts)})** — reframed per channel")
+            for a in arts:
+                with st.expander(f"{_chan_label(a.channel)} — {a.title or '(untitled)'}"):
+                    st.markdown(a.body)
+        if socs:
+            st.markdown(f"**🎬 Social concepts ({len(socs)})**")
+            for s in socs:
+                c1, c2 = st.columns([4, 1.1])
+                with c1:
+                    tag = "🎬 Reel" if s.format == "reel" else "🖼 Carousel"
+                    st.markdown(f"{tag} · **{s.caption or s.title}**  \n"
+                                f"<span style='color:{C['muted']};font-size:0.78rem;'>"
+                                f"{s.content_mode or ''}</span>", unsafe_allow_html=True)
+                    if s.body:
+                        st.caption(s.body[:180])
+                with c2:
+                    if s.format == "reel":
+                        if s.video_job_id:
+                            st.caption("→ in CREATE")
+                        elif st.button("🎬 Make reel", key=f"mkreel_{s.id}",
+                                       use_container_width=True):
+                            with st.spinner("Handing off to the video engine…"):
+                                job = make_reel_from_piece(s.id)
+                            if job:
+                                st.success("Reel started — produce it in the **CREATE** tab.")
+                            else:
+                                st.warning("Couldn't start (check the Anthropic key).")
+                            st.rerun()
+                    else:
+                        with st.popover("View slides"):
+                            for line in (s.body or "").split("|"):
+                                if line.strip():
+                                    st.markdown(f"- {line.strip()}")
+        st.markdown(" ")
+        if st.button("🗑 Delete batch", key=f"bdel_{b.id}"):
+            store.delete_batch(b.id); st.rerun()
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 #  CREATE TAB (Kanban Board)
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -1652,6 +1817,9 @@ def _render_create():
 
     bank = IdeaBank()
     counts = get_pipeline_counts()
+
+    st.caption("💡 New content now starts in **STUDIO** (a whole batch at once). This board is where "
+               "each **reel** gets produced, reviewed and scheduled.")
 
     conn = connection_status()
     if not conn["anthropic"]:
