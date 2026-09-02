@@ -189,6 +189,52 @@ def test_make_carousel_from_piece(db, monkeypatch, tmp_path):
     assert p.meta.get("slides") and p.status == "ready"
 
 
+def test_carousel_slide_edit_and_rerender(db, monkeypatch, tmp_path):
+    """Editing a slide's specs re-renders only from those specs (no AI), stores them back,
+    and clears stale PNGs when the slide count shrinks."""
+    import gtm_engine.config as cfg
+    monkeypatch.setattr(cfg, "OUTPUT_DIR", tmp_path / "out")
+    from gtm_engine.content_studio import ContentStudioStore, ContentBatch, ContentPiece
+    from gtm_engine.content_studio.carousel import rerender_carousel
+    store = ContentStudioStore()
+    bid = store.create_batch(ContentBatch(title="B", content_types=["insight"]))
+    pid = store.add_piece(ContentPiece(batch_id=bid, kind="social", format="carousel"))
+    specs = [{"type": "cover", "title": "Hook", "body": "sub"},
+             {"type": "insight", "title": "Point one", "body": "x"},
+             {"type": "data", "value": "45", "label": "meaningless"},
+             {"type": "cta", "title": "See it run", "body": "handle"}]
+    paths = rerender_carousel(pid, specs)
+    assert len(paths) == 4
+    # drop the meaningless data slide, re-render
+    specs2 = [s for s in specs if s.get("value") != "45"]
+    paths2 = rerender_carousel(pid, specs2)
+    assert len(paths2) == 3
+    p = store.get_piece(pid)
+    assert len(p.meta["slide_specs"]) == 3 and p.status == "ready"
+    # the 4th PNG was cleared (only 3 slide_*.png remain)
+    from pathlib import Path
+    out = tmp_path / "out" / "carousels" / f"batch_{bid}" / f"piece_{pid}"
+    assert len(list(out.glob("slide_*.png"))) == 3
+
+
+def test_revise_slide_ai_and_normalize(db, monkeypatch):
+    """revise_slide applies an instruction; a data slide stripped of its number becomes insight."""
+    import gtm_engine.utils.ai_client as aic
+    from gtm_engine.content_studio.carousel import revise_slide, _normalize_spec
+    monkeypatch.setattr(aic, "call_claude",
+                        lambda *a, **k: json.dumps({"type": "insight",
+                                                    "title": "The delivery gap", "body": "Plans die in the room."}))
+    out = revise_slide({"type": "data", "value": "45", "label": "x"},
+                       "drop the number, make it about delivery", voice="")
+    assert out["type"] == "insight" and "delivery" in out["title"].lower()
+    # normalize: data slide with no value falls back to insight
+    assert _normalize_spec({"type": "data", "value": ""})["type"] == "insight"
+    # bad AI output returns the original untouched
+    monkeypatch.setattr(aic, "call_claude", lambda *a, **k: "no json here")
+    orig = {"type": "insight", "title": "keep me"}
+    assert revise_slide(orig, "x", voice="") == orig
+
+
 def test_queue_listing(db):
     from gtm_engine.content_studio import ContentStudioStore, ContentBatch, ContentPiece
     store = ContentStudioStore()

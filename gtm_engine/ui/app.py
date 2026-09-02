@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-08m · Reel data scoped to tagged source (no cross-idea bleed) + remove a Data Vault source"
+BUILD_TAG = "2026-09-08n · Carousel slide-by-slide review — edit text, ask AI to rewrite a slide, remove/add, re-render"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -1931,12 +1931,77 @@ def _studio_social_row(store, s, make_reel_from_piece):
                     st.warning("Couldn't build it (check the Anthropic key).")
                 st.rerun()
     if slides:
-        with st.expander(f"View / download {len(slides)} slides"):
-            imgs = [p for p in slides if Path(p).exists()]
-            if imgs:
-                st.image(imgs, width=200)
+        _carousel_review(store, s, slides)
     # Every social piece queues the SAME way (the Publish Queue is the one shelf).
     _queue_button(store, s, st.container(), key=f"soq_{s.id}")
+
+
+def _carousel_review(store, s, slides):
+    """Slide-by-slide review: pick a slide, edit its text or ask AI to rewrite it,
+    remove it, or add one — then re-render. No AI call unless you ask for one."""
+    from gtm_engine.content_studio.carousel import rerender_carousel, revise_slide
+    from gtm_engine.persistence import backup_quietly
+    specs = list((s.meta or {}).get("slide_specs") or [])
+    with st.expander(f"🖼 Review / edit {len(slides)} slides"):
+        # thumbnails strip
+        imgs = [p for p in slides if Path(p).exists()]
+        if imgs:
+            st.image(imgs, width=120)
+        if not specs:
+            st.caption("These slides were made before editing existed — hit **↻ Remake** once to "
+                       "unlock slide-by-slide editing.")
+            return
+        n = len(specs)
+        labels = [f"{i + 1}. {(sp.get('type') or 'insight')} · "
+                  f"{(sp.get('title') or sp.get('value') or '—')[:34]}" for i, sp in enumerate(specs)]
+        sel = st.selectbox("Which slide?", list(range(n)), format_func=lambda i: labels[i],
+                           key=f"csel_{s.id}")
+        sp = specs[sel]
+        pv, ed = st.columns([1, 1.4])
+        with pv:
+            if sel < len(slides) and Path(slides[sel]).exists():
+                st.image(slides[sel], width=240)
+        with ed:
+            typ = sp.get("type", "insight")
+            new_title = st.text_input("Headline", sp.get("title", ""), key=f"ct_{s.id}_{sel}")
+            new_body = st.text_area("Body / sub-line", sp.get("body", ""), key=f"cb_{s.id}_{sel}",
+                                    height=70)
+            k1, k2 = st.columns(2)
+            new_value = k1.text_input("Big number", sp.get("value", ""), key=f"cv_{s.id}_{sel}",
+                                      help="Leave blank for a normal insight slide — an empty "
+                                           "number turns this back into a text slide.")
+            new_label = k2.text_input("Number label", sp.get("label", ""), key=f"cl_{s.id}_{sel}")
+        ask = st.text_input("✨ Or ask for a change (AI rewrites just this one slide)",
+                            key=f"cask_{s.id}_{sel}",
+                            placeholder="e.g. drop the 45 — it needs context; make it about the delivery gap")
+        b1, b2, b3, b4 = st.columns([1.2, 1.1, 1, 1])
+        did = False
+        if b1.button("💾 Save + re-render", key=f"csave_{s.id}_{sel}", use_container_width=True):
+            specs[sel] = {**sp, "title": new_title.strip(), "body": new_body.strip(),
+                          "value": new_value.strip(), "label": new_label.strip(), "type": typ}
+            rerender_carousel(s.id, specs); did = True
+            st.toast("Slide updated.")
+        if b2.button("✨ Apply change", key=f"cai_{s.id}_{sel}", use_container_width=True,
+                     disabled=not ask.strip()):
+            from gtm_engine.content_studio.generator import _brand_voice
+            blog = next((b for b in store.list_pieces(s.batch_id, kind="blog")), None)
+            ctx = blog.body if blog else ""
+            with st.spinner("Rewriting that slide…"):
+                specs[sel] = revise_slide(sp, ask, _brand_voice(), ctx)
+                rerender_carousel(s.id, specs)
+            did = True
+            st.toast("Slide rewritten.")
+        if b3.button("🗑 Remove", key=f"crm_{s.id}_{sel}", use_container_width=True,
+                     disabled=n <= 2):
+            specs.pop(sel); rerender_carousel(s.id, specs); did = True
+            st.toast("Slide removed.")
+        if b4.button("＋ Add", key=f"cadd_{s.id}_{sel}", use_container_width=True):
+            specs.insert(sel + 1, {"type": "insight", "title": "New slide", "body": ""})
+            rerender_carousel(s.id, specs); did = True
+            st.toast("Slide added — select it to edit.")
+        if did:
+            backup_quietly()
+            st.rerun()
 
 
 # ═══════════════════════════════════════════════════════════════════════════

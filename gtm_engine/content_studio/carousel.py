@@ -184,12 +184,81 @@ def generate_carousel_slides(concept: str, blog_excerpt: str, voice: str) -> lis
     return slides[:N_MAX]
 
 
+def _normalize_spec(sp: dict) -> dict:
+    """Keep a slide spec self-consistent: a 'data' slide with no number is really an
+    insight; a slide that gained a number can become a data slide if it has no title."""
+    sp = dict(sp or {})
+    typ = sp.get("type", "insight")
+    if typ == "data" and not str(sp.get("value", "")).strip():
+        sp["type"] = "insight"
+    return sp
+
+
+def _out_dir_for(batch_id: int, piece_id: int) -> Path:
+    from gtm_engine.config import OUTPUT_DIR
+    return OUTPUT_DIR / "carousels" / f"batch_{batch_id}" / f"piece_{piece_id}"
+
+
+def rerender_carousel(piece_id: int, specs: list[dict]) -> list[str]:
+    """Re-render a carousel from (edited) slide specs — pure PIL, no AI call. Clears the
+    old PNGs, renders the given specs, stores both specs + paths on the piece. Returns paths."""
+    from gtm_engine.content_studio import ContentStudioStore
+    store = ContentStudioStore()
+    p = store.get_piece(piece_id)
+    if not p:
+        return []
+    specs = [_normalize_spec(s) for s in (specs or []) if isinstance(s, dict)]
+    if not specs:
+        return []
+    out = _out_dir_for(p.batch_id, p.id)
+    if out.exists():
+        for old in out.glob("slide_*.png"):
+            try:
+                old.unlink()
+            except Exception:
+                pass
+    paths = render_carousel(specs, out, prefix="slide")
+    p.meta = {**(p.meta or {}), "slides": paths, "slide_specs": specs}
+    p.format = "carousel"
+    p.status = "ready"
+    store.save_piece(p)
+    return paths
+
+
+def revise_slide(slide: dict, instruction: str, voice: str, context: str = "") -> dict:
+    """Ask Claude to rewrite ONE carousel slide per a plain-English instruction (e.g.
+    'drop the number, make it about the delivery gap'). Returns the revised spec —
+    or the original slide unchanged if anything goes wrong."""
+    from gtm_engine.utils.ai_client import call_claude
+    sys = ("You revise a SINGLE slide in a square LinkedIn/Instagram carousel. Apply the user's "
+           "instruction to the slide below and return the improved slide. Keep it SHORT: title ≤ 8 "
+           "words, body ≤ 28 words. Only use a 'data' type (with value+label) if there's a real, "
+           "specific number that stands on its own — never invent or keep a number that isn't "
+           "clearly meaningful. " + (voice or "") + " Return ONLY JSON for the one slide: "
+           "{\"type\":\"cover|insight|data|cta\",\"title\":\"...\",\"body\":\"...\","
+           "\"value\":\"(data only)\",\"label\":\"(data only)\"}")
+    prompt = (f"CURRENT SLIDE:\n{json.dumps(slide, ensure_ascii=False)}\n\n"
+              f"INSTRUCTION: {instruction.strip()}\n\n"
+              + (f"CAROUSEL CONTEXT (for tone/facts only):\n{context[:1500]}\n\n" if context else "")
+              + "Return ONLY the revised slide JSON.")
+    raw = call_claude(prompt, system=sys, max_tokens=500)
+    s, e = raw.find("{"), raw.rfind("}")
+    if s == -1:
+        return slide
+    try:
+        new = json.loads(raw[s:e + 1])
+    except Exception:
+        return slide
+    if not isinstance(new, dict) or not (new.get("title") or new.get("value") or new.get("body")):
+        return slide
+    return _normalize_spec(new)
+
+
 def make_carousel_from_piece(piece_id: int) -> list[str]:
     """Generate + render a square carousel for a social 'carousel' piece. Stores the
     slide PNG paths on the piece (meta['slides']) and marks it ready. Returns paths."""
     from gtm_engine.content_studio import ContentStudioStore
     from gtm_engine.content_studio.generator import _brand_voice
-    from gtm_engine.config import OUTPUT_DIR
     store = ContentStudioStore()
     p = store.get_piece(piece_id)
     if not p:
@@ -199,10 +268,5 @@ def make_carousel_from_piece(piece_id: int) -> list[str]:
     slides = generate_carousel_slides(concept, blog.body if blog else "", _brand_voice())
     if not slides:
         return []
-    out = OUTPUT_DIR / "carousels" / f"batch_{p.batch_id}" / f"piece_{p.id}"
-    paths = render_carousel(slides, out, prefix="slide")
-    p.meta = {**(p.meta or {}), "slides": paths, "slide_specs": slides}
-    p.format = "carousel"
-    p.status = "ready"
-    store.save_piece(p)
-    return paths
+    # rerender_carousel does the render + store (clearing any stale PNGs) from these specs.
+    return rerender_carousel(piece_id, slides)
