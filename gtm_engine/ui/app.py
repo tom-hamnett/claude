@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-08e · Positioning baked in — The Rational Strategist / the Complexity Tax"
+BUILD_TAG = "2026-09-08f · Fix carousel/reel button crash (bare ternary tripped Streamlit magic)"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -1885,7 +1885,9 @@ def _studio_social_row(store, s, make_reel_from_piece):
             elif st.button("🎬 Make reel", key=f"mkreel_{s.id}", use_container_width=True):
                 with st.spinner("Handing off to the video engine…"):
                     job = make_reel_from_piece(s.id)
-                st.success("Reel started — produce it in **CREATE**.") if job else \
+                if job:
+                    st.success("Reel started — produce it in **CREATE**.")
+                else:
                     st.warning("Couldn't start (check the Anthropic key).")
                 st.rerun()
         else:  # carousel
@@ -1893,7 +1895,9 @@ def _studio_social_row(store, s, make_reel_from_piece):
             if st.button(lbl, key=f"mkcar_{s.id}", use_container_width=True):
                 with st.spinner("Designing square slides…"):
                     paths = make_carousel_from_piece(s.id)
-                st.success(f"{len(paths)} slides ready.") if paths else \
+                if paths:
+                    st.success(f"{len(paths)} slides ready.")
+                else:
                     st.warning("Couldn't build it (check the Anthropic key).")
                 st.rerun()
     if slides:
