@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-07j · A broken reel now FAILS loudly with the reason (no more silent-card reels shown as done)"
+BUILD_TAG = "2026-09-08a · Persistence banner + auto-save, New project at the bottom, Start-fresh, phone home-screen"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -46,9 +46,10 @@ C = {
 # ═══════════════════════════════════════════════════════════════════════════
 
 def main():
-    st.set_page_config(page_title="Quantum Tools GTM", layout="wide",
+    st.set_page_config(page_title="Quantum GTM", page_icon="⚛️", layout="wide",
                        initial_sidebar_state="collapsed")
     _apply_theme()
+    _pwa_head()
 
     # Password gate (only active if APP_PASSWORD is set)
     if not _check_auth():
@@ -74,6 +75,9 @@ def main():
     # Tiny build stamp so a redeploy is visibly confirmable at a glance.
     st.caption(f"build {BUILD_TAG}")
 
+    # Persistence status + one-tap save — front and centre so it's never a surprise.
+    _persistence_bar()
+
     # Three-tab navigation
     plan_tab, create_tab, perform_tab, settings_tab = st.tabs([
         "PLAN", "CREATE", "PERFORM", "SETTINGS"
@@ -92,6 +96,52 @@ def main():
 # ═══════════════════════════════════════════════════════════════════════════
 #  THEME
 # ═══════════════════════════════════════════════════════════════════════════
+
+def _pwa_head():
+    """Make the app installable to a phone home screen (best-effort). iOS reads the
+    apple-* tags; when the user taps Share → Add to Home Screen it opens full-screen
+    with this name. (Streamlit doesn't expose <head>, so this is injected inline.)"""
+    st.markdown(
+        '<meta name="apple-mobile-web-app-capable" content="yes">'
+        '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">'
+        '<meta name="apple-mobile-web-app-title" content="Quantum GTM">'
+        '<meta name="theme-color" content="#0d1b2a">',
+        unsafe_allow_html=True,
+    )
+
+
+def _persistence_bar():
+    """Show whether the workspace is being saved to durable cloud storage, and let
+    the user save/restore on demand. Without Supabase, work resets on reboot — so say
+    so loudly and give the 2-minute fix."""
+    from gtm_engine.persistence import is_configured, backup, restore
+    if is_configured():
+        c1, c2, c3 = st.columns([5, 1.3, 1.3])
+        with c1:
+            st.caption("✓ Saved to your private cloud — your projects auto-restore on reboot.")
+        with c2:
+            if st.button("💾 Save now", use_container_width=True, key="persist_save"):
+                ok, msg = backup()
+                (st.toast if hasattr(st, "toast") else st.caption)(msg)
+        with c3:
+            if st.button("↻ Restore", use_container_width=True, key="persist_restore"):
+                ok, msg = restore()
+                st.session_state["_restored"] = True
+                (st.toast if hasattr(st, "toast") else st.caption)(msg)
+                if ok:
+                    st.rerun()
+        return
+    with st.container(border=True):
+        st.warning("⚠️ **Your work is NOT being saved — it resets when the app sleeps or reboots.** "
+                   "Turn on saving (free, ~2 minutes):")
+        st.markdown(
+            "1. Create a free project at **[supabase.com](https://supabase.com)** → "
+            "your project → **Settings → API**.\n"
+            "2. Copy the **Project URL** and the **`service_role`** key.\n"
+            "3. Here in Streamlit: **Manage app → ⋮ → Settings → Secrets**, and add:\n"
+            "```toml\nSUPABASE_URL = \"https://xxxx.supabase.co\"\nSUPABASE_KEY = \"your-service_role-key\"\n```\n"
+            "4. Reboot. From then on every project persists across restarts — automatically.")
+
 
 def _apply_theme():
     st.markdown(f"""<style>
@@ -1608,32 +1658,18 @@ def _render_create():
                    "won't work. Add `ANTHROPIC_API_KEY` in Secrets, then reload. "
                    "Check it under **Settings → Connections**.")
 
-    # ── Top action bar ──
-    col_gen, col_brief, col_counts = st.columns([2, 2, 3])
-    with col_gen:
-        n_ideas = st.number_input("Ideas", min_value=5, max_value=100, value=20, step=5,
-                                  label_visibility="collapsed")
-        if st.button("Generate ideas"):
-            with st.spinner(f"Generating {n_ideas} ideas..."):
-                from gtm_engine.ideas.generator import generate_and_save
-                ids = generate_and_save(n=n_ideas)
-                st.success(f"{len(ids)} ideas created")
-                st.rerun()
-    with col_brief:
-        if st.button("New brief request"):
-            st.session_state["show_brief_panel"] = True
-    with col_counts:
-        pipeline_str = " → ".join(
-            f"**{counts.get(s, 0)}** {label}"
-            for s, label in [
-                ("idea_draft", "Draft"),
-                ("idea_approved", "Approved"),
-                ("content_generated", "Produced"),
-                ("content_approved", "Reviewed"),
-                ("deployment_scheduled", "Scheduled"),
-            ]
-        )
-        st.markdown(pipeline_str)
+    # ── Pipeline summary (create controls live at the BOTTOM) ──
+    pipeline_str = " → ".join(
+        f"**{counts.get(s, 0)}** {label}"
+        for s, label in [
+            ("idea_draft", "Draft"),
+            ("idea_approved", "Approved"),
+            ("content_generated", "Produced"),
+            ("content_approved", "Reviewed"),
+            ("deployment_scheduled", "Scheduled"),
+        ]
+    )
+    st.markdown("#### Your projects &nbsp; " + pipeline_str)
 
     # ── Brief request panel ──
     if st.session_state.get("show_brief_panel"):
@@ -1683,6 +1719,39 @@ def _render_create():
         st.info(f"Nothing in {label} yet.")
     for idea in ideas:
         _render_kanban_card(idea, status)
+
+    # ── ＋ New project — at the BOTTOM, under your existing projects ──
+    st.markdown("---")
+    with st.container(border=True):
+        st.markdown("#### ＋ New project")
+        nc1, nc2 = st.columns(2)
+        with nc1:
+            n_ideas = st.number_input("How many idea starters?", min_value=1, max_value=100,
+                                      value=10, step=5, key="new_n_ideas")
+            if st.button("✨ Generate ideas", use_container_width=True, key="new_gen",
+                         type="primary"):
+                with st.spinner(f"Generating {n_ideas} ideas..."):
+                    from gtm_engine.ideas.generator import generate_and_save
+                    ids = generate_and_save(n=n_ideas)
+                from gtm_engine.persistence import backup_quietly
+                backup_quietly()
+                st.success(f"{len(ids)} ideas created — saved."); st.rerun()
+        with nc2:
+            st.caption("Or describe exactly what you want and generate from a brief:")
+            if st.button("📝 New brief request", use_container_width=True, key="new_brief_btn"):
+                st.session_state["show_brief_panel"] = True
+                st.rerun()
+
+    # ── Start fresh — clear the demo (or everything) so it's just your projects ──
+    with st.expander("🧹 Start fresh — clear the demo / all projects"):
+        st.caption("Removes every idea/project so the board shows only what you create. "
+                   "Your cast, voice, strategy and connections are kept.")
+        _confirm = st.checkbox("Yes, delete all current projects", key="clear_confirm")
+        if st.button("Clear all projects", disabled=not _confirm, key="clear_all_btn"):
+            n = bank.clear_all()
+            from gtm_engine.persistence import backup_quietly
+            backup_quietly()
+            st.success(f"Cleared {n} project(s). This is now your clean workspace."); st.rerun()
 
     # ── Side panels (slide-out style via expanders) ──
     st.markdown("---")
@@ -1847,6 +1916,15 @@ def _render_settings():
 
     # ── Connections (key status for every service) ──
     with tabs[0]:
+        with st.expander("📱 Put this on your phone's home screen"):
+            st.markdown(
+                "It runs like an app — full-screen, one tap from your home screen:\n\n"
+                "**iPhone (Safari):** open the app → tap the **Share** button → "
+                "**Add to Home Screen** → **Add**.\n\n"
+                "**Android (Chrome):** open the app → **⋮** menu → **Add to Home screen** / "
+                "**Install app**.\n\n"
+                "It opens as **Quantum GTM** with no browser chrome. (Your projects live in "
+                "the cloud once saving is on, so it's the same app on every device.)")
         st.markdown("### Connections")
         st.caption("What each key powers. Add them in Manage app → Settings → Secrets.")
         from gtm_engine.utils.ai_client import connection_status, test_anthropic

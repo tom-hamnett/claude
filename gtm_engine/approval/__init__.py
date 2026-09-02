@@ -72,6 +72,12 @@ def transition(
 
     bank.update_status(idea_id, to_state, reason)
     logger.info("Idea %d: %s -> %s (%s)", idea_id, current, to_state, reason or "no reason given")
+    # Persist every funnel move to durable storage (no-op without Supabase).
+    try:
+        from gtm_engine.persistence import backup_quietly
+        backup_quietly()
+    except Exception:
+        pass
 
 
 def bulk_transition(idea_ids: list[int], to_state: str, reason: str = "") -> dict:

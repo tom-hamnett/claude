@@ -948,3 +948,14 @@ def test_choreographed_marks_failed_when_presenter_render_fails(db, tmp_path, mo
     st = json.loads(out.assembly_json)
     assert st.get("presenter_failed") is True
     assert "credit" in st.get("master_error", "").lower()
+
+
+def test_idea_bank_clear_all(db):
+    from gtm_engine.ideas import Idea, IdeaBank
+    bank = IdeaBank(db)
+    for i in range(3):
+        bank.create(Idea(title=f"t{i}", hook="h", angle="a", funnel_level="product"))
+    assert len(bank.list_all(limit=50)) == 3
+    n = bank.clear_all()
+    assert n == 3
+    assert bank.list_all(limit=50) == []

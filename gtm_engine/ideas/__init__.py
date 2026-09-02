@@ -240,6 +240,15 @@ class IdeaBank:
             conn.execute(f"UPDATE ideas SET {', '.join(sets)} WHERE id = ?", params)
             conn.commit()
 
+    def clear_all(self) -> int:
+        """Delete every idea (a 'start fresh' — e.g. to clear the demo). Returns the
+        number removed. Does not touch strategy/cast/brand."""
+        with self._connect() as conn:
+            n = conn.execute("SELECT COUNT(*) FROM ideas").fetchone()[0]
+            conn.execute("DELETE FROM ideas")
+            conn.commit()
+        return int(n or 0)
+
     def bulk_update_status(self, idea_ids: list[int], status: str, reason: str = "") -> int:
         """Bulk status update. Returns the number of rows affected."""
         count = 0
