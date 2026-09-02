@@ -47,8 +47,8 @@ DEFAULT_BRAND_STANDARDS = {
                    "is DELIVERY: making the plan actually happen in a people- and budget-constrained "
                    "environment, where it meets the politics. Think clearly, deliver pragmatically, "
                    "show the working."),
-        "audience": ("Operators, founders and leaders who have to actually deliver — done paying "
-                     "for confident opinions with no evidence behind them."),
+        "audience": ("Operators, founders and leaders who have to actually deliver — who care "
+                     "less about the elegance of the plan and more about whether it gets done."),
         "pillars": [
             {"id": "clear_thinking", "name": "Clear thinking & better decisions",
              "desc": "Mental models, judgement, and avoiding smart-sounding mistakes."},

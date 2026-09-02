@@ -72,8 +72,8 @@ POSITIONING (advance this in every idea):
   DELIVERY — making the plan actually happen in a people- and budget-constrained
   environment, where it meets the politics. Think clearly, deliver pragmatically,
   show the working.
-- For operators, founders and leaders done paying for confident opinions with no
-  evidence behind them.
+- For operators, founders and leaders who have to actually deliver — who care less
+  about the elegance of the plan and more about whether it gets done.
 - Draw from these pillars (vary across them): Clear thinking & better decisions;
   Real economics of growth; Strategy that ships; Leadership & the human side; The
   complexity tax (one angle); Show the working (transparent teardowns, evidence attached).

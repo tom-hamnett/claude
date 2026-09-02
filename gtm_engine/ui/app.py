@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-08i · Positioning: pro-framework, pro-DELIVERY under real constraints"
+BUILD_TAG = "2026-09-08j · Positioning: delivery gap, respect rigour (not others lack evidence)"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
