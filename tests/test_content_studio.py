@@ -145,3 +145,55 @@ def test_generate_reads_uploads_before_writing(db, tmp_path, monkeypatch):
     assert b.data_source_id is not None       # the upload was interpreted into a reference source
     from gtm_engine.data_vault import DataVault
     assert "ATLAS" in DataVault().get(b.data_source_id).content
+
+
+def test_carousel_render_and_queue(db, tmp_path):
+    from gtm_engine.content_studio.carousel import render_carousel
+    slides = [
+        {"type": "cover", "title": "Nobody logs their losses", "body": "So why trust the record?"},
+        {"type": "insight", "title": "Curated curves lie", "body": "Drawdowns are what break accounts."},
+        {"type": "data", "value": "-11.4%", "label": "Max drawdown", "body": "Logged, not hidden."},
+        {"type": "cta", "title": "See the whole log", "body": "quantumtools.ai"},
+    ]
+    paths = render_carousel(slides, tmp_path / "car", "slide")
+    from PIL import Image
+    assert len(paths) == 4
+    for p in paths:
+        assert Image.open(p).size == (1080, 1080)
+
+
+def test_make_carousel_from_piece(db, monkeypatch, tmp_path):
+    import gtm_engine.config as cfg
+    monkeypatch.setattr(cfg, "OUTPUT_DIR", tmp_path / "out")
+    from gtm_engine.content_studio import ContentStudioStore, ContentBatch, ContentPiece
+    import gtm_engine.utils.ai_client as aic
+
+    def fake(prompt, system="", **k):
+        if "SQUARE carousels" in system:
+            return json.dumps({"slides": [
+                {"type": "cover", "title": "Hook here", "body": "sub"},
+                {"type": "insight", "title": "A point", "body": "some body text"},
+                {"type": "data", "value": "34%", "label": "Return"},
+                {"type": "cta", "title": "See it run", "body": "quantumtools.ai"}]})
+        return "{}"
+    monkeypatch.setattr(aic, "call_claude", fake)
+    store = ContentStudioStore()
+    bid = store.create_batch(ContentBatch(title="B", content_types=["insight"]))
+    store.add_piece(ContentPiece(batch_id=bid, kind="blog", body="the blog body"))
+    pid = store.add_piece(ContentPiece(batch_id=bid, kind="social", format="carousel",
+                                       caption="hook", body="angle"))
+    from gtm_engine.content_studio.carousel import make_carousel_from_piece
+    paths = make_carousel_from_piece(pid)
+    assert len(paths) == 4
+    p = store.get_piece(pid)
+    assert p.meta.get("slides") and p.status == "ready"
+
+
+def test_queue_listing(db):
+    from gtm_engine.content_studio import ContentStudioStore, ContentBatch, ContentPiece
+    store = ContentStudioStore()
+    bid = store.create_batch(ContentBatch(title="B", content_types=["insight"]))
+    p1 = store.add_piece(ContentPiece(batch_id=bid, kind="blog", title="Blog", status="scheduled"))
+    store.add_piece(ContentPiece(batch_id=bid, kind="article", status="draft"))
+    q = store.list_queued()
+    assert len(q) == 1 and q[0].id == p1

@@ -284,6 +284,14 @@ class ContentStudioStore:
         with self._connect() as conn:
             return [self._piece(r) for r in conn.execute(q, params).fetchall()]
 
+    def list_queued(self) -> list[ContentPiece]:
+        """All pieces marked for publishing (status 'scheduled'), newest first."""
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM content_pieces WHERE status='scheduled' ORDER BY updated_at DESC"
+            ).fetchall()
+            return [self._piece(r) for r in rows]
+
     def counts_by_type(self) -> dict[str, int]:
         """How many BATCHES cover each content type (for the rotation dashboard)."""
         counts = {t: 0 for t in CONTENT_TYPE_IDS}

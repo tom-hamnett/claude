@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-08c · Studio reads ANY source — CV, PDF, deck, image, video, links (Claude + Gemini)"
+BUILD_TAG = "2026-09-08d · Edit/preview/queue blogs & articles + a Make-carousel engine (square slides)"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -1655,6 +1655,7 @@ def _render_studio():
                "then send a concept to the reel engine or a carousel. Pillar → atomise → distribute.")
 
     _studio_rotation(store)
+    _studio_queue(store)
 
     have_batches = bool(store.list_batches(limit=1))
     with st.expander("＋ New content batch", expanded=not have_batches):
@@ -1667,6 +1668,23 @@ def _render_studio():
         st.info("No batches yet — create your first one above.")
     for b in batches:
         _studio_batch_card(store, b)
+
+
+def _studio_queue(store):
+    """The publish queue — everything you've queued up, ready to post."""
+    queued = store.list_queued()
+    if not queued:
+        return
+    with st.expander(f"📤 Publish queue ({len(queued)})", expanded=False):
+        st.caption("Content you've queued up, ready to post. (Auto-publishing to channels is a "
+                   "future step — for now, open each and copy/download to post.)")
+        for p in queued:
+            kind = {"blog": "📝 Blog", "article": f"📄 {_chan_label(p.channel)}",
+                    "social": ("🎬 Reel" if p.format == "reel" else "🖼 Carousel")}.get(p.kind, p.kind)
+            c1, c2 = st.columns([5, 1.2])
+            c1.markdown(f"{kind} · **{p.title or p.caption or '(untitled)'}**")
+            if c2.button("Remove", key=f"unq_{p.id}", use_container_width=True):
+                p.status = "draft"; store.save_piece(p); st.rerun()
 
 
 def _studio_rotation(store):
@@ -1794,46 +1812,96 @@ def _studio_batch_card(store, b):
         socs = [p for p in pieces if p.kind == "social"]
 
         if blog:
-            st.markdown(f"**📝 Blog — {blog.title}**")
-            with st.expander("Read / copy the blog"):
-                st.markdown(blog.body)
+            st.markdown(f"**📝 Blog**")
+            _studio_blog_editor(store, blog)
         if arts:
             st.markdown(f"**📄 Articles ({len(arts)})** — reframed per channel")
             for a in arts:
                 with st.expander(f"{_chan_label(a.channel)} — {a.title or '(untitled)'}"):
-                    st.markdown(a.body)
+                    st.text_area("Edit", value=a.body, key=f"art_{a.id}", height=200,
+                                 label_visibility="collapsed")
+                    ac1, ac2 = st.columns(2)
+                    if ac1.button("💾 Save", key=f"artsave_{a.id}", use_container_width=True):
+                        a.body = st.session_state[f"art_{a.id}"]; store.save_piece(a)
+                        st.toast("Saved."); st.rerun()
+                    _queue_button(store, a, ac2, key=f"artq_{a.id}")
         if socs:
             st.markdown(f"**🎬 Social concepts ({len(socs)})**")
             for s in socs:
-                c1, c2 = st.columns([4, 1.1])
-                with c1:
-                    tag = "🎬 Reel" if s.format == "reel" else "🖼 Carousel"
-                    st.markdown(f"{tag} · **{s.caption or s.title}**  \n"
-                                f"<span style='color:{C['muted']};font-size:0.78rem;'>"
-                                f"{s.content_mode or ''}</span>", unsafe_allow_html=True)
-                    if s.body:
-                        st.caption(s.body[:180])
-                with c2:
-                    if s.format == "reel":
-                        if s.video_job_id:
-                            st.caption("→ in CREATE")
-                        elif st.button("🎬 Make reel", key=f"mkreel_{s.id}",
-                                       use_container_width=True):
-                            with st.spinner("Handing off to the video engine…"):
-                                job = make_reel_from_piece(s.id)
-                            if job:
-                                st.success("Reel started — produce it in the **CREATE** tab.")
-                            else:
-                                st.warning("Couldn't start (check the Anthropic key).")
-                            st.rerun()
-                    else:
-                        with st.popover("View slides"):
-                            for line in (s.body or "").split("|"):
-                                if line.strip():
-                                    st.markdown(f"- {line.strip()}")
+                _studio_social_row(store, s, make_reel_from_piece)
         st.markdown(" ")
         if st.button("🗑 Delete batch", key=f"bdel_{b.id}"):
             store.delete_batch(b.id); st.rerun()
+
+
+def _queue_button(store, piece, col, key):
+    """Toggle a piece in/out of the publish queue (status scheduled)."""
+    queued = piece.status == "scheduled"
+    label = "✓ Queued" if queued else "📤 Queue up"
+    if col.button(label, key=key, use_container_width=True):
+        piece.status = "draft" if queued else "scheduled"
+        store.save_piece(piece)
+        from gtm_engine.persistence import backup_quietly
+        backup_quietly()
+        st.rerun()
+
+
+def _studio_blog_editor(store, blog):
+    """Edit → preview → queue a blog before it goes anywhere."""
+    with st.expander(f"✍️ {blog.title or 'Blog'}", expanded=False):
+        title = st.text_input("Title", value=blog.title, key=f"blogtitle_{blog.id}")
+        body = st.text_area("Blog (markdown — edit freely)", value=blog.body, height=340,
+                            key=f"blogbody_{blog.id}")
+        c1, c2, c3 = st.columns(3)
+        if c1.button("💾 Save", key=f"blogsave_{blog.id}", use_container_width=True):
+            blog.title, blog.body = title, body
+            store.save_piece(blog)
+            from gtm_engine.persistence import backup_quietly
+            backup_quietly()
+            st.toast("Blog saved."); st.rerun()
+        with c2.popover("👁 Preview", use_container_width=True):
+            st.markdown(f"### {title}")
+            st.markdown(body)
+        _queue_button(store, blog, c3, key=f"blogq_{blog.id}")
+        if blog.status == "scheduled":
+            st.caption("✓ In your publish queue (see **📤 Queue** at the top of Studio).")
+
+
+def _studio_social_row(store, s, make_reel_from_piece):
+    from gtm_engine.content_studio.carousel import make_carousel_from_piece
+    slides = (s.meta or {}).get("slides") or []
+    c1, c2 = st.columns([4, 1.2])
+    with c1:
+        tag = "🎬 Reel" if s.format == "reel" else "🖼 Carousel"
+        st.markdown(f"{tag} · **{s.caption or s.title}**  \n"
+                    f"<span style='color:{C['muted']};font-size:0.78rem;'>{s.content_mode or ''}"
+                    "</span>", unsafe_allow_html=True)
+        if s.body and not slides:
+            st.caption(s.body[:180])
+    with c2:
+        if s.format == "reel":
+            if s.video_job_id:
+                st.caption("→ in CREATE")
+            elif st.button("🎬 Make reel", key=f"mkreel_{s.id}", use_container_width=True):
+                with st.spinner("Handing off to the video engine…"):
+                    job = make_reel_from_piece(s.id)
+                st.success("Reel started — produce it in **CREATE**.") if job else \
+                    st.warning("Couldn't start (check the Anthropic key).")
+                st.rerun()
+        else:  # carousel
+            lbl = "↻ Remake" if slides else "🖼 Make carousel"
+            if st.button(lbl, key=f"mkcar_{s.id}", use_container_width=True):
+                with st.spinner("Designing square slides…"):
+                    paths = make_carousel_from_piece(s.id)
+                st.success(f"{len(paths)} slides ready.") if paths else \
+                    st.warning("Couldn't build it (check the Anthropic key).")
+                st.rerun()
+    if slides:
+        with st.expander(f"View / download {len(slides)} slides"):
+            imgs = [p for p in slides if Path(p).exists()]
+            if imgs:
+                st.image(imgs, width=200)
+            _queue_button(store, s, st.container(), key=f"carq_{s.id}")
 
 
 # ═══════════════════════════════════════════════════════════════════════════
