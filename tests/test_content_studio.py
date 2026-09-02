@@ -101,3 +101,47 @@ def test_make_reel_from_piece_hands_off_to_video_engine(db, monkeypatch):
     from gtm_engine.ideas import IdeaBank
     idea = IdeaBank().get(p.idea_id)
     assert idea.content_mode == "insight" and "studio" in idea.tags
+
+
+def test_batch_stores_raw_intake_inputs(db):
+    from gtm_engine.content_studio import ContentStudioStore, ContentBatch
+    store = ContentStudioStore()
+    bid = store.create_batch(ContentBatch(
+        title="X", content_types=["origin"],
+        ref_files=["/tmp/cv.pdf"], ref_links=["https://example.com"],
+        example_files=["/tmp/post.pdf"], example_links=["https://ex.com/blog"]))
+    got = store.get_batch(bid)
+    assert got.ref_files == ["/tmp/cv.pdf"] and got.ref_links == ["https://example.com"]
+    assert got.example_files == ["/tmp/post.pdf"] and got.example_links == ["https://ex.com/blog"]
+
+
+def test_ingest_text_formats_and_combine(db, tmp_path):
+    from gtm_engine.utils.ingest import interpret_upload, ingest_references
+    md = tmp_path / "cv.md"; md.write_text("# CV\nFounder. Built ATLAS.")
+    csv = tmp_path / "log.csv"; csv.write_text("week,pnl\n1,2.3\n2,-1.1\n")
+    t1, s1 = interpret_upload(str(md)); assert s1 == "document" and "CV" in t1
+    t2, s2 = interpret_upload(str(csv)); assert s2 == "dataset" and "week" in t2
+    sid, notes = ingest_references(files=[(str(md), "cv.md"), (str(csv), "log.csv")],
+                                   links=[], name="Refs")
+    from gtm_engine.data_vault import DataVault
+    assert sid and "CV" in DataVault().get(sid).content and "week" in DataVault().get(sid).content
+    assert all(n.startswith("✓") for n in notes)
+
+
+def test_generate_reads_uploads_before_writing(db, tmp_path, monkeypatch):
+    """A batch with ref_files gets them interpreted into a data source during generation."""
+    from gtm_engine.content_studio import ContentStudioStore, ContentBatch
+    import gtm_engine.utils.ai_client as aic
+    monkeypatch.setattr(aic, "call_claude", _fake_claude_factory())
+    ref = tmp_path / "background.md"
+    ref.write_text("Origin: I stopped trusting edited track records. Built ATLAS to log everything.")
+    store = ContentStudioStore()
+    bid = store.create_batch(ContentBatch(title="Origin", content_types=["origin"],
+                                          ref_files=[str(ref)]))
+    from gtm_engine.content_studio.generator import generate_batch
+    res = generate_batch(bid)
+    assert res["ok"]
+    b = store.get_batch(bid)
+    assert b.data_source_id is not None       # the upload was interpreted into a reference source
+    from gtm_engine.data_vault import DataVault
+    assert "ATLAS" in DataVault().get(b.data_source_id).content

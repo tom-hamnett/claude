@@ -536,6 +536,41 @@ def qa_video(video_path, context: str = "") -> dict:
         return {}
 
 
+def interpret_file_gemini(file_path, prompt: str = "", is_video: bool = False) -> str:
+    """Read ANY media file (PDF, image, video, audio) with Gemini and return a rich
+    text interpretation — extracted text, described visuals, transcribed speech, the
+    key facts/insights. Used by the content intake so a CV, a deck, a photo or a clip
+    all become usable reference text. '' if unavailable (no key / failure)."""
+    if not GOOGLE_API_KEY:
+        return ""
+    p = Path(file_path)
+    if not p.exists():
+        return ""
+    ask = prompt or (
+        "Extract and interpret EVERYTHING useful in this file for a content writer: all text, "
+        "the key facts, figures, names, dates, claims and story; describe any images/slides/"
+        "charts; transcribe any speech. Return clean, well-structured plain text — no preamble.")
+    try:
+        client = _get_client()
+        f = client.files.upload(file=str(p))
+        waited = 0
+        while getattr(f, "state", None) and str(f.state).endswith("PROCESSING") and waited < 180:
+            time.sleep(3); waited += 3
+            f = client.files.get(name=f.name)
+        if getattr(f, "state", None) and str(f.state).endswith("FAILED"):
+            return ""
+        r = client.models.generate_content(model="gemini-2.5-flash", contents=[f, ask])
+        text = (getattr(r, "text", "") or "").strip()
+        try:
+            client.files.delete(name=f.name)
+        except Exception:
+            pass
+        return text
+    except Exception as ex:
+        logger.error("interpret_file_gemini failed: %s", ex)
+        return ""
+
+
 @retry(wait=wait_exponential(min=2, max=30), stop=stop_after_attempt(3))
 def generate_image(
     prompt: str,

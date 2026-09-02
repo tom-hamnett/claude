@@ -14,6 +14,9 @@ rich>=13.9.0
 Pillow>=10.0.0
 imageio-ffmpeg>=0.5.1   # bundled ffmpeg binary — extract audio from uploaded video
 openpyxl>=3.1.0         # read uploaded .xlsx spreadsheets for the data-analysis step
+pypdf>=4.0.0            # read uploaded PDFs (CVs, reports) in the content intake
+python-docx>=1.1.0     # read uploaded Word docs
+python-pptx>=0.6.23    # read uploaded PowerPoint decks
 
 # These are only needed for CLI deployment features (not the UI):
 # praw>=7.7.0          # Reddit

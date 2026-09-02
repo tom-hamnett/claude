@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-08b · STUDIO — one brief → 1 blog · 5 articles · 10 social concepts → reels/carousels"
+BUILD_TAG = "2026-09-08c · Studio reads ANY source — CV, PDF, deck, image, video, links (Claude + Gemini)"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -1691,6 +1691,25 @@ def _studio_rotation(store):
         st.caption("Analytics integration (views over time, click-through, ROI) will wire in here.")
 
 
+def _save_uploads(files, subdir: str) -> list[str]:
+    """Persist uploaded files to disk and return their paths."""
+    import time as _t
+    paths = []
+    if not files:
+        return paths
+    dd = OUTPUT_DIR / "uploads" / "studio" / f"{subdir}_{int(_t.time())}"
+    dd.mkdir(parents=True, exist_ok=True)
+    for f in files:
+        fp = dd / f.name
+        fp.write_bytes(f.getbuffer())
+        paths.append(str(fp))
+    return paths
+
+
+def _split_links(text: str) -> list[str]:
+    return [ln.strip() for ln in (text or "").splitlines() if ln.strip()]
+
+
 def _studio_intake(store):
     from gtm_engine.content_studio import ContentBatch, CONTENT_TYPES
     from gtm_engine.content_studio.generator import start_batch
@@ -1707,29 +1726,40 @@ def _studio_intake(store):
     background = st.text_area("Background & detail — the substance to work from", key="sb_bg",
                              height=140, placeholder="What's the point? The facts, the story, the "
                              "argument, the proof. The more you give, the better the batch.")
+
+    # ── Reference material — ANY format + links; the AI reads and interprets it all ──
+    st.markdown("**📎 Source & reference material** — upload anything, or paste links")
+    st.caption("CV, PDFs, Word, PowerPoint, spreadsheets, images, video, audio — Claude + Gemini "
+               "read and interpret them. (Images/video/scanned files need a Google key.)")
+    ref_files = st.file_uploader("Upload files (any format, multiple)", accept_multiple_files=True,
+                                 key="sb_reffiles")
+    ref_links = st.text_area("…or paste links (one per line)", key="sb_reflinks", height=68,
+                             placeholder="https://…\nhttps://…")
+
     tc = dict(template_choices())
     tmpl = st.selectbox("Blog structure", list(tc.keys()), format_func=lambda k: tc[k], key="sb_tmpl")
-    examples = st.text_area("Emulate an example (optional) — paste a blog/post whose structure & "
-                            "tone you like", key="sb_ex", height=90)
-    dfile = st.file_uploader("Attach data (optional) — CSV/XLSX to ground the numbers",
-                             type=["csv", "tsv", "xlsx", "xlsm"], key="sb_data")
+
+    # ── Examples to emulate — paste, upload, or link the content you want to echo ──
+    st.markdown("**✨ Examples to emulate** _(optional)_ — content whose structure & tone you like")
+    examples = st.text_area("Paste an example", key="sb_ex", height=80)
+    ex_files = st.file_uploader("…or upload examples (blog PDF, a deck, a screenshot of a post…)",
+                                accept_multiple_files=True, key="sb_exfiles")
+    ex_links = st.text_area("…or link examples (one per line)", key="sb_exlinks", height=54,
+                            placeholder="https://…")
+
     if st.button("✨ Generate batch  ·  1 blog · 5 articles · 10 social",
                  type="primary", use_container_width=True, disabled=not title.strip()):
-        data_source_id = None
-        if dfile:
-            dd = OUTPUT_DIR / "uploads" / "studio"
-            dd.mkdir(parents=True, exist_ok=True)
-            fp = dd / dfile.name
-            fp.write_bytes(dfile.getbuffer())
-            from gtm_engine.video.data_insight import ingest_data_file
-            data_source_id = ingest_data_file(str(fp), name=dfile.name)
-        b = ContentBatch(title=title.strip(), topic=title.strip()[:80],
-                         content_types=picked or ["insight"], background=background.strip(),
-                         data_source_id=data_source_id, template_id=tmpl, examples=examples.strip())
+        b = ContentBatch(
+            title=title.strip(), topic=title.strip()[:80],
+            content_types=picked or ["insight"], background=background.strip(),
+            template_id=tmpl, examples=examples.strip(),
+            ref_files=_save_uploads(ref_files, "ref"), ref_links=_split_links(ref_links),
+            example_files=_save_uploads(ex_files, "ex"), example_links=_split_links(ex_links),
+        )
         bid = store.create_batch(b)
         start_batch(bid)
-        st.success("Generating your batch — it runs on the server, so you can close the tab. "
-                   "It'll appear below when it's done.")
+        st.success("Generating — it reads your files/links then writes the batch, all on the "
+                   "server. You can close the tab; it'll appear below when done.")
         st.rerun()
 
 

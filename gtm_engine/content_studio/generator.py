@@ -8,6 +8,7 @@ video engine we built; a "carousel" carries its slide text for later layout.
 import json
 import logging
 import threading
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -85,13 +86,17 @@ def _brand_voice() -> str:
 
 
 def _data_text(data_source_id) -> str:
+    """The interpreted reference material for a batch — could be numbers, a CV, a
+    deck, a PDF, a described image/video, or a fetched link. Ground the content in it."""
     if not data_source_id:
         return ""
     try:
         from gtm_engine.data_vault import DataVault
         src = DataVault().get(data_source_id)
         if src and (src.content or "").strip():
-            return f"\nREAL DATA to ground claims in (use only these numbers):\n{src.content[:1500]}\n"
+            kind = "REAL DATA (use these exact numbers, never invent)" if src.source_type == "dataset" \
+                else "REFERENCE MATERIAL the user provided (draw the facts, story and substance from it)"
+            return f"\n{kind}:\n{src.content[:6000]}\n"
     except Exception:
         pass
     return ""
@@ -129,6 +134,32 @@ def generate_batch(batch_id: int, on_progress=None) -> dict:
     def prog(i, t, label):
         if on_progress:
             on_progress(i, t, label)
+
+    # 0 · Interpret ANY uploaded files / links (CV, PDF, deck, image, video, URL) into
+    # reference text — done here in the thread so slow multimodal reads never block the UI.
+    try:
+        from gtm_engine.utils.ingest import ingest_references, interpret_upload, interpret_url
+        if (batch.ref_files or batch.ref_links) and not batch.data_source_id:
+            prog(0, 3, "Reading your uploads & links")
+            sid, _notes = ingest_references(
+                files=[(p, Path(p).name) for p in batch.ref_files],
+                links=batch.ref_links, name=f"Refs — {batch.title[:40]}")
+            if sid:
+                batch.data_source_id = sid; store.save_batch(batch)
+        if batch.example_files or batch.example_links:
+            ex_bits = [batch.examples] if batch.examples else []
+            for p in batch.example_files:
+                t, _ = interpret_upload(p, Path(p).name)
+                if t:
+                    ex_bits.append(f"[example — {Path(p).name}]\n{t[:2500]}")
+            for u in batch.example_links:
+                t = interpret_url(u)
+                if t:
+                    ex_bits.append(f"[example — {u}]\n{t[:2500]}")
+            if ex_bits:
+                batch.examples = "\n\n".join(ex_bits)[:8000]; store.save_batch(batch)
+    except Exception as e:
+        logger.info("intake interpretation note: %s", e)
 
     voice = _brand_voice()
     brief = _brief_block(batch)

@@ -69,9 +69,15 @@ class ContentBatch(BaseModel):
     topic: str = ""                                  # short subject line
     content_types: list[str] = Field(default_factory=list)
     background: str = ""                             # detailed context the user typed
-    data_source_id: int | None = None               # Data Vault source (optional)
+    data_source_id: int | None = None               # combined reference source (built at gen time)
     template_id: str = "default"
     examples: str = ""                              # example content to emulate (tone/structure)
+    # Raw intake inputs (any format) — interpreted into text when generation runs, so
+    # slow multimodal reads (images/video/links) happen off the button, in the thread.
+    ref_files: list[str] = Field(default_factory=list)      # uploaded reference file paths
+    ref_links: list[str] = Field(default_factory=list)      # reference URLs
+    example_files: list[str] = Field(default_factory=list)  # example-to-emulate file paths
+    example_links: list[str] = Field(default_factory=list)  # example-to-emulate URLs
     status: str = "draft"
     error: str = ""
     created_at: str = ""
@@ -109,6 +115,10 @@ CREATE TABLE IF NOT EXISTS content_batches (
     data_source_id INTEGER,
     template_id TEXT DEFAULT 'default',
     examples TEXT DEFAULT '',
+    ref_files TEXT DEFAULT '[]',
+    ref_links TEXT DEFAULT '[]',
+    example_files TEXT DEFAULT '[]',
+    example_links TEXT DEFAULT '[]',
     status TEXT DEFAULT 'draft',
     error TEXT DEFAULT '',
     created_at TEXT NOT NULL,
@@ -137,7 +147,10 @@ CREATE INDEX IF NOT EXISTS idx_pieces_batch ON content_pieces(batch_id);
 CREATE INDEX IF NOT EXISTS idx_batches_status ON content_batches(status);
 """
 
-_BATCH_MIGRATIONS: dict[str, str] = {}     # future columns go here (idempotent ALTER)
+_BATCH_MIGRATIONS: dict[str, str] = {
+    "ref_files": "TEXT DEFAULT '[]'", "ref_links": "TEXT DEFAULT '[]'",
+    "example_files": "TEXT DEFAULT '[]'", "example_links": "TEXT DEFAULT '[]'",
+}
 _PIECE_MIGRATIONS: dict[str, str] = {}
 
 
@@ -177,10 +190,13 @@ class ContentStudioStore:
         with self._connect() as conn:
             cur = conn.execute(
                 """INSERT INTO content_batches (title, topic, content_types, background,
-                   data_source_id, template_id, examples, status, error, created_at, updated_at)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+                   data_source_id, template_id, examples, ref_files, ref_links, example_files,
+                   example_links, status, error, created_at, updated_at)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (b.title, b.topic, json.dumps(b.content_types), b.background, b.data_source_id,
-                 b.template_id, b.examples, b.status, b.error, b.created_at, b.updated_at),
+                 b.template_id, b.examples, json.dumps(b.ref_files), json.dumps(b.ref_links),
+                 json.dumps(b.example_files), json.dumps(b.example_links),
+                 b.status, b.error, b.created_at, b.updated_at),
             )
             conn.commit()
             return cur.lastrowid
@@ -192,10 +208,13 @@ class ContentStudioStore:
         with self._connect() as conn:
             conn.execute(
                 """UPDATE content_batches SET title=?, topic=?, content_types=?, background=?,
-                   data_source_id=?, template_id=?, examples=?, status=?, error=?, updated_at=?
+                   data_source_id=?, template_id=?, examples=?, ref_files=?, ref_links=?,
+                   example_files=?, example_links=?, status=?, error=?, updated_at=?
                    WHERE id=?""",
                 (b.title, b.topic, json.dumps(b.content_types), b.background, b.data_source_id,
-                 b.template_id, b.examples, b.status, b.error, b.updated_at, b.id),
+                 b.template_id, b.examples, json.dumps(b.ref_files), json.dumps(b.ref_links),
+                 json.dumps(b.example_files), json.dumps(b.example_links),
+                 b.status, b.error, b.updated_at, b.id),
             )
             conn.commit()
             return b.id
@@ -290,6 +309,10 @@ class ContentStudioStore:
             content_types=json.loads(g("content_types", "[]") or "[]"),
             background=g("background", ""), data_source_id=g("data_source_id"),
             template_id=g("template_id", "default"), examples=g("examples", ""),
+            ref_files=json.loads(g("ref_files", "[]") or "[]"),
+            ref_links=json.loads(g("ref_links", "[]") or "[]"),
+            example_files=json.loads(g("example_files", "[]") or "[]"),
+            example_links=json.loads(g("example_links", "[]") or "[]"),
             status=g("status", "draft"), error=g("error", ""),
             created_at=row["created_at"], updated_at=row["updated_at"],
         )
