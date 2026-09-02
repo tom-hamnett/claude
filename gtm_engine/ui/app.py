@@ -136,10 +136,11 @@ def _persistence_bar():
                    "Turn on saving (free, ~2 minutes):")
         st.markdown(
             "1. Create a free project at **[supabase.com](https://supabase.com)** → "
-            "your project → **Settings → API**.\n"
-            "2. Copy the **Project URL** and the **`service_role`** key.\n"
+            "your project → **Settings (⚙️) → API Keys**.\n"
+            "2. Copy the **Project URL**, and the **Secret key** (`sb_secret_…`) — NOT the "
+            "*Publishable* key. (On older projects it's the **`service_role`** key, an `eyJ…` token.)\n"
             "3. Here in Streamlit: **Manage app → ⋮ → Settings → Secrets**, and add:\n"
-            "```toml\nSUPABASE_URL = \"https://xxxx.supabase.co\"\nSUPABASE_KEY = \"your-service_role-key\"\n```\n"
+            "```toml\nSUPABASE_URL = \"https://xxxx.supabase.co\"\nSUPABASE_KEY = \"sb_secret_...\"\n```\n"
             "4. Reboot. From then on every project persists across restarts — automatically.")
 
 

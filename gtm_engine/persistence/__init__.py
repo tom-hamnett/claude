@@ -8,11 +8,13 @@ is best-effort and guarded: if Supabase isn't configured or a call fails, the
 app simply behaves as before (local-only). It can never break the app.
 
 Setup (one time, free):
-  1. Create a Supabase project → Project Settings → API: copy the URL and the
-     service_role key.
+  1. Create a Supabase project → Project Settings → API Keys: copy the URL and the
+     SECRET key (sb_secret_…) — not the Publishable key. (Older projects: the
+     service_role key, an eyJ… JWT.) The secret key bypasses RLS so Storage
+     bucket-create + upload work.
   2. Add to Streamlit Secrets:
         SUPABASE_URL = "https://<ref>.supabase.co"
-        SUPABASE_KEY = "<service_role key>"
+        SUPABASE_KEY = "<sb_secret_… or service_role key>"
   3. The bucket is created automatically on first backup.
 """
 
