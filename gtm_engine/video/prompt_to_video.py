@@ -43,85 +43,60 @@ def _handle() -> str:
     return "The Rational Strategist"
 
 
-def build_agent_prompt(concept: str, script: str, mode: str, data_text: str,
-                       voice: str) -> str:
-    """Compose the Video Agent prompt: format + presenter tone + brand palette +
-    the script, plus a data-visualisation instruction that NEVER invents numbers."""
-    handle = _handle()
-    parts = [
-        "Create a ~40-second vertical (9:16) short-form video for LinkedIn and Instagram "
-        "Reels — a single talking-head presenter with clean, minimal ANIMATED data graphics "
-        "on a dark background. This is a sharp business/strategy channel; credible and "
-        "understated, never flashy corporate-stock. No handshake/skyline B-roll.",
-        f"BRAND: {handle}. Delivery is measured, low-energy, authoritative — the tone of "
-        "someone reading a board pack they've made peace with. Full stops between sentences, "
-        "real air in the gaps, no upward 'sales' lift at line ends. Numbers spoken slowly "
-        "and cleanly.",
-        f"PALETTE (match exactly): {_PALETTE}. One accent green; gold only for a 'bad'/"
-        "contrast value. Sans-serif, tight, modern. Captions burned in, one short line at a "
-        "time, synced to the speech.",
+def _frame(voice: str) -> list[str]:
+    """The light, non-prescriptive brief: format + delivery direction. We deliberately do
+    NOT dictate palette / hex / caption styling — over-specifying the visuals in the prompt
+    fights HeyGen's own styling and produces garbled overlays. Let HeyGen style it; we bring
+    the script, the direction, and a high-level guide to the visuals."""
+    out = [
+        "Short vertical (9:16) talking-head reel, about 40 seconds, for LinkedIn and Instagram. "
+        "One presenter speaking to camera with simple supporting visuals. Use your own clean, "
+        "modern style — I'm giving you the script, the delivery direction and a high-level "
+        "guide to the on-screen support, not a design spec.",
+        "DELIVERY: measured, low-energy, credible — unhurried, with room to breathe between "
+        "lines. Never hyped or salesy.",
     ]
     if voice:
-        parts.append("VOICE GUARDRAILS: " + voice.strip())
+        out.append("VOICE: " + voice.strip())
+    return out
+
+
+def build_agent_prompt(concept: str, script: str, mode: str, data_text: str,
+                       voice: str) -> str:
+    """A lean fallback prompt (used when the AI script step is unavailable): the light
+    frame + whatever script/angle we have. No design micro-management."""
+    out = _frame(voice)
     if script.strip():
-        parts.append("SCRIPT (deliver these lines, in order):\n" + script.strip())
+        out.append("SCRIPT (say these lines, in order):\n" + script.strip())
     else:
-        parts.append("TOPIC / ANGLE:\n" + concept.strip())
-    parts.append(
-        "DATA GRAPHICS: wherever the script states a figure or a before→after, render it as "
-        "a clean animated graphic — a counting number, a bar, or a two-point line — that "
-        "animates in ON the words it belongs to. Use ONLY numbers that appear in the script; "
-        "never invent or add a statistic. If a number would need context to be meaningful, "
-        "show that context (label + unit) or leave it out.")
-    if (data_text or "").strip():
-        parts.append("REFERENCE FIGURES (the only numbers you may visualise):\n"
-                     + data_text.strip()[:1200])
-    parts.append(f"End on a soft close and a lower-third handle: {handle}.")
-    return "\n\n".join(parts)
+        out.append("TOPIC / ANGLE:\n" + concept.strip())
+    out.append("Where the script mentions a figure or a before→after, support it with a simple "
+               "on-screen chart or number in your own style. Only show figures that appear in "
+               "the script — don't invent numbers or add text that isn't in it.")
+    out.append(f"Close on the handle: {_handle()}.")
+    return "\n\n".join(out)
 
 
 def _assemble(script_lines: list[str], scenes: list[dict], data_text: str, voice: str) -> str:
-    """Turn a written script + scene beats into the final paste-ready Video Agent prompt,
-    wrapped in the fixed brand frame. This is exactly what gets sent to HeyGen."""
-    handle = _handle()
-    out = [
-        "Create a ~40-second vertical (9:16) short-form video for LinkedIn and Instagram "
-        "Reels — a single talking-head presenter with clean, minimal ANIMATED data graphics "
-        "on a dark background. Sharp business/strategy channel; credible and understated, "
-        "never flashy corporate-stock. No handshake/skyline B-roll.",
-        f"BRAND: {handle}. Delivery is measured, low-energy, authoritative — the tone of "
-        "someone reading a board pack they've made peace with. Full stops between sentences, "
-        "real air in the gaps, no upward 'sales' lift at line ends. Numbers spoken slowly.",
-        f"PALETTE (match exactly): {_PALETTE}. One accent green; gold only for a 'bad'/"
-        "contrast value. Captions burned in, one short line at a time, synced to the speech.",
-    ]
-    if voice:
-        out.append("VOICE GUARDRAILS: " + voice.strip())
+    """Turn a written script + high-level scene notes into the paste-ready prompt. Kept
+    deliberately light: script, delivery, and a plain-English 'on screen / B-roll' guide —
+    no palette, no hex, no caption rules. This is exactly what gets sent to HeyGen."""
+    out = _frame(voice)
     if script_lines:
-        out.append("SCRIPT (deliver these lines, in order):\n"
+        out.append("SCRIPT (say these lines, in order):\n"
                    + "\n".join(f"- {ln}" for ln in script_lines))
     if scenes:
         beats = []
         for i, sc in enumerate(scenes, 1):
             beat = (sc.get("beat") or f"Scene {i}").strip()
-            say = (sc.get("say") or "").strip()
             osd = (sc.get("on_screen") or "").strip()
-            line = f"{i}. [{beat}]"
-            if say:
-                line += f' Presenter: "{say}"'
-            if osd:
-                line += f" — On screen: {osd}"
+            line = f"{i}. {beat}" + (f" — show: {osd}" if osd else "")
             beats.append(line)
-        out.append("SCENE BREAKDOWN (what appears when):\n" + "\n".join(beats))
-    out.append(
-        "DATA GRAPHICS: render any figure or before→after as a clean animated graphic — a "
-        "counting number, a bar, or a two-point line — that animates in ON the words it "
-        "belongs to. Use ONLY numbers that appear in the script above; never invent or add a "
-        "statistic. If a number needs context to be meaningful, show the label + unit or drop it.")
-    if (data_text or "").strip():
-        out.append("REFERENCE FIGURES (the only numbers you may visualise):\n"
-                   + data_text.strip()[:1200])
-    out.append(f"End on a soft close and a lower-third handle: {handle}.")
+        out.append("ON SCREEN / B-ROLL (high level — keep it simple, your styling):\n"
+                   + "\n".join(beats))
+    out.append("Only show figures that appear in the script; don't invent numbers or put text "
+               "on screen that isn't in the script.")
+    out.append(f"Close on the handle: {_handle()}.")
     return "\n\n".join(out)
 
 
@@ -143,13 +118,17 @@ def compose_agent_prompt(piece_id: int) -> str:
     voice = _brand_voice()
     concept = f"{p.caption or ''}\n{p.body or ''}".strip()
 
-    sys = ("You script a ~40-second vertical talking-head reel with animated data graphics. "
+    sys = ("You script a ~40-second vertical talking-head reel. "
            + voice + " Write for the EAR: short spoken lines, one idea each, spoken rhythm. "
            "Structure it hook → tension → proof → payoff → soft close. Use ONLY numbers that "
-           "appear in the material given; never invent a statistic. Return ONLY JSON: "
-           "{\"script\":[\"line\",...], \"scenes\":[{\"beat\":\"Hook|Tension|Proof|Payoff|"
-           "Close\",\"say\":\"the spoken line(s) for this beat\",\"on_screen\":\"what the "
-           "viewer sees — e.g. an animated bar of X, a counter 34→9, presenter only\"}]}")
+           "appear in the material given; never invent a statistic. For each beat also give a "
+           "HIGH-LEVEL note on what supports it on screen — a plain-English description of the "
+           "analysis to show or the B-roll (e.g. 'a simple chart of revenue vs profit over "
+           "time', 'a before/after of the two numbers', 'presenter only'). Keep on_screen "
+           "conceptual — describe the visual, do NOT write literal caption text or design "
+           "detail. Return ONLY JSON: {\"script\":[\"line\",...], \"scenes\":[{\"beat\":\"Hook|"
+           "Tension|Proof|Payoff|Close\",\"on_screen\":\"high-level visual/analysis or B-roll "
+           "for this beat\"}]}")
     ctx = f"CONCEPT / ANGLE:\n{concept}\n\n"
     if blog and (blog.body or "").strip():
         ctx += f"BLOG CONTEXT (for facts/tone):\n{blog.body[:2500]}\n\n"
