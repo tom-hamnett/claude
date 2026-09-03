@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-08s · Prompt-to-Video live status — phase + elapsed seconds while HeyGen renders"
+BUILD_TAG = "2026-09-08t · Prompt-to-Video credits check — surface HeyGen quota on failure + on demand"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -2035,7 +2035,16 @@ def _heygen_agent_block(store, s):
                               "(pick **The Analyst**).")
                 err = ptv.error_of(s.id) or meta.get("agent_error")
                 if err:
-                    st.warning(err[:200])
+                    st.warning(err[:400])
+                if configured and st.button("💳 Check HeyGen credits", key=f"agcred_{s.id}"):
+                    c = ptv.heygen_credits()
+                    if c is None:
+                        st.caption("Couldn't read credits — check the HeyGen key.")
+                    elif c <= 0:
+                        st.error("HeyGen credits: **0** — you're out. That's why the render "
+                                 "failed. Top up in HeyGen, then Render again.")
+                    else:
+                        st.success(f"HeyGen credits remaining: **{c}**")
                 if not configured:
                     st.caption("💡 Add **HEYGEN_API_KEY** in Settings to render straight from here.")
 

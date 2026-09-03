@@ -269,6 +269,13 @@ def available_looks() -> list[dict]:
     return looks
 
 
+def heygen_credits() -> int | None:
+    """Remaining HeyGen API credits (0 = out), or None if not configured / unreadable."""
+    from gtm_engine.avatar import get_provider
+    p = get_provider("heygen")
+    return p.remaining_quota() if p.is_configured() else None
+
+
 def set_look_for_piece(piece_id: int, avatar_id: str) -> None:
     """Pin the starting avatar look for THIS reel (overrides the default cast)."""
     from gtm_engine.content_studio import ContentStudioStore
@@ -341,6 +348,14 @@ def render_for_piece(piece_id: int, on_status=None, prompt: str = "") -> "Path |
             pass
         return result
     err = getattr(provider, "last_error", "") or "Render failed."
+    # HeyGen often reports a bare 'failed' with no reason — check credits, the usual cause.
+    try:
+        q = provider.remaining_quota()
+    except Exception:
+        q = None
+    if q is not None:
+        err += (f"  ·  HeyGen credits remaining: {q}"
+                + ("  — you're out of credits, that's the cause." if q <= 0 else ""))
     p.meta = {**(p.meta or {}), "agent_error": err, "agent_prompt": prompt}
     store.save_piece(p)
     _say(f"Failed: {err}")

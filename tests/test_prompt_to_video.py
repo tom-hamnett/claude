@@ -218,6 +218,40 @@ def test_available_looks_and_per_piece_override(db, monkeypatch, tmp_path):
     assert seen["avatar_id"] == "look_walk"       # the chosen look wins over the default
 
 
+def test_render_failure_appends_credits(db, monkeypatch, tmp_path):
+    """When a render fails, the stored error includes the HeyGen credit balance so a
+    silent 'failed' is explained (0 credits = out)."""
+    from gtm_engine.content_studio import ContentStudioStore, ContentBatch, ContentPiece
+    store = ContentStudioStore()
+    bid = store.create_batch(ContentBatch(title="B", content_types=["insight"]))
+    pid = store.add_piece(ContentPiece(batch_id=bid, kind="social", format="reel"))
+
+    class _Prov:
+        last_error = "HeyGen job failed: status=failed"
+        def is_configured(self): return True
+        def render_video_agent(self, *a, **k): return None      # simulate failure
+        def remaining_quota(self): return 0
+    monkeypatch.setattr("gtm_engine.avatar.get_provider", lambda *_: _Prov())
+    import gtm_engine.config as cfg
+    cfg.OUTPUT_DIR = tmp_path / "out"
+    from gtm_engine.video import prompt_to_video as ptv
+    ptv.save_agent_prompt(pid, "P")
+    assert ptv.render_for_piece(pid) is None
+    err = store.get_piece(pid).meta["agent_error"]
+    assert "credits remaining: 0" in err and "out of credits" in err
+
+
+def test_remaining_quota_converts_units(monkeypatch):
+    monkeypatch.setenv("HEYGEN_API_KEY", "sk-test")
+    from gtm_engine.avatar import HeyGenProvider
+    class _R:
+        status_code = 200
+        def json(self): return {"data": {"remaining_quota": 1200}}
+    import httpx
+    monkeypatch.setattr(httpx, "get", lambda *a, **k: _R())
+    assert HeyGenProvider().remaining_quota() == 20     # 1200 / 60 = 20 credits
+
+
 def test_attach_uploaded_video_marks_ready(db, tmp_path):
     from gtm_engine.content_studio import ContentStudioStore, ContentBatch, ContentPiece
     import gtm_engine.config as cfg

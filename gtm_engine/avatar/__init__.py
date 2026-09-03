@@ -742,6 +742,28 @@ class HeyGenProvider(AvatarProvider):
             logger.error("HeyGen render failed: %s", e)
             return None
 
+    def remaining_quota(self) -> int | None:
+        """Remaining HeyGen API quota in credits (GET /v2/user/remaining_quota).
+        0 means you're out of credits — the usual cause of a silent 'failed'. Returns
+        None if it can't be read. HeyGen reports quota in 1/60-credit units, so we
+        divide to get whole API credits."""
+        if not self.is_configured():
+            return None
+        try:
+            import httpx
+            r = httpx.get(f"{self.API_V2}/user/remaining_quota",
+                          headers=self._headers(), timeout=15)
+            if r.status_code != 200:
+                return None
+            d = (r.json() or {}).get("data", {}) or {}
+            q = d.get("remaining_quota")
+            if q is None:
+                return None
+            q = int(q)
+            return q // 60 if q >= 60 else q      # raw units → whole credits
+        except Exception:
+            return None
+
     # ── Video Agent (Prompt-to-Video) ─────────────────────────────────────────
     def render_video_agent(self, prompt: str, output_path: Path, *,
                            avatar_id: str = "", voice_id: str = "", style_id: str = "",
