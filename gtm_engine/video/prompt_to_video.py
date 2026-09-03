@@ -202,6 +202,37 @@ def save_agent_prompt(piece_id: int, prompt: str) -> None:
     store.save_piece(p)
 
 
+def resolve_cast() -> dict:
+    """What avatar / voice / style the Video Agent render will PIN — resolved from the
+    same place the reel engine uses (the casting default character), falling back to the
+    avatar config, then env. So a render uses YOUR presenter, not HeyGen's auto-pick.
+    style/brand-kit have no UI yet, so they come from env (HEYGEN_STYLE_ID / _BRAND_KIT_ID).
+    Empty avatar/voice means HeyGen will auto-pick that field."""
+    avatar_id = avatar_name = voice_id = voice_name = ""
+    try:
+        from gtm_engine.casting import CastingStore
+        ch = CastingStore().get_default_character()
+        if ch:
+            avatar_id, avatar_name = ch.avatar_id or "", ch.avatar_name or ""
+            voice_id, voice_name = ch.voice_id or "", ch.voice_name or ""
+    except Exception:
+        pass
+    if not avatar_id or not voice_id:
+        try:
+            from gtm_engine.avatar import AvatarConfigStore
+            cfg = AvatarConfigStore().load()
+            if not avatar_id:
+                avatar_id, avatar_name = cfg.avatar_id or "", cfg.avatar_name or ""
+            if not voice_id:
+                voice_id, voice_name = cfg.voice_id or "", cfg.voice_name or ""
+        except Exception:
+            pass
+    return {"avatar_id": avatar_id, "avatar_name": avatar_name,
+            "voice_id": voice_id, "voice_name": voice_name,
+            "style_id": os.getenv("HEYGEN_STYLE_ID", ""),
+            "brand_kit_id": os.getenv("HEYGEN_BRAND_KIT_ID", "")}
+
+
 def _out_path(piece_id: int) -> Path:
     from gtm_engine.config import OUTPUT_DIR
     d = OUTPUT_DIR / "prompt_to_video"
@@ -215,7 +246,7 @@ def render_for_piece(piece_id: int, on_status=None, prompt: str = "") -> "Path |
     reviewed/edited text); otherwise the stored reviewed prompt, else a freshly composed
     one. Returns the path or None."""
     from gtm_engine.content_studio import ContentStudioStore
-    from gtm_engine.avatar import get_provider, AvatarConfigStore
+    from gtm_engine.avatar import get_provider
 
     def _say(msg):
         if on_status:
@@ -235,15 +266,15 @@ def render_for_piece(piece_id: int, on_status=None, prompt: str = "") -> "Path |
         return None
 
     prompt = (prompt or "").strip() or agent_prompt_for_piece(piece_id)
-    cfg = AvatarConfigStore().load()
+    cast = resolve_cast()   # pin YOUR presenter/voice, not HeyGen's auto-pick
     _say("Submitting to HeyGen Video Agent…")
     out = _out_path(piece_id)
     result = provider.render_video_agent(
         prompt, out,
-        avatar_id=cfg.avatar_id or "",
-        voice_id=cfg.voice_id or "",
-        style_id=os.getenv("HEYGEN_STYLE_ID", ""),
-        brand_kit_id=os.getenv("HEYGEN_BRAND_KIT_ID", ""),
+        avatar_id=cast["avatar_id"],
+        voice_id=cast["voice_id"],
+        style_id=cast["style_id"],
+        brand_kit_id=cast["brand_kit_id"],
         orientation="portrait",
     )
     p = store.get_piece(piece_id)  # reload (may have changed)

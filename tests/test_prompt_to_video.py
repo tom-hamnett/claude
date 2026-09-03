@@ -136,6 +136,45 @@ def test_render_video_agent_reports_failure(tmp_path, monkeypatch):
     assert res is None and "failed" in prov.last_error.lower()
 
 
+def test_resolve_cast_pins_casting_character(db, monkeypatch):
+    """resolve_cast reads the casting default character (where 'The Analyst' lives), so
+    a render pins your presenter/voice instead of letting HeyGen auto-pick."""
+    from gtm_engine.casting import CastingStore, Character
+    cs = CastingStore()
+    cs.save_character(Character(name="The Analyst", avatar_id="av_analyst",
+                               avatar_name="The Analyst", voice_id="vo_analyst",
+                               voice_name="The Analyst - Voice"))
+    monkeypatch.setenv("HEYGEN_STYLE_ID", "style_boardroom")
+    from gtm_engine.video.prompt_to_video import resolve_cast
+    cast = resolve_cast()
+    assert cast["avatar_id"] == "av_analyst" and cast["avatar_name"] == "The Analyst"
+    assert cast["voice_id"] == "vo_analyst" and cast["style_id"] == "style_boardroom"
+
+
+def test_render_pins_resolved_cast(db, monkeypatch, tmp_path):
+    """render_for_piece passes the resolved avatar/voice/style to the provider."""
+    from gtm_engine.casting import CastingStore, Character
+    CastingStore().save_character(Character(name="The Analyst", avatar_id="av1",
+                                            voice_id="vo1"))
+    from gtm_engine.content_studio import ContentStudioStore, ContentBatch, ContentPiece
+    store = ContentStudioStore()
+    bid = store.create_batch(ContentBatch(title="B", content_types=["insight"]))
+    pid = store.add_piece(ContentPiece(batch_id=bid, kind="social", format="reel"))
+    import gtm_engine.config as cfg
+    cfg.OUTPUT_DIR = tmp_path / "out"
+    from gtm_engine.video import prompt_to_video as ptv
+    ptv.save_agent_prompt(pid, "PROMPT")
+    seen = {}
+    class _Prov:
+        def is_configured(self): return True
+        def render_video_agent(self, prompt, out, **k):
+            seen.update(k); Path(out).write_bytes(b"MP4"); return Path(out)
+        last_error = ""
+    monkeypatch.setattr("gtm_engine.avatar.get_provider", lambda *_: _Prov())
+    ptv.render_for_piece(pid)
+    assert seen["avatar_id"] == "av1" and seen["voice_id"] == "vo1"
+
+
 def test_attach_uploaded_video_marks_ready(db, tmp_path):
     from gtm_engine.content_studio import ContentStudioStore, ContentBatch, ContentPiece
     import gtm_engine.config as cfg

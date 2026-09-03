@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-08p · Prompt-to-Video review gate — generate script + scenes, edit, send exactly that"
+BUILD_TAG = "2026-09-08q · Prompt-to-Video pins your cast — resolves avatar/voice from Cast & Voice + shows what will render"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -1972,6 +1972,16 @@ def _heygen_agent_block(store, s):
                        "what gets sent** — nothing is rebuilt behind your back.")
             edited = st.text_area("Prompt — script + scenes", stored, height=340,
                                   key=f"agtxt_{s.id}")
+            # What the render will PIN — so you can confirm before spending credits.
+            cast = ptv.resolve_cast()
+            av = cast["avatar_name"] or cast["avatar_id"] or "⚠ auto-pick (not set)"
+            vc = cast["voice_name"] or cast["voice_id"] or "⚠ auto-pick (not set)"
+            style = cast["style_id"] or "auto (HeyGen picks)"
+            st.caption(f"**Will render with →** Avatar: `{av}` · Voice: `{vc}` · Style: `{style}`")
+            if not cast["avatar_id"] or not cast["voice_id"]:
+                st.caption("⚠ Set your presenter in **Settings → Cast & Voice** first, or HeyGen "
+                           "picks its own avatar/voice. Style has no picker yet — set "
+                           "**HEYGEN_STYLE_ID** in Secrets to pin it.")
             configured = get_provider("heygen").is_configured()
             if ptv.is_rendering(s.id):
                 a, b = st.columns([3, 1])
