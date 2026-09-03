@@ -742,6 +742,75 @@ class HeyGenProvider(AvatarProvider):
             logger.error("HeyGen render failed: %s", e)
             return None
 
+    # ── Video Agent (Prompt-to-Video) ─────────────────────────────────────────
+    def render_video_agent(self, prompt: str, output_path: Path, *,
+                           avatar_id: str = "", voice_id: str = "", style_id: str = "",
+                           brand_kit_id: str = "", orientation: str = "portrait",
+                           max_wait: int = 1200) -> "Path | None":
+        """Prompt-to-Video via HeyGen's Video Agent (POST /v3/video-agents).
+
+        One prompt in; the agent scripts, picks scenes/b-roll, and renders the whole
+        video — the higher-polish path than compositing ourselves. Optionally pins a
+        specific avatar / voice / visual style / brand kit so it stays on-brand rather
+        than auto-picking. Submits, polls the session for the assigned video_id, then
+        reuses the standard status poll + download. Returns the saved mp4, or None
+        (with self.last_error set)."""
+        if not self.is_configured():
+            raise AvatarProviderError("HEYGEN_API_KEY not set")
+        import httpx
+        self.last_error = ""
+        payload: dict = {"prompt": prompt}
+        if avatar_id:
+            # our internal "tp:" prefix marks a photo avatar; HeyGen wants the bare id
+            payload["avatar_id"] = avatar_id[3:] if avatar_id.startswith("tp:") else avatar_id
+        if voice_id:
+            payload["voice_id"] = voice_id
+        if style_id:
+            payload["style_id"] = style_id
+        if brand_kit_id:
+            payload["brand_kit_id"] = brand_kit_id
+        if orientation:
+            payload["orientation"] = orientation
+        try:
+            r = httpx.post(f"{self.API_V3}/video-agents", headers=self._headers(),
+                           json=payload, timeout=30)
+            if r.status_code != 200:
+                self.last_error = f"HeyGen video-agent {r.status_code}: {r.text[:250]}"
+                return None
+            body = r.json() or {}
+            d = body.get("data", body) or {}
+            session_id = d.get("session_id") or ""
+            video_id = d.get("video_id") or ""
+            if not session_id and not video_id:
+                self.last_error = f"video-agent returned no session/video id: {r.text[:200]}"
+                return None
+            # The agent assigns a video_id a few seconds after the session opens.
+            waited = 0
+            while not video_id and waited < 300:
+                time.sleep(6)
+                waited += 6
+                sr = httpx.get(f"{self.API_V3}/video-agents/{session_id}",
+                               headers=self._headers(), timeout=20)
+                if sr.status_code != 200:
+                    continue
+                sd = (sr.json() or {}).get("data", sr.json()) or {}
+                video_id = sd.get("video_id") or ""
+                if str(sd.get("status", "")).lower() in ("failed", "error"):
+                    self.last_error = f"video-agent session failed: {str(sd)[:200]}"
+                    return None
+            if not video_id:
+                self.last_error = "video-agent didn't assign a video (timed out waiting)."
+                return None
+            logger.info("HeyGen video-agent video_id=%s", video_id)
+            result = self._poll_and_download(video_id, output_path, max_wait=max_wait)
+            if not result and not self.last_error:
+                self.last_error = "video-agent render didn't complete (timeout/failed)."
+            return result
+        except Exception as e:
+            self.last_error = f"video-agent exception: {e}"
+            logger.error("HeyGen video-agent failed: %s", e)
+            return None
+
     # ── Cinematic Avatar (Seedance / "Avatar Shots") ──────────────────────────
     def list_avatar_looks(self, group_id: str) -> list[dict]:
         """List the looks in an avatar group so the user can pick look ids for

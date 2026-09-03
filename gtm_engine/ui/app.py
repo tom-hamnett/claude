@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-08n · Carousel slide-by-slide review — edit text, ask AI to rewrite a slide, remove/add, re-render"
+BUILD_TAG = "2026-09-08o · HeyGen Prompt-to-Video — on-brand prompt in, rendered reel out (API or app drop-in)"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -1932,8 +1932,58 @@ def _studio_social_row(store, s, make_reel_from_piece):
                 st.rerun()
     if slides:
         _carousel_review(store, s, slides)
+    if s.format == "reel":
+        _heygen_agent_block(store, s)
     # Every social piece queues the SAME way (the Publish Queue is the one shelf).
     _queue_button(store, s, st.container(), key=f"soq_{s.id}")
+
+
+def _heygen_agent_block(store, s):
+    """HeyGen Prompt-to-Video: the on-brand prompt (input) + render-via-API or an
+    MP4 drop-in (output). The higher-polish path — HeyGen scripts, composes and renders."""
+    from gtm_engine.video import prompt_to_video as ptv
+    from gtm_engine.avatar import get_provider
+    meta = s.meta or {}
+    vpath = meta.get("video_path")
+    have_video = bool(vpath) and Path(vpath).exists()
+    label = "🎥 HeyGen Prompt-to-Video" + (" ✓" if have_video else "")
+    with st.expander(label):
+        if have_video:
+            st.video(vpath)
+            src = ("rendered in the HeyGen app" if meta.get("video_source") == "heygen_app"
+                   else "via the Video Agent API")
+            st.caption(f"✓ Video ready ({src}) — it's in your Publish Queue below.")
+        st.caption("Paste this into HeyGen → **Prompt to Video** (pick **The Analyst**), "
+                   "or render it straight from here.")
+        st.code(ptv.agent_prompt_for_piece(s.id))
+        configured = get_provider("heygen").is_configured()
+        if configured:
+            if ptv.is_rendering(s.id):
+                a, b = st.columns([3, 1])
+                a.info(ptv.status_of(s.id) or "Rendering… (this can take a few minutes)")
+                if b.button("↻ Refresh", key=f"agref_{s.id}", use_container_width=True):
+                    st.rerun()
+            else:
+                a, b = st.columns([1.4, 2])
+                run_label = "↻ Re-render via API" if have_video else "🎬 Render via API →"
+                if a.button(run_label, key=f"agrun_{s.id}", use_container_width=True):
+                    ptv.start_agent(s.id)
+                    st.rerun()
+                err = ptv.error_of(s.id) or meta.get("agent_error")
+                if err:
+                    b.warning(err[:200])
+        else:
+            st.caption("💡 Add **HEYGEN_API_KEY** in Settings to render from here. Without it, "
+                       "copy the prompt above into the HeyGen app, then drop the MP4 back in below.")
+        up = st.file_uploader("Rendered it in the HeyGen app? Drop the MP4 here",
+                              type=["mp4", "mov", "webm"], key=f"agup_{s.id}")
+        if up is not None:
+            import tempfile
+            tmp = Path(tempfile.gettempdir()) / f"heygen_{s.id}_{up.name}"
+            tmp.write_bytes(up.getvalue())
+            ptv.attach_uploaded_video(s.id, tmp)
+            st.success("Video attached — it's in your Publish Queue.")
+            st.rerun()
 
 
 def _carousel_review(store, s, slides):
