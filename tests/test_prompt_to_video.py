@@ -175,6 +175,49 @@ def test_render_pins_resolved_cast(db, monkeypatch, tmp_path):
     assert seen["avatar_id"] == "av1" and seen["voice_id"] == "vo1"
 
 
+def test_available_looks_and_per_piece_override(db, monkeypatch, tmp_path):
+    """available_looks lists the presenter's looks; a per-piece look choice overrides the
+    default avatar on render."""
+    monkeypatch.setenv("HEYGEN_API_KEY", "sk-test")
+    from gtm_engine.casting import CastingStore, Character
+    CastingStore().save_character(Character(name="The Analyst", avatar_id="av_current",
+                                            avatar_name="The Analyst", voice_id="vo1",
+                                            avatar_group_id="grp1"))
+
+    class _Prov:
+        def is_configured(self): return True
+        def list_avatar_looks(self, gid):
+            return [{"id": "look_desk", "name": "At the desk", "preview_url": "http://x/1.jpg"},
+                    {"id": "look_walk", "name": "Walking", "preview_url": "http://x/2.jpg"}]
+        def list_avatars(self): return []
+    monkeypatch.setattr("gtm_engine.avatar.get_provider", lambda *_: _Prov())
+
+    from gtm_engine.video import prompt_to_video as ptv
+    looks = ptv.available_looks()
+    ids = [lk["id"] for lk in looks]
+    assert ids[0] == "av_current"                 # current avatar is the default first option
+    assert "look_desk" in ids and "look_walk" in ids
+
+    from gtm_engine.content_studio import ContentStudioStore, ContentBatch, ContentPiece
+    store = ContentStudioStore()
+    bid = store.create_batch(ContentBatch(title="B", content_types=["insight"]))
+    pid = store.add_piece(ContentPiece(batch_id=bid, kind="social", format="reel"))
+    ptv.set_look_for_piece(pid, "look_walk")
+    assert store.get_piece(pid).meta["agent_avatar_id"] == "look_walk"
+
+    seen = {}
+    class _Prov2(_Prov):
+        def render_video_agent(self, prompt, out, **k):
+            seen.update(k); Path(out).write_bytes(b"MP4"); return Path(out)
+        last_error = ""
+    monkeypatch.setattr("gtm_engine.avatar.get_provider", lambda *_: _Prov2())
+    import gtm_engine.config as cfg
+    cfg.OUTPUT_DIR = tmp_path / "out"
+    ptv.save_agent_prompt(pid, "P")
+    ptv.render_for_piece(pid)
+    assert seen["avatar_id"] == "look_walk"       # the chosen look wins over the default
+
+
 def test_attach_uploaded_video_marks_ready(db, tmp_path):
     from gtm_engine.content_studio import ContentStudioStore, ContentBatch, ContentPiece
     import gtm_engine.config as cfg

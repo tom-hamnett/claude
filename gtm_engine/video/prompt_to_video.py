@@ -233,6 +233,53 @@ def resolve_cast() -> dict:
             "brand_kit_id": os.getenv("HEYGEN_BRAND_KIT_ID", "")}
 
 
+def available_looks() -> list[dict]:
+    """The avatar 'looks' you can start a reel from — the looks in your presenter's HeyGen
+    avatar group, plus the presenter's own avatar as the default. Each look is a distinct
+    avatar_id the Video Agent accepts. Returns [{id, name, preview_url}] (a network call);
+    [] when HeyGen isn't configured."""
+    from gtm_engine.avatar import get_provider
+    provider = get_provider("heygen")
+    if not provider.is_configured():
+        return []
+    cast = resolve_cast()
+    looks, seen = [], set()
+    if cast["avatar_id"]:
+        looks.append({"id": cast["avatar_id"],
+                      "name": f"{cast['avatar_name'] or 'Current avatar'} (current)",
+                      "preview_url": ""})
+        seen.add(cast["avatar_id"])
+    group_id = ""
+    try:
+        from gtm_engine.casting import CastingStore
+        ch = CastingStore().get_default_character()
+        group_id = (ch.avatar_group_id if ch else "") or ""
+    except Exception:
+        pass
+    try:
+        pool = provider.list_avatar_looks(group_id) if group_id else provider.list_avatars()
+    except Exception:
+        pool = []
+    for lk in pool or []:
+        lid = lk.get("id")
+        if lid and lid not in seen:
+            seen.add(lid)
+            looks.append({"id": lid, "name": lk.get("name") or lid,
+                          "preview_url": lk.get("preview_url", "")})
+    return looks
+
+
+def set_look_for_piece(piece_id: int, avatar_id: str) -> None:
+    """Pin the starting avatar look for THIS reel (overrides the default cast)."""
+    from gtm_engine.content_studio import ContentStudioStore
+    store = ContentStudioStore()
+    p = store.get_piece(piece_id)
+    if not p:
+        return
+    p.meta = {**(p.meta or {}), "agent_avatar_id": avatar_id}
+    store.save_piece(p)
+
+
 def _out_path(piece_id: int) -> Path:
     from gtm_engine.config import OUTPUT_DIR
     d = OUTPUT_DIR / "prompt_to_video"
@@ -267,11 +314,13 @@ def render_for_piece(piece_id: int, on_status=None, prompt: str = "") -> "Path |
 
     prompt = (prompt or "").strip() or agent_prompt_for_piece(piece_id)
     cast = resolve_cast()   # pin YOUR presenter/voice, not HeyGen's auto-pick
+    # a per-reel look choice (from the picker) overrides the default avatar
+    avatar_id = (p.meta or {}).get("agent_avatar_id") or cast["avatar_id"]
     _say("Submitting to HeyGen Video Agent…")
     out = _out_path(piece_id)
     result = provider.render_video_agent(
         prompt, out,
-        avatar_id=cast["avatar_id"],
+        avatar_id=avatar_id,
         voice_id=cast["voice_id"],
         style_id=cast["style_id"],
         brand_kit_id=cast["brand_kit_id"],

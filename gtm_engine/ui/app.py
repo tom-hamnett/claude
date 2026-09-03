@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-08q · Prompt-to-Video pins your cast — resolves avatar/voice from Cast & Voice + shows what will render"
+BUILD_TAG = "2026-09-08r · Prompt-to-Video look picker — choose the starting avatar look per reel"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -1972,17 +1972,42 @@ def _heygen_agent_block(store, s):
                        "what gets sent** — nothing is rebuilt behind your back.")
             edited = st.text_area("Prompt — script + scenes", stored, height=340,
                                   key=f"agtxt_{s.id}")
-            # What the render will PIN — so you can confirm before spending credits.
             cast = ptv.resolve_cast()
-            av = cast["avatar_name"] or cast["avatar_id"] or "⚠ auto-pick (not set)"
+            configured = get_provider("heygen").is_configured()
+
+            # Step 2b — choose the STARTING avatar look for this reel (face + wardrobe).
+            chosen_id = meta.get("agent_avatar_id") or cast["avatar_id"]
+            looks = []
+            if configured:
+                lk_key = "_ptv_looks"
+                lp, rp = st.columns([4, 1])
+                if rp.button("↻ Looks", key=f"aglkref_{s.id}", help="Reload looks from HeyGen"):
+                    st.session_state.pop(lk_key, None)
+                if lk_key not in st.session_state:
+                    with st.spinner("Loading your avatar looks…"):
+                        st.session_state[lk_key] = ptv.available_looks()
+                looks = st.session_state.get(lk_key) or []
+                if looks:
+                    ids = [lk["id"] for lk in looks]
+                    names = [lk["name"] for lk in looks]
+                    idx = ids.index(chosen_id) if chosen_id in ids else 0
+                    sel = lp.selectbox("Starting avatar look", range(len(ids)), index=idx,
+                                       format_func=lambda i: names[i], key=f"aglook_{s.id}")
+                    chosen_id = ids[sel]
+                    if looks[sel].get("preview_url"):
+                        st.image(looks[sel]["preview_url"], width=140)
+                else:
+                    lp.caption("No looks found — using the avatar from Cast & Voice.")
+
+            # What the render will PIN — confirm before spending credits.
+            look_name = next((lk["name"] for lk in looks if lk["id"] == chosen_id), None)
+            av = look_name or cast["avatar_name"] or chosen_id or "⚠ auto-pick (not set)"
             vc = cast["voice_name"] or cast["voice_id"] or "⚠ auto-pick (not set)"
             style = cast["style_id"] or "auto (HeyGen picks)"
             st.caption(f"**Will render with →** Avatar: `{av}` · Voice: `{vc}` · Style: `{style}`")
-            if not cast["avatar_id"] or not cast["voice_id"]:
-                st.caption("⚠ Set your presenter in **Settings → Cast & Voice** first, or HeyGen "
-                           "picks its own avatar/voice. Style has no picker yet — set "
-                           "**HEYGEN_STYLE_ID** in Secrets to pin it.")
-            configured = get_provider("heygen").is_configured()
+            if not chosen_id or not cast["voice_id"]:
+                st.caption("⚠ Set your presenter in **Settings → Cast & Voice**, or HeyGen picks its "
+                           "own. Style: set **HEYGEN_STYLE_ID** in Secrets to pin it.")
             if ptv.is_rendering(s.id):
                 a, b = st.columns([3, 1])
                 a.info(ptv.status_of(s.id) or "Rendering… (this can take a few minutes)")
@@ -1997,8 +2022,9 @@ def _heygen_agent_block(store, s):
                 if configured:
                     run_label = "↻ Re-render via API" if have_video else "🎬 Render via API →"
                     if b.button(run_label, key=f"agrun_{s.id}", use_container_width=True):
-                        ptv.save_agent_prompt(s.id, edited)   # persist what's on screen
-                        ptv.start_agent(s.id, prompt=edited)  # …and send exactly that
+                        ptv.set_look_for_piece(s.id, chosen_id)  # pin the chosen look
+                        ptv.save_agent_prompt(s.id, edited)      # persist what's on screen
+                        ptv.start_agent(s.id, prompt=edited)     # …and send exactly that
                         st.rerun()
                 else:
                     b.caption("Copy the text above into HeyGen → **Prompt to Video** "
