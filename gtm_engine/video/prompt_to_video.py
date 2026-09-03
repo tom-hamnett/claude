@@ -325,6 +325,7 @@ def render_for_piece(piece_id: int, on_status=None, prompt: str = "") -> "Path |
         style_id=cast["style_id"],
         brand_kit_id=cast["brand_kit_id"],
         orientation="portrait",
+        on_status=_say,
     )
     p = store.get_piece(piece_id)  # reload (may have changed)
     if result:

@@ -746,7 +746,7 @@ class HeyGenProvider(AvatarProvider):
     def render_video_agent(self, prompt: str, output_path: Path, *,
                            avatar_id: str = "", voice_id: str = "", style_id: str = "",
                            brand_kit_id: str = "", orientation: str = "portrait",
-                           max_wait: int = 1200) -> "Path | None":
+                           max_wait: int = 1200, on_status=None) -> "Path | None":
         """Prompt-to-Video via HeyGen's Video Agent (POST /v3/video-agents).
 
         One prompt in; the agent scripts, picks scenes/b-roll, and renders the whole
@@ -759,6 +759,15 @@ class HeyGenProvider(AvatarProvider):
             raise AvatarProviderError("HEYGEN_API_KEY not set")
         import httpx
         self.last_error = ""
+
+        def _say(msg):
+            if on_status:
+                try:
+                    on_status(msg)
+                except Exception:
+                    pass
+
+        t0 = time.time()
         payload: dict = {"prompt": prompt}
         if avatar_id:
             # our internal "tp:" prefix marks a photo avatar; HeyGen wants the bare id
@@ -787,6 +796,7 @@ class HeyGenProvider(AvatarProvider):
             # The agent assigns a video_id a few seconds after the session opens.
             waited = 0
             while not video_id and waited < 300:
+                _say(f"HeyGen is planning the video — scripting & scenes… ({int(time.time() - t0)}s)")
                 time.sleep(6)
                 waited += 6
                 sr = httpx.get(f"{self.API_V3}/video-agents/{session_id}",
@@ -802,7 +812,10 @@ class HeyGenProvider(AvatarProvider):
                 self.last_error = "video-agent didn't assign a video (timed out waiting)."
                 return None
             logger.info("HeyGen video-agent video_id=%s", video_id)
-            result = self._poll_and_download(video_id, output_path, max_wait=max_wait)
+            _say(f"Rendering the video — this is the long part (usually a few minutes)… "
+                 f"({int(time.time() - t0)}s)")
+            result = self._poll_and_download(video_id, output_path, max_wait=max_wait,
+                                             on_status=on_status, t0=t0)
             if not result and not self.last_error:
                 self.last_error = "video-agent render didn't complete (timeout/failed)."
             return result
@@ -911,10 +924,17 @@ class HeyGenProvider(AvatarProvider):
         return None
 
     def _poll_and_download(self, video_id: str, output_path: Path,
-                           max_wait: int = 600) -> Path | None:
+                           max_wait: int = 600, on_status=None, t0: float | None = None) -> Path | None:
         import httpx
+        base = t0 if t0 is not None else time.time()
         waited = 0
         while waited < max_wait:
+            if on_status:
+                try:
+                    on_status(f"Rendering the video — usually a few minutes… "
+                              f"({int(time.time() - base)}s)")
+                except Exception:
+                    pass
             time.sleep(10)
             waited += 10
             try:

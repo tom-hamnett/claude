@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-08r · Prompt-to-Video look picker — choose the starting avatar look per reel"
+BUILD_TAG = "2026-09-08s · Prompt-to-Video live status — phase + elapsed seconds while HeyGen renders"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -2010,9 +2010,13 @@ def _heygen_agent_block(store, s):
                            "own. Style: set **HEYGEN_STYLE_ID** in Secrets to pin it.")
             if ptv.is_rendering(s.id):
                 a, b = st.columns([3, 1])
-                a.info(ptv.status_of(s.id) or "Rendering… (this can take a few minutes)")
+                a.info(ptv.status_of(s.id) or "Rendering… (usually a few minutes)")
                 if b.button("↻ Refresh", key=f"agref_{s.id}", use_container_width=True):
                     st.rerun()
+                st.caption("Tap **Refresh** every minute or two — the Video Agent scripts, builds "
+                           "scenes and renders, so 3–10 minutes is normal. It's also rendering in "
+                           "your **HeyGen app**, so if it ever times out here, download it there and "
+                           "drop the MP4 in below.")
             else:
                 a, b = st.columns(2)
                 if a.button("💾 Save prompt", key=f"agsave_{s.id}", use_container_width=True):
