@@ -2,6 +2,8 @@
 the provider's submit/poll/download, and the piece output attachment."""
 
 import json
+from pathlib import Path
+
 import pytest
 
 
@@ -23,16 +25,53 @@ def test_build_agent_prompt_embeds_brand_and_script_and_forbids_invention():
     assert "34 initiatives" in out                       # reference figures included
 
 
-def test_agent_prompt_for_piece_uses_piece_and_voice(db, monkeypatch):
+def test_compose_prompt_writes_script_and_scenes_for_review(db, monkeypatch):
+    """compose_agent_prompt asks Claude for script+scenes, assembles a reviewable prompt,
+    and stores it on the piece so the render sends exactly what was reviewed."""
     from gtm_engine.content_studio import ContentStudioStore, ContentBatch, ContentPiece
+    import gtm_engine.utils.ai_client as aic
+    monkeypatch.setattr(aic, "call_claude", lambda *a, **k: json.dumps({
+        "script": ["Everyone's busy.", "EBITDA's flat.", "See it run."],
+        "scenes": [{"beat": "Hook", "say": "Everyone's busy.", "on_screen": "presenter only"},
+                   {"beat": "Proof", "say": "EBITDA's flat.",
+                    "on_screen": "animated bar of EBITDA holding at 0%"}]}))
     store = ContentStudioStore()
     bid = store.create_batch(ContentBatch(title="B", content_types=["insight"]))
     pid = store.add_piece(ContentPiece(batch_id=bid, kind="social", format="reel",
-                                       caption="Nobody logs their losses", content_mode="insight",
-                                       meta={"script": "Watch activity against outcome."}))
-    from gtm_engine.video.prompt_to_video import agent_prompt_for_piece
-    out = agent_prompt_for_piece(pid)
-    assert "Watch activity against outcome." in out and "9:16" in out
+                                       caption="The complexity tax", content_mode="insight"))
+    from gtm_engine.video.prompt_to_video import compose_agent_prompt, agent_prompt_for_piece
+    out = compose_agent_prompt(pid)
+    assert "SCRIPT" in out and "SCENE BREAKDOWN" in out
+    assert "EBITDA's flat." in out and "animated bar of EBITDA" in out
+    assert "never invent" in out.lower() and "9:16" in out
+    # stored, so a later fetch returns the SAME reviewed text (no rebuild)
+    p = store.get_piece(pid)
+    assert p.meta["agent_prompt"] == out
+    assert agent_prompt_for_piece(pid) == out
+
+
+def test_edited_prompt_is_what_gets_sent(db, monkeypatch):
+    """save_agent_prompt persists an edit; render_for_piece sends the given prompt verbatim."""
+    from gtm_engine.content_studio import ContentStudioStore, ContentBatch, ContentPiece
+    store = ContentStudioStore()
+    bid = store.create_batch(ContentBatch(title="B", content_types=["insight"]))
+    pid = store.add_piece(ContentPiece(batch_id=bid, kind="social", format="reel"))
+    from gtm_engine.video import prompt_to_video as ptv
+    ptv.save_agent_prompt(pid, "MY EDITED PROMPT")
+    assert store.get_piece(pid).meta["agent_prompt"] == "MY EDITED PROMPT"
+
+    sent = {}
+    class _Prov:
+        def is_configured(self): return True
+        def render_video_agent(self, prompt, out, **k):
+            sent["prompt"] = prompt
+            Path(out).write_bytes(b"MP4"); return Path(out)
+        last_error = ""
+    monkeypatch.setattr("gtm_engine.avatar.get_provider", lambda *_: _Prov())
+    import gtm_engine.config as cfg
+    cfg.OUTPUT_DIR = db.parent / "out"
+    ptv.render_for_piece(pid, prompt="EXACT REVIEWED TEXT")
+    assert sent["prompt"] == "EXACT REVIEWED TEXT"       # not a rebuild
 
 
 def _stub_httpx(monkeypatch, *, agent_post, session_get, status_get, download=b"MP4DATA"):

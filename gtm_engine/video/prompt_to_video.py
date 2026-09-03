@@ -80,22 +80,126 @@ def build_agent_prompt(concept: str, script: str, mode: str, data_text: str,
     return "\n\n".join(parts)
 
 
-def agent_prompt_for_piece(piece_id: int) -> str:
-    """Build the prompt for a Content Studio social piece (uses its caption/body/mode,
-    the batch's blog for context, brand voice, and any tagged data — nothing else)."""
+def _assemble(script_lines: list[str], scenes: list[dict], data_text: str, voice: str) -> str:
+    """Turn a written script + scene beats into the final paste-ready Video Agent prompt,
+    wrapped in the fixed brand frame. This is exactly what gets sent to HeyGen."""
+    handle = _handle()
+    out = [
+        "Create a ~40-second vertical (9:16) short-form video for LinkedIn and Instagram "
+        "Reels — a single talking-head presenter with clean, minimal ANIMATED data graphics "
+        "on a dark background. Sharp business/strategy channel; credible and understated, "
+        "never flashy corporate-stock. No handshake/skyline B-roll.",
+        f"BRAND: {handle}. Delivery is measured, low-energy, authoritative — the tone of "
+        "someone reading a board pack they've made peace with. Full stops between sentences, "
+        "real air in the gaps, no upward 'sales' lift at line ends. Numbers spoken slowly.",
+        f"PALETTE (match exactly): {_PALETTE}. One accent green; gold only for a 'bad'/"
+        "contrast value. Captions burned in, one short line at a time, synced to the speech.",
+    ]
+    if voice:
+        out.append("VOICE GUARDRAILS: " + voice.strip())
+    if script_lines:
+        out.append("SCRIPT (deliver these lines, in order):\n"
+                   + "\n".join(f"- {ln}" for ln in script_lines))
+    if scenes:
+        beats = []
+        for i, sc in enumerate(scenes, 1):
+            beat = (sc.get("beat") or f"Scene {i}").strip()
+            say = (sc.get("say") or "").strip()
+            osd = (sc.get("on_screen") or "").strip()
+            line = f"{i}. [{beat}]"
+            if say:
+                line += f' Presenter: "{say}"'
+            if osd:
+                line += f" — On screen: {osd}"
+            beats.append(line)
+        out.append("SCENE BREAKDOWN (what appears when):\n" + "\n".join(beats))
+    out.append(
+        "DATA GRAPHICS: render any figure or before→after as a clean animated graphic — a "
+        "counting number, a bar, or a two-point line — that animates in ON the words it "
+        "belongs to. Use ONLY numbers that appear in the script above; never invent or add a "
+        "statistic. If a number needs context to be meaningful, show the label + unit or drop it.")
+    if (data_text or "").strip():
+        out.append("REFERENCE FIGURES (the only numbers you may visualise):\n"
+                   + data_text.strip()[:1200])
+    out.append(f"End on a soft close and a lower-third handle: {handle}.")
+    return "\n\n".join(out)
+
+
+def compose_agent_prompt(piece_id: int) -> str:
+    """Write a full reviewable prompt — SCRIPT + SCENE BREAKDOWN — for a social piece,
+    using Claude, and store it on the piece (meta['agent_prompt'] + meta['script']).
+    Falls back to the deterministic frame if the AI call fails. Returns the prompt."""
+    import json as _json
     from gtm_engine.content_studio import ContentStudioStore
     from gtm_engine.content_studio.generator import _brand_voice, _data_text
+    from gtm_engine.utils.ai_client import call_claude
     store = ContentStudioStore()
     p = store.get_piece(piece_id)
     if not p:
         return ""
-    concept = f"{p.caption or ''}\n{p.body or ''}".strip()
-    # A reel piece may already carry a written script in meta (from the producer brief).
-    script = ((p.meta or {}).get("script") or "").strip()
     batch = store.get_batch(p.batch_id)
+    blog = next((b for b in store.list_pieces(p.batch_id, kind="blog")), None)
     data_text = _data_text(batch.data_source_id) if (batch and batch.data_source_id) else ""
-    return build_agent_prompt(concept, script, p.content_mode or "insight", data_text,
-                              _brand_voice())
+    voice = _brand_voice()
+    concept = f"{p.caption or ''}\n{p.body or ''}".strip()
+
+    sys = ("You script a ~40-second vertical talking-head reel with animated data graphics. "
+           + voice + " Write for the EAR: short spoken lines, one idea each, spoken rhythm. "
+           "Structure it hook → tension → proof → payoff → soft close. Use ONLY numbers that "
+           "appear in the material given; never invent a statistic. Return ONLY JSON: "
+           "{\"script\":[\"line\",...], \"scenes\":[{\"beat\":\"Hook|Tension|Proof|Payoff|"
+           "Close\",\"say\":\"the spoken line(s) for this beat\",\"on_screen\":\"what the "
+           "viewer sees — e.g. an animated bar of X, a counter 34→9, presenter only\"}]}")
+    ctx = f"CONCEPT / ANGLE:\n{concept}\n\n"
+    if blog and (blog.body or "").strip():
+        ctx += f"BLOG CONTEXT (for facts/tone):\n{blog.body[:2500]}\n\n"
+    if data_text.strip():
+        ctx += f"REFERENCE FIGURES (the only numbers allowed):\n{data_text[:1200]}\n\n"
+    raw = call_claude(ctx + "Return ONLY the JSON.", system=sys, max_tokens=1500)
+    script_lines, scenes = [], []
+    s, e = raw.find("{"), raw.rfind("}")
+    if s != -1:
+        try:
+            d = _json.loads(raw[s:e + 1])
+            script_lines = [str(x).strip() for x in (d.get("script") or []) if str(x).strip()]
+            scenes = [sc for sc in (d.get("scenes") or []) if isinstance(sc, dict)]
+        except Exception:
+            pass
+    if script_lines or scenes:
+        prompt = _assemble(script_lines, scenes, data_text, voice)
+    else:
+        # AI unavailable/failed — deterministic frame from whatever the piece already has.
+        prompt = build_agent_prompt(concept, ((p.meta or {}).get("script") or ""),
+                                    p.content_mode or "insight", data_text, voice)
+    p.meta = {**(p.meta or {}), "agent_prompt": prompt,
+              "script": "\n".join(script_lines) or (p.meta or {}).get("script", "")}
+    store.save_piece(p)
+    return prompt
+
+
+def agent_prompt_for_piece(piece_id: int, regenerate: bool = False) -> str:
+    """Return the reviewable prompt for a piece. Uses the stored one (so you send exactly
+    what you reviewed); composes a fresh script+scenes prompt if there isn't one yet, or
+    when regenerate=True."""
+    from gtm_engine.content_studio import ContentStudioStore
+    p = ContentStudioStore().get_piece(piece_id)
+    if not p:
+        return ""
+    stored = (p.meta or {}).get("agent_prompt")
+    if stored and not regenerate:
+        return stored
+    return compose_agent_prompt(piece_id)
+
+
+def save_agent_prompt(piece_id: int, prompt: str) -> None:
+    """Persist an edited prompt so it's exactly what the render sends."""
+    from gtm_engine.content_studio import ContentStudioStore
+    store = ContentStudioStore()
+    p = store.get_piece(piece_id)
+    if not p:
+        return
+    p.meta = {**(p.meta or {}), "agent_prompt": prompt}
+    store.save_piece(p)
 
 
 def _out_path(piece_id: int) -> Path:
@@ -105,9 +209,11 @@ def _out_path(piece_id: int) -> Path:
     return d / f"piece_{piece_id}.mp4"
 
 
-def render_for_piece(piece_id: int, on_status=None) -> "Path | None":
-    """Build the prompt, render it through HeyGen's Video Agent (pinning the configured
-    avatar/voice), download the MP4, and store it on the piece. Returns the path or None."""
+def render_for_piece(piece_id: int, on_status=None, prompt: str = "") -> "Path | None":
+    """Render a piece through HeyGen's Video Agent (pinning the configured avatar/voice),
+    download the MP4, and store it on the piece. Sends EXACTLY `prompt` when given (the
+    reviewed/edited text); otherwise the stored reviewed prompt, else a freshly composed
+    one. Returns the path or None."""
     from gtm_engine.content_studio import ContentStudioStore
     from gtm_engine.avatar import get_provider, AvatarConfigStore
 
@@ -128,7 +234,7 @@ def render_for_piece(piece_id: int, on_status=None) -> "Path | None":
         store.save_piece(p)
         return None
 
-    prompt = agent_prompt_for_piece(piece_id)
+    prompt = (prompt or "").strip() or agent_prompt_for_piece(piece_id)
     cfg = AvatarConfigStore().load()
     _say("Submitting to HeyGen Video Agent…")
     out = _out_path(piece_id)
@@ -208,8 +314,9 @@ def error_of(piece_id: int) -> str:
         return (_BG.get(piece_id) or {}).get("error", "")
 
 
-def start_agent(piece_id: int) -> None:
-    """Kick off a Video Agent render on a daemon thread; no-op if already running."""
+def start_agent(piece_id: int, prompt: str = "") -> None:
+    """Kick off a Video Agent render on a daemon thread; no-op if already running.
+    Sends EXACTLY `prompt` (the reviewed text) when given."""
     if is_rendering(piece_id):
         return
 
@@ -221,7 +328,7 @@ def start_agent(piece_id: int) -> None:
     def _run():
         res, err = None, ""
         try:
-            res = render_for_piece(piece_id, on_status=_status)
+            res = render_for_piece(piece_id, on_status=_status, prompt=prompt)
             if not res:
                 from gtm_engine.content_studio import ContentStudioStore
                 pp = ContentStudioStore().get_piece(piece_id)

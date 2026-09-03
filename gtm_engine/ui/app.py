@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-08o · HeyGen Prompt-to-Video — on-brand prompt in, rendered reel out (API or app drop-in)"
+BUILD_TAG = "2026-09-08p · Prompt-to-Video review gate — generate script + scenes, edit, send exactly that"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -1939,13 +1939,15 @@ def _studio_social_row(store, s, make_reel_from_piece):
 
 
 def _heygen_agent_block(store, s):
-    """HeyGen Prompt-to-Video: the on-brand prompt (input) + render-via-API or an
-    MP4 drop-in (output). The higher-polish path — HeyGen scripts, composes and renders."""
+    """HeyGen Prompt-to-Video with a review gate: generate the full script + scene
+    breakdown, review/edit it, then send EXACTLY that to the Video Agent API (or the
+    HeyGen app). Output comes back as an MP4 in the Publish Queue."""
     from gtm_engine.video import prompt_to_video as ptv
     from gtm_engine.avatar import get_provider
     meta = s.meta or {}
     vpath = meta.get("video_path")
     have_video = bool(vpath) and Path(vpath).exists()
+    stored = meta.get("agent_prompt", "")
     label = "🎥 HeyGen Prompt-to-Video" + (" ✓" if have_video else "")
     with st.expander(label):
         if have_video:
@@ -1953,28 +1955,51 @@ def _heygen_agent_block(store, s):
             src = ("rendered in the HeyGen app" if meta.get("video_source") == "heygen_app"
                    else "via the Video Agent API")
             st.caption(f"✓ Video ready ({src}) — it's in your Publish Queue below.")
-        st.caption("Paste this into HeyGen → **Prompt to Video** (pick **The Analyst**), "
-                   "or render it straight from here.")
-        st.code(ptv.agent_prompt_for_piece(s.id))
-        configured = get_provider("heygen").is_configured()
-        if configured:
+
+        # Step 1 — generate the reviewable script + scenes (an AI call; only on click).
+        gen_label = "↻ Regenerate script + scenes" if stored else "✨ Generate script + scenes"
+        if st.button(gen_label, key=f"aggen_{s.id}", use_container_width=True):
+            with st.spinner("Writing the script and scene breakdown…"):
+                ptv.compose_agent_prompt(s.id)
+            st.rerun()
+
+        if not stored:
+            st.caption("Generate the script + scene breakdown first — then review and edit it "
+                       "before anything is sent.")
+        else:
+            # Step 2 — review / edit. This EXACT text is what gets sent.
+            st.caption("Review and edit the full prompt (script + scenes). **This exact text is "
+                       "what gets sent** — nothing is rebuilt behind your back.")
+            edited = st.text_area("Prompt — script + scenes", stored, height=340,
+                                  key=f"agtxt_{s.id}")
+            configured = get_provider("heygen").is_configured()
             if ptv.is_rendering(s.id):
                 a, b = st.columns([3, 1])
                 a.info(ptv.status_of(s.id) or "Rendering… (this can take a few minutes)")
                 if b.button("↻ Refresh", key=f"agref_{s.id}", use_container_width=True):
                     st.rerun()
             else:
-                a, b = st.columns([1.4, 2])
-                run_label = "↻ Re-render via API" if have_video else "🎬 Render via API →"
-                if a.button(run_label, key=f"agrun_{s.id}", use_container_width=True):
-                    ptv.start_agent(s.id)
+                a, b = st.columns(2)
+                if a.button("💾 Save prompt", key=f"agsave_{s.id}", use_container_width=True):
+                    ptv.save_agent_prompt(s.id, edited)
+                    st.toast("Prompt saved.")
                     st.rerun()
+                if configured:
+                    run_label = "↻ Re-render via API" if have_video else "🎬 Render via API →"
+                    if b.button(run_label, key=f"agrun_{s.id}", use_container_width=True):
+                        ptv.save_agent_prompt(s.id, edited)   # persist what's on screen
+                        ptv.start_agent(s.id, prompt=edited)  # …and send exactly that
+                        st.rerun()
+                else:
+                    b.caption("Copy the text above into HeyGen → **Prompt to Video** "
+                              "(pick **The Analyst**).")
                 err = ptv.error_of(s.id) or meta.get("agent_error")
                 if err:
-                    b.warning(err[:200])
-        else:
-            st.caption("💡 Add **HEYGEN_API_KEY** in Settings to render from here. Without it, "
-                       "copy the prompt above into the HeyGen app, then drop the MP4 back in below.")
+                    st.warning(err[:200])
+                if not configured:
+                    st.caption("💡 Add **HEYGEN_API_KEY** in Settings to render straight from here.")
+
+        # Output drop-in — for when you render in the HeyGen app.
         up = st.file_uploader("Rendered it in the HeyGen app? Drop the MP4 here",
                               type=["mp4", "mov", "webm"], key=f"agup_{s.id}")
         if up is not None:
