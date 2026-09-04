@@ -14,18 +14,17 @@ def db(tmp_path, monkeypatch):
     return p
 
 
-def test_build_agent_prompt_is_lean_script_and_direction():
-    """The prompt is pared back: format + delivery + script + anti-invention guardrail,
-    with NO hex/palette/caption micro-management (that fought HeyGen's styling)."""
+def test_build_agent_prompt_carries_style_script_and_data():
+    """The prompt leads with one coherent STYLE block, carries the script, uses the real
+    data, and keeps the anti-invention guardrail."""
     from gtm_engine.video.prompt_to_video import build_agent_prompt
     out = build_agent_prompt(
         concept="The complexity tax", script="Revenue's up. EBITDA's flat. See it run.",
         mode="insight", data_text="Q1: 34 initiatives, 11% margin", voice="No hype.")
-    assert "9:16" in out                                 # format kept
+    assert "9:16" in out and "STYLE:" in out             # format + one coherent style block
     assert "EBITDA's flat" in out                        # the script is carried verbatim
+    assert "34 initiatives" in out                       # the real data IS used on screen
     assert "invent" in out.lower()                       # the anti-fabrication guardrail
-    assert "#" not in out                                # no hex codes / palette spec
-    assert "34 initiatives" not in out                   # raw data no longer dumped on screen
 
 
 def test_compose_prompt_writes_script_and_scenes_for_review(db, monkeypatch):
@@ -36,18 +35,17 @@ def test_compose_prompt_writes_script_and_scenes_for_review(db, monkeypatch):
     monkeypatch.setattr(aic, "call_claude", lambda *a, **k: json.dumps({
         "script": ["Everyone's busy.", "EBITDA's flat.", "See it run."],
         "scenes": [{"beat": "Hook", "on_screen": "presenter only"},
-                   {"beat": "Proof", "on_screen": "a simple chart of EBITDA holding flat"}]}))
+                   {"beat": "Proof", "on_screen": "margin 11% → 19%"}]}))
     store = ContentStudioStore()
     bid = store.create_batch(ContentBatch(title="B", content_types=["insight"]))
     pid = store.add_piece(ContentPiece(batch_id=bid, kind="social", format="reel",
                                        caption="The complexity tax", content_mode="insight"))
     from gtm_engine.video.prompt_to_video import compose_agent_prompt, agent_prompt_for_piece
     out = compose_agent_prompt(pid)
-    assert "SCRIPT" in out and "CUTAWAY" in out.upper()
-    assert "EBITDA's flat." in out and "chart of EBITDA holding flat" in out
+    assert "SCRIPT" in out and "STYLE:" in out and "ON SCREEN" in out
+    assert "EBITDA's flat." in out and "11% → 19%" in out   # the data moment is on screen
     assert "invent" in out.lower() and "9:16" in out
-    assert "repeat" in out.lower()                       # the "don't duplicate captions" rule
-    assert "#" not in out                                # no hex/palette in the lean prompt
+    assert "presenter" in out.lower()                       # presenter-only beats supported
     # stored, so a later fetch returns the SAME reviewed text (no rebuild)
     p = store.get_piece(pid)
     assert p.meta["agent_prompt"] == out

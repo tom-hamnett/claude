@@ -67,6 +67,14 @@ DEFAULT_BRAND_STANDARDS = {
         "never_name": True,
         "punch_at": ["empty expertise", "strategy theatre", "the framework industry",
                      "the academic approach", "the old way"],
+        "video_style": ("Bold Editorial. Pure near-black #080F0C background, nothing else on "
+                        "screen but the presenter and the words. Signal green #20C878 for the key "
+                        "word or number on each line; hard white #E9F2EC for everything else. Big "
+                        "bold sans-serif text lands on screen word-by-word on the hardest lines — "
+                        "the words ARE the display: no lower thirds, no separate captions, no "
+                        "decoration. Text snaps in with a quick scale-up. Smash cuts to black "
+                        "between points. Calm and heavy, not loud — measured authority, zero "
+                        "ornamentation."),
     },
     "edginess": {
         "level": 8,
