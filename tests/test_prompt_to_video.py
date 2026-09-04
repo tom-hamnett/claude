@@ -43,9 +43,10 @@ def test_compose_prompt_writes_script_and_scenes_for_review(db, monkeypatch):
                                        caption="The complexity tax", content_mode="insight"))
     from gtm_engine.video.prompt_to_video import compose_agent_prompt, agent_prompt_for_piece
     out = compose_agent_prompt(pid)
-    assert "SCRIPT" in out and "ON SCREEN" in out
+    assert "SCRIPT" in out and "CUTAWAY" in out.upper()
     assert "EBITDA's flat." in out and "chart of EBITDA holding flat" in out
     assert "invent" in out.lower() and "9:16" in out
+    assert "repeat" in out.lower()                       # the "don't duplicate captions" rule
     assert "#" not in out                                # no hex/palette in the lean prompt
     # stored, so a later fetch returns the SAME reviewed text (no rebuild)
     p = store.get_piece(pid)

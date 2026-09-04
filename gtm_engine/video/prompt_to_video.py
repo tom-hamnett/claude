@@ -70,17 +70,18 @@ def build_agent_prompt(concept: str, script: str, mode: str, data_text: str,
         out.append("SCRIPT (say these lines, in order):\n" + script.strip())
     else:
         out.append("TOPIC / ANGLE:\n" + concept.strip())
-    out.append("Where the script mentions a figure or a before→after, support it with a simple "
-               "on-screen chart or number in your own style. Only show figures that appear in "
-               "the script — don't invent numbers or add text that isn't in it.")
+    out.append("Vary the shot — cut away to simple, relevant B-roll between talking-head "
+               "moments so it doesn't feel like one static AI presenter. Keep on-screen text "
+               "minimal (the captions carry the words — don't add big callouts that repeat "
+               "them). Only show figures that are in the script; never invent one.")
     out.append(f"Close on the handle: {_handle()}.")
     return "\n\n".join(out)
 
 
 def _assemble(script_lines: list[str], scenes: list[dict], data_text: str, voice: str) -> str:
-    """Turn a written script + high-level scene notes into the paste-ready prompt. Kept
-    deliberately light: script, delivery, and a plain-English 'on screen / B-roll' guide —
-    no palette, no hex, no caption rules. This is exactly what gets sent to HeyGen."""
+    """Turn a written script + high-level cutaway notes into the paste-ready prompt. Kept
+    deliberately light: script, delivery, and cutaway ideas — no palette, no hex, no caption
+    rules. Built for HeyGen's template flow, where the template owns the styling."""
     out = _frame(voice)
     if script_lines:
         out.append("SCRIPT (say these lines, in order):\n"
@@ -90,12 +91,14 @@ def _assemble(script_lines: list[str], scenes: list[dict], data_text: str, voice
         for i, sc in enumerate(scenes, 1):
             beat = (sc.get("beat") or f"Scene {i}").strip()
             osd = (sc.get("on_screen") or "").strip()
-            line = f"{i}. {beat}" + (f" — show: {osd}" if osd else "")
+            line = f"{i}. {beat}" + (f" — cut to: {osd}" if osd else "")
             beats.append(line)
-        out.append("ON SCREEN / B-ROLL (high level — keep it simple, your styling):\n"
-                   + "\n".join(beats))
-    out.append("Only show figures that appear in the script; don't invent numbers or put text "
-               "on screen that isn't in the script.")
+        out.append("CUTAWAYS / B-ROLL (vary the shot — don't hold on the presenter the whole "
+                   "time; cut to simple, relevant footage or ONE clean graphic between "
+                   "talking-head moments):\n" + "\n".join(beats))
+    out.append("Keep on-screen text minimal — the captions already carry the spoken words, so "
+               "do NOT add big emphasis-text callouts that just repeat what's being said. Only "
+               "show a figure if it's in the script, and never invent one.")
     out.append(f"Close on the handle: {_handle()}.")
     return "\n\n".join(out)
 
@@ -118,17 +121,16 @@ def compose_agent_prompt(piece_id: int) -> str:
     voice = _brand_voice()
     concept = f"{p.caption or ''}\n{p.body or ''}".strip()
 
-    sys = ("You script a ~40-second vertical talking-head reel. "
+    sys = ("You script a ~40-second vertical talking-head reel for HeyGen's template flow. "
            + voice + " Write for the EAR: short spoken lines, one idea each, spoken rhythm. "
            "Structure it hook → tension → proof → payoff → soft close. Use ONLY numbers that "
-           "appear in the material given; never invent a statistic. For each beat also give a "
-           "HIGH-LEVEL note on what supports it on screen — a plain-English description of the "
-           "analysis to show or the B-roll (e.g. 'a simple chart of revenue vs profit over "
-           "time', 'a before/after of the two numbers', 'presenter only'). Keep on_screen "
-           "conceptual — describe the visual, do NOT write literal caption text or design "
-           "detail. Return ONLY JSON: {\"script\":[\"line\",...], \"scenes\":[{\"beat\":\"Hook|"
-           "Tension|Proof|Payoff|Close\",\"on_screen\":\"high-level visual/analysis or B-roll "
-           "for this beat\"}]}")
+           "appear in the material given; never invent a statistic. For each beat give a "
+           "CUTAWAY idea — simple relevant B-roll or ONE clean graphic that varies the shot so "
+           "it isn't a static talking head. Some beats should be 'presenter only'. Keep it "
+           "conceptual (describe the footage/visual); do NOT write literal on-screen text — the "
+           "captions already carry the words, so avoid callouts that just repeat the line. "
+           "Return ONLY JSON: {\"script\":[\"line\",...], \"scenes\":[{\"beat\":\"Hook|Tension|"
+           "Proof|Payoff|Close\",\"on_screen\":\"a cutaway/B-roll idea, or 'presenter only'\"}]}")
     ctx = f"CONCEPT / ANGLE:\n{concept}\n\n"
     if blog and (blog.body or "").strip():
         ctx += f"BLOG CONTEXT (for facts/tone):\n{blog.body[:2500]}\n\n"
