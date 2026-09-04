@@ -34,18 +34,20 @@ def test_compose_prompt_writes_script_and_scenes_for_review(db, monkeypatch):
     import gtm_engine.utils.ai_client as aic
     monkeypatch.setattr(aic, "call_claude", lambda *a, **k: json.dumps({
         "script": ["Everyone's busy.", "EBITDA's flat.", "See it run."],
-        "scenes": [{"beat": "Hook", "on_screen": "presenter only"},
-                   {"beat": "Proof", "on_screen": "margin 11% → 19%"}]}))
+        "scenes": [{"beat": "Hook", "roll": "presenter", "say": "Everyone's busy.",
+                    "visual": "presenter, captions track the line"},
+                   {"beat": "Proof", "roll": "data", "say": "EBITDA's flat.",
+                    "visual": "before/after bars: margin 11% → 19%, big number ticks up"}]}))
     store = ContentStudioStore()
     bid = store.create_batch(ContentBatch(title="B", content_types=["insight"]))
     pid = store.add_piece(ContentPiece(batch_id=bid, kind="social", format="reel",
                                        caption="The complexity tax", content_mode="insight"))
     from gtm_engine.video.prompt_to_video import compose_agent_prompt, agent_prompt_for_piece
     out = compose_agent_prompt(pid)
-    assert "SCRIPT" in out and "STYLE:" in out and "ON SCREEN" in out
-    assert "EBITDA's flat." in out and "11% → 19%" in out   # the data moment is on screen
+    assert "STYLE:" in out and "SCENE-BY-SCENE" in out
+    assert "EBITDA's flat." in out and "11% → 19%" in out   # concrete data visual per beat
+    assert "Visual:" in out and "VO:" in out                # scene-by-scene structure
     assert "invent" in out.lower() and "9:16" in out
-    assert "presenter" in out.lower()                       # presenter-only beats supported
     # stored, so a later fetch returns the SAME reviewed text (no rebuild)
     p = store.get_piece(pid)
     assert p.meta["agent_prompt"] == out

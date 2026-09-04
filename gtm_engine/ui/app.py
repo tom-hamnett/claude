@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-08w · Prompt = coherent STYLE block + script + real data moments (editable brand video style)"
+BUILD_TAG = "2026-09-08x · Prompt = detailed scene-by-scene VIZ brief for HeyGen Prompt-to-Video (the format that worked)"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {

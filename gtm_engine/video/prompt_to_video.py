@@ -63,15 +63,15 @@ def _video_style() -> str:
 
 
 def _frame(voice: str) -> list[str]:
-    """The brief for HeyGen's template flow: format + one coherent STYLE block + delivery.
-    A single self-consistent style (like a named look) is what produces clean results — the
-    opposite of a fragmented list of rules that fights the template."""
+    """The brief for HeyGen's Prompt-to-Video flow: format + one coherent STYLE block +
+    delivery. This flow generates a plan you approve, and REWARDS detail — so we lead with a
+    self-consistent style and then (in _assemble) a concrete scene-by-scene with real data."""
     out = [
-        "Short vertical (9:16) talking-head reel, about 40 seconds, for LinkedIn and Instagram. "
-        "One presenter speaking to camera.",
+        "Create a ~40-second vertical (9:16) short-form video for LinkedIn and Instagram — an "
+        "authoritative talking-head presenter intercut with clean, animated data visualisations.",
         "STYLE: " + _video_style(),
-        "DELIVERY: measured, low-energy, credible — unhurried, with room to breathe between "
-        "lines. Never hyped or salesy.",
+        "DELIVERY: measured, low-energy, credible — unhurried; let the hard lines land. Never "
+        "hyped or salesy.",
     ]
     if voice:
         out.append("VOICE: " + voice.strip())
@@ -98,28 +98,33 @@ def build_agent_prompt(concept: str, script: str, mode: str, data_text: str,
 
 
 def _assemble(script_lines: list[str], scenes: list[dict], data_text: str, voice: str) -> str:
-    """Turn a written script + high-level cutaway notes into the paste-ready prompt. Kept
-    deliberately light: script, delivery, and cutaway ideas — no palette, no hex, no caption
-    rules. Built for HeyGen's template flow, where the template owns the styling."""
+    """Turn a script + detailed scenes into the paste-ready prompt for HeyGen's Prompt-to-Video.
+    A concrete SCENE-BY-SCENE (voiceover + a specific animated data visual per beat) is what
+    produced the result that worked — this flow generates a plan you approve, so detail helps."""
     out = _frame(voice)
-    if script_lines:
-        out.append("SCRIPT (say these lines, in order):\n"
-                   + "\n".join(f"- {ln}" for ln in script_lines))
     if scenes:
-        beats = []
+        blocks = []
         for i, sc in enumerate(scenes, 1):
             beat = (sc.get("beat") or f"Scene {i}").strip()
-            osd = (sc.get("on_screen") or "").strip()
-            line = f"{i}. {beat}" + (f" — show: {osd}" if osd else "")
-            beats.append(line)
-        out.append("ON SCREEN — use the DATA. At the lines with a figure, put the actual number "
-                   "or the before→after on screen, rendered in the STYLE above (the words/numbers "
-                   "ARE the display — don't add a second layer of captions on top). Elsewhere, "
-                   "stay on the presenter:\n" + "\n".join(beats))
+            roll = (sc.get("roll") or "").strip()
+            say = (sc.get("say") or "").strip()
+            vis = (sc.get("visual") or sc.get("on_screen") or "").strip()
+            head = f"{i}. {beat}" + (f" · {roll}" if roll else "")
+            block = head
+            if say:
+                block += f'\n   VO: "{say}"'
+            if vis:
+                block += f"\n   Visual: {vis}"
+            blocks.append(block)
+        out.append("SCENE-BY-SCENE (voiceover + the animated data visual for each beat):\n\n"
+                   + "\n\n".join(blocks))
+    elif script_lines:
+        out.append("SCRIPT (say these lines, in order):\n"
+                   + "\n".join(f"- {ln}" for ln in script_lines))
     if (data_text or "").strip():
-        out.append("THE DATA (real figures — show these, never invent others):\n"
+        out.append("DATA (real figures — visualise these; never invent others):\n"
                    + data_text.strip()[:900])
-    out.append("Only show numbers that are in the script/data above; never invent a figure.")
+    out.append("Use ONLY the numbers above; never invent a figure. Captions on.")
     out.append(f"Close on the handle: {_handle()}.")
     return "\n\n".join(out)
 
@@ -142,16 +147,18 @@ def compose_agent_prompt(piece_id: int) -> str:
     voice = _brand_voice()
     concept = f"{p.caption or ''}\n{p.body or ''}".strip()
 
-    sys = ("You script a ~40-second vertical talking-head reel for HeyGen's template flow. "
-           + voice + " Write for the EAR: short spoken lines, one idea each, spoken rhythm. "
-           "Structure it hook → tension → proof → payoff → soft close. Use ONLY numbers that "
-           "appear in the material given; never invent a statistic. For each beat set on_screen "
-           "to the DATA MOMENT to display at that line — the specific figure or before→after "
-           "from the script/data (e.g. '34 → 9 initiatives', 'margin 11% → 19%', 'EBITDA flat') "
-           "— or 'presenter only' for beats with no number. The number IS the visual; don't "
-           "describe design or captions. Return ONLY JSON: {\"script\":[\"line\",...], "
-           "\"scenes\":[{\"beat\":\"Hook|Tension|Proof|Payoff|Close\",\"on_screen\":\"the figure/"
-           "comparison to show, or 'presenter only'\"}]}")
+    sys = ("You script a ~40-second vertical talking-head reel intercut with animated DATA "
+           "visualisations, for HeyGen's Prompt-to-Video (which generates a plan the user then "
+           "approves). " + voice + " Write for the EAR: short spoken lines, one idea each, "
+           "spoken rhythm. Structure hook → tension → proof → payoff → close. Use ONLY numbers "
+           "that appear in the material; never invent a statistic. For each scene give: beat (a "
+           "short name), roll ('presenter' or 'data'), say (the spoken lines for that scene), "
+           "and visual — for a DATA scene describe the animated graphic CONCRETELY (chart type, "
+           "which values, what animates, which colours from the style, and an optional short "
+           "kicker line); for a PRESENTER scene just 'presenter, captions track the line'. "
+           "Return ONLY JSON: {\"script\":[\"line\",...], \"scenes\":[{\"beat\":\"\",\"roll\":"
+           "\"presenter|data\",\"say\":\"the spoken lines\",\"visual\":\"concrete animated "
+           "visual, or presenter note\"}]}")
     ctx = f"CONCEPT / ANGLE:\n{concept}\n\n"
     if blog and (blog.body or "").strip():
         ctx += f"BLOG CONTEXT (for facts/tone):\n{blog.body[:2500]}\n\n"
