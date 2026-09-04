@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-08x · Prompt = detailed scene-by-scene VIZ brief for HeyGen Prompt-to-Video (the format that worked)"
+BUILD_TAG = "2026-09-08y · Prompt requests multi-camera angles (opt-in, ~40 credits once per avatar)"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -1970,6 +1970,9 @@ def _heygen_agent_block(store, s):
             # Step 2 — review / edit. This EXACT text is what gets sent.
             st.caption("Review and edit the full prompt (script + scenes). **This exact text is "
                        "what gets sent** — nothing is rebuilt behind your back.")
+            st.caption("ℹ️ Includes a **multi-camera angles** request — HeyGen generates those "
+                       "once per avatar (~40 credits) then reuses them; say **yes** to its offer "
+                       "once. Delete the CAMERA line to skip the spend.")
             edited = st.text_area("Prompt — script + scenes", stored, height=340,
                                   key=f"agtxt_{s.id}")
             cast = ptv.resolve_cast()

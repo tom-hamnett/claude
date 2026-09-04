@@ -72,6 +72,9 @@ def _frame(voice: str) -> list[str]:
         "STYLE: " + _video_style(),
         "DELIVERY: measured, low-energy, credible — unhurried; let the hard lines land. Never "
         "hyped or salesy.",
+        # HeyGen only generates multi-camera angles on request (~40 credits, once per avatar,
+        # then reusable) — so we ask for them explicitly to get that professional look.
+        "CAMERA: vary the presenter's framing with dynamic, multi-camera angles.",
     ]
     if voice:
         out.append("VOICE: " + voice.strip())
