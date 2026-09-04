@@ -132,10 +132,12 @@ def _assemble(script_lines: list[str], scenes: list[dict], data_text: str, voice
     return "\n\n".join(out)
 
 
-def compose_agent_prompt(piece_id: int) -> str:
-    """Write a full reviewable prompt — SCRIPT + SCENE BREAKDOWN — for a social piece,
-    using Claude, and store it on the piece (meta['agent_prompt'] + meta['script']).
-    Falls back to the deterministic frame if the AI call fails. Returns the prompt."""
+def compose_agent_prompt(piece_id: int, broll_notes: str = "") -> str:
+    """Write a full reviewable prompt — SCRIPT + SCENE-BY-SCENE — for a social piece, using
+    Claude, and store it on the piece (meta['agent_prompt'] + meta['script'] + meta['broll_notes']).
+    `broll_notes` is the user's required brief for what the graphics/cutaways should show — the
+    on-screen visuals are BUILT FROM IT, not invented. Falls back to a deterministic frame if
+    the AI call fails. Returns the prompt."""
     import json as _json
     from gtm_engine.content_studio import ContentStudioStore
     from gtm_engine.content_studio.generator import _brand_voice, _data_text
@@ -144,6 +146,7 @@ def compose_agent_prompt(piece_id: int) -> str:
     p = store.get_piece(piece_id)
     if not p:
         return ""
+    broll_notes = (broll_notes or "").strip() or (p.meta or {}).get("broll_notes", "")
     batch = store.get_batch(p.batch_id)
     blog = next((b for b in store.list_pieces(p.batch_id, kind="blog")), None)
     data_text = _data_text(batch.data_source_id) if (batch and batch.data_source_id) else ""
@@ -154,15 +157,19 @@ def compose_agent_prompt(piece_id: int) -> str:
            "visualisations, for HeyGen's Prompt-to-Video (which generates a plan the user then "
            "approves). " + voice + " Write for the EAR: short spoken lines, one idea each, "
            "spoken rhythm. Structure hook → tension → proof → payoff → close. Use ONLY numbers "
-           "that appear in the material; never invent a statistic. For each scene give: beat (a "
-           "short name), roll ('presenter' or 'data'), say (the spoken lines for that scene), "
-           "and visual — for a DATA scene describe the animated graphic CONCRETELY (chart type, "
-           "which values, what animates, which colours from the style, and an optional short "
-           "kicker line); for a PRESENTER scene just 'presenter, captions track the line'. "
-           "Return ONLY JSON: {\"script\":[\"line\",...], \"scenes\":[{\"beat\":\"\",\"roll\":"
-           "\"presenter|data\",\"say\":\"the spoken lines\",\"visual\":\"concrete animated "
-           "visual, or presenter note\"}]}")
+           "that appear in the material; never invent a statistic. Build the on-screen visuals "
+           "from the user's VISUALS BRIEF below — use those graphics/cutaways, don't substitute "
+           "your own. For each scene give: beat (a short name), roll ('presenter' or 'data'), "
+           "say (the spoken lines for that scene), and visual — for a DATA scene describe the "
+           "animated graphic CONCRETELY (chart type, which values, what animates, which colours "
+           "from the style, and an optional short kicker line); for a PRESENTER scene just "
+           "'presenter, captions track the line'. Return ONLY JSON: {\"script\":[\"line\",...], "
+           "\"scenes\":[{\"beat\":\"\",\"roll\":\"presenter|data\",\"say\":\"the spoken lines\","
+           "\"visual\":\"concrete animated visual, or presenter note\"}]}")
     ctx = f"CONCEPT / ANGLE:\n{concept}\n\n"
+    if broll_notes:
+        ctx += ("VISUALS BRIEF — the graphics / b-roll / cutaways to build the scenes from "
+                "(use THESE):\n" + broll_notes[:1500] + "\n\n")
     if blog and (blog.body or "").strip():
         ctx += f"BLOG CONTEXT (for facts/tone):\n{blog.body[:2500]}\n\n"
     if data_text.strip():
@@ -184,7 +191,8 @@ def compose_agent_prompt(piece_id: int) -> str:
         prompt = build_agent_prompt(concept, ((p.meta or {}).get("script") or ""),
                                     p.content_mode or "insight", data_text, voice)
     p.meta = {**(p.meta or {}), "agent_prompt": prompt,
-              "script": "\n".join(script_lines) or (p.meta or {}).get("script", "")}
+              "script": "\n".join(script_lines) or (p.meta or {}).get("script", ""),
+              "broll_notes": broll_notes}
     store.save_piece(p)
     return prompt
 

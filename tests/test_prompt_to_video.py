@@ -54,6 +54,27 @@ def test_compose_prompt_writes_script_and_scenes_for_review(db, monkeypatch):
     assert agent_prompt_for_piece(pid) == out
 
 
+def test_broll_brief_drives_the_visuals(db, monkeypatch):
+    """The user's b-roll/visuals brief is fed to the composer (built from, not invented) and
+    stored on the piece for reuse."""
+    from gtm_engine.content_studio import ContentStudioStore, ContentBatch, ContentPiece
+    import gtm_engine.utils.ai_client as aic
+    seen = {}
+    def fake(prompt, system="", **k):
+        seen["prompt"] = prompt
+        return json.dumps({"script": ["Line."], "scenes": [{"beat": "Proof", "roll": "data",
+                          "say": "Line.", "visual": "the chart the user asked for"}]})
+    monkeypatch.setattr(aic, "call_claude", fake)
+    store = ContentStudioStore()
+    bid = store.create_batch(ContentBatch(title="B", content_types=["insight"]))
+    pid = store.add_piece(ContentPiece(batch_id=bid, kind="social", format="reel"))
+    from gtm_engine.video.prompt_to_video import compose_agent_prompt
+    compose_agent_prompt(pid, broll_notes="bar chart of revenue vs EBITDA, then 34→9 before/after")
+    assert "VISUALS BRIEF" in seen["prompt"] and "34→9 before/after" in seen["prompt"]
+    # persisted for reuse / regenerate
+    assert store.get_piece(pid).meta["broll_notes"].startswith("bar chart of revenue")
+
+
 def test_edited_prompt_is_what_gets_sent(db, monkeypatch):
     """save_agent_prompt persists an edit; render_for_piece sends the given prompt verbatim."""
     from gtm_engine.content_studio import ContentStudioStore, ContentBatch, ContentPiece
