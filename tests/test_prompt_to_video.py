@@ -75,6 +75,24 @@ def test_broll_brief_drives_the_visuals(db, monkeypatch):
     assert store.get_piece(pid).meta["broll_notes"].startswith("bar chart of revenue")
 
 
+def test_batch_analysis_prefills_reel_broll(db, monkeypatch):
+    """The core analysis defined at intake is inherited as the reel's b-roll brief when the
+    piece has none — so the reel graphics stay consistent with the rest of the batch."""
+    from gtm_engine.content_studio import ContentStudioStore, ContentBatch, ContentPiece
+    import gtm_engine.utils.ai_client as aic
+    seen = {}
+    monkeypatch.setattr(aic, "call_claude", lambda prompt, system="", **k: seen.setdefault("p", prompt)
+                        or json.dumps({"script": ["Line."], "scenes": []}))
+    store = ContentStudioStore()
+    bid = store.create_batch(ContentBatch(title="B", content_types=["insight"],
+                                          analysis="34 → 9 initiatives; margin 11% → 19%"))
+    assert store.get_batch(bid).analysis.startswith("34 → 9")   # persisted on the batch
+    pid = store.add_piece(ContentPiece(batch_id=bid, kind="social", format="reel"))
+    from gtm_engine.video.prompt_to_video import compose_agent_prompt
+    compose_agent_prompt(pid)                                    # no explicit broll — inherits batch
+    assert "VISUALS BRIEF" in seen["p"] and "34 → 9 initiatives" in seen["p"]
+
+
 def test_edited_prompt_is_what_gets_sent(db, monkeypatch):
     """save_agent_prompt persists an edit; render_for_piece sends the given prompt verbatim."""
     from gtm_engine.content_studio import ContentStudioStore, ContentBatch, ContentPiece

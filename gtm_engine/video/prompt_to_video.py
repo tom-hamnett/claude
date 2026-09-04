@@ -146,8 +146,11 @@ def compose_agent_prompt(piece_id: int, broll_notes: str = "") -> str:
     p = store.get_piece(piece_id)
     if not p:
         return ""
-    broll_notes = (broll_notes or "").strip() or (p.meta or {}).get("broll_notes", "")
     batch = store.get_batch(p.batch_id)
+    # The b-roll brief: what the user typed for this reel, else the batch's CORE ANALYSIS
+    # (defined once at intake) so the reel graphics stay consistent with the blog/articles.
+    broll_notes = ((broll_notes or "").strip() or (p.meta or {}).get("broll_notes", "")
+                   or (getattr(batch, "analysis", "") or "").strip())
     blog = next((b for b in store.list_pieces(p.batch_id, kind="blog")), None)
     data_text = _data_text(batch.data_source_id) if (batch and batch.data_source_id) else ""
     voice = _brand_voice()

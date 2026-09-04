@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-08z · Reel prompt: graphics/b-roll brief is a required input, scenes built from it"
+BUILD_TAG = "2026-09-09a · Core analysis defined once at intake → flows to blog + reel graphics (consistent)"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -1774,6 +1774,13 @@ def _studio_intake(store):
     background = st.text_area("Background & detail — the substance to work from", key="sb_bg",
                              height=140, placeholder="What's the point? The facts, the story, the "
                              "argument, the proof. The more you give, the better the batch.")
+    analysis = st.text_area("📊 Core analysis — the data story (defined ONCE, used everywhere)",
+                            key="sb_analysis", height=110,
+                            placeholder="The key figures and the finding this whole batch is built "
+                            "on — e.g. Q1: 34 initiatives, 11% margin → Q3: 9 initiatives, 19% "
+                            "margin; revenue & headcount up, EBITDA flat. The blog cites it, and "
+                            "the reel's on-screen graphics are built from it — so everything stays "
+                            "consistent.")
 
     # ── Reference material — ANY format + links; the AI reads and interprets it all ──
     st.markdown("**📎 Source & reference material** — upload anything, or paste links")
@@ -1800,6 +1807,7 @@ def _studio_intake(store):
         b = ContentBatch(
             title=title.strip(), topic=title.strip()[:80],
             content_types=picked or ["insight"], background=background.strip(),
+            analysis=analysis.strip(),
             template_id=tmpl, examples=examples.strip(),
             ref_files=_save_uploads(ref_files, "ref"), ref_links=_split_links(ref_links),
             example_files=_save_uploads(ex_files, "ex"), example_links=_split_links(ex_links),

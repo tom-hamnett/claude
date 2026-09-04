@@ -126,6 +126,13 @@ def _brief_block(batch) -> str:
         f"TOPIC: {batch.title}\n"
         f"CONTENT TYPE(S): {types}\n"
         f"BACKGROUND (use this — it's the substance):\n{batch.background or '(none given)'}\n"
+    )
+    if (getattr(batch, "analysis", "") or "").strip():
+        # The core analysis / data story — defined once at intake, the evidentiary spine that
+        # every format (blog, articles, social, and the reel graphics) is built on.
+        block += (f"\nCORE ANALYSIS — the data story every piece must be built on (cite these "
+                  f"real figures; the reel graphics use them too):\n{batch.analysis}\n")
+    block += (
         f"{_data_text(batch.data_source_id)}"
         f"\nBLOG STRUCTURE TO FOLLOW:\n{get_structure(batch.template_id)}\n"
     )

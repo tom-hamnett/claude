@@ -69,6 +69,8 @@ class ContentBatch(BaseModel):
     topic: str = ""                                  # short subject line
     content_types: list[str] = Field(default_factory=list)
     background: str = ""                             # detailed context the user typed
+    analysis: str = ""                              # THE data story: key figures/finding, defined
+                                                     # up front and inherited by every format
     data_source_id: int | None = None               # combined reference source (built at gen time)
     template_id: str = "default"
     examples: str = ""                              # example content to emulate (tone/structure)
@@ -150,6 +152,7 @@ CREATE INDEX IF NOT EXISTS idx_batches_status ON content_batches(status);
 _BATCH_MIGRATIONS: dict[str, str] = {
     "ref_files": "TEXT DEFAULT '[]'", "ref_links": "TEXT DEFAULT '[]'",
     "example_files": "TEXT DEFAULT '[]'", "example_links": "TEXT DEFAULT '[]'",
+    "analysis": "TEXT DEFAULT ''",
 }
 _PIECE_MIGRATIONS: dict[str, str] = {}
 
@@ -189,13 +192,13 @@ class ContentStudioStore:
         b.updated_at = now
         with self._connect() as conn:
             cur = conn.execute(
-                """INSERT INTO content_batches (title, topic, content_types, background,
+                """INSERT INTO content_batches (title, topic, content_types, background, analysis,
                    data_source_id, template_id, examples, ref_files, ref_links, example_files,
                    example_links, status, error, created_at, updated_at)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-                (b.title, b.topic, json.dumps(b.content_types), b.background, b.data_source_id,
-                 b.template_id, b.examples, json.dumps(b.ref_files), json.dumps(b.ref_links),
-                 json.dumps(b.example_files), json.dumps(b.example_links),
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (b.title, b.topic, json.dumps(b.content_types), b.background, b.analysis,
+                 b.data_source_id, b.template_id, b.examples, json.dumps(b.ref_files),
+                 json.dumps(b.ref_links), json.dumps(b.example_files), json.dumps(b.example_links),
                  b.status, b.error, b.created_at, b.updated_at),
             )
             conn.commit()
@@ -208,12 +211,12 @@ class ContentStudioStore:
         with self._connect() as conn:
             conn.execute(
                 """UPDATE content_batches SET title=?, topic=?, content_types=?, background=?,
-                   data_source_id=?, template_id=?, examples=?, ref_files=?, ref_links=?,
-                   example_files=?, example_links=?, status=?, error=?, updated_at=?
+                   analysis=?, data_source_id=?, template_id=?, examples=?, ref_files=?,
+                   ref_links=?, example_files=?, example_links=?, status=?, error=?, updated_at=?
                    WHERE id=?""",
-                (b.title, b.topic, json.dumps(b.content_types), b.background, b.data_source_id,
-                 b.template_id, b.examples, json.dumps(b.ref_files), json.dumps(b.ref_links),
-                 json.dumps(b.example_files), json.dumps(b.example_links),
+                (b.title, b.topic, json.dumps(b.content_types), b.background, b.analysis,
+                 b.data_source_id, b.template_id, b.examples, json.dumps(b.ref_files),
+                 json.dumps(b.ref_links), json.dumps(b.example_files), json.dumps(b.example_links),
                  b.status, b.error, b.updated_at, b.id),
             )
             conn.commit()
@@ -315,7 +318,8 @@ class ContentStudioStore:
         return ContentBatch(
             id=row["id"], title=row["title"], topic=g("topic", ""),
             content_types=json.loads(g("content_types", "[]") or "[]"),
-            background=g("background", ""), data_source_id=g("data_source_id"),
+            background=g("background", ""), analysis=g("analysis", ""),
+            data_source_id=g("data_source_id"),
             template_id=g("template_id", "default"), examples=g("examples", ""),
             ref_files=json.loads(g("ref_files", "[]") or "[]"),
             ref_links=json.loads(g("ref_links", "[]") or "[]"),
