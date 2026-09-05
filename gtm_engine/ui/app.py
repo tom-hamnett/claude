@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-09b · Positioning: the framework/change gap + AI-priced insight; Manson/Tomassi register"
+BUILD_TAG = "2026-09-09c · Reel prompts match the winning HeyGen format; subtitles left to HeyGen; MVP = copy/paste/upload"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -1984,8 +1984,9 @@ def _heygen_agent_block(store, s):
                        "anything is sent.")
         else:
             # Step 2 — review / edit. This EXACT text is what gets sent.
-            st.caption("Review and edit the full prompt (script + scenes). **This exact text is "
-                       "what gets sent** — nothing is rebuilt behind your back.")
+            st.caption("**MVP flow:** copy this prompt → HeyGen **Prompt to Video** (pick your "
+                       "look) → render → drop the finished MP4 back in below. (API render is "
+                       "optional — for now, the copy-and-paste loop is the reliable path.)")
             st.caption("ℹ️ Includes a **multi-camera angles** request — HeyGen generates those "
                        "once per avatar (~40 credits) then reuses them; say **yes** to its offer "
                        "once. Delete the CAMERA line to skip the spend.")

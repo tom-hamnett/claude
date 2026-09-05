@@ -127,7 +127,8 @@ def _assemble(script_lines: list[str], scenes: list[dict], data_text: str, voice
     if (data_text or "").strip():
         out.append("DATA (real figures — visualise these; never invent others):\n"
                    + data_text.strip()[:900])
-    out.append("Use ONLY the numbers above; never invent a figure. Captions on.")
+    out.append("Use ONLY the numbers above; never invent a figure. Leave the subtitle styling "
+               "to you — don't need it specified.")
     out.append(f"Close on the handle: {_handle()}.")
     return "\n\n".join(out)
 
