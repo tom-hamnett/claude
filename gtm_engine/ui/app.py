@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-09d · Reel flow self-contained in Studio — script generates inline, no bounce to CREATE"
+BUILD_TAG = "2026-09-09e · Fix: Generate script button no longer disabled (graphics brief now optional)"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -1956,24 +1956,22 @@ def _heygen_agent_block(store, s):
                    else "via the Video Agent API")
             st.caption(f"✓ Video ready ({src}) — it's in your Publish Queue below.")
 
-        # Step 1 — you brief the graphics (required), then generate the script + scenes.
+        # Step 1 — optionally brief the graphics, then generate the script + scenes.
         broll = st.text_area(
-            "What should the graphics show? — data, b-roll or cutaways (required)",
+            "What should the graphics show? — data, b-roll or cutaways "
+            "(optional — leave blank to use the batch's Core analysis)",
             value=meta.get("broll_notes", ""), key=f"agbroll_{s.id}", height=90,
             placeholder="e.g. bar chart: revenue & headcount up, EBITDA flat; then a before/after "
                         "34→9 initiatives with margin 11%→19%; presenter for the open and close.")
         gen_label = "↻ Regenerate script + scenes" if stored else "✨ Generate script + scenes"
-        if st.button(gen_label, key=f"aggen_{s.id}", use_container_width=True,
-                     disabled=not broll.strip()):
-            with st.spinner("Writing the script and scene breakdown from your visuals brief…"):
+        if st.button(gen_label, key=f"aggen_{s.id}", use_container_width=True):
+            with st.spinner("Writing the script and scene breakdown…"):
                 ptv.compose_agent_prompt(s.id, broll_notes=broll)
             st.rerun()
-        if not broll.strip():
-            st.caption("↑ Brief the graphics first — the scenes are built from what you put here.")
 
         if not stored:
-            st.caption("Generate the script + scene breakdown — then review and edit it before "
-                       "anything is sent.")
+            st.caption("Tap **Generate** — the script + scene breakdown appears right here to "
+                       "review and edit before you copy it into HeyGen.")
         else:
             # Step 2 — review / edit. This EXACT text is what gets sent.
             st.caption("**MVP flow:** copy this prompt → HeyGen **Prompt to Video** (pick your "
