@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-09e · Fix: Generate script button no longer disabled (graphics brief now optional)"
+BUILD_TAG = "2026-09-09f · Fix tofu boxes — sanitise emoji/symbols/bad-encoding from prompts, captions, ingest, carousels"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {

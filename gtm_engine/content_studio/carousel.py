@@ -186,8 +186,13 @@ def generate_carousel_slides(concept: str, blog_excerpt: str, voice: str) -> lis
 
 def _normalize_spec(sp: dict) -> dict:
     """Keep a slide spec self-consistent: a 'data' slide with no number is really an
-    insight; a slide that gained a number can become a data slide if it has no title."""
+    insight; a slide that gained a number can become a data slide if it has no title.
+    Also strips tofu-prone characters (emoji/symbols) from on-screen text."""
+    from gtm_engine.utils.text_clean import clean_text
     sp = dict(sp or {})
+    for k in ("title", "body", "value", "label", "sub"):
+        if isinstance(sp.get(k), str):
+            sp[k] = clean_text(sp[k])
     typ = sp.get("type", "insight")
     if typ == "data" and not str(sp.get("value", "")).strip():
         sp["type"] = "insight"

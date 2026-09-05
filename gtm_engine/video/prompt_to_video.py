@@ -85,14 +85,15 @@ def build_agent_prompt(concept: str, script: str, mode: str, data_text: str,
                        voice: str) -> str:
     """A lean fallback prompt (used when the AI script step is unavailable): the light
     frame + whatever script/angle we have. No design micro-management."""
+    from gtm_engine.utils.text_clean import clean_text
     out = _frame(voice)
     if script.strip():
-        out.append("SCRIPT (say these lines, in order):\n" + script.strip())
+        out.append("SCRIPT (say these lines, in order):\n" + clean_text(script.strip()))
     else:
-        out.append("TOPIC / ANGLE:\n" + concept.strip())
+        out.append("TOPIC / ANGLE:\n" + clean_text(concept.strip()))
     if (data_text or "").strip():
         out.append("THE DATA (real figures — put these on screen in the STYLE above at the "
-                   "matching lines; never invent others):\n" + data_text.strip()[:900])
+                   "matching lines; never invent others):\n" + clean_text(data_text.strip())[:900])
     out.append("At the lines with a figure, show the actual number / before→after on screen in "
                "the STYLE above (the number is the visual — no second layer of captions). "
                "Only show numbers that are in the script/data; never invent one.")
@@ -104,14 +105,15 @@ def _assemble(script_lines: list[str], scenes: list[dict], data_text: str, voice
     """Turn a script + detailed scenes into the paste-ready prompt for HeyGen's Prompt-to-Video.
     A concrete SCENE-BY-SCENE (voiceover + a specific animated data visual per beat) is what
     produced the result that worked — this flow generates a plan you approve, so detail helps."""
+    from gtm_engine.utils.text_clean import clean_text
     out = _frame(voice)
     if scenes:
         blocks = []
         for i, sc in enumerate(scenes, 1):
-            beat = (sc.get("beat") or f"Scene {i}").strip()
-            roll = (sc.get("roll") or "").strip()
-            say = (sc.get("say") or "").strip()
-            vis = (sc.get("visual") or sc.get("on_screen") or "").strip()
+            beat = clean_text((sc.get("beat") or f"Scene {i}").strip())
+            roll = clean_text((sc.get("roll") or "").strip())
+            say = clean_text((sc.get("say") or "").strip())
+            vis = clean_text((sc.get("visual") or sc.get("on_screen") or "").strip())
             head = f"{i}. {beat}" + (f" · {roll}" if roll else "")
             block = head
             if say:
@@ -123,10 +125,10 @@ def _assemble(script_lines: list[str], scenes: list[dict], data_text: str, voice
                    + "\n\n".join(blocks))
     elif script_lines:
         out.append("SCRIPT (say these lines, in order):\n"
-                   + "\n".join(f"- {ln}" for ln in script_lines))
+                   + "\n".join(f"- {clean_text(ln)}" for ln in script_lines))
     if (data_text or "").strip():
         out.append("DATA (real figures — visualise these; never invent others):\n"
-                   + data_text.strip()[:900])
+                   + clean_text(data_text.strip())[:900])
     out.append("Use ONLY the numbers above; never invent a figure. Leave the subtitle styling "
                "to you — don't need it specified.")
     out.append(f"Close on the handle: {_handle()}.")

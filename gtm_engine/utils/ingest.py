@@ -129,7 +129,8 @@ def interpret_upload(path: str, name: str = "") -> tuple[str, str]:
     except Exception as e:
         logger.info("interpret_upload failed %s: %s", name, e)
         text = ""
-    return (text or "").strip()[:MAX_PER_FILE], stype
+    from gtm_engine.utils.text_clean import clean_text
+    return clean_text((text or "").strip())[:MAX_PER_FILE], stype
 
 
 def _html_to_text(html: str) -> str:
@@ -155,7 +156,8 @@ def interpret_url(url: str) -> str:
             return ""
         ctype = r.headers.get("content-type", "")
         text = r.text if "html" not in ctype else _html_to_text(r.text)
-        return text.strip()[:MAX_PER_FILE]
+        from gtm_engine.utils.text_clean import clean_text
+        return clean_text(text.strip())[:MAX_PER_FILE]
     except Exception as e:
         logger.info("interpret_url failed %s: %s", url, e)
         return ""

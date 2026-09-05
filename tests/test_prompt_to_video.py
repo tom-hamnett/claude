@@ -45,7 +45,7 @@ def test_compose_prompt_writes_script_and_scenes_for_review(db, monkeypatch):
     from gtm_engine.video.prompt_to_video import compose_agent_prompt, agent_prompt_for_piece
     out = compose_agent_prompt(pid)
     assert "STYLE:" in out and "SCENE-BY-SCENE" in out
-    assert "EBITDA's flat." in out and "11% → 19%" in out   # concrete data visual per beat
+    assert "EBITDA's flat." in out and "11% to 19%" in out   # arrow normalised, figures intact
     assert "Visual:" in out and "VO:" in out                # scene-by-scene structure
     assert "invent" in out.lower() and "9:16" in out
     # stored, so a later fetch returns the SAME reviewed text (no rebuild)
@@ -73,6 +73,30 @@ def test_broll_brief_drives_the_visuals(db, monkeypatch):
     assert "VISUALS BRIEF" in seen["prompt"] and "34→9 before/after" in seen["prompt"]
     # persisted for reuse / regenerate
     assert store.get_piece(pid).meta["broll_notes"].startswith("bar chart of revenue")
+
+
+def test_clean_text_strips_tofu_keeps_currency():
+    from gtm_engine.utils.text_clean import clean_text
+    out = clean_text("Revenue ⭐ up 18% — margin £1m → £2m …done 🎯�")
+    assert "⭐" not in out and "🎯" not in out and "�" not in out   # emoji + replacement gone
+    assert "£1m" in out and "18%" in out                                # currency + percent kept
+    assert "—" not in out and " to " in out and "..." in out            # dash/arrow/ellipsis normalised
+
+
+def test_compose_prompt_has_no_tofu(db, monkeypatch):
+    from gtm_engine.content_studio import ContentStudioStore, ContentBatch, ContentPiece
+    import gtm_engine.utils.ai_client as aic
+    monkeypatch.setattr(aic, "call_claude", lambda *a, **k: json.dumps({
+        "script": ["Margin up ⭐ 11% to 19%�"],
+        "scenes": [{"beat": "Proof 🎯", "roll": "data", "say": "Margin 11% → 19% ⭐",
+                    "visual": "bar grows 11% to 19% 📊"}]}))
+    store = ContentStudioStore()
+    bid = store.create_batch(ContentBatch(title="B", content_types=["insight"]))
+    pid = store.add_piece(ContentPiece(batch_id=bid, kind="social", format="reel"))
+    from gtm_engine.video.prompt_to_video import compose_agent_prompt
+    out = compose_agent_prompt(pid)
+    assert "⭐" not in out and "🎯" not in out and "📊" not in out and "�" not in out
+    assert "11%" in out and "19%" in out                                # the real figures survive
 
 
 def test_batch_analysis_prefills_reel_broll(db, monkeypatch):
