@@ -77,8 +77,9 @@ def _brand_voice() -> str:
             bs = load_json(bp) or {}
             voice = bs.get("voice", {}) or {}
             pos = bs.get("positioning", {}) or {}
-            tone = ", ".join(voice.get("tone_descriptors", [])[:6])
+            tone = ", ".join(voice.get("tone_descriptors", [])[:8])
             forbidden = ", ".join(voice.get("forbidden_phrases", [])[:10])
+            register = (voice.get("register_note") or "").strip()
             parts = []
             if pos:
                 pillars = "; ".join(f"{p.get('name')} ({p.get('desc')})"
@@ -90,9 +91,11 @@ def _brand_voice() -> str:
                     f"FOR: {pos.get('audience', '')} "
                     + (f"PILLARS to draw from: {pillars}. " if pillars else ""))
             parts.append(
-                f"VOICE: {tone or 'sharp, transparent, anti-guru'}. Teach and demonstrate, never "
-                f"pitch. NEVER name real companies or competitors — challenge the category, not a "
-                f"brand. " + (f"Never use these words: {forbidden}." if forbidden else ""))
+                f"VOICE: {tone or 'sharp, transparent, anti-guru'}. "
+                + (register + " " if register else "")
+                + "Teach and demonstrate, never pitch. NEVER name real companies or competitors "
+                "— challenge the category, not a brand. "
+                + (f"Never use these words: {forbidden}." if forbidden else ""))
             return " ".join(parts)
     except Exception:
         pass

@@ -23,9 +23,15 @@ BRAND_STANDARDS_PATH = DATA_DIR / "brand_standards.json"
 DEFAULT_BRAND_STANDARDS = {
     "voice": {
         "tone_descriptors": [
-            "sharp", "transparent", "authoritative", "anti-guru",
-            "confident without arrogance", "calm", "direct", "precise",
+            "blunt", "unsentimental", "cuts through comfortable illusions",
+            "conversational but rigorous", "confident without arrogance",
+            "says the thing everyone's dancing around", "direct address to the reader",
+            "dispassionate clarity",
         ],
+        "register_note": ("Mark Manson / Rollo Tomassi register: name the uncomfortable mechanic "
+                          "plainly, short declaratives, a little swagger, zero corporate hedging. "
+                          "Go full-punch on social and taglines; on long-form stay sharp and blunt "
+                          "but NOT performative or edgy-for-its-own-sake — the rigour carries it."),
         "forbidden_phrases": [
             "game-changer", "revolutionary", "unlock your potential",
             "disruptive", "innovative", "cutting-edge", "best-in-class",
@@ -40,25 +46,29 @@ DEFAULT_BRAND_STANDARDS = {
         "persona": "The Rational Strategist",
         "publication": "The Rational Strategist",
         "handle": "The Rational Strategist",
-        "tagline": "Clear, evidence-first thinking on business, strategy and leadership — pragmatic over academic.",
-        "enemy": ("Strategy that never leaves the slide — plans that ignore the real constraints of "
-                  "people, budget and politics, and confident advice that never actually gets "
-                  "delivered. The problem is rarely the framework; it's the delivery."),
-        "thesis": ("Frameworks give you structure and can be genuinely illuminating — the hard part "
-                   "is DELIVERY: making the plan actually happen in a people- and budget-constrained "
-                   "environment, where it meets the politics. Think clearly, deliver pragmatically, "
-                   "show the working."),
-        "audience": ("Operators, founders and leaders who have to actually deliver — who care "
-                     "less about the elegance of the plan and more about whether it gets done."),
+        "tagline": "Frameworks are easy. Change is hard. AI just made the insight cheap.",
+        "enemy": ("The comfortable lie that the framework is the hard part. Anyone can draw the "
+                  "two-by-two; the gap nobody gets paid to talk about is between the elegant slide "
+                  "and the grinding, political work of actually changing something. And the dying "
+                  "moat: expensive firms selling access to analysis that AI now collates at a "
+                  "fraction of the cost."),
+        "thesis": ("The framework was never the hard part. Value is created (and quietly destroyed) "
+                   "in the gap between the plan and real, delivered change — that's the terrain. And "
+                   "the game just changed: the insight that used to take consultants six months and "
+                   "a seven-figure invoice, AI collates now for pennies. Navigate the gap; use AI to "
+                   "see what used to be invisible."),
+        "audience": ("Operators, founders and leaders tired of clever plans that go nowhere — who "
+                     "care about delivered change, not the elegance of the slide, and who sense the "
+                     "old analysis moat is gone."),
         "pillars": [
             {"id": "clear_thinking", "name": "Clear thinking & better decisions",
              "desc": "Mental models, judgement, and avoiding smart-sounding mistakes."},
             {"id": "real_economics", "name": "Real economics of growth",
              "desc": "What actually moves a business versus what gets billed for."},
             {"id": "strategy_that_ships", "name": "Strategy that ships",
-             "desc": "Delivering what's on the slide inside real constraints of people, budget and politics."},
-            {"id": "leadership", "name": "Leadership & the human side",
-             "desc": "Politics, incentives, and getting people to actually move."},
+             "desc": "Closing the gap between the slide and delivered change — people, budget, politics."},
+            {"id": "ai_priced_insight", "name": "AI-priced insight",
+             "desc": "The analysis that used to cost millions and six months, collated by AI for pennies — the consulting moat is gone."},
             {"id": "complexity_tax", "name": "The complexity tax",
              "desc": "Where hidden complexity quietly costs money and speed — one angle, not the whole story."},
             {"id": "show_the_working", "name": "Show the working",
