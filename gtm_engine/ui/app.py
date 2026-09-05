@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-09c · Reel prompts match the winning HeyGen format; subtitles left to HeyGen; MVP = copy/paste/upload"
+BUILD_TAG = "2026-09-09d · Reel flow self-contained in Studio — script generates inline, no bounce to CREATE"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -1918,16 +1918,8 @@ def _studio_social_row(store, s, make_reel_from_piece):
             st.caption(s.body[:180])
     with c2:
         if s.format == "reel":
-            if s.video_job_id:
-                st.caption("→ in CREATE")
-            elif st.button("🎬 Make reel", key=f"mkreel_{s.id}", use_container_width=True):
-                with st.spinner("Handing off to the video engine…"):
-                    job = make_reel_from_piece(s.id)
-                if job:
-                    st.success("Reel started — produce it in **CREATE**.")
-                else:
-                    st.warning("Couldn't start (check the Anthropic key).")
-                st.rerun()
+            # MVP: the whole reel flow lives in the HeyGen block below — no bouncing to CREATE.
+            st.caption("↓ make it below")
         else:  # carousel
             lbl = "↻ Remake" if slides else "🖼 Make carousel"
             if st.button(lbl, key=f"mkcar_{s.id}", use_container_width=True):
@@ -1956,8 +1948,8 @@ def _heygen_agent_block(store, s):
     vpath = meta.get("video_path")
     have_video = bool(vpath) and Path(vpath).exists()
     stored = meta.get("agent_prompt", "")
-    label = "🎥 HeyGen Prompt-to-Video" + (" ✓" if have_video else "")
-    with st.expander(label):
+    label = "🎥 Make this reel — HeyGen Prompt-to-Video" + (" ✓" if have_video else "")
+    with st.expander(label, expanded=not have_video):
         if have_video:
             st.video(vpath)
             src = ("rendered in the HeyGen app" if meta.get("video_source") == "heygen_app"
