@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-09f · Fix tofu boxes — sanitise emoji/symbols/bad-encoding from prompts, captions, ingest, carousels"
+BUILD_TAG = "2026-09-09g · Reel review simplified — script on its own, full prompt in a section; presenter no longer a black void"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -1973,15 +1973,22 @@ def _heygen_agent_block(store, s):
             st.caption("Tap **Generate** — the script + scene breakdown appears right here to "
                        "review and edit before you copy it into HeyGen.")
         else:
-            # Step 2 — review / edit. This EXACT text is what gets sent.
-            st.caption("**MVP flow:** copy this prompt → HeyGen **Prompt to Video** (pick your "
-                       "look) → render → drop the finished MP4 back in below. (API render is "
-                       "optional — for now, the copy-and-paste loop is the reliable path.)")
-            st.caption("ℹ️ Includes a **multi-camera angles** request — HeyGen generates those "
-                       "once per avatar (~40 credits) then reuses them; say **yes** to its offer "
-                       "once. Delete the CAMERA line to skip the spend.")
-            edited = st.text_area("Prompt — script + scenes", stored, height=340,
-                                  key=f"agtxt_{s.id}")
+            # Section 1 — the SCRIPT, on its own, easy to read.
+            script_txt = (meta.get("script") or "").strip()
+            st.markdown("**📝 Script** — the spoken lines")
+            if script_txt:
+                st.text_area("Script", script_txt, height=150, key=f"agscript_{s.id}",
+                             disabled=True, label_visibility="collapsed")
+            else:
+                st.caption("_(no separate script captured — see the full prompt below)_")
+            # Section 2 — everything else (style · scenes · camera), tucked away, editable.
+            with st.expander("🎬 Full prompt for HeyGen — style · scenes · camera (copy this)"):
+                st.caption("This exact text is what you paste into HeyGen. Edit here if you want.")
+                edited = st.text_area("Full prompt", stored, height=300,
+                                      key=f"agtxt_{s.id}", label_visibility="collapsed")
+            st.caption("Copy the full prompt → HeyGen **Prompt to Video** → render → drop the MP4 "
+                       "back in below. (Multi-camera angles are requested — HeyGen generates them "
+                       "once per avatar, ~40 credits; delete the CAMERA line to skip.)")
             cast = ptv.resolve_cast()
             configured = get_provider("heygen").is_configured()
 
