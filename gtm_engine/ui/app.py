@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-09h · Prompts hand HeyGen the creative reins (style/captions/camera) + ask for a review plan; we specify only script + b-roll/data"
+BUILD_TAG = "2026-09-09i · Edit the reel script in-tool — by hand or ask AI to revise — before passing to HeyGen"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -1973,22 +1973,33 @@ def _heygen_agent_block(store, s):
             st.caption("Tap **Generate** — the script + scene breakdown appears right here to "
                        "review and edit before you copy it into HeyGen.")
         else:
-            # Section 1 — the SCRIPT, on its own, easy to read.
-            script_txt = (meta.get("script") or "").strip()
-            st.markdown("**📝 Script** — the spoken lines")
-            if script_txt:
-                st.text_area("Script", script_txt, height=150, key=f"agscript_{s.id}",
-                             disabled=True, label_visibility="collapsed")
-            else:
-                st.caption("_(no separate script captured — see the full prompt below)_")
-            # Section 2 — everything else (style · scenes · camera), tucked away, editable.
-            with st.expander("🎬 Full prompt for HeyGen — style · scenes · camera (copy this)"):
-                st.caption("This exact text is what you paste into HeyGen. Edit here if you want.")
-                edited = st.text_area("Full prompt", stored, height=300,
+            # Section 1 — the SCRIPT: edit it by hand OR ask AI to revise it, like a chat.
+            st.markdown("**📝 Script** — edit the words here before you pass it over")
+            script_txt = st.text_area("Script", (meta.get("script") or "").strip(), height=170,
+                                      key=f"agscript_{s.id}", label_visibility="collapsed")
+            sc1, sc2 = st.columns(2)
+            if sc1.button("💾 Save script", key=f"agscsave_{s.id}", use_container_width=True):
+                ptv.set_script(s.id, script_txt)
+                st.toast("Script saved — prompt updated.")
+                st.rerun()
+            ask = st.text_input("✨ Ask AI to revise the script",
+                                key=f"agscask_{s.id}",
+                                placeholder="e.g. punchier hook · make it shorter · lead with the number")
+            if sc2.button("✨ Apply AI edit", key=f"agscai_{s.id}", use_container_width=True,
+                          disabled=not ask.strip()):
+                with st.spinner("Revising the script…"):
+                    ptv.revise_script(s.id, ask)
+                st.toast("Script revised — prompt updated.")
+                st.rerun()
+
+            # Section 2 — the full prompt (script + b-roll + brand leaning), tucked away.
+            with st.expander("🎬 Full prompt for HeyGen — copy this"):
+                st.caption("Built from your script above + the b-roll. This exact text is what you "
+                           "paste; edit here for a one-off tweak.")
+                edited = st.text_area("Full prompt", stored, height=280,
                                       key=f"agtxt_{s.id}", label_visibility="collapsed")
-            st.caption("Copy the full prompt → HeyGen **Prompt to Video** → render → drop the MP4 "
-                       "back in below. (Multi-camera angles are requested — HeyGen generates them "
-                       "once per avatar, ~40 credits; delete the CAMERA line to skip.)")
+            st.caption("Copy it → HeyGen **Prompt to Video** → it returns a plan to approve → "
+                       "render → drop the MP4 back in below.")
             cast = ptv.resolve_cast()
             configured = get_provider("heygen").is_configured()
 

@@ -111,25 +111,21 @@ def _assemble(script_lines: list[str], scenes: list[dict], data_text: str, voice
     produced the result that worked — this flow generates a plan you approve, so detail helps."""
     from gtm_engine.utils.text_clean import clean_text
     out = _frame(voice)
+    # Script and b-roll are SEPARATE blocks — the script is the words (easy to edit on its own),
+    # the b-roll is the visuals I need. HeyGen matches them and designs everything else.
+    if script_lines:
+        out.append("SCRIPT — the exact words to say, in order:\n"
+                   + "\n".join(f"- {clean_text(ln)}" for ln in script_lines if clean_text(ln)))
     if scenes:
         blocks = []
         for i, sc in enumerate(scenes, 1):
-            beat = clean_text((sc.get("beat") or f"Scene {i}").strip())
-            roll = clean_text((sc.get("roll") or "").strip())
-            say = clean_text((sc.get("say") or "").strip())
+            beat = clean_text((sc.get("beat") or f"Beat {i}").strip())
             vis = clean_text((sc.get("visual") or sc.get("on_screen") or "").strip())
-            head = f"{i}. {beat}" + (f" · {roll}" if roll else "")
-            block = head
-            if say:
-                block += f'\n   VO: "{say}"'
-            if vis:
-                block += f"\n   Visual: {vis}"
-            blocks.append(block)
-        out.append("THE BITS I NEED YOU TO COVER — voiceover + the specific data visual / b-roll "
-                   "for each beat (design everything else yourself):\n\n" + "\n\n".join(blocks))
-    elif script_lines:
-        out.append("SCRIPT (say these lines, in order):\n"
-                   + "\n".join(f"- {clean_text(ln)}" for ln in script_lines))
+            if not vis and (sc.get("roll", "").lower() == "presenter"):
+                vis = "presenter on camera"
+            blocks.append(f"- {beat}: {vis}" if vis else f"- {beat}")
+        out.append("THE B-ROLL / DATA I NEED YOU TO INCLUDE (match these to the script above; "
+                   "design everything else yourself):\n" + "\n".join(blocks))
     if (data_text or "").strip():
         out.append("DATA (real figures — visualise these; never invent others):\n"
                    + clean_text(data_text.strip())[:900])
@@ -202,9 +198,72 @@ def compose_agent_prompt(piece_id: int, broll_notes: str = "") -> str:
                                     p.content_mode or "insight", data_text, voice)
     p.meta = {**(p.meta or {}), "agent_prompt": prompt,
               "script": "\n".join(script_lines) or (p.meta or {}).get("script", ""),
-              "broll_notes": broll_notes}
+              "scenes": scenes, "broll_notes": broll_notes}
     store.save_piece(p)
     return prompt
+
+
+def _reassemble_prompt(piece_id: int) -> str:
+    """Rebuild the full paste-ready prompt from the piece's stored script + scenes (no AI) —
+    so an edited script flows straight into what gets pasted. Stores + returns the prompt."""
+    from gtm_engine.content_studio import ContentStudioStore
+    from gtm_engine.content_studio.generator import _brand_voice, _data_text
+    store = ContentStudioStore()
+    p = store.get_piece(piece_id)
+    if not p:
+        return ""
+    meta = p.meta or {}
+    script_lines = [ln for ln in (meta.get("script") or "").split("\n") if ln.strip()]
+    scenes = meta.get("scenes") or []
+    batch = store.get_batch(p.batch_id)
+    data_text = _data_text(batch.data_source_id) if (batch and batch.data_source_id) else ""
+    prompt = _assemble(script_lines, scenes, data_text, _brand_voice())
+    p.meta = {**meta, "agent_prompt": prompt}
+    store.save_piece(p)
+    return prompt
+
+
+def set_script(piece_id: int, script_text: str) -> str:
+    """Save a manually-edited script and rebuild the prompt. Returns the new prompt."""
+    from gtm_engine.content_studio import ContentStudioStore
+    from gtm_engine.utils.text_clean import clean_text
+    store = ContentStudioStore()
+    p = store.get_piece(piece_id)
+    if not p:
+        return ""
+    p.meta = {**(p.meta or {}), "script": clean_text(script_text or "")}
+    store.save_piece(p)
+    return _reassemble_prompt(piece_id)
+
+
+def revise_script(piece_id: int, instruction: str) -> str:
+    """Ask Claude to revise the stored script per a plain-English instruction (like a chat:
+    'punchier hook', 'shorter', 'lead with the number'), save it, and rebuild the prompt.
+    Returns the new script text (or the current one unchanged on failure)."""
+    from gtm_engine.content_studio import ContentStudioStore
+    from gtm_engine.content_studio.generator import _brand_voice
+    from gtm_engine.utils.ai_client import call_claude
+    from gtm_engine.utils.text_clean import clean_text
+    store = ContentStudioStore()
+    p = store.get_piece(piece_id)
+    if not p:
+        return ""
+    current = (p.meta or {}).get("script", "")
+    sys = ("You revise the spoken script of a ~40-second vertical reel. Apply the user's "
+           "instruction. Keep it short and for the EAR — one idea per line, spoken rhythm, no "
+           "stage directions. " + _brand_voice() + " Never invent statistics that aren't already "
+           "there. Return ONLY the revised script as plain lines (one spoken line per line), no "
+           "JSON, no commentary, no numbering.")
+    raw = call_claude(f"CURRENT SCRIPT:\n{current}\n\nINSTRUCTION: {instruction.strip()}\n\n"
+                      "Return ONLY the revised script lines.", system=sys, max_tokens=700)
+    new = clean_text((raw or "").strip())
+    if not new:
+        return current
+    p = store.get_piece(piece_id)
+    p.meta = {**(p.meta or {}), "script": new}
+    store.save_piece(p)
+    _reassemble_prompt(piece_id)
+    return new
 
 
 def agent_prompt_for_piece(piece_id: int, regenerate: bool = False) -> str:

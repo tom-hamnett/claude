@@ -46,7 +46,7 @@ def test_compose_prompt_writes_script_and_scenes_for_review(db, monkeypatch):
     out = compose_agent_prompt(pid)
     assert "PLAN" in out and "BRAND LEANING" in out         # asks for a plan; style is a preference
     assert "EBITDA's flat." in out and "11% to 19%" in out   # arrow normalised, figures intact
-    assert "Visual:" in out and "VO:" in out                # the required b-roll/data section
+    assert "SCRIPT" in out and "B-ROLL" in out              # script and b-roll as separate blocks
     assert "invent" in out.lower() and "9:16" in out
     # stored, so a later fetch returns the SAME reviewed text (no rebuild)
     p = store.get_piece(pid)
@@ -73,6 +73,33 @@ def test_broll_brief_drives_the_visuals(db, monkeypatch):
     assert "VISUALS BRIEF" in seen["prompt"] and "34→9 before/after" in seen["prompt"]
     # persisted for reuse / regenerate
     assert store.get_piece(pid).meta["broll_notes"].startswith("bar chart of revenue")
+
+
+def test_edit_script_manually_and_with_ai(db, monkeypatch):
+    """The script is editable on its own — a manual save and an AI revise both update it and
+    rebuild the full prompt from the (script + scenes)."""
+    from gtm_engine.content_studio import ContentStudioStore, ContentBatch, ContentPiece
+    import gtm_engine.utils.ai_client as aic
+    monkeypatch.setattr(aic, "call_claude", lambda *a, **k: json.dumps({
+        "script": ["Old hook.", "Old point."],
+        "scenes": [{"beat": "Hook", "roll": "presenter", "visual": ""},
+                   {"beat": "Proof", "roll": "data", "visual": "bar 11% to 19%"}]}))
+    store = ContentStudioStore()
+    bid = store.create_batch(ContentBatch(title="B", content_types=["insight"]))
+    pid = store.add_piece(ContentPiece(batch_id=bid, kind="social", format="reel"))
+    from gtm_engine.video import prompt_to_video as ptv
+    ptv.compose_agent_prompt(pid)
+
+    # manual edit → stored + reflected in the rebuilt prompt, b-roll preserved
+    prompt = ptv.set_script(pid, "Brand new hook.\nBrand new point.")
+    assert "Brand new hook." in prompt and "bar 11% to 19%" in prompt
+    assert store.get_piece(pid).meta["script"].startswith("Brand new hook.")
+
+    # AI revise → Claude returns plain lines; stored + rebuilt
+    monkeypatch.setattr(aic, "call_claude", lambda *a, **k: "Punchier hook.\nSharper point.")
+    new = ptv.revise_script(pid, "punchier hook")
+    assert new.startswith("Punchier hook.")
+    assert "Punchier hook." in store.get_piece(pid).meta["agent_prompt"]
 
 
 def test_clean_text_strips_tofu_keeps_currency():
