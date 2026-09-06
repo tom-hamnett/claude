@@ -228,6 +228,34 @@ def _reassemble_prompt(piece_id: int) -> str:
     return prompt
 
 
+def script_from_prompt(prompt: str) -> str:
+    """Last-resort: pull the spoken lines out of an already-built prompt (for reels made
+    before the script was stored separately). Handles the VO: "..." scene format and a
+    'SCRIPT' section of '- ' lines. Returns '' if nothing recognisable."""
+    if not prompt:
+        return ""
+    import re
+    lines = prompt.split("\n")
+    vo = [m.group(1).strip() for ln in lines
+          if (m := re.search(r'VO:\s*"(.+?)"', ln.strip()))]
+    if vo:
+        return "\n".join(vo)
+    out, collecting = [], False
+    for ln in lines:
+        s = ln.strip()
+        if not collecting:
+            if s.upper().startswith("SCRIPT"):
+                collecting = True
+            continue
+        if s.startswith("- "):
+            out.append(s[2:].strip())
+        elif s == "":
+            continue
+        elif out:
+            break
+    return "\n".join(out)
+
+
 def set_script(piece_id: int, script_text: str) -> str:
     """Save a manually-edited script and rebuild the prompt. Returns the new prompt."""
     from gtm_engine.content_studio import ContentStudioStore

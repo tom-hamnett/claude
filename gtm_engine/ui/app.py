@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-09j · Fix blank script — derive it from scene VO when the model omits the top-level script"
+BUILD_TAG = "2026-09-09k · Blank script: also extract it from the stored prompt for older reels + nudge to regenerate"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -1977,9 +1977,12 @@ def _heygen_agent_block(store, s):
             st.markdown("**📝 Script** — edit the words here before you pass it over")
             _script_seed = (meta.get("script") or "").strip() or "\n".join(
                 str(sc.get("say", "")).strip() for sc in (meta.get("scenes") or [])
-                if str(sc.get("say", "")).strip())
+                if str(sc.get("say", "")).strip()) or ptv.script_from_prompt(stored)
             script_txt = st.text_area("Script", _script_seed, height=170,
                                       key=f"agscript_{s.id}", label_visibility="collapsed")
+            if not _script_seed.strip():
+                st.caption("↑ Empty? This reel was made before scripts were stored — hit "
+                           "**↻ Regenerate script + scenes** above and it'll populate.")
             sc1, sc2 = st.columns(2)
             if sc1.button("💾 Save script", key=f"agscsave_{s.id}", use_container_width=True):
                 ptv.set_script(s.id, script_txt)
