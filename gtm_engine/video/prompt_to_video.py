@@ -79,9 +79,9 @@ def _frame(voice: str) -> list[str]:
     ]
     style = _video_style()
     if style:
-        out.append("BRAND LEANING (a preference, not a rule — use your judgement): " + style)
-    if voice:
-        out.append("VOICE: " + voice.strip())
+        out.append("DATA-GRAPHICS LOOK (a light preference — use your judgement): " + style)
+    # NB: no brand voice / positioning here — the script is already written; HeyGen just reads
+    # it. Voice belongs to script GENERATION, not to the video prompt.
     return out
 
 
@@ -95,12 +95,8 @@ def build_agent_prompt(concept: str, script: str, mode: str, data_text: str,
         out.append("SCRIPT (say these lines, in order):\n" + clean_text(script.strip()))
     else:
         out.append("TOPIC / ANGLE:\n" + clean_text(concept.strip()))
-    if (data_text or "").strip():
-        out.append("THE DATA (real figures — put these on screen in the STYLE above at the "
-                   "matching lines; never invent others):\n" + clean_text(data_text.strip())[:900])
-    out.append("At the lines with a figure, show the actual number / before→after on screen in "
-               "the STYLE above (the number is the visual — no second layer of captions). "
-               "Only show numbers that are in the script/data; never invent one.")
+    out.append("At the lines with a figure, show the actual number / before→after on screen. "
+               "Only show numbers that are in the script; never invent one.")
     out.append(f"Close on the handle: {_handle()}.")
     return "\n\n".join(out)
 
@@ -126,11 +122,9 @@ def _assemble(script_lines: list[str], scenes: list[dict], data_text: str, voice
             blocks.append(f"- {beat}: {vis}" if vis else f"- {beat}")
         out.append("THE B-ROLL / DATA I NEED YOU TO INCLUDE (match these to the script above; "
                    "design everything else yourself):\n" + "\n".join(blocks))
-    if (data_text or "").strip():
-        out.append("DATA (real figures — visualise these; never invent others):\n"
-                   + clean_text(data_text.strip())[:900])
-    out.append("Use ONLY the numbers above; never invent a figure. Leave the subtitle styling "
-               "to you — don't need it specified.")
+    # No raw source/reference dump and no separate DATA block — the figures live in the
+    # b-roll lines above; the presenter setting and subtitles are HeyGen's own from the avatar.
+    out.append("Only use the numbers in the b-roll above; never invent a figure.")
     out.append(f"Close on the handle: {_handle()}.")
     return "\n\n".join(out)
 

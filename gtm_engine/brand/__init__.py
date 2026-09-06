@@ -77,12 +77,10 @@ DEFAULT_BRAND_STANDARDS = {
         "never_name": True,
         "punch_at": ["empty expertise", "strategy theatre", "the framework industry",
                      "the academic approach", "the old way"],
-        "video_style": ("Bold and minimalist. The animated DATA GRAPHICS use a clean dark palette "
-                        "— near-black #080F0C, near-white text #E9F2EC, signal-green #20C878 and "
-                        "gold #FFD166 accents — with modern sans-serif and bold, impactful "
-                        "captions. The presenter sits in a real, uncluttered setting (NOT a black "
-                        "void). No stock business B-roll. Smash cuts between points. (Leave the "
-                        "subtitle styling to HeyGen.)"),
+        "video_style": ("The animated DATA GRAPHICS are bold and minimalist on a clean dark "
+                        "background — near-black #080F0C, near-white text #E9F2EC, signal-green "
+                        "#20C878 and gold #FFD166 accents, modern sans-serif. Smash cuts between "
+                        "points."),
     },
     "edginess": {
         "level": 8,

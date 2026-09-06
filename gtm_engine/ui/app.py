@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-09k · Blank script: also extract it from the stored prompt for older reels + nudge to regenerate"
+BUILD_TAG = "2026-09-09l · Strip the reel prompt to essentials — no voice/positioning, no presenter-setting, no source dump"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
