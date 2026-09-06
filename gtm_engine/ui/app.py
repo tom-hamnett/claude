@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-09g · Reel review simplified — script on its own, full prompt in a section; presenter no longer a black void"
+BUILD_TAG = "2026-09-09h · Prompts hand HeyGen the creative reins (style/captions/camera) + ask for a review plan; we specify only script + b-roll/data"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {

@@ -21,7 +21,7 @@ def test_build_agent_prompt_carries_style_script_and_data():
     out = build_agent_prompt(
         concept="The complexity tax", script="Revenue's up. EBITDA's flat. See it run.",
         mode="insight", data_text="Q1: 34 initiatives, 11% margin", voice="No hype.")
-    assert "9:16" in out and "STYLE:" in out             # format + one coherent style block
+    assert "9:16" in out and "BRAND LEANING" in out      # format + light style preference
     assert "EBITDA's flat" in out                        # the script is carried verbatim
     assert "34 initiatives" in out                       # the real data IS used on screen
     assert "invent" in out.lower()                       # the anti-fabrication guardrail
@@ -44,9 +44,9 @@ def test_compose_prompt_writes_script_and_scenes_for_review(db, monkeypatch):
                                        caption="The complexity tax", content_mode="insight"))
     from gtm_engine.video.prompt_to_video import compose_agent_prompt, agent_prompt_for_piece
     out = compose_agent_prompt(pid)
-    assert "STYLE:" in out and "SCENE-BY-SCENE" in out
+    assert "PLAN" in out and "BRAND LEANING" in out         # asks for a plan; style is a preference
     assert "EBITDA's flat." in out and "11% to 19%" in out   # arrow normalised, figures intact
-    assert "Visual:" in out and "VO:" in out                # scene-by-scene structure
+    assert "Visual:" in out and "VO:" in out                # the required b-roll/data section
     assert "invent" in out.lower() and "9:16" in out
     # stored, so a later fetch returns the SAME reviewed text (no rebuild)
     p = store.get_piece(pid)

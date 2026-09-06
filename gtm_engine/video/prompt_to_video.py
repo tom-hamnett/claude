@@ -69,13 +69,17 @@ def _frame(voice: str) -> list[str]:
     out = [
         "Create a ~40-second vertical (9:16) short-form video for LinkedIn and Instagram — an "
         "authoritative talking-head presenter intercut with clean, animated data visualisations.",
-        "STYLE: " + _video_style(),
-        "DELIVERY: measured, low-energy, credible — unhurried; let the hard lines land. Never "
-        "hyped or salesy.",
-        # HeyGen only generates multi-camera angles on request (~40 credits, once per avatar,
-        # then reusable) — so we ask for them explicitly to get that professional look.
-        "CAMERA: vary the presenter's framing with dynamic, multi-camera angles.",
+        # Ask HeyGen for a reviewable plan first (don't auto-proceed).
+        "FIRST, give me a scene-by-scene PLAN to review and approve BEFORE you generate the video.",
+        # Be open: let HeyGen do what it's best at, be prescriptive only where we must.
+        "Use your own engine and style for what you're best at — the overall look, captions, "
+        "transitions, multi-camera angles and pacing. I'm specific ONLY about the script and the "
+        "data/b-roll to visualise (below); treat everything else as yours to design.",
+        "DELIVERY: measured, credible and unhurried — not hyped or salesy.",
     ]
+    style = _video_style()
+    if style:
+        out.append("BRAND LEANING (a preference, not a rule — use your judgement): " + style)
     if voice:
         out.append("VOICE: " + voice.strip())
     return out
@@ -121,8 +125,8 @@ def _assemble(script_lines: list[str], scenes: list[dict], data_text: str, voice
             if vis:
                 block += f"\n   Visual: {vis}"
             blocks.append(block)
-        out.append("SCENE-BY-SCENE (voiceover + the animated data visual for each beat):\n\n"
-                   + "\n\n".join(blocks))
+        out.append("THE BITS I NEED YOU TO COVER — voiceover + the specific data visual / b-roll "
+                   "for each beat (design everything else yourself):\n\n" + "\n\n".join(blocks))
     elif script_lines:
         out.append("SCRIPT (say these lines, in order):\n"
                    + "\n".join(f"- {clean_text(ln)}" for ln in script_lines))
