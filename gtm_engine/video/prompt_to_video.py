@@ -188,6 +188,11 @@ def compose_agent_prompt(piece_id: int, broll_notes: str = "") -> str:
             d = _json.loads(raw[s:e + 1])
             script_lines = [str(x).strip() for x in (d.get("script") or []) if str(x).strip()]
             scenes = [sc for sc in (d.get("scenes") or []) if isinstance(sc, dict)]
+            # If the model put the words only inside the scenes (no top-level script), derive
+            # the script from the scenes' spoken lines so the Script box is never blank.
+            if not script_lines and scenes:
+                script_lines = [str(sc.get("say", "")).strip() for sc in scenes
+                                if str(sc.get("say", "")).strip()]
         except Exception:
             pass
     if script_lines or scenes:
