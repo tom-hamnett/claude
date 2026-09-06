@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-09l · Strip the reel prompt to essentials — no voice/positioning, no presenter-setting, no source dump"
+BUILD_TAG = "2026-09-09m · Minimal reel prompt — tight header + two review items (Script, B-roll)"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -1998,11 +1998,20 @@ def _heygen_agent_block(store, s):
                 st.toast("Script revised — prompt updated.")
                 st.rerun()
 
-            # Section 2 — the full prompt (script + b-roll + brand leaning), tucked away.
+            # Section 2 — the B-ROLL / data-viz notes, on their own, editable.
+            st.markdown("**🎞 B-roll / data to show** — the visuals, one per line (`beat: what to show`)")
+            broll_txt = st.text_area("B-roll", ptv.broll_text_of(s), height=140,
+                                     key=f"agbr_{s.id}", label_visibility="collapsed")
+            if st.button("💾 Save b-roll", key=f"agbrsave_{s.id}", use_container_width=True):
+                ptv.set_broll(s.id, broll_txt)
+                st.toast("B-roll saved — prompt updated.")
+                st.rerun()
+
+            # Section 3 — the full assembled prompt, tucked away (this is what you paste).
             with st.expander("🎬 Full prompt for HeyGen — copy this"):
-                st.caption("Built from your script above + the b-roll. This exact text is what you "
-                           "paste; edit here for a one-off tweak.")
-                edited = st.text_area("Full prompt", stored, height=280,
+                st.caption("Built from the header + your script + your b-roll. This exact text is "
+                           "what you paste; edit here for a one-off tweak.")
+                edited = st.text_area("Full prompt", stored, height=260,
                                       key=f"agtxt_{s.id}", label_visibility="collapsed")
             st.caption("Copy it → HeyGen **Prompt to Video** → it returns a plan to approve → "
                        "render → drop the MP4 back in below.")

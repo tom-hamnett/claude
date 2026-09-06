@@ -77,10 +77,8 @@ DEFAULT_BRAND_STANDARDS = {
         "never_name": True,
         "punch_at": ["empty expertise", "strategy theatre", "the framework industry",
                      "the academic approach", "the old way"],
-        "video_style": ("The animated DATA GRAPHICS are bold and minimalist on a clean dark "
-                        "background — near-black #080F0C, near-white text #E9F2EC, signal-green "
-                        "#20C878 and gold #FFD166 accents, modern sans-serif. Smash cuts between "
-                        "points."),
+        "video_style": ("clean and minimal, dark background with signal-green (#20C878) and gold "
+                        "(#FFD166) accents"),
     },
     "edginess": {
         "level": 8,

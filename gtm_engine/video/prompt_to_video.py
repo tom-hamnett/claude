@@ -66,23 +66,17 @@ def _frame(voice: str) -> list[str]:
     """The brief for HeyGen's Prompt-to-Video flow: format + one coherent STYLE block +
     delivery. This flow generates a plan you approve, and REWARDS detail — so we lead with a
     self-consistent style and then (in _assemble) a concrete scene-by-scene with real data."""
-    out = [
-        "Create a ~40-second vertical (9:16) short-form video for LinkedIn and Instagram — an "
-        "authoritative talking-head presenter intercut with clean, animated data visualisations.",
-        # Ask HeyGen for a reviewable plan first (don't auto-proceed).
-        "FIRST, give me a scene-by-scene PLAN to review and approve BEFORE you generate the video.",
-        # Be open: let HeyGen do what it's best at, be prescriptive only where we must.
-        "Use your own engine and style for what you're best at — the overall look, captions, "
-        "transitions, multi-camera angles and pacing. I'm specific ONLY about the script and the "
-        "data/b-roll to visualise (below); treat everything else as yours to design.",
-        "DELIVERY: measured, credible and unhurried — not hyped or salesy.",
-    ]
     style = _video_style()
-    if style:
-        out.append("DATA-GRAPHICS LOOK (a light preference — use your judgement): " + style)
-    # NB: no brand voice / positioning here — the script is already written; HeyGen just reads
-    # it. Voice belongs to script GENERATION, not to the video prompt.
-    return out
+    graphics = f" Data graphics: {style}." if style else ""
+    # One tight header: setup + "plan first" + the camera note. Everything else is HeyGen's.
+    header = (
+        "Make a ~40-second vertical (9:16) talking-head reel with clean, animated data graphics. "
+        "FIRST, give me a scene-by-scene plan to review before you generate (don't auto-proceed). "
+        "Use your own style and engine for the look, captions, transitions and pacing — just vary "
+        "the camera angle across the different snippets." + graphics
+        + f" End on a lower-third handle: {_handle()}."
+    )
+    return [header]
 
 
 def build_agent_prompt(concept: str, script: str, mode: str, data_text: str,
@@ -122,10 +116,8 @@ def _assemble(script_lines: list[str], scenes: list[dict], data_text: str, voice
             blocks.append(f"- {beat}: {vis}" if vis else f"- {beat}")
         out.append("THE B-ROLL / DATA I NEED YOU TO INCLUDE (match these to the script above; "
                    "design everything else yourself):\n" + "\n".join(blocks))
-    # No raw source/reference dump and no separate DATA block — the figures live in the
-    # b-roll lines above; the presenter setting and subtitles are HeyGen's own from the avatar.
+    # Figures live in the b-roll lines above; setting/subtitles/handle are handled in the header.
     out.append("Only use the numbers in the b-roll above; never invent a figure.")
-    out.append(f"Close on the handle: {_handle()}.")
     return "\n\n".join(out)
 
 
@@ -248,6 +240,71 @@ def script_from_prompt(prompt: str) -> str:
         elif out:
             break
     return "\n".join(out)
+
+
+def broll_text_of(piece) -> str:
+    """The editable B-ROLL / data-viz notes as plain text (one 'beat: visual' per line),
+    from the stored scenes; falls back to pulling them out of the built prompt for old reels."""
+    meta = getattr(piece, "meta", None) or {}
+    scenes = meta.get("scenes") or []
+    lines = []
+    for sc in scenes:
+        beat = str(sc.get("beat", "")).strip()
+        vis = str(sc.get("visual", "") or sc.get("on_screen", "")).strip()
+        if beat and vis:
+            lines.append(f"{beat}: {vis}")
+        elif vis or beat:
+            lines.append(vis or beat)
+    if lines:
+        return "\n".join(lines)
+    return broll_from_prompt(meta.get("agent_prompt", ""))
+
+
+def broll_from_prompt(prompt: str) -> str:
+    """Extract the B-ROLL section (the '- ' lines) out of an already-built prompt."""
+    if not prompt:
+        return ""
+    out, collecting = [], False
+    for ln in prompt.split("\n"):
+        s = ln.strip()
+        if not collecting:
+            if s.upper().startswith("B-ROLL"):
+                collecting = True
+            continue
+        if s.startswith("- "):
+            out.append(s[2:].strip())
+        elif s == "":
+            continue
+        elif out:
+            break
+    return "\n".join(out)
+
+
+def _scenes_from_broll_text(text: str) -> list[dict]:
+    """Parse edited 'beat: visual' lines back into scene dicts."""
+    scenes = []
+    for ln in (text or "").split("\n"):
+        s = ln.strip().lstrip("-").strip()
+        if not s:
+            continue
+        if ": " in s:
+            beat, vis = s.split(": ", 1)
+            scenes.append({"beat": beat.strip(), "visual": vis.strip()})
+        else:
+            scenes.append({"beat": "", "visual": s})
+    return scenes
+
+
+def set_broll(piece_id: int, broll_text: str) -> str:
+    """Save edited b-roll / data-viz notes and rebuild the prompt. Returns the new prompt."""
+    from gtm_engine.content_studio import ContentStudioStore
+    store = ContentStudioStore()
+    p = store.get_piece(piece_id)
+    if not p:
+        return ""
+    p.meta = {**(p.meta or {}), "scenes": _scenes_from_broll_text(broll_text)}
+    store.save_piece(p)
+    return _reassemble_prompt(piece_id)
 
 
 def set_script(piece_id: int, script_text: str) -> str:
