@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-09m · Minimal reel prompt — tight header + two review items (Script, B-roll)"
+BUILD_TAG = "2026-09-09n · Reel prompt echoes the winning plan — rich style + paired scene-by-scene (VO+Visual); one editable Scene plan"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -1973,44 +1973,34 @@ def _heygen_agent_block(store, s):
             st.caption("Tap **Generate** — the script + scene breakdown appears right here to "
                        "review and edit before you copy it into HeyGen.")
         else:
-            # Section 1 — the SCRIPT: edit it by hand OR ask AI to revise it, like a chat.
-            st.markdown("**📝 Script** — edit the words here before you pass it over")
-            _script_seed = (meta.get("script") or "").strip() or "\n".join(
-                str(sc.get("say", "")).strip() for sc in (meta.get("scenes") or [])
-                if str(sc.get("say", "")).strip()) or ptv.script_from_prompt(stored)
-            script_txt = st.text_area("Script", _script_seed, height=170,
-                                      key=f"agscript_{s.id}", label_visibility="collapsed")
-            if not _script_seed.strip():
-                st.caption("↑ Empty? This reel was made before scripts were stored — hit "
-                           "**↻ Regenerate script + scenes** above and it'll populate.")
-            sc1, sc2 = st.columns(2)
-            if sc1.button("💾 Save script", key=f"agscsave_{s.id}", use_container_width=True):
-                ptv.set_script(s.id, script_txt)
-                st.toast("Script saved — prompt updated.")
+            # The review unit is the SCENE PLAN — voiceover + visual per scene, exactly like the
+            # plan HeyGen returns. Edit it by hand or ask AI to revise the whole plan.
+            st.markdown("**🎬 Scene plan** — the voiceover + the data visual for each scene")
+            st.caption("Each block: `[Beat · role]` then `VO:` and `Visual:`. Keep the visuals "
+                       "concrete (that's what makes HeyGen actually build the graphics).")
+            plan_seed = ptv.plan_text_of(s)
+            plan_txt = st.text_area("Scene plan", plan_seed, height=340,
+                                    key=f"agplan_{s.id}", label_visibility="collapsed")
+            if not plan_seed.strip():
+                st.caption("↑ Empty? Hit **↻ Regenerate script + scenes** above to (re)build it.")
+            pc1, pc2 = st.columns(2)
+            if pc1.button("💾 Save plan", key=f"agplansave_{s.id}", use_container_width=True):
+                ptv.set_plan(s.id, plan_txt)
+                st.toast("Plan saved — prompt updated.")
                 st.rerun()
-            ask = st.text_input("✨ Ask AI to revise the script",
-                                key=f"agscask_{s.id}",
-                                placeholder="e.g. punchier hook · make it shorter · lead with the number")
-            if sc2.button("✨ Apply AI edit", key=f"agscai_{s.id}", use_container_width=True,
+            ask = st.text_input("✨ Ask AI to revise the plan", key=f"agask_{s.id}",
+                                placeholder="e.g. punchier hook · add a chart to scene 2 · natural presenter")
+            if pc2.button("✨ Apply AI edit", key=f"agai_{s.id}", use_container_width=True,
                           disabled=not ask.strip()):
-                with st.spinner("Revising the script…"):
-                    ptv.revise_script(s.id, ask)
-                st.toast("Script revised — prompt updated.")
+                with st.spinner("Revising the plan…"):
+                    ptv.revise_plan(s.id, ask)
+                st.toast("Plan revised — prompt updated.")
                 st.rerun()
 
-            # Section 2 — the B-ROLL / data-viz notes, on their own, editable.
-            st.markdown("**🎞 B-roll / data to show** — the visuals, one per line (`beat: what to show`)")
-            broll_txt = st.text_area("B-roll", ptv.broll_text_of(s), height=140,
-                                     key=f"agbr_{s.id}", label_visibility="collapsed")
-            if st.button("💾 Save b-roll", key=f"agbrsave_{s.id}", use_container_width=True):
-                ptv.set_broll(s.id, broll_txt)
-                st.toast("B-roll saved — prompt updated.")
-                st.rerun()
-
-            # Section 3 — the full assembled prompt, tucked away (this is what you paste).
-            with st.expander("🎬 Full prompt for HeyGen — copy this"):
-                st.caption("Built from the header + your script + your b-roll. This exact text is "
-                           "what you paste; edit here for a one-off tweak.")
+            # The full assembled prompt, tucked away (this is what you paste).
+            with st.expander("📋 Full prompt for HeyGen — copy this"):
+                st.caption("Header + style + your scene plan. This exact text is what you paste; "
+                           "edit here for a one-off tweak.")
                 edited = st.text_area("Full prompt", stored, height=260,
                                       key=f"agtxt_{s.id}", label_visibility="collapsed")
             st.caption("Copy it → HeyGen **Prompt to Video** → it returns a plan to approve → "

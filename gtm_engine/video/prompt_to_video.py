@@ -66,17 +66,21 @@ def _frame(voice: str) -> list[str]:
     """The brief for HeyGen's Prompt-to-Video flow: format + one coherent STYLE block +
     delivery. This flow generates a plan you approve, and REWARDS detail — so we lead with a
     self-consistent style and then (in _assemble) a concrete scene-by-scene with real data."""
+    # Mirror the plan that worked: setup + "plan first" + a rich STYLE block + a presenter/
+    # camera note (fixes the uncanny single-angle result), then the scene-by-scene below.
+    out = [
+        "Create a ~40-second vertical (9:16) short-form video for LinkedIn and Instagram — an "
+        "authoritative talking-head presenter intercut with clean, animated data visualisations.",
+        "FIRST, give me a scene-by-scene plan to review before you generate (don't auto-proceed).",
+    ]
     style = _video_style()
-    graphics = f" Data graphics: {style}." if style else ""
-    # One tight header: setup + "plan first" + the camera note. Everything else is HeyGen's.
-    header = (
-        "Make a ~40-second vertical (9:16) talking-head reel with clean, animated data graphics. "
-        "FIRST, give me a scene-by-scene plan to review before you generate (don't auto-proceed). "
-        "Use your own style and engine for the look, captions, transitions and pacing — just vary "
-        "the camera angle across the different snippets." + graphics
-        + f" End on a lower-third handle: {_handle()}."
-    )
-    return [header]
+    if style:
+        out.append("STYLE: " + style)
+    out.append("PRESENTER: natural and composed, a measured expression — NOT a fixed grin or "
+               "uncanny smile. Vary the camera framing/angle between scenes so it isn't one "
+               "static shot.")
+    out.append(f"End on a lower-third handle: {_handle()}.")
+    return out
 
 
 def build_agent_prompt(concept: str, script: str, mode: str, data_text: str,
@@ -101,23 +105,29 @@ def _assemble(script_lines: list[str], scenes: list[dict], data_text: str, voice
     produced the result that worked — this flow generates a plan you approve, so detail helps."""
     from gtm_engine.utils.text_clean import clean_text
     out = _frame(voice)
-    # Script and b-roll are SEPARATE blocks — the script is the words (easy to edit on its own),
-    # the b-roll is the visuals I need. HeyGen matches them and designs everything else.
-    if script_lines:
-        out.append("SCRIPT — the exact words to say, in order:\n"
-                   + "\n".join(f"- {clean_text(ln)}" for ln in script_lines if clean_text(ln)))
+    # Winning structure: a SCENE-BY-SCENE table pairing the voiceover with the animated visual
+    # for each scene (this is what HeyGen turns into the plan you approve and actually builds).
     if scenes:
         blocks = []
         for i, sc in enumerate(scenes, 1):
-            beat = clean_text((sc.get("beat") or f"Beat {i}").strip())
+            beat = clean_text((sc.get("beat") or f"Scene {i}").strip())
+            roll = clean_text((sc.get("roll") or "").strip())
+            say = clean_text((sc.get("say") or "").strip())
             vis = clean_text((sc.get("visual") or sc.get("on_screen") or "").strip())
-            if not vis and (sc.get("roll", "").lower() == "presenter"):
-                vis = "presenter on camera"
-            blocks.append(f"- {beat}: {vis}" if vis else f"- {beat}")
-        out.append("THE B-ROLL / DATA I NEED YOU TO INCLUDE (match these to the script above; "
-                   "design everything else yourself):\n" + "\n".join(blocks))
-    # Figures live in the b-roll lines above; setting/subtitles/handle are handled in the header.
-    out.append("Only use the numbers in the b-roll above; never invent a figure.")
+            head = f"{i}. {beat}" + (f" · {roll}" if roll else "")
+            block = head
+            if say:
+                block += f'\n   VO: "{say}"'
+            if vis:
+                block += f"\n   Visual: {vis}"
+            blocks.append(block)
+        out.append("SCENE-BY-SCENE — the voiceover and the animated data visual for each scene "
+                   "(include ALL of these; the data visuals are the point):\n\n"
+                   + "\n\n".join(blocks))
+    elif script_lines:
+        out.append("SCRIPT — the exact words to say, in order:\n"
+                   + "\n".join(f"- {clean_text(ln)}" for ln in script_lines if clean_text(ln)))
+    out.append("Only use the numbers in the visuals above; never invent a figure.")
     return "\n\n".join(out)
 
 
@@ -242,68 +252,137 @@ def script_from_prompt(prompt: str) -> str:
     return "\n".join(out)
 
 
-def broll_text_of(piece) -> str:
-    """The editable B-ROLL / data-viz notes as plain text (one 'beat: visual' per line),
-    from the stored scenes; falls back to pulling them out of the built prompt for old reels."""
+def plan_text_of(piece) -> str:
+    """The editable SCENE PLAN as text — one block per scene, mirroring the plan HeyGen
+    returns:  [Beat · roll] / VO: ... / Visual: ...  . Falls back to parsing the built prompt."""
     meta = getattr(piece, "meta", None) or {}
     scenes = meta.get("scenes") or []
-    lines = []
+    blocks = []
     for sc in scenes:
         beat = str(sc.get("beat", "")).strip()
+        roll = str(sc.get("roll", "")).strip()
+        say = str(sc.get("say", "")).strip()
         vis = str(sc.get("visual", "") or sc.get("on_screen", "")).strip()
-        if beat and vis:
-            lines.append(f"{beat}: {vis}")
-        elif vis or beat:
-            lines.append(vis or beat)
-    if lines:
-        return "\n".join(lines)
-    return broll_from_prompt(meta.get("agent_prompt", ""))
+        head = f"[{beat}" + (f" · {roll}" if roll else "") + "]"
+        b = head
+        if say:
+            b += f"\nVO: {say}"
+        if vis:
+            b += f"\nVisual: {vis}"
+        blocks.append(b)
+    if blocks:
+        return "\n\n".join(blocks)
+    return _plan_from_prompt(meta.get("agent_prompt", ""))
 
 
-def broll_from_prompt(prompt: str) -> str:
-    """Extract the B-ROLL section (the '- ' lines) out of an already-built prompt."""
+def _plan_from_prompt(prompt: str) -> str:
+    """Recover an editable scene plan from a built prompt's SCENE-BY-SCENE section (old reels)."""
+    import re
+    scenes = _scenes_from_prompt_scenes(prompt)
+    blocks = []
+    for sc in scenes:
+        head = f"[{sc['beat']}" + (f" · {sc['roll']}" if sc.get("roll") else "") + "]"
+        b = head
+        if sc.get("say"):
+            b += f"\nVO: {sc['say']}"
+        if sc.get("visual"):
+            b += f"\nVisual: {sc['visual']}"
+        blocks.append(b)
+    return "\n\n".join(blocks)
+
+
+def _scenes_from_prompt_scenes(prompt: str) -> list[dict]:
+    """Parse the 'N. beat · roll / VO: ".." / Visual: ..' blocks out of a built prompt."""
+    import re
     if not prompt:
-        return ""
-    out, collecting = [], False
+        return []
+    scenes, cur = [], None
     for ln in prompt.split("\n"):
         s = ln.strip()
-        if not collecting:
-            if s.upper().startswith("B-ROLL"):
-                collecting = True
-            continue
-        if s.startswith("- "):
-            out.append(s[2:].strip())
-        elif s == "":
-            continue
-        elif out:
-            break
-    return "\n".join(out)
-
-
-def _scenes_from_broll_text(text: str) -> list[dict]:
-    """Parse edited 'beat: visual' lines back into scene dicts."""
-    scenes = []
-    for ln in (text or "").split("\n"):
-        s = ln.strip().lstrip("-").strip()
-        if not s:
-            continue
-        if ": " in s:
-            beat, vis = s.split(": ", 1)
-            scenes.append({"beat": beat.strip(), "visual": vis.strip()})
-        else:
-            scenes.append({"beat": "", "visual": s})
+        m = re.match(r"^\d+\.\s+(.*)$", s)
+        if m:
+            if cur:
+                scenes.append(cur)
+            head = m.group(1)
+            beat, roll = (head.split("·", 1) + [""])[:2]
+            cur = {"beat": beat.strip(), "roll": roll.strip(), "say": "", "visual": ""}
+        elif cur and s.lower().startswith("vo:"):
+            cur["say"] = s[3:].strip().strip('"')
+        elif cur and s.lower().startswith("visual:"):
+            cur["visual"] = s[7:].strip()
+    if cur:
+        scenes.append(cur)
     return scenes
 
 
-def set_broll(piece_id: int, broll_text: str) -> str:
-    """Save edited b-roll / data-viz notes and rebuild the prompt. Returns the new prompt."""
+def _scenes_from_plan_text(text: str) -> list[dict]:
+    """Parse the edited scene-plan text back into scene dicts."""
+    import re
+    scenes = []
+    for block in re.split(r"\n\s*\n", text or ""):
+        lines = [l for l in block.split("\n") if l.strip()]
+        if not lines:
+            continue
+        head = lines[0].strip().strip("[]").strip()
+        beat, roll = (head.split("·", 1) + [""])[:2]
+        sc = {"beat": beat.strip(), "roll": roll.strip(), "say": "", "visual": ""}
+        for l in lines[1:]:
+            ls = l.strip()
+            if ls.lower().startswith("vo:"):
+                sc["say"] = ls[3:].strip().strip('"')
+            elif ls.lower().startswith("visual:"):
+                sc["visual"] = ls[7:].strip()
+            elif not sc["visual"] and not ls.lower().startswith(("vo", "visual")):
+                sc["visual"] = ls
+        scenes.append(sc)
+    return scenes
+
+
+def set_plan(piece_id: int, plan_text: str) -> str:
+    """Save an edited scene plan (VO + Visual per scene) and rebuild the prompt."""
     from gtm_engine.content_studio import ContentStudioStore
     store = ContentStudioStore()
     p = store.get_piece(piece_id)
     if not p:
         return ""
-    p.meta = {**(p.meta or {}), "scenes": _scenes_from_broll_text(broll_text)}
+    scenes = _scenes_from_plan_text(plan_text)
+    script = "\n".join(sc.get("say", "") for sc in scenes if sc.get("say"))
+    p.meta = {**(p.meta or {}), "scenes": scenes, "script": script}
     store.save_piece(p)
+    return _reassemble_prompt(piece_id)
+
+
+def revise_plan(piece_id: int, instruction: str) -> str:
+    """Ask Claude to revise the whole scene plan per a plain instruction (add b-roll, punchier
+    hook, natural presenter, etc.), save it, and rebuild the prompt. Returns the new prompt."""
+    import json as _json
+    from gtm_engine.content_studio import ContentStudioStore
+    from gtm_engine.content_studio.generator import _brand_voice
+    from gtm_engine.utils.ai_client import call_claude
+    store = ContentStudioStore()
+    p = store.get_piece(piece_id)
+    if not p:
+        return ""
+    scenes = (p.meta or {}).get("scenes") or []
+    sys = ("You revise the scene plan of a ~40-second vertical talking-head reel with animated "
+           "data visualisations. Apply the user's instruction. Keep the voiceover short and for "
+           "the ear; keep each scene's visual a CONCRETE animated data graphic (chart type, "
+           "values, what animates, colours, a short kicker) — never vague. " + _brand_voice()
+           + " Never invent statistics. Return ONLY JSON: {\"scenes\":[{\"beat\":\"\",\"roll\":"
+           "\"presenter|data\",\"say\":\"the spoken lines\",\"visual\":\"concrete animated "
+           "visual\"}]}")
+    raw = call_claude(f"CURRENT SCENES:\n{_json.dumps(scenes, ensure_ascii=False)}\n\n"
+                      f"INSTRUCTION: {instruction.strip()}\n\nReturn ONLY the revised JSON.",
+                      system=sys, max_tokens=1600)
+    s, e = raw.find("{"), raw.rfind("}")
+    try:
+        new = [sc for sc in (_json.loads(raw[s:e + 1]).get("scenes") or []) if isinstance(sc, dict)]
+    except Exception:
+        new = []
+    if new:
+        script = "\n".join(sc.get("say", "") for sc in new if sc.get("say"))
+        p.meta = {**(p.meta or {}), "scenes": new, "script": script}
+        store.save_piece(p)
     return _reassemble_prompt(piece_id)
 
 
