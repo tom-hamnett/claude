@@ -155,19 +155,22 @@ def compose_agent_prompt(piece_id: int, broll_notes: str = "") -> str:
     voice = _brand_voice()
     concept = f"{p.caption or ''}\n{p.body or ''}".strip()
 
-    sys = ("You script a ~40-second vertical talking-head reel intercut with animated DATA "
-           "visualisations, for HeyGen's Prompt-to-Video (which generates a plan the user then "
-           "approves). " + voice + " Write for the EAR: short spoken lines, one idea each, "
-           "spoken rhythm. Structure hook → tension → proof → payoff → close. Use ONLY numbers "
-           "that appear in the material; never invent a statistic. Build the on-screen visuals "
-           "from the user's VISUALS BRIEF below — use those graphics/cutaways, don't substitute "
-           "your own. For each scene give: beat (a short name), roll ('presenter' or 'data'), "
-           "say (the spoken lines for that scene), and visual — for a DATA scene describe the "
-           "animated graphic CONCRETELY (chart type, which values, what animates, which colours "
-           "from the style, and an optional short kicker line); for a PRESENTER scene just "
-           "'presenter, captions track the line'. Return ONLY JSON: {\"script\":[\"line\",...], "
-           "\"scenes\":[{\"beat\":\"\",\"roll\":\"presenter|data\",\"say\":\"the spoken lines\","
-           "\"visual\":\"concrete animated visual, or presenter note\"}]}")
+    sys = ("You script a ~40-second vertical talking-head reel with a few simple animated data "
+           "graphics, for HeyGen's Prompt-to-Video (it generates a plan the user approves). "
+           + voice + " Write for the EAR: short spoken lines, one idea each. Structure hook → "
+           "tension → proof → payoff → close. KEEP IT TIGHT: at most 6 scenes and UNDER ~110 "
+           "words of voiceover in total (one or two short sentences per scene) so it fits ~40 "
+           "seconds. Use ONLY numbers that appear in the material; never invent a statistic. "
+           "Build the visuals from the user's VISUALS BRIEF below, but SIMPLIFY them. For each "
+           "scene give: beat, roll ('presenter' or 'data'), say (the spoken lines), and visual. "
+           "For a DATA scene, describe the visual in ONE short plain sentence — WHAT it shows (a "
+           "comparison, a number, or a trend) — and keep it to a SIMPLE, robust graphic: a bar "
+           "chart, two lines, a big number, or a before/after. Do NOT choreograph gauges, dials, "
+           "needles, spotlights, network webs, or frame-by-frame animation — HeyGen renders "
+           "those literally and badly. For a PRESENTER scene, just 'presenter on camera'. Return "
+           "ONLY JSON: {\"script\":[\"line\"], \"scenes\":[{\"beat\":\"\",\"roll\":\"presenter|"
+           "data\",\"say\":\"...\",\"visual\":\"one short plain description, or presenter on "
+           "camera\"}]}")
     ctx = f"CONCEPT / ANGLE:\n{concept}\n\n"
     if broll_notes:
         ctx += ("VISUALS BRIEF — the graphics / b-roll / cutaways to build the scenes from "
@@ -370,13 +373,15 @@ def revise_plan(piece_id: int, instruction: str) -> str:
     if not p:
         return ""
     scenes = (p.meta or {}).get("scenes") or []
-    sys = ("You revise the scene plan of a ~40-second vertical talking-head reel with animated "
-           "data visualisations. Apply the user's instruction. Keep the voiceover short and for "
-           "the ear; keep each scene's visual a CONCRETE animated data graphic (chart type, "
-           "values, what animates, colours, a short kicker) — never vague. " + _brand_voice()
-           + " Never invent statistics. Return ONLY JSON: {\"scenes\":[{\"beat\":\"\",\"roll\":"
-           "\"presenter|data\",\"say\":\"the spoken lines\",\"visual\":\"concrete animated "
-           "visual\"}]}")
+    sys = ("You revise the scene plan of a ~40-second vertical talking-head reel with a few "
+           "simple animated data graphics. Apply the user's instruction. KEEP IT TIGHT: at most "
+           "6 scenes, under ~110 words of voiceover total, so it fits ~40 seconds. Keep each "
+           "scene's visual a SIMPLE, robust graphic described in ONE short plain sentence — a bar "
+           "chart, two lines, a big number, or a before/after — NOT gauges, dials, needles, "
+           "spotlights, network webs or frame-by-frame choreography (HeyGen renders those "
+           "literally and badly). " + _brand_voice() + " Never invent statistics. Return ONLY "
+           "JSON: {\"scenes\":[{\"beat\":\"\",\"roll\":\"presenter|data\",\"say\":\"the spoken "
+           "lines\",\"visual\":\"one short plain description\"}]}")
     raw = call_claude(f"CURRENT SCENES:\n{_json.dumps(scenes, ensure_ascii=False)}\n\n"
                       f"INSTRUCTION: {instruction.strip()}\n\nReturn ONLY the revised JSON.",
                       system=sys, max_tokens=3000)

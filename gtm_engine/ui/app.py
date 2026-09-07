@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-09o · Fix blank scene plan — raise AI token cap (detailed scenes were truncating) + synth scenes from script"
+BUILD_TAG = "2026-09-09p · Simpler, shorter scenes — one-line visuals (no gauges/needles/choreography), ≤6 scenes, ~40s"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
