@@ -79,3 +79,50 @@ def test_uploaded_visual_is_preferred_kind_and_gates_pass(db):
     e = add_uploaded_visual(eid, "/tmp/two.png", title="Second")
     e = remove_visual(eid, "VIZ 1")
     assert len(e.visuals) == 1 and e.visuals[0].id == "VIZ 1" and e.visuals[0].title == "Second"
+
+
+def _essay_with_visuals(store):
+    from gtm_engine.essay import Essay, Visual
+    eid = store.create(Essay(
+        title="The complexity tax",
+        body="# The Complexity Tax\n\nUtilisation is a lie. Complexity multiplies cost.",
+        visuals=[Visual(id="VIZ 1", title="Utilisation vs cash", chart_type="grouped bars",
+                        spec="utilisation 95% vs free cash flat", caption="cash frozen",
+                        kind="illustrative"),
+                 Visual(id="VIZ 2", title="Multiplier", chart_type="big number",
+                        spec="1 to 45", caption="cost multiplies", kind="uploaded")]))
+    return store.get(eid)
+
+
+def test_reel_prompt_uses_locked_template_and_references_library(db, monkeypatch):
+    import gtm_engine.utils.ai_client as aic
+    monkeypatch.setattr(aic, "call_claude", lambda *a, **k: json.dumps({"scenes": [
+        {"beat": "Hook", "role": "presenter", "say": "Utilisation is a lie.", "viz": ""},
+        {"beat": "The trap", "role": "data", "say": "Cash sits frozen.", "viz": "VIZ 1"},
+        {"beat": "Close", "role": "presenter", "say": "Follow the cash.", "viz": ""}]}))
+    from gtm_engine.essay import EssayStore
+    from gtm_engine.essay.derivatives import reel_prompt, REEL_STYLE
+    e = _essay_with_visuals(EssayStore())
+    out = reel_prompt(e)
+    assert REEL_STYLE in out                                   # locked style, verbatim
+    assert "SCENE / VOICEOVER / VISUAL" in out and "Voiceover:" in out
+    assert "VIZ 1 — grouped bars" in out                       # data scene references the library
+    assert "label this graphic 'illustrative'" in out         # illustrative flag carried through
+    assert "VISUAL LIBRARY" in out and "The Rational Strategist" in out
+    assert "Presenter only, framed right-of-centre" in out     # locked hook bookend
+
+
+def test_x_thread_and_linkedin_and_carousel_from_essay(db, monkeypatch):
+    import gtm_engine.utils.ai_client as aic
+    from gtm_engine.essay import EssayStore
+    e = _essay_with_visuals(EssayStore())
+    monkeypatch.setattr(aic, "call_claude", lambda *a, **k: "1/ Utilisation is a lie.\n\n2/ Follow the cash.")
+    from gtm_engine.essay.derivatives import x_thread, linkedin_post, carousel_specs
+    assert "1/" in x_thread(e)
+    monkeypatch.setattr(aic, "call_claude", lambda *a, **k: "Most dashboards lie. Here's why.")
+    assert "dashboards" in linkedin_post(e)
+    monkeypatch.setattr(aic, "call_claude", lambda *a, **k: json.dumps({"slides": [
+        {"type": "cover", "title": "Utilisation is a lie", "body": "here's why"},
+        {"type": "cta", "title": "Follow the cash", "body": "read the essay"}]}))
+    slides = carousel_specs(e)
+    assert len(slides) == 2 and slides[0]["type"] == "cover"

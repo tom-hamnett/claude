@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-09q · Prompt restructured — script block, analysis-only style, minimal avatar/analysis breakdown; analysis precise but safe chart types"
+BUILD_TAG = "2026-09-10a · Essay-first rebuild — ESSAY · REEL · CAROUSEL · X tabs; one essay → all channels, shared visual library"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {
@@ -78,19 +78,20 @@ def main():
     # Persistence status + one-tap save — front and centre so it's never a surprise.
     _persistence_bar()
 
-    # Navigation — STUDIO is the front door (new content starts here).
-    studio_tab, plan_tab, create_tab, perform_tab, settings_tab = st.tabs([
-        "STUDIO", "PLAN", "CREATE", "PERFORM", "SETTINGS"
+    # Navigation — the ESSAY is the front door; every channel derives from it.
+    from gtm_engine.ui import essay_ui
+    essay_tab, reel_tab, carousel_tab, x_tab, settings_tab = st.tabs([
+        "ESSAY", "REEL", "CAROUSEL", "X", "SETTINGS"
     ])
 
-    with studio_tab:
-        _render_studio()
-    with plan_tab:
-        _render_plan()
-    with create_tab:
-        _render_create()
-    with perform_tab:
-        _render_perform()
+    with essay_tab:
+        essay_ui.render_essay_tab()
+    with reel_tab:
+        essay_ui.render_reel_tab()
+    with carousel_tab:
+        essay_ui.render_carousel_tab()
+    with x_tab:
+        essay_ui.render_x_tab()
     with settings_tab:
         _render_settings()
 

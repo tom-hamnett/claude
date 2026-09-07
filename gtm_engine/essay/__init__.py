@@ -43,6 +43,7 @@ class Essay(BaseModel):
     qa: list[dict] = Field(default_factory=list)     # [{"q":..., "a":...}]
     body: str = ""                                    # the SCQA essay (markdown)
     visuals: list[Visual] = Field(default_factory=list)
+    derivatives: dict = Field(default_factory=dict)   # {reel|carousel|x|linkedin: {...}}
     status: str = "drafting"                          # drafting | ready | generated
     created_at: str = ""
     updated_at: str = ""
@@ -60,12 +61,13 @@ CREATE TABLE IF NOT EXISTS essays (
     qa TEXT DEFAULT '[]',
     body TEXT DEFAULT '',
     visuals TEXT DEFAULT '[]',
+    derivatives TEXT DEFAULT '{}',
     status TEXT DEFAULT 'drafting',
     created_at TEXT,
     updated_at TEXT
 );
 """
-_MIGRATIONS: dict[str, str] = {}
+_MIGRATIONS: dict[str, str] = {"derivatives": "TEXT DEFAULT '{}'"}
 
 
 class EssayStore:
@@ -100,10 +102,10 @@ class EssayStore:
         e.updated_at = now
         with self._connect() as conn:
             cur = conn.execute(
-                """INSERT INTO essays (title, topic, qa, body, visuals, status, created_at, updated_at)
-                   VALUES (?,?,?,?,?,?,?,?)""",
+                """INSERT INTO essays (title, topic, qa, body, visuals, derivatives, status,
+                   created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?)""",
                 (e.title, e.topic, json.dumps(e.qa), e.body,
-                 json.dumps([v.model_dump() for v in e.visuals]),
+                 json.dumps([v.model_dump() for v in e.visuals]), json.dumps(e.derivatives),
                  e.status, e.created_at, e.updated_at),
             )
             conn.commit()
@@ -115,10 +117,10 @@ class EssayStore:
         e.updated_at = datetime.now(timezone.utc).isoformat()
         with self._connect() as conn:
             conn.execute(
-                """UPDATE essays SET title=?, topic=?, qa=?, body=?, visuals=?, status=?, updated_at=?
-                   WHERE id=?""",
+                """UPDATE essays SET title=?, topic=?, qa=?, body=?, visuals=?, derivatives=?,
+                   status=?, updated_at=? WHERE id=?""",
                 (e.title, e.topic, json.dumps(e.qa), e.body,
-                 json.dumps([v.model_dump() for v in e.visuals]),
+                 json.dumps([v.model_dump() for v in e.visuals]), json.dumps(e.derivatives),
                  e.status, e.updated_at, e.id),
             )
             conn.commit()
@@ -148,6 +150,7 @@ class EssayStore:
             qa=json.loads(g("qa", "[]") or "[]"),
             body=g("body", ""),
             visuals=[Visual(**v) for v in json.loads(g("visuals", "[]") or "[]")],
+            derivatives=json.loads(g("derivatives", "{}") or "{}"),
             status=g("status", "drafting"),
             created_at=g("created_at", ""), updated_at=g("updated_at", ""),
         )
