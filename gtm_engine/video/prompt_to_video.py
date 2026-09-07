@@ -176,7 +176,8 @@ def compose_agent_prompt(piece_id: int, broll_notes: str = "") -> str:
         ctx += f"BLOG CONTEXT (for facts/tone):\n{blog.body[:2500]}\n\n"
     if data_text.strip():
         ctx += f"REFERENCE FIGURES (the only numbers allowed):\n{data_text[:1200]}\n\n"
-    raw = call_claude(ctx + "Return ONLY the JSON.", system=sys, max_tokens=1500)
+    # Detailed scene visuals need room — too small a cap truncates the JSON and yields nothing.
+    raw = call_claude(ctx + "Return ONLY the JSON.", system=sys, max_tokens=4000)
     script_lines, scenes = [], []
     s, e = raw.find("{"), raw.rfind("}")
     if s != -1:
@@ -191,6 +192,11 @@ def compose_agent_prompt(piece_id: int, broll_notes: str = "") -> str:
                                 if str(sc.get("say", "")).strip()]
         except Exception:
             pass
+    # Safety net: if we got a script but no scenes (e.g. truncated/partial JSON), build a
+    # scene per line so the plan is never blank — the user can flesh out the visuals.
+    if script_lines and not scenes:
+        scenes = [{"beat": f"Scene {i + 1}", "roll": "", "say": ln, "visual": ""}
+                  for i, ln in enumerate(script_lines)]
     if script_lines or scenes:
         prompt = _assemble(script_lines, scenes, data_text, voice)
     else:
@@ -373,7 +379,7 @@ def revise_plan(piece_id: int, instruction: str) -> str:
            "visual\"}]}")
     raw = call_claude(f"CURRENT SCENES:\n{_json.dumps(scenes, ensure_ascii=False)}\n\n"
                       f"INSTRUCTION: {instruction.strip()}\n\nReturn ONLY the revised JSON.",
-                      system=sys, max_tokens=1600)
+                      system=sys, max_tokens=3000)
     s, e = raw.find("{"), raw.rfind("}")
     try:
         new = [sc for sc in (_json.loads(raw[s:e + 1]).get("scenes") or []) if isinstance(sc, dict)]
