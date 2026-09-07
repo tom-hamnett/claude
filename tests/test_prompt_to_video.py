@@ -21,7 +21,7 @@ def test_build_agent_prompt_carries_style_script_and_data():
     out = build_agent_prompt(
         concept="The complexity tax", script="Revenue's up. EBITDA's flat. See it run.",
         mode="insight", data_text="Q1: 34 initiatives, 11% margin", voice="No hype.")
-    assert "9:16" in out and "STYLE:" in out             # setup + rich style block
+    assert "9:16" in out and "STYLE" in out              # setup + analysis-only style
     assert "EBITDA's flat" in out                        # the script is carried verbatim
     assert "34 initiatives" not in out                   # raw source/data is NOT dumped in
     assert "invent" in out.lower()                       # the anti-fabrication guardrail
@@ -44,8 +44,9 @@ def test_compose_prompt_writes_script_and_scenes_for_review(db, monkeypatch):
                                        caption="The complexity tax", content_mode="insight"))
     from gtm_engine.video.prompt_to_video import compose_agent_prompt, agent_prompt_for_piece
     out = compose_agent_prompt(pid)
-    assert "plan" in out.lower() and "STYLE:" in out        # plan request + rich style block
-    assert "SCENE-BY-SCENE" in out and "VO:" in out and "Visual:" in out   # paired scene table
+    assert "plan" in out.lower() and "STYLE" in out         # plan request + analysis-only style
+    assert "SCRIPT" in out and "BREAKDOWN" in out           # script block + minimal shot breakdown
+    assert "Analysis —" in out and "Avatar —" in out        # analysis + avatar rows
     assert "EBITDA's flat." in out and "11% to 19%" in out   # arrow normalised, figures intact
     assert "invent" in out.lower() and "9:16" in out
     # stored, so a later fetch returns the SAME reviewed text (no rebuild)
@@ -95,17 +96,17 @@ def test_edit_scene_plan_manually_and_with_ai(db, monkeypatch):
     txt = ptv.plan_text_of(store.get_piece(pid))
     assert "[Hook · presenter]" in txt and "VO: Old hook." in txt and "Visual: bar 11% to 19%" in txt
 
-    # manual edit → parsed to scenes, rebuilt into the paired scene table
+    # manual edit → parsed to scenes, rebuilt: script block + analysis in the shot breakdown
     prompt = ptv.set_plan(pid, "[Hook · presenter]\nVO: Brand new hook.\nVisual: presenter\n\n"
                                "[Proof · data]\nVO: Sharper point.\nVisual: bar 20% to 40%")
-    assert 'VO: "Brand new hook."' in prompt and "Visual: bar 20% to 40%" in prompt
-    assert "11% to 19%" not in prompt
+    assert "Brand new hook." in prompt and "bar 20% to 40%" in prompt   # script + analysis
+    assert "Avatar —" in prompt and "11% to 19%" not in prompt
 
     # AI revise the whole plan → new scenes JSON, rebuilt
     monkeypatch.setattr(aic, "call_claude", lambda *a, **k: json.dumps({"scenes": [
         {"beat": "Hook", "roll": "presenter", "say": "Punchier hook.", "visual": "presenter"}]}))
     ptv.revise_plan(pid, "punchier hook")
-    assert 'VO: "Punchier hook."' in store.get_piece(pid).meta["agent_prompt"]
+    assert "Punchier hook." in store.get_piece(pid).meta["agent_prompt"]
 
 
 def test_clean_text_strips_tofu_keeps_currency():

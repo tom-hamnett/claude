@@ -66,21 +66,13 @@ def _frame(voice: str) -> list[str]:
     """The brief for HeyGen's Prompt-to-Video flow: format + one coherent STYLE block +
     delivery. This flow generates a plan you approve, and REWARDS detail — so we lead with a
     self-consistent style and then (in _assemble) a concrete scene-by-scene with real data."""
-    # Mirror the plan that worked: setup + "plan first" + a rich STYLE block + a presenter/
-    # camera note (fixes the uncanny single-angle result), then the scene-by-scene below.
-    out = [
-        "Create a ~40-second vertical (9:16) short-form video for LinkedIn and Instagram — an "
-        "authoritative talking-head presenter intercut with clean, animated data visualisations.",
+    # Minimal header only: format + "give me a plan first". No duration (the script sets that),
+    # no presenter line (the avatar carries it), no end-handle. STYLE + scenes come from _assemble.
+    return [
+        "Create a vertical (9:16) short-form video for LinkedIn and Instagram — a talking-head "
+        "presenter intercut with clean, animated data visualisations.",
         "FIRST, give me a scene-by-scene plan to review before you generate (don't auto-proceed).",
     ]
-    style = _video_style()
-    if style:
-        out.append("STYLE: " + style)
-    out.append("PRESENTER: natural and composed, a measured expression — NOT a fixed grin or "
-               "uncanny smile. Vary the camera framing/angle between scenes so it isn't one "
-               "static shot.")
-    out.append(f"End on a lower-third handle: {_handle()}.")
-    return out
 
 
 def build_agent_prompt(concept: str, script: str, mode: str, data_text: str,
@@ -90,12 +82,16 @@ def build_agent_prompt(concept: str, script: str, mode: str, data_text: str,
     from gtm_engine.utils.text_clean import clean_text
     out = _frame(voice)
     if script.strip():
-        out.append("SCRIPT (say these lines, in order):\n" + clean_text(script.strip()))
+        out.append("SCRIPT (the exact words, in order — this sets the length):\n"
+                   + clean_text(script.strip()))
     else:
         out.append("TOPIC / ANGLE:\n" + clean_text(concept.strip()))
-    out.append("At the lines with a figure, show the actual number / before→after on screen. "
-               "Only show numbers that are in the script; never invent one.")
-    out.append(f"Close on the handle: {_handle()}.")
+    style = _video_style()
+    if style:
+        out.append("STYLE — applies to the DATA / ANALYSIS GRAPHICS ONLY (the presenter, framing, "
+                   "captions and transitions are yours): " + style + ".")
+    out.append("At the lines with a figure, show it as a simple bar chart or a big number — never "
+               "a gauge/dial. Only use numbers that appear in the script; never invent one.")
     return "\n\n".join(out)
 
 
@@ -105,29 +101,37 @@ def _assemble(script_lines: list[str], scenes: list[dict], data_text: str, voice
     produced the result that worked — this flow generates a plan you approve, so detail helps."""
     from gtm_engine.utils.text_clean import clean_text
     out = _frame(voice)
-    # Winning structure: a SCENE-BY-SCENE table pairing the voiceover with the animated visual
-    # for each scene (this is what HeyGen turns into the plan you approve and actually builds).
+    # 1) SCRIPT in one block (sets the length). 2) STYLE — analysis graphics only. 3) A minimal
+    # SHOT breakdown: 'Avatar + angle' for presenter, or the precise analysis + where it comes in.
+    lines = list(script_lines) or [str(sc.get("say", "")) for sc in scenes if str(sc.get("say", "")).strip()]
+    lines = [clean_text(l) for l in lines if clean_text(l)]
+    if lines:
+        out.append("SCRIPT (the exact words, in order — this sets the length):\n" + "\n".join(lines))
+    style = _video_style()
+    if style:
+        out.append("STYLE — applies to the DATA / ANALYSIS GRAPHICS ONLY (the presenter, framing, "
+                   "captions and transitions are yours to design): " + style + ".")
     if scenes:
-        blocks = []
+        angles = ["front", "slight left angle", "slight right angle", "closer"]
+        ai, rows = 0, []
         for i, sc in enumerate(scenes, 1):
-            beat = clean_text((sc.get("beat") or f"Scene {i}").strip())
-            roll = clean_text((sc.get("roll") or "").strip())
-            say = clean_text((sc.get("say") or "").strip())
+            roll = (sc.get("roll") or "").lower()
             vis = clean_text((sc.get("visual") or sc.get("on_screen") or "").strip())
-            head = f"{i}. {beat}" + (f" · {roll}" if roll else "")
-            block = head
-            if say:
-                block += f'\n   VO: "{say}"'
-            if vis:
-                block += f"\n   Visual: {vis}"
-            blocks.append(block)
-        out.append("SCENE-BY-SCENE — the voiceover and the animated data visual for each scene "
-                   "(include ALL of these; the data visuals are the point):\n\n"
-                   + "\n\n".join(blocks))
-    elif script_lines:
-        out.append("SCRIPT — the exact words to say, in order:\n"
-                   + "\n".join(f"- {clean_text(ln)}" for ln in script_lines if clean_text(ln)))
-    out.append("Only use the numbers in the visuals above; never invent a figure.")
+            is_analysis = (roll == "data") or (
+                vis and "presenter" not in vis.lower() and "avatar" not in vis.lower())
+            if is_analysis and vis:
+                cue = " ".join(clean_text((sc.get("say") or "").strip()).split()[:8])
+                row = f"{i}. Analysis — {vis}"
+                if cue:
+                    row += f' — in on "{cue}"'
+                rows.append(row)
+            else:
+                rows.append(f"{i}. Avatar — {angles[ai % len(angles)]}")
+                ai += 1
+        out.append("SCENE / SHOT BREAKDOWN (minimal — for each moment: either 'Avatar' + a camera "
+                   "angle, or the analysis animation and where it comes in; nothing more):\n"
+                   + "\n".join(rows))
+    out.append("Only use numbers that appear in the script; never invent a figure.")
     return "\n\n".join(out)
 
 
@@ -155,22 +159,22 @@ def compose_agent_prompt(piece_id: int, broll_notes: str = "") -> str:
     voice = _brand_voice()
     concept = f"{p.caption or ''}\n{p.body or ''}".strip()
 
-    sys = ("You script a ~40-second vertical talking-head reel with a few simple animated data "
-           "graphics, for HeyGen's Prompt-to-Video (it generates a plan the user approves). "
-           + voice + " Write for the EAR: short spoken lines, one idea each. Structure hook → "
-           "tension → proof → payoff → close. KEEP IT TIGHT: at most 6 scenes and UNDER ~110 "
-           "words of voiceover in total (one or two short sentences per scene) so it fits ~40 "
-           "seconds. Use ONLY numbers that appear in the material; never invent a statistic. "
-           "Build the visuals from the user's VISUALS BRIEF below, but SIMPLIFY them. For each "
-           "scene give: beat, roll ('presenter' or 'data'), say (the spoken lines), and visual. "
-           "For a DATA scene, describe the visual in ONE short plain sentence — WHAT it shows (a "
-           "comparison, a number, or a trend) — and keep it to a SIMPLE, robust graphic: a bar "
-           "chart, two lines, a big number, or a before/after. Do NOT choreograph gauges, dials, "
-           "needles, spotlights, network webs, or frame-by-frame animation — HeyGen renders "
-           "those literally and badly. For a PRESENTER scene, just 'presenter on camera'. Return "
-           "ONLY JSON: {\"script\":[\"line\"], \"scenes\":[{\"beat\":\"\",\"roll\":\"presenter|"
-           "data\",\"say\":\"...\",\"visual\":\"one short plain description, or presenter on "
-           "camera\"}]}")
+    sys = ("You script a short-form vertical (9:16) talking-head reel with a few animated DATA "
+           "visualisations, for HeyGen's Prompt-to-Video (it generates a plan the user approves). "
+           + voice + " Write for the EAR: short spoken lines, one idea each; keep the whole thing "
+           "punchy short-form — a handful of scenes. Use ONLY numbers that appear in the "
+           "material; never invent a statistic. For each scene give: beat, roll ('presenter' or "
+           "'data'), say (the spoken lines), and visual. For a PRESENTER scene, set visual to "
+           "'presenter on camera'. For a DATA scene, SPECIFY THE ANALYSIS PRECISELY — this is the "
+           "part HeyGen can't guess: name a chart type from this ALLOWED SET ONLY — bar chart, "
+           "grouped bars, line chart (1-2 lines), a big counting number, a before/after pair, or "
+           "a simple stacked bar — and give the actual values/labels, the comparison, and a "
+           "short caption. Do NOT use gauges, dials, speedometers, needles, spotlights, network/"
+           "node webs, maps, particles, or any 'draws / sweeps / fills / disperses across' "
+           "frame-by-frame choreography — HeyGen renders those literally and badly. Return ONLY "
+           "JSON: {\"script\":[\"line\"], \"scenes\":[{\"beat\":\"\",\"roll\":\"presenter|data\","
+           "\"say\":\"...\",\"visual\":\"a precise chart spec from the allowed set, or presenter "
+           "on camera\"}]}")
     ctx = f"CONCEPT / ANGLE:\n{concept}\n\n"
     if broll_notes:
         ctx += ("VISUALS BRIEF — the graphics / b-roll / cutaways to build the scenes from "
@@ -373,15 +377,18 @@ def revise_plan(piece_id: int, instruction: str) -> str:
     if not p:
         return ""
     scenes = (p.meta or {}).get("scenes") or []
-    sys = ("You revise the scene plan of a ~40-second vertical talking-head reel with a few "
-           "simple animated data graphics. Apply the user's instruction. KEEP IT TIGHT: at most "
-           "6 scenes, under ~110 words of voiceover total, so it fits ~40 seconds. Keep each "
-           "scene's visual a SIMPLE, robust graphic described in ONE short plain sentence — a bar "
-           "chart, two lines, a big number, or a before/after — NOT gauges, dials, needles, "
-           "spotlights, network webs or frame-by-frame choreography (HeyGen renders those "
-           "literally and badly). " + _brand_voice() + " Never invent statistics. Return ONLY "
+    sys = ("You revise the scene plan of a short-form vertical talking-head reel with a few "
+           "animated data visualisations. Apply the user's instruction; keep it punchy "
+           "short-form. For a DATA scene, specify the analysis PRECISELY but use a chart type "
+           "from this ALLOWED SET ONLY — bar chart, grouped bars, line chart (1-2 lines), a big "
+           "counting number, a before/after pair, or a simple stacked bar — with real values/"
+           "labels, the comparison and a short caption. NEVER use gauges, dials, needles, "
+           "spotlights, network webs, maps, particles or 'draws/sweeps/fills across' "
+           "choreography (HeyGen renders those literally and badly). Presenter scenes: visual "
+           "'presenter on camera'. " + _brand_voice() + " Never invent statistics. Return ONLY "
            "JSON: {\"scenes\":[{\"beat\":\"\",\"roll\":\"presenter|data\",\"say\":\"the spoken "
-           "lines\",\"visual\":\"one short plain description\"}]}")
+           "lines\",\"visual\":\"precise chart spec from the allowed set, or presenter on "
+           "camera\"}]}")
     raw = call_claude(f"CURRENT SCENES:\n{_json.dumps(scenes, ensure_ascii=False)}\n\n"
                       f"INSTRUCTION: {instruction.strip()}\n\nReturn ONLY the revised JSON.",
                       system=sys, max_tokens=3000)

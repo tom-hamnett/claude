@@ -77,10 +77,8 @@ DEFAULT_BRAND_STANDARDS = {
         "never_name": True,
         "punch_at": ["empty expertise", "strategy theatre", "the framework industry",
                      "the academic approach", "the old way"],
-        "video_style": ("Minimalist, clean animated data graphics. Palette: background near-black "
-                        "#080F0C; text near-white #E9F2EC; accents signal-green #20C878 and gold "
-                        "#FFD166. Modern sans-serif. Alex Hormozi bold, impactful captions. No "
-                        "stock business B-roll."),
+        "video_style": ("minimalist, clean animated graphics on a dark background; signal-green "
+                        "(#20C878) and gold (#FFD166) accents; modern sans-serif"),
     },
     "edginess": {
         "level": 8,
