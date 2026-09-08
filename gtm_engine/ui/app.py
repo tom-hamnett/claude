@@ -23,7 +23,7 @@ from gtm_engine.config import OUTPUT_DIR, CONTENT_QUEUE_DIR, DATA_DIR, LOGS_DIR,
 from gtm_engine.utils.file_io import load_json
 
 # Bump on each deploy so a redeploy is visibly confirmable in the running app.
-BUILD_TAG = "2026-09-10a · Essay-first rebuild — ESSAY · REEL · CAROUSEL · X tabs; one essay → all channels, shared visual library"
+BUILD_TAG = "2026-09-10b · Essay Engine v2 — wave pipeline (intake→research→provocation→evidence→personality→five-beat draft→human-voice pass), AI-as-mode, propose-mode, voice-note intake"
 
 # ── Brand palette ──────────────────────────────────────────────────────────
 C = {

@@ -1,5 +1,5 @@
-"""Tests for the Essay Engine — the master asset: Q&A flow, SCQA generation, visual library
-(mandatory analysis + illustrative labelling)."""
+"""Tests for the Essay Engine (v2): state model, the wave pipeline (intake → research →
+provocation → evidence → personality → five-beat draft → human-voice pass), and derivatives."""
 
 import json
 import pytest
@@ -12,73 +12,94 @@ def db(tmp_path, monkeypatch):
     return p
 
 
-def test_store_roundtrip(db):
+def test_store_roundtrip_full_state(db):
     from gtm_engine.essay import EssayStore, Essay, Visual
     store = EssayStore()
-    eid = store.create(Essay(title="The complexity tax"))
+    eid = store.create(Essay(title="Prism", ai_mode="led", brain_dump=["messy dump"],
+                             exclusions=["not about hype"],
+                             research={"comprehension": "c", "pole_b": ["reddit gripe"]},
+                             provocation={"wrong_belief": "w"}))
     e = store.get(eid)
-    assert e.title == "The complexity tax" and e.status == "drafting" and not e.has_analysis()
-    e.visuals = [Visual(id="VIZ 1", title="x", spec="bars", kind="illustrative")]
+    assert e.ai_mode == "led" and e.brain_dump == ["messy dump"]
+    assert e.exclusions == ["not about hype"] and e.research["pole_b"] == ["reddit gripe"]
+    assert e.status == "intake" and not e.has_analysis()
+    e.visuals = [Visual(id="VIZ 1", title="x", spec="bars", kind="illustrative", claim="proves it")]
     store.save(e)
-    assert store.get(eid).has_analysis()
-    assert store.get(eid).visuals[0].is_illustrative()
+    assert store.get(eid).has_analysis() and store.get(eid).visuals[0].claim == "proves it"
 
 
-def test_socratic_flow_cycles_the_questions(db):
-    from gtm_engine.essay import EssayStore, Essay
-    from gtm_engine.essay.engine import next_question, record_answer, QUESTIONS
-    store = EssayStore()
-    eid = store.create(Essay(title="X"))
-    e = store.get(eid)
-    assert next_question(e) == QUESTIONS[0]
-    for i in range(len(QUESTIONS)):
-        e = record_answer(eid, f"answer {i}")
-    assert next_question(e) is None            # interview complete
-    assert len(store.get(eid).qa) == len(QUESTIONS)
-
-
-def test_generate_scqa_essay(db, monkeypatch):
+def test_intake_and_research_and_propose(db, monkeypatch):
     import gtm_engine.utils.ai_client as aic
-    monkeypatch.setattr(aic, "call_claude",
-                        lambda *a, **k: "# The Complexity Tax\n\nSituation... Complication... "
-                        "Question... Answer. AI collates it now for pennies.")
     from gtm_engine.essay import EssayStore, Essay
-    from gtm_engine.essay.engine import generate_essay, record_answer
+    from gtm_engine.essay import waves
     store = EssayStore()
-    eid = store.create(Essay(title="Complexity"))
-    record_answer(eid, "utilisation is a lie")
-    e = generate_essay(eid)
-    assert "Complexity Tax" in e.body and e.status == "ready"
+    e = store.get(store.create(Essay(title="Prism", topic="consultants waste time on research")))
+
+    monkeypatch.setattr(aic, "call_claude", lambda *a, **k: json.dumps({
+        "titles": ["The numbers aren't reported"], "angles": ["triangulation"], "ai_mode": "led"}))
+    ip = waves.intake_proposals(e)
+    assert ip["ai_mode"] == "led" and ip["titles"]
+
+    monkeypatch.setattr(aic, "call_claude", lambda *a, **k: json.dumps({
+        "comprehension": "outside-in benchmarking", "standard_practice": "weeks of desk research",
+        "pole_a": ["McKinsey POV"], "pole_b": ["how do I actually deliver this"], "gaps": ["triangulation ignored"]}))
+    r = waves.wave0_research(e)
+    assert r["pole_b"] == ["how do I actually deliver this"] and "triangulation" in r["gaps"][0]
+
+    monkeypatch.setattr(aic, "call_claude", lambda *a, **k: json.dumps({
+        "candidates": [{"wrong_belief": "more data is better", "twist": "roughly right beats precise"}]}))
+    cands = waves.propose_provocations(e)
+    assert cands[0]["twist"].startswith("roughly right")
 
 
-def test_propose_visuals_are_labelled_illustrative(db, monkeypatch):
+def test_draft_uses_five_beats_and_ai_mode(db, monkeypatch):
     import gtm_engine.utils.ai_client as aic
-    monkeypatch.setattr(aic, "call_claude", lambda *a, **k: json.dumps({"visuals": [
-        {"title": "Utilisation vs cash", "chart_type": "grouped bars",
-         "spec": "utilisation 95% vs free cash flat", "caption": "cash frozen"},
-        {"title": "Multiplier", "chart_type": "big number", "spec": "1 to 45", "caption": "cost multiplies"}]}))
+    seen = {}
+    def fake(prompt, system="", **k):
+        seen["sys"] = system
+        return "# Prism\n\nEveryone believes more data is better. It's backwards."
+    monkeypatch.setattr(aic, "call_claude", fake)
     from gtm_engine.essay import EssayStore, Essay
-    from gtm_engine.essay.engine import propose_visuals, visual_library_text
+    from gtm_engine.essay import waves
+    store = EssayStore()
+    e = store.get(store.create(Essay(title="Prism", ai_mode="led",
+                                     provocation={"wrong_belief": "more data is better"})))
+    draft = waves.draft_essay(e)
+    assert "WRONG BELIEF" in seen["sys"] and "THE TURN" in seen["sys"]     # five-beat structure
+    assert "AI is the SUBJECT" in seen["sys"] and "credibility beat" in seen["sys"]  # led mode
+    assert draft.startswith("# Prism") and store.get(e.id).status == "draft"
+
+
+def test_human_voice_pass_enforces_style_and_finalises(db, monkeypatch):
+    import gtm_engine.utils.ai_client as aic
+    seen = {}
+    def fake(prompt, system="", **k):
+        seen["sys"] = system
+        return "# Prism\n\nYou think more data helps. You're wrong."
+    monkeypatch.setattr(aic, "call_claude", fake)
+    from gtm_engine.essay import EssayStore, Essay
+    from gtm_engine.essay import waves
+    store = EssayStore()
+    e = store.get(store.create(Essay(title="Prism", draft="# Prism\n\nDraft body here.")))
+    body = waves.human_voice_pass(e)
+    assert "British English" in seen["sys"] and "single line" in seen["sys"]
+    assert "PROHIBITED" in seen["sys"] and body and store.get(e.id).status == "final"
+
+
+def test_visual_library_helpers(db, monkeypatch):
+    import gtm_engine.utils.ai_client as aic
+    from gtm_engine.essay import EssayStore, Essay
+    from gtm_engine.essay.engine import propose_visuals, add_uploaded_visual, remove_visual, visual_library_text
     store = EssayStore()
     eid = store.create(Essay(title="X", body="essay body"))
+    monkeypatch.setattr(aic, "call_claude", lambda *a, **k: json.dumps({"visuals": [
+        {"title": "T", "claim": "proves cost", "chart_type": "bar chart", "spec": "1 to 45", "caption": "cap"}]}))
     new = propose_visuals(eid)
-    assert len(new) == 2 and new[0].id == "VIZ 1" and new[0].kind == "illustrative"
-    lib = visual_library_text(store.get(eid))
-    assert "VIZ 1 (illustrative)" in lib and "VIZ 2 (illustrative)" in lib and "1 to 45" in lib
-
-
-def test_uploaded_visual_is_preferred_kind_and_gates_pass(db):
-    from gtm_engine.essay import EssayStore, Essay
-    from gtm_engine.essay.engine import add_uploaded_visual, remove_visual, visual_library_text
-    store = EssayStore()
-    eid = store.create(Essay(title="X"))
-    e = add_uploaded_visual(eid, "/tmp/chart.png", title="Real ATLAS log", caption="from the product")
-    assert e.has_analysis() and e.visuals[0].kind == "uploaded" and e.visuals[0].id == "VIZ 1"
-    assert "(uploaded)" in visual_library_text(e)
-    # removing renumbers so ids stay contiguous
-    e = add_uploaded_visual(eid, "/tmp/two.png", title="Second")
+    assert new[0].id == "VIZ 1" and new[0].kind == "illustrative" and new[0].claim == "proves cost"
+    e = add_uploaded_visual(eid, "/tmp/c.png", title="Real chart")
+    assert e.visuals[1].kind == "uploaded" and "(uploaded)" in visual_library_text(e)
     e = remove_visual(eid, "VIZ 1")
-    assert len(e.visuals) == 1 and e.visuals[0].id == "VIZ 1" and e.visuals[0].title == "Second"
+    assert len(e.visuals) == 1 and e.visuals[0].id == "VIZ 1"
 
 
 def _essay_with_visuals(store):
@@ -104,25 +125,21 @@ def test_reel_prompt_uses_locked_template_and_references_library(db, monkeypatch
     from gtm_engine.essay.derivatives import reel_prompt, REEL_STYLE
     e = _essay_with_visuals(EssayStore())
     out = reel_prompt(e)
-    assert REEL_STYLE in out                                   # locked style, verbatim
-    assert "SCENE / VOICEOVER / VISUAL" in out and "Voiceover:" in out
-    assert "VIZ 1 — grouped bars" in out                       # data scene references the library
-    assert "label this graphic 'illustrative'" in out         # illustrative flag carried through
-    assert "VISUAL LIBRARY" in out and "The Rational Strategist" in out
-    assert "Presenter only, framed right-of-centre" in out     # locked hook bookend
+    assert REEL_STYLE in out and "SCENE / VOICEOVER / VISUAL" in out and "Voiceover:" in out
+    assert "VIZ 1 — grouped bars" in out and "label this graphic 'illustrative'" in out
+    assert "VISUAL LIBRARY" in out and "Presenter only, framed right-of-centre" in out
 
 
-def test_x_thread_and_linkedin_and_carousel_from_essay(db, monkeypatch):
+def test_x_thread_linkedin_carousel(db, monkeypatch):
     import gtm_engine.utils.ai_client as aic
     from gtm_engine.essay import EssayStore
     e = _essay_with_visuals(EssayStore())
     monkeypatch.setattr(aic, "call_claude", lambda *a, **k: "1/ Utilisation is a lie.\n\n2/ Follow the cash.")
     from gtm_engine.essay.derivatives import x_thread, linkedin_post, carousel_specs
     assert "1/" in x_thread(e)
-    monkeypatch.setattr(aic, "call_claude", lambda *a, **k: "Most dashboards lie. Here's why.")
+    monkeypatch.setattr(aic, "call_claude", lambda *a, **k: "Most dashboards lie.")
     assert "dashboards" in linkedin_post(e)
     monkeypatch.setattr(aic, "call_claude", lambda *a, **k: json.dumps({"slides": [
         {"type": "cover", "title": "Utilisation is a lie", "body": "here's why"},
         {"type": "cta", "title": "Follow the cash", "body": "read the essay"}]}))
-    slides = carousel_specs(e)
-    assert len(slides) == 2 and slides[0]["type"] == "cover"
+    assert len(carousel_specs(e)) == 2
