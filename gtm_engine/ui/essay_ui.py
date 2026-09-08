@@ -1,8 +1,8 @@
-"""Essay-first UI — the wave pipeline (build brief v2).
+"""Essay-first UI — upload flow.
 
-ESSAY tab walks the waves: intake → research → provocation → evidence → personality →
-five-beat draft → human-voice pass → publish. REEL / CAROUSEL / X derive from the current
-essay and reference its visual library. Extract-and-propose throughout; voice via transcription.
+The essay and its analysis are written outside the tool and UPLOADED here: paste/upload the
+essay body, upload each supporting analysis artefact (chart image or dataset) into the visual
+library. REEL / CAROUSEL / X then derive from the current essay and reference that library.
 """
 
 from pathlib import Path
@@ -32,40 +32,37 @@ def _current_essay(store):
     return store.get(eid) if eid else None
 
 
-def _transcribe(up) -> str:
-    """Audio → text via Gemini (voice-first intake fallback)."""
-    try:
-        from gtm_engine.utils.media import interpret_file_gemini
-        path = _save_upload(up, "audio")
-        return interpret_file_gemini(path, "Transcribe this audio verbatim.") or ""
-    except Exception:
-        return ""
+_ESSAY_TYPES = ["md", "txt", "markdown", "docx", "pdf"]
+_ART_TYPES = ["png", "jpg", "jpeg", "csv", "xlsx", "tsv", "txt", "md", "pdf"]
+
+
+def _read_file(up, subdir: str) -> str:
+    from gtm_engine.utils.ingest import interpret_upload
+    txt, _ = interpret_upload(_save_upload(up, subdir), up.name)
+    return txt or ""
 
 
 # ── ESSAY tab ────────────────────────────────────────────────────────────────
 def render_essay_tab():
     from gtm_engine.essay import EssayStore, Essay
     store = EssayStore()
-    st.caption("The master asset. Work one essay through the waves — it proposes where you shrug — "
-               "then spin off the reel, carousel and X thread, all from this one piece.")
+    st.caption("Write the essay and its analysis wherever you like, then upload them here. "
+               "Everything downstream — reel, carousel, X thread — is built from what you upload.")
 
     essays = store.list_all()
     with st.expander("＋ New essay", expanded=not essays):
-        t = st.text_input("Working title / the idea", key="new_essay_title",
+        t = st.text_input("Title", key="new_essay_title",
                           placeholder="e.g. The numbers you need aren't reported")
-        bd = st.text_area("Brain-dump (optional) — everything you want in it, messy is fine",
-                          key="new_essay_bd", height=90)
-        exc = st.text_input("What it must NOT be about (optional)", key="new_essay_exc")
-        au = st.file_uploader("Or record/upload a voice note (transcribed into the dump)",
-                              type=["mp3", "m4a", "wav", "webm"], key="new_essay_audio")
-        if st.button("Start the essay", disabled=not t.strip(), use_container_width=True):
-            dump = [bd.strip()] if bd.strip() else []
-            if au is not None:
-                tx = _transcribe(au)
-                if tx:
-                    dump.append(tx)
-            eid = store.create(Essay(title=t.strip(), topic=t.strip(), brain_dump=dump,
-                                     exclusions=[exc.strip()] if exc.strip() else []))
+        paste = st.text_area("Paste the essay", key="new_essay_body", height=160,
+                             placeholder="Paste the full essay here…")
+        up = st.file_uploader("…or upload it (md / txt / docx / pdf)", type=_ESSAY_TYPES,
+                              key="new_essay_file")
+        if st.button("Create essay", disabled=not (t.strip() or up), use_container_width=True):
+            body = paste.strip()
+            if up is not None and not body:
+                body = _read_file(up, "essay_src")
+            title = t.strip() or (up.name.rsplit(".", 1)[0] if up else "Untitled")
+            eid = store.create(Essay(title=title, topic=title, body=body, status="final"))
             st.session_state["essay_id"] = eid
             st.rerun()
 
@@ -80,175 +77,72 @@ def render_essay_tab():
     st.session_state["essay_id"] = sel
     e = store.get(sel)
     if e:
-        _workspace(store, e)
+        _upload_workspace(store, e)
 
 
-def _save_wave_answers(store, e, key, questions, prefix):
-    """Render a wave's questions, collect answers into e.<key>['qa'], save on button."""
-    d = dict(getattr(e, key) or {})
-    existing = {x["q"]: x["a"] for x in d.get("qa", [])}
-    answers = []
-    for i, q in enumerate(questions):
-        a = st.text_area(q, value=existing.get(q, ""), key=f"{prefix}_{e.id}_{i}", height=70)
-        answers.append({"q": q, "a": a.strip()})
-    if st.button("💾 Save answers", key=f"{prefix}save_{e.id}"):
-        d["qa"] = answers
-        setattr(e, key, d)
+def _upload_workspace(store, e):
+    from gtm_engine.essay import engine as ve
+    # 1) The essay — paste-editable or replace from a file
+    st.markdown("### 📝 Essay")
+    body = st.text_area("Essay", e.body, height=300, key=f"body_{e.id}", label_visibility="collapsed")
+    c1, c2 = st.columns([1, 1])
+    if c1.button("💾 Save essay", key=f"savebody_{e.id}", use_container_width=True):
+        e.body = body
+        e.status = "final"
         store.save(e)
         _backup()
-        st.toast("Saved.")
-        st.rerun()
-    return d
-
-
-def _workspace(store, e):
-    from gtm_engine.essay import waves
-    from gtm_engine.essay import engine as ve
-
-    st.markdown(f"**Status:** `{e.status}` · **AI mode:** `{e.ai_mode}`")
-
-    # [0] Intake — proposals + AI mode
-    with st.expander("① Intake — titles, angles, AI mode", expanded=e.status == "intake"):
-        if st.button("✨ Get proposals", key=f"intake_{e.id}"):
-            with st.spinner("Reading your dump…"):
-                st.session_state[f"intake_{e.id}"] = waves.intake_proposals(e)
-        ip = st.session_state.get(f"intake_{e.id}")
-        if ip:
-            if ip.get("titles"):
-                pick = st.radio("Suggested titles", ip["titles"], key=f"title_{e.id}")
-                if st.button("Use this title", key=f"usetitle_{e.id}"):
-                    e.title = pick
-                    store.save(e)
-                    st.rerun()
-            if ip.get("angles"):
-                st.caption("Angles: " + " · ".join(ip["angles"]))
-        mode = st.radio("AI mode", ["led", "adjacent", "none"],
-                        index=["led", "adjacent", "none"].index(e.ai_mode),
-                        key=f"mode_{e.id}", horizontal=True,
-                        help="led = AI is the subject · adjacent = one lever · none = pure strategy")
-        if mode != e.ai_mode:
-            e.ai_mode = mode
-            store.save(e)
-
-    # [1] Wave Zero — research
-    with st.expander("② Research — comprehension & the field (Pole A / Pole B)"):
-        if st.button("✨ Run research", key=f"w0_{e.id}"):
-            with st.spinner("Researching the field…"):
-                e.research = waves.wave0_research(e)
-                e.status = "research"
-                store.save(e)
-            _backup()
-            st.rerun()
-        r = e.research or {}
-        if r:
-            st.markdown(f"**What it is:** {r.get('comprehension','')}")
-            st.markdown(f"**Standard practice:** {r.get('standard_practice','')}")
-            if r.get("pole_a"):
-                st.markdown("**Pole A (prestige):** " + " · ".join(r["pole_a"]))
-            if r.get("pole_b"):
-                st.markdown("**Pole B (raw):** " + " · ".join(r["pole_b"]))
-            if r.get("gaps"):
-                st.markdown("**Gaps:** " + " · ".join(r["gaps"]))
-
-    # [2] Wave One — provocation
-    with st.expander("③ Provocation — the wrong belief & the twist"):
-        _save_wave_answers(store, e, "provocation", waves.WAVE1_QUESTIONS, "w1")
-        if st.button("💡 Propose provocations (from research)", key=f"w1p_{e.id}"):
-            st.session_state[f"w1cand_{e.id}"] = waves.propose_provocations(e)
-        for c in (st.session_state.get(f"w1cand_{e.id}") or []):
-            st.info(f"**Belief:** {c.get('wrong_belief','')}\n\n**Twist:** {c.get('twist','')}")
-
-    # [3] Wave Two — evidence / visual library
-    with st.expander("④ Evidence — the analysis (mandatory)"):
-        _save_wave_answers(store, e, "provocation", waves.WAVE2_QUESTIONS, "w2")
-        st.caption("Upload real charts where you can; AI-proposed ones are labelled *illustrative*.")
-        for v in (e.visuals or []):
-            tag = "🟢 uploaded" if v.kind in ("real", "uploaded") else "🟡 illustrative"
-            c1, c2 = st.columns([6, 1])
-            c1.markdown(f"**{v.id} · {v.title}** — _{v.chart_type}_ · {tag}"
-                        + (f"  \nProves: {v.claim}" if v.claim else "")
-                        + (f"  \n{v.spec}" if v.spec else ""))
-            if v.image_path and Path(v.image_path).exists():
-                c1.image(v.image_path, width=170)
-            if c2.button("🗑", key=f"rmv_{e.id}_{v.id}"):
-                ve.remove_visual(e.id, v.id)
-                _backup()
-                st.rerun()
-        a, b = st.columns(2)
-        if a.button("✨ Propose visuals", key=f"propv_{e.id}", disabled=not e.body,
-                    use_container_width=True):
-            with st.spinner("Proposing analysis…"):
-                ve.propose_visuals(e.id)
-            _backup()
-            st.rerun()
-        with b.popover("⬆ Upload a real chart", use_container_width=True):
-            up = st.file_uploader("Chart (PNG/JPG)", type=["png", "jpg", "jpeg"], key=f"vup_{e.id}")
-            vt = st.text_input("Title", key=f"vt_{e.id}")
-            vcl = st.text_input("What it proves", key=f"vcl_{e.id}")
-            if up is not None and st.button("Add to library", key=f"vadd_{e.id}"):
-                ve.add_uploaded_visual(e.id, _save_upload(up, f"essay_{e.id}"),
-                                       title=vt or "Uploaded chart", claim=vcl)
-                _backup()
-                st.rerun()
-        if not e.has_analysis():
-            st.warning("⚠ At least one visual is required before you can make channel content.")
-
-    # [4] Wave Three — personality
-    with st.expander("⑤ Personality — incredulity, sarcasm, references"):
-        _save_wave_answers(store, e, "personality", waves.WAVE3_QUESTIONS, "w3")
-        if st.button("💡 Propose references (+ one to disqualify)", key=f"w3p_{e.id}"):
-            st.session_state[f"w3ref_{e.id}"] = waves.propose_references(e)
-        ref = st.session_state.get(f"w3ref_{e.id}")
-        if ref:
-            for x in ref.get("references", []):
-                st.caption(f"• {x.get('ref','')} — {x.get('why','')}")
-            if ref.get("disqualify"):
-                st.caption(f"🚫 Disqualify the obvious: {ref['disqualify']}")
-
-    # [5]+[6] Draft + human-voice pass
-    st.markdown("### 📝 The essay")
-    words = st.slider("Target length (words)", 300, 900, 550, 50, key=f"len_{e.id}")
-    c1, c2 = st.columns(2)
-    if c1.button("✨ Write the five-beat draft", key=f"draft_{e.id}", use_container_width=True):
-        with st.spinner("Drafting…"):
-            waves.draft_essay(e, words=words)
-        _backup()
-        st.rerun()
-    if c2.button("🫧 Human-voice pass", key=f"voice_{e.id}", use_container_width=True,
-                 disabled=not (e.draft or e.body)):
-        with st.spinner("Making it read human…"):
-            waves.human_voice_pass(e)
-        _backup()
-        st.rerun()
-    show = e.body or e.draft
-    if show:
-        body = st.text_area("Essay", show, height=320, key=f"body_{e.id}",
-                            label_visibility="collapsed")
-        if st.button("💾 Save essay", key=f"savebody_{e.id}"):
-            e.body = body
-            e.status = "final"
+        st.toast("Essay saved.")
+    rep = c2.file_uploader("Replace from file", type=_ESSAY_TYPES, key=f"repl_{e.id}",
+                           label_visibility="collapsed")
+    if rep is not None:
+        txt = _read_file(rep, "essay_src")
+        if txt:
+            e.body = txt
             store.save(e)
             _backup()
-            st.toast("Saved.")
-        with st.expander("👁 Preview"):
-            st.markdown(e.body or e.draft)
-
-    # publish (Substack = the essay; LinkedIn = condensed)
+            st.rerun()
     if e.body:
-        from gtm_engine.essay.derivatives import linkedin_post
-        st.markdown("### 📤 Publish")
-        if st.button("✨ LinkedIn version", key=f"li_{e.id}"):
-            with st.spinner("Condensing for LinkedIn…"):
-                e.derivatives = {**(e.derivatives or {}), "linkedin": linkedin_post(e)}
-                store.save(e)
+        with st.expander("👁 Preview"):
+            st.markdown(e.body)
+
+    # 2) Supporting analysis — the visual library (upload each artefact)
+    st.markdown("### 📊 Supporting analysis")
+    st.caption("Upload each chart or dataset that proves a point. These are what the reel, carousel "
+               "and X thread reference. A chart image is strongest.")
+    for v in (e.visuals or []):
+        c1, c2 = st.columns([6, 1])
+        c1.markdown(f"**{v.id} · {v.title}**"
+                    + (f"  \nProves: {v.claim}" if v.claim else "")
+                    + (f"  \n{v.spec[:200]}" if v.spec else ""))
+        if v.image_path and Path(v.image_path).exists():
+            c1.image(v.image_path, width=180)
+        if c2.button("🗑", key=f"rmv_{e.id}_{v.id}"):
+            ve.remove_visual(e.id, v.id)
             _backup()
             st.rerun()
-        li = (e.derivatives or {}).get("linkedin")
-        if li:
-            st.text_area("LinkedIn post — copy", li, height=150, key=f"lipost_{e.id}")
+    with st.expander("⬆ Add an analysis artefact", expanded=not e.visuals):
+        up = st.file_uploader("Chart image or data file", type=_ART_TYPES, key=f"art_{e.id}")
+        vt = st.text_input("Title", key=f"artt_{e.id}")
+        vcl = st.text_input("What it proves (the claim)", key=f"artc_{e.id}")
+        vcap = st.text_input("Caption (optional)", key=f"artcap_{e.id}")
+        if up is not None and st.button("Add to library", key=f"vadd_{e.id}"):
+            path = _save_upload(up, f"essay_{e.id}")
+            ext = up.name.rsplit(".", 1)[-1].lower()
+            if ext in ("png", "jpg", "jpeg"):
+                ve.add_uploaded_visual(e.id, path, title=vt or up.name, caption=vcap, claim=vcl)
+            else:
+                spec = _read_file(up, f"essay_{e.id}")
+                ve.add_uploaded_visual(e.id, "", title=vt or up.name, caption=vcap, claim=vcl,
+                                       spec=spec[:1500])
+            _backup()
+            st.rerun()
+    if not e.has_analysis():
+        st.warning("⚠ Add at least one analysis artefact — the reel, carousel and X thread "
+                   "reference these.")
+    else:
+        st.caption("→ Build the **reel**, **carousel** and **X** thread in their tabs.")
 
 
-# ── channel tabs ─────────────────────────────────────────────────────────────
 def _need_essay():
     from gtm_engine.essay import EssayStore
     store = EssayStore()
@@ -260,7 +154,7 @@ def _need_essay():
         st.warning("Finish the essay first (in the **ESSAY** tab).")
         return None, None
     if not e.has_analysis():
-        st.warning("This essay has no analysis yet — add at least one visual in **ESSAY → Evidence**.")
+        st.warning("This essay has no analysis yet — add at least one in **ESSAY → Supporting analysis**.")
         return None, None
     return store, e
 
