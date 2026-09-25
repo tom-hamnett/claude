@@ -19,6 +19,8 @@ import sys
 from pathlib import Path
 
 ROOT = Path(sys.argv[1])
+# Source slides left intact here so populate_regions.py can fill them with real content.
+KEEP_FOR_POPULATE = {int(x) for x in sys.argv[2].split(",")} if len(sys.argv) > 2 else set()
 PPT = ROOT / "ppt"
 REGIONS = ["AMER", "EMEAA", "Greater China"]
 REGION_LONG = {"AMER": "Americas (AMER)", "EMEAA": "EMEAA", "Greater China": "Greater China"}
@@ -114,6 +116,7 @@ RULES = {
               "HLG, DEVELOPMENT, BRAND ALIGNMENT ON BRAND COMPLIANCE REQUIREMENTS",
               "NUMBER OF SUPPLIERS CONTRACTED UNDER CRF SCHEME", "AMOUNT OF PROGRAMMES IN PLACE VS TOTAL REQUIRED",
               "DELIVERY OF JTT PROCUREMENT REQUIREMENTS", "ANNUAL COLLEAGUE SATISIFACTION SURVEY",
+              "PRIORITY & GROWTH MARKET PROGRAMME COVERAGE",
               "BUILD AND OPEN COST PER KEY", "OPERATE - GOP", "N/A for 2027", "[Current Status]"},
         set={"How we will measure and track success": "{R}: how we will measure and track success",
              "AGREE A METHODOLOGY AND GOAL": "LOREM IPSUM DOLOR SIT AMET",
@@ -330,8 +333,12 @@ def main() -> None:
             sl = slides / files[base + 1 + k]
             if ri > 0:
                 clone_chart(sl)
-            process_slide(sl, src, region)
-            placeholder_chart_values(sl)
+            if src in KEEP_FOR_POPULATE:  # filled by populate_regions.py instead of blanked
+                sl.write_text(re.sub(r'(<p:sld\b[^>]*?)\s+show="0"', r"\1", sl.read_text("utf-8")), "utf-8")
+            else:
+                process_slide(sl, src, region)
+            if src not in KEEP_FOR_POPULATE:
+                placeholder_chart_values(sl)
             clear_notes(sl, keep=(src == 19))
     print("done")
 
