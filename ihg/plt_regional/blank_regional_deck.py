@@ -331,8 +331,7 @@ def main() -> None:
         div.write_text(d, "utf-8")
         for k, src in enumerate(range(14, 22)):
             sl = slides / files[base + 1 + k]
-            if ri > 0:
-                clone_chart(sl)
+            # each duplicated slide already owns its charts / OLE / tags (assemble.py unshare_parts)
             if src in KEEP_FOR_POPULATE:  # filled by populate_regions.py instead of blanked
                 sl.write_text(re.sub(r'(<p:sld\b[^>]*?)\s+show="0"', r"\1", sl.read_text("utf-8")), "utf-8")
             else:

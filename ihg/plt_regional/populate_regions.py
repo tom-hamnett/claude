@@ -696,6 +696,96 @@ def populate_18(path: Path, region: str) -> None:
     path.write_text(s, "utf-8")
 
 
+# ---------------------------------------------------------------------------------- slide 19
+# KPI table rows 2-9 (row 0-1 headers). Cols: 3 = 2026 target, 4 = 2027 target, 5 = comments.
+# Supplier sustainability figures are GP-wide (fact_supplier_metrics.csv, Mar-26); no regional cut.
+SUPPLIER_GLOBAL = "GP-WIDE (MAR-26): 75% ECOVADIS PARTICIPATION, 98% RATED GOOD+, 51% WITH A VALID RATING"
+KPIS = {
+    "AMER": {
+        2: ("$21.0M", "$24.2M", "BUDGET SCENARIO (3% SHARE + ACCELERATE); HIGH SCENARIO $26.2M. COLLECT ≥80%"),
+        4: ("4.8% [CURRENT]", "5.4%", "KEY METRIC FOR THE 5% NUG CHALLENGE; ~7% BY 2030 ON ACCELERATE, ~10% WITH STEP-CHANGE"),
+        5: ("N/A", "TBC", "FDD OPT-OUT AND LOCKED ORDER GUIDES AS THE AMER COMPLIANCE ROUTE"),
+        7: ("N/A", "TBC", "STRONGER GPO AND SUPPLIER COMMITMENTS; ADD BUILD / OPEN SUPPLIERS INCL. EME"),
+        8: ("N/A", "TBC", "MEXICO AND PRIORITY LAC MARKETS; PREMIUM AND L&L PROPOSITION"),
+        9: ("≥70% ECOVADIS", "TBC", SUPPLIER_GLOBAL),
+    },
+    "EMEAA": {
+        2: ("$4.7M", "$6.0M", "BUDGET SCENARIO (3% SHARE + ACCELERATE); NO STEP-CHANGE CRF UNTIL 2028. COLLECT ≥80%"),
+        4: ("3.0% [CURRENT]", "3.8%", "KEY METRIC FOR THE 5% NUG CHALLENGE; +0.8PP IN 2027 FROM INITIATIVES, ~9% BY 2030"),
+        5: ("N/A", "TBC", "GM / DOO ACCOUNTABILITY AND MANCO COMMITMENTS; MANAGED PILOT IN EAPAC AND IMEA"),
+        7: ("N/A", "TBC", "FEWER, DEEPER CONTRACTS AT THE 27–28 RENEWALS; RESOLVE FUTURELOG DEPENDENCY"),
+        8: ("N/A", "TBC", "KSA, INDIA AND SE ASIA FIRST; UK&I FRANCHISE VALUE PROPOSITION"),
+        9: ("≥70% ECOVADIS", "TBC", SUPPLIER_GLOBAL),
+    },
+    "Greater China": {
+        2: ("$2.0M", "$2.2M", "BUDGET SCENARIO (3% SHARE + ACCELERATE); HIGH SCENARIO $2.4M. COLLECT ≥80%"),
+        4: ("2.0% [CURRENT]", "1.9%", "SHARE DIPS AS SPEND GROWS UNLESS STEP-CHANGE LANDS; ~4% BY 2030 WITH STEP-CHANGE"),
+        5: ("N/A", "TBC", "AI-ENFORCED COMPLIANCE AND POPD WAIVER CHECKS (NON-RETROACTIVE)"),
+        7: ("N/A", "TBC", "DESIGN-CONSULTANT SRM; AGGREGATOR PARTNERS FOR LONG TAIL"),
+        8: ("N/A", "TBC", "LONG-TAIL OPERATE, F&B NON-STANDARD AND FROZEN SEAFOOD"),
+        9: ("≥70% ECOVADIS", "TBC", SUPPLIER_GLOBAL),
+    },
+}
+KPI_COMMON = {6: ("88%", "+1%", "MAINTAIN 88% THROUGH CHANGE; +1% IN 2027 (GP-WIDE SCORE; REGIONAL CUT TBC)")}
+
+
+def populate_19(path: Path, region: str) -> None:
+    s = path.read_text("utf-8")
+    s = s.replace("<a:t>How we will measure and track success</a:t>",
+                  f"<a:t>{esc(region)}: how we will measure and track success</a:t>", 1)
+    g = {}
+    for r, (t26, t27, com) in {**KPIS[region], **KPI_COMMON}.items():
+        g[(r, 3)], g[(r, 4)], g[(r, 5)] = t26, t27, com
+    s = fill_table(s, "Table 1", g)
+    path.write_text(s, "utf-8")
+
+
+# ---------------------------------------------------------------------------------- slide 20
+# (heading, body paragraphs) for cards 01-05, then "How we deliver" text. EMEAA keeps its own.
+CAPABILITIES = {
+    "AMER": ([("Data & utilisation insight",
+               ["Supplier and GPO data to test value and coverage; P2P, locked-order-guide and utilisation reporting"]),
+              ("OHES commercial capability",
+               ["OHES capacity, owner segmentation, account management and evidence, extended to Mexico and LAC"]),
+              ("Build / Open category capacity",
+               ["Design, waiver and category capacity for EME and adjacent categories",
+                "Turnkey support to cut FF&E delivery from 19 to 9.5 months"]),
+              ("Legal & partner assessment",
+               ["Legal and EC support for FDD reform; commercial, legal and financial assessment of GPO choices"]),
+              ("Distribution & in-market sourcing",
+               ["Distribution design for F&B and OS&E",
+                "In-market sourcing and OHES for Mexico and priority LAC"])],
+             "Central capability, regional execution – AMER’s OHES playbook as the global template."),
+    "Greater China": ([("Digital & AI platform",
+                        ["Platform integrated with POPD for non-retroactive waiver checks; AI-led spend classification"]),
+                       ("CRM & owner engagement",
+                        ["POPD–CRM integration, KOM tracking, OHE field resources and the Owner Link programme"]),
+                       ("Category & market intelligence",
+                        ["Continuous market intelligence and price benchmarking for frozen seafood",
+                         "Aggregator and distribution solutions for long tail"]),
+                       ("Legal & BRR support",
+                        ["BRR support for lead-constructor solutions; legal and digital infrastructure for retail"]),
+                       ("Owner marketing & incentives",
+                        ["Marketing packages and tools that explain programme value",
+                         "Owner and hotel incentives to drive participation"])],
+                      "Design-consultant SRM – only GC manages this category; align HLG, owners and suppliers."),
+}
+CARD_BOXES = [("TextBox 345", "TextBox 346"), ("TextBox 352", "TextBox 353"), ("TextBox 359", "TextBox 360"),
+              ("TextBox 366", "TextBox 367"), ("TextBox 373", "TextBox 374")]
+
+
+def populate_20(path: Path, region: str) -> None:
+    s = path.read_text("utf-8")
+    s = s.replace("<a:t>What we need to deliver</a:t>", f"<a:t>{esc(region)}: what we need to deliver</a:t>", 1)
+    if region in CAPABILITIES:
+        cards, how = CAPABILITIES[region]
+        for (hbox, bbox), (head, body) in zip(CARD_BOXES, cards):
+            s = edit_shapes(s, lambda sp, hbox=hbox, head=head: replace_shape_paras(sp, [head]) if f'name="{hbox}"' in sp else sp)
+            s = edit_shapes(s, lambda sp, bbox=bbox, body=body: replace_shape_paras(sp, body) if f'name="{bbox}"' in sp else sp)
+        s = edit_shapes(s, lambda sp: replace_shape_paras(sp, [how]) if 'name="TextBox 378"' in sp else sp)
+    path.write_text(s, "utf-8")
+
+
 def main_17_18() -> None:
     files = slide_order()
     slides = PPT / "slides"
@@ -703,7 +793,9 @@ def main_17_18() -> None:
         base = 2 + ri * 9
         populate_17(slides / files[base + 4], region)
         populate_18(slides / files[base + 5], region)
-    print("populated 17-18")
+        populate_19(slides / files[base + 6], region)
+        populate_20(slides / files[base + 7], region)
+    print("populated 17-20")
 
 
 if __name__ == "__main__":

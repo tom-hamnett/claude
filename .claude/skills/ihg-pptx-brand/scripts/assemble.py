@@ -15,6 +15,7 @@ script prints which file holds each output position. Then zip from inside:
 """
 
 import argparse
+import random
 import re
 import shutil
 import subprocess
@@ -42,6 +43,74 @@ def slide_order(pres_xml: str, rels_xml: str) -> list[str]:
         for m in re.finditer(r'Target="(slides/slide\d+\.xml)"[^>]*Id="(rId\d+)"', rels_xml)
     )
     return [rid_to_file[r] for r in re.findall(r'<p:sldId [^>]*r:id="(rId\d+)"', pres_xml)]
+
+
+# Parts a duplicated slide must own outright. PowerPoint rejects (or "repairs") decks where two slides
+# point at the same embedded OLE object, tag list or chart; LibreOffice does not, so this is invisible
+# in rendered previews. Media (images) may be shared safely.
+OWNED_DIRS = ("tags", "embeddings", "charts")
+
+
+def _content_type(root: Path, part: str) -> str | None:
+    """The part's Override content type, or None when an extension Default already covers it."""
+    ct = (root / "[Content_Types].xml").read_text("utf-8")
+    m = re.search(rf'PartName="{re.escape(part)}" ContentType="([^"]+)"', ct)
+    return m.group(1) if m else None
+
+
+def _add_override(root: Path, part: str, ctype: str) -> None:
+    ctp = root / "[Content_Types].xml"
+    ct = ctp.read_text("utf-8")
+    if f'PartName="{part}"' not in ct:
+        ctp.write_text(ct.replace("</Types>", f'<Override PartName="{part}" ContentType="{ctype}"/></Types>'), "utf-8")
+
+
+def _fresh(path: Path) -> Path:
+    stem = re.sub(r"\d+$", "", path.stem)
+    n = 1
+    while (path.parent / f"{stem}{n}{path.suffix}").exists():
+        n += 1
+    return path.parent / f"{stem}{n}{path.suffix}"
+
+
+def _clone_part(root: Path, part: Path) -> Path:
+    """Copy a part (and, recursively, the owned parts its own .rels point at). Returns the copy."""
+    new = _fresh(part)
+    shutil.copy(part, new)
+    rel_part = "/" + part.relative_to(root).as_posix()
+    ctype = _content_type(root, rel_part)
+    if ctype:
+        _add_override(root, "/" + new.relative_to(root).as_posix(), ctype)
+    rels = part.parent / "_rels" / (part.name + ".rels")
+    if rels.exists():
+        r = rels.read_text("utf-8")
+        for tgt in set(re.findall(r'Target="([^"]+)"', r)):
+            if tgt.startswith(("http", "/")):
+                continue
+            tp = (part.parent / tgt).resolve()
+            if tp.exists() and tp.parent.name in OWNED_DIRS + ("drawings",):
+                tnew = _clone_part(root, tp)
+                prefix = tgt.rsplit("/", 1)[0] + "/" if "/" in tgt else ""
+                r = r.replace(f'Target="{tgt}"', f'Target="{prefix}{tnew.name}"')
+        (new.parent / "_rels" / (new.name + ".rels")).write_text(r, "utf-8")
+    return new
+
+
+def unshare_parts(root: Path, slide: Path) -> None:
+    # a copy must not reuse its source slide's creation id
+    x = slide.read_text("utf-8")
+    x = re.sub(r'(<p14:creationId\b[^>]*val=")\d+(")',
+               lambda m: f"{m.group(1)}{random.randint(10**9, 4 * 10**9)}{m.group(2)}", x)
+    slide.write_text(x, "utf-8")
+    rels = slide.parent / "_rels" / (slide.name + ".rels")
+    r = rels.read_text("utf-8")
+    for tgt in sorted(set(re.findall(r'Target="\.\./([a-z]+)/([^"]+)"', r))):
+        folder, name = tgt
+        if folder not in OWNED_DIRS:
+            continue
+        new = _clone_part(root, slide.parent.parent / folder / name)
+        r = r.replace(f'Target="../{folder}/{name}"', f'Target="../{folder}/{new.name}"')
+    rels.write_text(r, "utf-8")
 
 
 def main() -> None:
@@ -82,6 +151,7 @@ def main() -> None:
         if r.returncode or not m:
             sys.exit(f"duplicate of {src} failed: {r.stdout}{r.stderr}")
         result.append(m.group(1))
+        unshare_parts(out.resolve(), (ppt / "slides" / m.group(1)).resolve())
 
     # Rewrite <p:sldIdLst> to exactly the chosen order.
     pres = pres_path.read_text("utf-8")
