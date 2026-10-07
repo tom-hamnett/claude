@@ -31,28 +31,37 @@ Claude at `flux/docs/handoff/HANDOFF.md`) as the first message.
 
 ---
 
-## 🔴 ACTIVE BLOCKER: cloud sign-in email fails
-**Symptom:** sign-in shows **"Error sending confirmation email"** after *Send code*.
+## ✅ SIGN-IN RESOLVED (2026-10-07) — do not re-chase
 
-**Diagnosis (confirmed):** app code is fine — `flux/src/services/auth.tsx:95`
-just surfaces Supabase's own error. That string is Supabase Auth's **SMTP send
-failure**, i.e. the Supabase → **Resend** handoff failing. Most likely cause:
-Supabase is on Resend's **test sender `onboarding@resend.dev`**, which only
-delivers to the Resend account's **own** email; any other recipient → Resend 403.
-So the recipient address is not the problem — the **sender** must be fixed.
+Cloud sign-in is **working end-to-end**. The chain of blockers and their fixes:
 
-**Fix (permanent):**
-1. Resend → **Domains** → verify a domain you control now (not v2ogroup).
-2. Resend → **API Keys** → new key (`re_…`).
-3. Supabase → **Authentication → SMTP Settings**: host `smtp.resend.com`,
-   port `465`, user `resend`, password = new key, **sender = @your-verified-domain**.
-4. Supabase → **Authentication → Emails → Templates → Magic Link**: body must
-   print **`{{ .Token }}`** (see `flux/docs/DEPLOYMENT.md:54-60`), else the email
-   contains a link, not the 6-digit code the app expects.
+1. **"Load failed"** — the Supabase project (`szhbqwazcnlmwoidzkqv`) had
+   **auto-paused** after inactivity. Fixed by restoring it (status now
+   `ACTIVE_HEALTHY`). *If "Load failed" ever returns, the project has paused
+   again — restore it (Supabase dashboard, or `restore_project` via the Supabase
+   connector).*
+2. **"Error sending confirmation email"** — Resend's **test sender
+   `onboarding@resend.dev`** only delivers to the account-owner email. Solo path:
+   sign in with **`tomhamnett85@gmail.com`** (the Resend account email). Email
+   now sends and delivers (verified via the Resend connector). The Magic Link
+   template already prints `{{ .Token }}`, so the code shows correctly.
+3. **Code wouldn't verify** — Supabase was set to **8-digit** OTPs but the app's
+   code box hard-caps at **6** (`auth.tsx` `slice(0,6)`), so it silently
+   truncated and failed. Fixed by setting **Email OTP Length = 6** in Supabase
+   (Authentication → Sign In / Providers → Email).
+4. **Blank page after login** — NOT a bug. The app renders fully when the bundle
+   loads (verified headlessly with a real session: full dashboard, all four
+   Supabase queries 200). It was a **transient bundle-load blip**; Vercel serves
+   reliably (20/20 200s direct). A reload fixes it.
 
-**Diagnostic shortcut:** Resend → **Emails/Logs** after a failed attempt.
-403 = wrong recipient/test-sender; 401 = stale API key in Supabase; no entry =
-Supabase isn't using Resend (built-in mailer, rate-limited).
+**Still TODO (to onboard anyone other than the owner):** verify a real domain in
+Resend + point the sender at it (the test sender only reaches the owner's inbox).
+
+**Hardening worth doing (code, future):** add a top-level ErrorBoundary + a
+retry/"failed to load" fallback so a bundle-load blip shows a message instead of a
+blank; add a `.catch` on `getSession()` in `auth.tsx` so a bad stored session
+can't leave the app stuck on the loading spinner; relax the OTP box to accept the
+configured code length instead of hard-coding 6.
 
 ## ⚠️ Account context (important)
 - Owner **no longer controls V2O Sports** — **no access to `tom@v2ogroup.com`
