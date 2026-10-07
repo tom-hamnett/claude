@@ -70,7 +70,10 @@ async function resolveAI(provider?: AIProviderId): Promise<ResolvedAI> {
   if (isCloud) {
     const claude = getProvider('anthropic');
     const model = settings.aiModel && claude.models.some((m) => m.id === settings.aiModel) ? settings.aiModel : CLOUD_REASONING_MODEL;
-    return { providerId: 'anthropic', model, apiKey: '' };
+    // BYOK: if the user added their own Anthropic key, call Claude directly with
+    // it; otherwise fall back to the shared-key server proxy (empty key).
+    const ownKey = await getAIKey('anthropic');
+    return { providerId: 'anthropic', model, apiKey: ownKey ?? '' };
   }
   const providerId = provider ?? settings.aiProvider ?? 'anthropic';
   const p = getProvider(providerId);
@@ -90,7 +93,11 @@ async function resolveAI(provider?: AIProviderId): Promise<ResolvedAI> {
 async function resolveForAttachment(kind: AttachmentKind): Promise<ResolvedAI> {
   // Cloud mode: all media (docs, images, audio, video) goes to Gemini 3 Pro via
   // the shared-key proxy — the only model that natively interprets video.
-  if (isCloud) return { providerId: 'gemini', model: CLOUD_MEDIA_MODEL, apiKey: '' };
+  if (isCloud) {
+    // BYOK: use the user's own Gemini key for media when present; else the proxy.
+    const ownKey = await getAIKey('gemini');
+    return { providerId: 'gemini', model: CLOUD_MEDIA_MODEL, apiKey: ownKey ?? '' };
+  }
   const available = await configuredProviders();
   const prefs: Record<AttachmentKind, AIProviderId[]> = {
     image: ['anthropic', 'gemini', 'openai'],

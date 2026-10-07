@@ -1,6 +1,6 @@
 import type { AICompleteRequest, AICompleteResult, AIProvider } from './types';
 import { AIError, friendlyMessage, safeJson, tryParseJson } from './types';
-import { anthropicBase, anthropicUsesProxy, proxyAuthHeaders } from './gateway';
+import { anthropicBase, anthropicUsesProxy, proxyAuthHeaders, ANTHROPIC_DIRECT } from './gateway';
 
 /**
  * Anthropic provider — calls the Messages API directly from the browser.
@@ -62,8 +62,12 @@ export const anthropicProvider: AIProvider = {
     // In cloud mode the key is injected by our /api/anthropic proxy (the user
     // is identified by a Supabase bearer token); in BYOK mode we call Anthropic
     // directly with the user's own key.
+    // Proxy only in cloud mode AND when no BYOK key is supplied. A user-supplied
+    // key calls Anthropic directly (even in cloud), keeping data on their account.
+    const useProxy = anthropicUsesProxy && !opts.apiKey;
+    const base = useProxy ? anthropicBase : ANTHROPIC_DIRECT;
     const headers: Record<string, string> = { 'content-type': 'application/json', 'anthropic-version': '2023-06-01' };
-    if (anthropicUsesProxy) {
+    if (useProxy) {
       Object.assign(headers, await proxyAuthHeaders());
     } else {
       headers['x-api-key'] = opts.apiKey;
@@ -72,7 +76,7 @@ export const anthropicProvider: AIProvider = {
 
     let resp: Response;
     try {
-      resp = await fetch(`${anthropicBase}/v1/messages`, {
+      resp = await fetch(`${base}/v1/messages`, {
         method: 'POST',
         headers,
         body: JSON.stringify(body),

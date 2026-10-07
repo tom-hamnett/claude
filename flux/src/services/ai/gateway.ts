@@ -14,6 +14,15 @@ export const anthropicUsesProxy = isCloud;
 
 export const anthropicBase = isCloud ? '/api/anthropic' : 'https://api.anthropic.com';
 
+/**
+ * Direct provider endpoints. Used for BYOK calls — when the user has supplied
+ * their own key, the browser talks to the provider directly (even in cloud
+ * mode), so their data flows only to their own Anthropic/Google account and
+ * never through a shared FLUX server.
+ */
+export const ANTHROPIC_DIRECT = 'https://api.anthropic.com';
+export const GEMINI_DIRECT = 'https://generativelanguage.googleapis.com';
+
 /** Bearer header proving the caller is a signed-in FLUX user (proxy mode only). */
 export async function proxyAuthHeaders(): Promise<Record<string, string>> {
   if (!isCloud || !supabase) return {};

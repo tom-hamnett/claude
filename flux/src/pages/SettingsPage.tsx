@@ -69,12 +69,17 @@ export default function SettingsPage() {
         <section className="card p-5">
           <div className="mb-1 flex items-center gap-2">
             <Icon name="spark" className="h-5 w-5 text-flux-600" />
-            <h2 className="font-semibold text-ink-800">AI</h2>
+            <h2 className="font-semibold text-ink-800">AI — your keys</h2>
           </div>
           <p className="mb-4 text-sm text-ink-500">
-            FLUX runs on your team's <strong>shared keys</strong> — no setup, nothing to paste. Reasoning (map, diagnose, design, deep research) runs on <strong>Claude</strong>; documents, images, audio and video are interpreted by <strong>Gemini 3 Pro</strong>.
+            Add your own <strong>Anthropic</strong> and <strong>Google Gemini</strong> API keys. FLUX calls them <strong>directly from your browser</strong> — keys are stored encrypted on this device, and your data goes only to your own provider accounts, never through a shared server. Reasoning (map, diagnose, design) runs on <strong>Claude</strong>; documents, images, audio and video on <strong>Gemini 3 Pro</strong>.
           </p>
-          <label className="label">Reasoning model</label>
+          <div className="space-y-3">
+            <ProviderKeyRow providerId="anthropic" entry={settings?.aiKeys?.anthropic} passphrase={undefined} onStatus={setStatus} />
+            <ProviderKeyRow providerId="gemini" entry={settings?.aiKeys?.gemini} passphrase={undefined} onStatus={setStatus} />
+          </div>
+          {status && <div className={`mt-3 text-sm ${status.kind === 'ok' ? 'text-va-600' : 'text-nva-600'}`}>{status.msg}</div>}
+          <label className="label mt-5">Reasoning model</label>
           <select
             className="input max-w-xs"
             value={settings?.aiModel && getProvider('anthropic').models.some((m) => m.id === settings.aiModel) ? settings.aiModel : 'claude-opus-4-8'}

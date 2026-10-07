@@ -1,5 +1,5 @@
 import { AIError } from './types';
-import { geminiBase, geminiUsesProxy, proxyAuthHeaders } from './gateway';
+import { geminiBase, geminiUsesProxy, proxyAuthHeaders, GEMINI_DIRECT } from './gateway';
 
 /**
  * Gemini Files API — resumable upload for media too large to inline (audio,
@@ -13,9 +13,6 @@ import { geminiBase, geminiUsesProxy, proxyAuthHeaders } from './gateway';
  */
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-// In proxy mode the key is injected server-side; otherwise it rides in the query.
-const keyQuery = (apiKey: string) => (geminiUsesProxy ? '' : `?key=${encodeURIComponent(apiKey)}`);
-
 export async function uploadFileToGemini(opts: {
   apiKey: string;
   /** The raw file/blob — streamed directly (no in-memory base64). */
@@ -25,11 +22,16 @@ export async function uploadFileToGemini(opts: {
   signal?: AbortSignal;
 }): Promise<{ fileUri: string; mimeType: string }> {
   const numBytes = opts.blob.size;
+  // Proxy only in cloud mode without a BYOK key; otherwise upload straight to Google.
+  const useProxy = geminiUsesProxy && !opts.apiKey;
+  const base = useProxy ? geminiBase : GEMINI_DIRECT;
+  const keyQ = useProxy ? '' : `?key=${encodeURIComponent(opts.apiKey)}`;
+  const authHeaders = useProxy ? await proxyAuthHeaders() : {};
 
   // 1) Start resumable session.
   let startResp: Response;
   try {
-    startResp = await fetch(`${geminiBase}/upload/v1beta/files${keyQuery(opts.apiKey)}`, {
+    startResp = await fetch(`${base}/upload/v1beta/files${keyQ}`, {
       method: 'POST',
       headers: {
         'X-Goog-Upload-Protocol': 'resumable',
@@ -37,7 +39,7 @@ export async function uploadFileToGemini(opts: {
         'X-Goog-Upload-Header-Content-Length': String(numBytes),
         'X-Goog-Upload-Header-Content-Type': opts.mime,
         'Content-Type': 'application/json',
-        ...(await proxyAuthHeaders()),
+        ...authHeaders,
       },
       body: JSON.stringify({ file: { display_name: opts.name ?? 'flux-source' } }),
       signal: opts.signal,
@@ -77,8 +79,8 @@ export async function uploadFileToGemini(opts: {
   let state = file.state ?? 'PROCESSING';
   for (let i = 0; i < 40 && state === 'PROCESSING'; i++) {
     await sleep(2000);
-    const poll = await fetch(`${geminiBase}/v1beta/${file.name}${keyQuery(opts.apiKey)}`, {
-      headers: { ...(await proxyAuthHeaders()) },
+    const poll = await fetch(`${base}/v1beta/${file.name}${keyQ}`, {
+      headers: { ...authHeaders },
       signal: opts.signal,
     });
     if (poll.ok) {
