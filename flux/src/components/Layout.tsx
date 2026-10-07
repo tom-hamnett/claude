@@ -2,6 +2,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Icon, { type IconName } from './Icon';
 import { hasAnyAIKey } from '../services/aiKey';
+import { isCloud } from '../services/supabase';
 
 const NAV: { to: string; label: string; icon: IconName; end?: boolean }[] = [
   { to: '/', label: 'Dashboard', icon: 'home', end: true },
@@ -18,6 +19,12 @@ export default function Layout() {
   const loc = useLocation();
 
   useEffect(() => {
+    // Cloud mode runs on shared server-side keys, so there's nothing for the
+    // user to add — only prompt for a key in local (BYOK) mode.
+    if (isCloud) {
+      setKeySet(true);
+      return;
+    }
     hasAnyAIKey().then(setKeySet);
   }, [loc.pathname]);
 
