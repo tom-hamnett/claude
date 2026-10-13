@@ -263,7 +263,7 @@ export async function runDiagnostic(
     system,
     user,
     DIAGNOSTIC_SCHEMA,
-    { maxTokens: 1800, temperature: 0.5, signal },
+    { maxTokens: 3000, temperature: 0.5, signal },
   );
   return {
     signals,
@@ -346,7 +346,7 @@ export async function mapProcessFromText(
 - 8-20 steps is typical. Don't pad; don't omit the messy reality.`;
   const user = `ENGAGEMENT\n${projectContext(opts.project)}\n\nANALYST DESCRIPTION OF THE CURRENT PROCESS\n${opts.description}${knowledgeContext(opts.knowledge ?? [])}`;
   const { result } = await callJSON<MapResult>(system, user, MAP_SCHEMA, {
-    maxTokens: 4000,
+    maxTokens: 12000,
     temperature: 0.3,
     signal: opts.signal,
   });
@@ -461,7 +461,7 @@ export async function scanOpportunities(opts: {
   const user = `ENGAGEMENT\n${projectContext(opts.project)}\n\nMAPPED PROCESS\n${processToText(opts.process)}\n\nCOMPUTED METRICS\n- Lead time ${metrics.totalLeadTimeMin}m, touch time ${metrics.totalProcessTimeMin}m, wait ${metrics.totalWaitTimeMin}m\n- Process Cycle Efficiency (PCE): ${(metrics.pce * 100).toFixed(1)}%\n- Rolled %C&A: ${(metrics.rolledCompleteAccurate * 100).toFixed(1)}%\n- Steps ${metrics.stepCount} (VA ${metrics.vaCount} / BVA ${metrics.bvaCount} / NVA ${metrics.nvaCount}); handoffs ${metrics.handoffCount}; decisions ${metrics.decisionCount}; rework loops ${metrics.reworkLoopCount}\n- Automation index ${metrics.automationIndex}/100${metrics.annualCost ? `; est. annual run-cost ${Math.round(metrics.annualCost)}; est. annual waste ${Math.round(metrics.annualWasteCost ?? 0)}` : ''}${knowledgeContext(opts.knowledge ?? [])}`;
 
   const { result } = await callJSON<{ opportunities: RawOpp[] }>(system, user, OPP_SCHEMA, {
-    maxTokens: 4000,
+    maxTokens: 12000,
     temperature: 0.5,
     signal: opts.signal,
   });
@@ -750,7 +750,7 @@ export async function synthesizeProcess(opts: {
 - Suggest additional inputs that would sharpen the map as 'suggestion'.`;
   const user = `ENGAGEMENT\n${projectContext(opts.project)}\n\nINGESTED SOURCES\n${sourcesToText(opts.sources)}${opts.extraNotes ? `\n\nANALYST NOTES\n${opts.extraNotes}` : ''}${knowledgeContext(opts.knowledge ?? [])}`;
   const { result } = await callJSON<MapResult & { clarifications: RawClarification[] }>(system, user, SYNTH_SCHEMA, {
-    maxTokens: 4000,
+    maxTokens: 12000,
     temperature: 0.3,
     signal: opts.signal,
   });
@@ -792,7 +792,7 @@ export async function refineProcess(opts: {
     system,
     user,
     REFINE_SCHEMA,
-    { maxTokens: 4000, temperature: 0.3, signal: opts.signal },
+    { maxTokens: 12000, temperature: 0.3, signal: opts.signal },
   );
   return {
     steps: rawToSteps(result.steps ?? opts.process.steps),
@@ -836,7 +836,7 @@ Re-output ALL steps in order.${opts.instructions ? '' : ' If no guidance is give
     system,
     user,
     TIDY_SCHEMA,
-    { maxTokens: 4000, temperature: 0.2, signal: opts.signal },
+    { maxTokens: 12000, temperature: 0.2, signal: opts.signal },
   );
   return { steps: rawToSteps(result.steps ?? opts.process.steps), changeSummary: result.changeSummary ?? '' };
 }
