@@ -1,5 +1,5 @@
 /** Impact (y) vs Effort (x) bubble matrix with the four classic quadrants. */
-import { DRIVER } from '../lib/frameworks';
+import { driverInfo } from '../lib/frameworks';
 import type { Opportunity } from '../types';
 
 const SIZE = 360;
@@ -53,7 +53,7 @@ export default function OpportunityMatrix({
           const cx = x(o.effort) + j;
           const cy = y(o.impact) + j;
           const r = 7 + (o.confidence ?? 0.6) * 6;
-          const c = DRIVER[o.driver].color;
+          const c = driverInfo(o.driver).color;
           const sel = o.id === selectedId;
           return (
             <g key={o.id} className={onSelect ? 'cursor-pointer' : ''} onClick={() => onSelect?.(o)}>

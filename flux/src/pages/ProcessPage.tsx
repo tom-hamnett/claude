@@ -21,7 +21,7 @@ import Clarifications from '../components/Clarifications';
 import TidyTools from '../components/TidyTools';
 import CostBasis from '../components/CostBasis';
 import { AIError_, AIThinking, Spinner, useAIRun } from '../components/AIRun';
-import { AUTOMATION, DRIVER, DRIVER_ORDER, STEP_TYPE, STEP_TYPE_ORDER, VALUE_CLASS, WASTE } from '../lib/frameworks';
+import { AUTOMATION, DRIVER, DRIVER_ORDER, STEP_TYPE, STEP_TYPE_ORDER, VALUE_CLASS, driverInfo, wasteInfo, automationInfo, stepTypeInfo, valueClassInfo } from '../lib/frameworks';
 import { computeMetrics, prioritize, renumber } from '../lib/metrics';
 import { buildProcessReport, downloadJSON, downloadText, slugify } from '../lib/export';
 import { fmtMoney } from '../lib/format';
@@ -222,17 +222,17 @@ function MapTab({ process, project }: { process: Process; project: Project }) {
                 <td className="px-3 py-2 text-ink-400">{s.order}</td>
                 <td className="px-3 py-2 font-medium text-ink-800">
                   <button className="text-left hover:text-brand-700" onClick={() => setEditing(s)}>
-                    {STEP_TYPE[s.type].symbol} {s.name || <span className="text-ink-300">untitled</span>}
+                    {stepTypeInfo(s.type).symbol} {s.name || <span className="text-ink-300">untitled</span>}
                   </button>
                   {s.painPoint && <div className="text-xs text-nva-600">⚠ {s.painPoint}</div>}
                 </td>
-                <td className="px-3 py-2 text-ink-500">{STEP_TYPE[s.type].label}</td>
+                <td className="px-3 py-2 text-ink-500">{stepTypeInfo(s.type).label}</td>
                 <td className="px-3 py-2 text-ink-500">{s.actor || '—'}</td>
-                <td className="px-3 py-2"><span className={`chip ${VALUE_CLASS[s.valueClass].chip}`}>{s.valueClass}</span></td>
+                <td className="px-3 py-2"><span className={`chip ${valueClassInfo(s.valueClass).chip}`}>{s.valueClass}</span></td>
                 <td className="px-3 py-2 text-ink-500">{s.processTimeMin ?? '—'}</td>
                 <td className="px-3 py-2 text-ink-500">{s.waitTimeMin ?? '—'}</td>
                 <td className="px-3 py-2 text-ink-500">{s.pctCompleteAccurate ?? '—'}</td>
-                <td className="px-3 py-2 text-xs text-ink-500">{AUTOMATION[s.automation].label}</td>
+                <td className="px-3 py-2 text-xs text-ink-500">{automationInfo(s.automation).label}</td>
                 <td className="px-3 py-2">
                   <div className="flex items-center gap-1 text-ink-300">
                     <button className="hover:text-ink-600" onClick={() => move(i, -1)} title="Move up">↑</button>
@@ -342,7 +342,7 @@ function StepEditorModal({ step, process, onSave, onClose }: { step: ProcessStep
         </L>
         <div className="sm:col-span-2"><L label="Pain point"><input className="input" value={s.painPoint ?? ''} onChange={(e) => setS({ ...s, painPoint: e.target.value })} /></L></div>
       </div>
-      <div className="mt-2 text-xs text-ink-400">{VALUE_CLASS[s.valueClass].help}</div>
+      <div className="mt-2 text-xs text-ink-400">{valueClassInfo(s.valueClass).help}</div>
       <div className="mt-5 flex justify-end gap-2">
         <button className="btn-ghost" onClick={onClose}>Cancel</button>
         <button className="btn-primary" onClick={() => onSave(s)} disabled={!s.name.trim()}>Save step</button>
@@ -442,11 +442,11 @@ function OpportunityCard({ o, process, currency, selected, onSelect }: { o: Oppo
         </div>
       ) : null}
       <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
-        <span className={`chip ${DRIVER[o.driver].chip}`}>{DRIVER[o.driver].label}</span>
-        {o.waste && <span className="chip bg-nva-100 text-nva-700">{WASTE[o.waste].label}</span>}
+        <span className={`chip ${driverInfo(o.driver).chip}`}>{driverInfo(o.driver).label}</span>
+        {o.waste && <span className="chip bg-nva-100 text-nva-700">{wasteInfo(o.waste)?.label ?? o.waste}</span>}
         <span className="chip bg-ink-100 text-ink-600">Impact {o.impact}</span>
         <span className="chip bg-ink-100 text-ink-600">Effort {o.effort}</span>
-        <span className="chip bg-ink-100 text-ink-600">{AUTOMATION[o.automation].label}</span>
+        <span className="chip bg-ink-100 text-ink-600">{automationInfo(o.automation).label}</span>
         {refs.length > 0 && <span className="chip bg-flux-100 text-flux-700">Steps {refs.join(', ')}</span>}
         <span className="chip bg-ink-100 text-ink-400">conf {(o.confidence * 100).toFixed(0)}%</span>
       </div>

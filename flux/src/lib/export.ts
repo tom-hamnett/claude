@@ -2,7 +2,7 @@
  * Standardized report generation. Every FLUX report has the same sections in the
  * same order — that is what makes engagements comparable.
  */
-import { AUTOMATION, DRIVER, VALUE_CLASS, WASTE } from './frameworks';
+import { automationInfo, driverInfo, valueClassInfo, wasteInfo } from './frameworks';
 import { computeMetrics, prioritize } from './metrics';
 import { fmtDuration, fmtMoney, fmtPct } from './format';
 import type { Opportunity, OrgDefaults, Process, Project } from '../types';
@@ -60,7 +60,7 @@ export function buildProcessReport(
   lines.push('| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |');
   for (const s of process.steps) {
     lines.push(
-      `| ${s.order} | ${s.name} | ${s.type} | ${s.actor || '—'} | ${s.system || '—'} | ${VALUE_CLASS[s.valueClass].label} | ${s.processTimeMin ?? '—'} | ${s.waitTimeMin ?? '—'} | ${s.pctCompleteAccurate ?? '—'} | ${AUTOMATION[s.automation].label} |`,
+      `| ${s.order} | ${s.name} | ${s.type} | ${s.actor || '—'} | ${s.system || '—'} | ${valueClassInfo(s.valueClass).label} | ${s.processTimeMin ?? '—'} | ${s.waitTimeMin ?? '—'} | ${s.pctCompleteAccurate ?? '—'} | ${automationInfo(s.automation).label} |`,
     );
   }
   lines.push('');
@@ -76,7 +76,7 @@ export function buildProcessReport(
     for (const o of opps) {
       const ev = o.stepRefs.map((id) => stepById.get(id)?.order).filter(Boolean).join(', ');
       lines.push(
-        `| ${o.priority ?? '—'} | ${o.title}${o.quickWin ? ' ⚡' : ''} | ${DRIVER[o.driver].label} | ${o.waste ? WASTE[o.waste].label : '—'} | ${o.impact} | ${o.effort} | ${AUTOMATION[o.automation].label} | ${o.estAnnualValue ? fmtMoney(o.estAnnualValue, currency) : '—'} | ${ev || '—'} |`,
+        `| ${o.priority ?? '—'} | ${o.title}${o.quickWin ? ' ⚡' : ''} | ${driverInfo(o.driver).label} | ${o.waste ? (wasteInfo(o.waste)?.label ?? o.waste) : '—'} | ${o.impact} | ${o.effort} | ${automationInfo(o.automation).label} | ${o.estAnnualValue ? fmtMoney(o.estAnnualValue, currency) : '—'} | ${ev || '—'} |`,
       );
     }
     lines.push('');

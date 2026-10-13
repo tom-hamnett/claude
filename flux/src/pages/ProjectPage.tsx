@@ -7,7 +7,7 @@ import Modal from '../components/Modal';
 import ProjectRepository from '../components/ProjectRepository';
 import ProjectMembers from '../components/ProjectMembers';
 import { AIError_, AIThinking, Spinner, useAIRun } from '../components/AIRun';
-import { DRIVER } from '../lib/frameworks';
+import { driverInfo } from '../lib/frameworks';
 import { FLUX_SCHEMA_VERSION } from '../types';
 import { runDiagnostic } from '../services/fluxAI';
 import { computeMetrics, opportunityValue } from '../lib/metrics';
@@ -227,7 +227,7 @@ function DiagnosticPanel({ project }: { project: Project }) {
               <p className="mt-1 text-sm text-ink-500">{a.rationale}</p>
               <div className="mt-2 flex flex-wrap gap-1">
                 {a.drivers.map((d) => (
-                  <span key={d} className={`chip ${DRIVER[d].chip}`}>{DRIVER[d].label}</span>
+                  <span key={d} className={`chip ${driverInfo(d).chip}`}>{driverInfo(d).label}</span>
                 ))}
                 {a.recommended && <span className="chip bg-flux-100 text-flux-700">★ Map next</span>}
               </div>

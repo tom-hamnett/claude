@@ -135,5 +135,27 @@ export const MATURITY_LEVELS = [
 export const SCALE_5 = ['', 'Very low', 'Low', 'Medium', 'High', 'Very high'];
 
 export function wasteLabel(w?: WasteType): string {
-  return w ? WASTE[w].label : '—';
+  return w && WASTE[w] ? WASTE[w].label : '—';
+}
+
+// --- Safe accessors ----------------------------------------------------------
+// The AI occasionally returns a driver/waste/automation/type value outside the
+// strict enum. Looking those up directly (e.g. DRIVER[o.driver].color) throws
+// and, without an ErrorBoundary, blanks the whole app. These fall back to a
+// sensible default so a stray value is shown, not fatal.
+
+export function driverInfo(d: string | undefined) {
+  return DRIVER[d as ValueDriver] ?? DRIVER.efficiency;
+}
+export function wasteInfo(w: string | undefined) {
+  return w ? WASTE[w as WasteType] : undefined;
+}
+export function automationInfo(a: string | undefined) {
+  return AUTOMATION[a as AutomationType] ?? AUTOMATION.none;
+}
+export function stepTypeInfo(t: string | undefined) {
+  return STEP_TYPE[t as StepType] ?? STEP_TYPE.task;
+}
+export function valueClassInfo(v: string | undefined) {
+  return VALUE_CLASS[v as ValueClass] ?? VALUE_CLASS.BVA;
 }

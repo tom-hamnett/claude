@@ -2,7 +2,7 @@
  * Pure functions that turn a Process into comparable, standardized metrics.
  * No I/O, no React — easy to test and reason about.
  */
-import { AUTOMATION } from './frameworks';
+import { automationInfo } from './frameworks';
 import type {
   ImpactEffort,
   OrgDefaults,
@@ -39,7 +39,7 @@ export function computeMetrics(p: Process, org?: OrgDefaults): ProcessMetrics {
   const vaTimeShare = totalProcessTimeMin > 0 ? vaTimeMin / totalProcessTimeMin : 0;
 
   const automationIndex = steps.length
-    ? Math.round(sum(steps.map((s) => AUTOMATION[s.automation].score)) / steps.length)
+    ? Math.round(sum(steps.map((s) => automationInfo(s.automation).score)) / steps.length)
     : 0;
 
   // Costing — only when we can annualise.

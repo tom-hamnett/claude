@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Icon, { type IconName } from './Icon';
+import ErrorBoundary from './ErrorBoundary';
 import { hasAnyAIKey } from '../services/aiKey';
 import { isCloud } from '../services/supabase';
 
@@ -88,7 +89,9 @@ export default function Layout() {
           )}
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-8">
-          <Outlet />
+          <ErrorBoundary key={loc.pathname}>
+            <Outlet />
+          </ErrorBoundary>
         </main>
       </div>
     </div>

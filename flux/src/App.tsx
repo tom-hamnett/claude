@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
 import AuthGate from './components/AuthGate';
+import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider } from './services/auth';
 import { isCloud } from './services/supabase';
 import { seedIfEmpty } from './lib/seed';
@@ -40,7 +41,8 @@ export default function App() {
   }
 
   return (
-    <AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
       <AuthGate>
         <Routes>
           <Route path="/" element={<Layout />}>
@@ -55,6 +57,7 @@ export default function App() {
           </Route>
         </Routes>
       </AuthGate>
-    </AuthProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }

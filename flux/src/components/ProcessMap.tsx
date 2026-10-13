@@ -3,7 +3,7 @@
  * Lanes = actors. Columns = step order. Node colour = Lean value class.
  * Pure presentational; horizontally scrollable for long processes.
  */
-import { VALUE_CLASS, STEP_TYPE } from '../lib/frameworks';
+import { valueClassInfo, stepTypeInfo } from '../lib/frameworks';
 import type { Process, ProcessStep } from '../types';
 
 const COL_W = 160;
@@ -93,7 +93,7 @@ export default function ProcessMap({
         {/* Nodes */}
         {steps.map((s, i) => {
           const p = pos(s, i);
-          const vc = VALUE_CLASS[s.valueClass];
+          const vc = valueClassInfo(s.valueClass);
           const selected = s.id === selectedId;
           return (
             <g
@@ -112,7 +112,7 @@ export default function ProcessMap({
               />
               <rect width={6} height={NODE_H} rx={3} fill={vc.color} />
               <text x={14} y={20} fontSize={11} className="fill-ink-400">
-                {s.order}. {STEP_TYPE[s.type].symbol} {STEP_TYPE[s.type].label}
+                {s.order}. {stepTypeInfo(s.type).symbol} {stepTypeInfo(s.type).label}
               </text>
               <text x={14} y={38} fontSize={12.5} fontWeight={600} className="fill-ink-800">
                 {truncate(s.name, 17)}
