@@ -62,7 +62,7 @@ interface ResolvedAI {
 // Platform (cloud) defaults: best model for each job, run on the shared keys
 // via the server proxies (no per-user key).
 const CLOUD_REASONING_MODEL = 'claude-opus-4-8'; // map / diagnose / design / deep research
-const CLOUD_MEDIA_MODEL = 'gemini-3-pro-preview'; // documents, images, audio, video
+const CLOUD_MEDIA_MODEL = 'gemini-3.1-pro-preview'; // documents, images, audio, video
 
 async function resolveAI(provider?: AIProviderId): Promise<ResolvedAI> {
   const settings = await getSettings();

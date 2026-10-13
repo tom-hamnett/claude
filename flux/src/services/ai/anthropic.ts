@@ -45,10 +45,11 @@ export const anthropicProvider: AIProvider = {
       const lastUser = [...messages].reverse().find((m) => m.role === 'user');
       if (lastUser) lastUser.content = [{ type: 'text', text: String(lastUser.content) }, ...blocks];
     }
+    // Newer Claude models (e.g. Opus 4.8) reject `temperature`; omit it and use
+    // the model default. (Gemini still honours temperature in generationConfig.)
     const body: Record<string, unknown> = {
       model: opts.model,
       max_tokens: req.maxTokens ?? 1024,
-      temperature: req.temperature ?? 0.4,
       messages,
     };
     if (req.system) body.system = req.system;

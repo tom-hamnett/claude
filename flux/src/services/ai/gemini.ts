@@ -8,7 +8,7 @@ export const geminiProvider: AIProvider = {
   defaultModel: 'gemini-2.5-flash',
   models: [
     { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', notes: 'Default. Fast, cheap.' },
-    { id: 'gemini-3-pro-preview', label: 'Gemini 3 Pro', notes: 'Highest quality.' },
+    { id: 'gemini-3.1-pro-preview', label: 'Gemini 3.1 Pro', notes: 'Highest quality.' },
     { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash', notes: 'Stable fallback.' },
   ],
   supports: ['image', 'document', 'audio', 'video'],
