@@ -74,11 +74,20 @@ body {
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Clean Print / PDF: drop app chrome, show only the content. */
+/* Clean Print / PDF: drop app chrome, fit wide content to the page. */
+@page { size: A4 landscape; margin: 10mm; }
 @media print {
   .no-print { display: none !important; }
   main { overflow: visible !important; padding: 0 !important; }
   .card { box-shadow: none !important; border-color: #e5e7eb !important; break-inside: avoid; }
+  /* Scale the swimlane SVG down to fit the printable width instead of clipping. */
+  .overflow-x-auto { overflow: visible !important; }
+  svg { max-width: 100% !important; height: auto !important; }
+  /* Wide report tables: fit to the page and wrap long cells rather than overflow. */
+  .prose-flux table { width: 100% !important; table-layout: fixed; font-size: 8pt; }
+  .prose-flux th, .prose-flux td { word-break: break-word; overflow-wrap: anywhere; padding: 2px 4px !important; }
+  .prose-flux h1 { font-size: 16pt; }
+  .prose-flux h2 { font-size: 12pt; }
 }
 
 @keyframes shimmer {
