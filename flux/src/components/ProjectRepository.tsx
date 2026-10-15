@@ -69,10 +69,12 @@ export default function ProjectRepository({ project }: { project: Project }) {
     <div className="card p-4">
       <div className="mb-1 flex items-center gap-2">
         <Icon name="knowledge" className="h-5 w-5 text-flux-600" />
-        <h3 className="font-semibold text-ink-800">Project repository</h3>
-        <span className="text-sm text-ink-400">— shared context for every process</span>
+        <h3 className="font-semibold text-ink-800">Engagement repository</h3>
+        <span className="text-sm text-ink-400">— upload once, used by every sub-process</span>
       </div>
-      <p className="mb-3 text-sm text-ink-500">Org chart, budget, headcount roster, KPI dashboards, project brief… FLUX reads these when mapping and diagnosing.</p>
+      <p className="mb-3 text-sm text-ink-500">
+        Drop in the material that frames the whole engagement — <strong>org chart &amp; roles, department budget &amp; headcount, cost/pay rates, KPI dashboards, SLAs, the project brief</strong>. Upload it here <strong>once</strong> and FLUX uses it when mapping and diagnosing <strong>every</strong> sub-process — no need to re-upload per process. The more cost and role detail you include, the sharper the numbers.
+      </p>
 
       <div
         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}

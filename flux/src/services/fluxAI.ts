@@ -46,7 +46,8 @@ You operate the FLUX Standard for process work:
 - VSM timing: process/touch time, wait time, %Complete & Accurate.
 - TIMWOODS 8 wastes: Transport, Inventory, Motion, Waiting, Overproduction, Over-processing, Defects, Skills.
 - Opportunity spectrum / value drivers: efficiency, effectiveness, waste, scale, experience, control, resilience.
-- Kaizen: prize quick wins (low-effort, high-impact) alongside structural redesign.`;
+- Kaizen: prize quick wins (low-effort, high-impact) alongside structural redesign.
+- Engagement memory: a shared engagement context (department economics, roles, and repository documents) is supplied with every task. Treat it as established fact — use its figures (headcount, loaded cost, department budget, roles) in your estimates, and NEVER raise a clarification or ask the client to supply information that is already present in it. Only surface genuinely missing, process-specific detail.`;
 
 // ============================================================================
 // Resolve + call
@@ -172,13 +173,29 @@ function projectContext(p: Project): string {
     .filter((s) => s.status === 'ready')
     .map((s) => `- [${s.kind}] ${s.name}: ${s.summary ?? ''} ${(s.extraction ?? '').slice(0, 800)}`)
     .join('\n');
+  const cur = p.org?.currency ?? 'GBP';
+  const econ = [
+    p.org?.loadedHourlyCost ? `Loaded labour cost: ${cur} ${p.org.loadedHourlyCost}/hour` : '',
+    p.org?.annualHoursPerFte ? `Working hours per FTE/year: ${p.org.annualHoursPerFte}` : '',
+    p.department?.headcount ? `Department headcount: ${p.department.headcount} FTE` : '',
+    p.department?.annualCost ? `Department annual run-cost / budget: ${cur} ${p.department.annualCost}` : '',
+    p.department?.roles ? `Key roles & grades: ${p.department.roles}` : '',
+    p.department?.notes ? `Department notes: ${p.department.notes}` : '',
+  ]
+    .filter(Boolean)
+    .join('\n');
   return [
     `Client: ${p.client || '(unspecified)'}`,
     `Industry: ${p.industry || '(unspecified)'}`,
     `Scope / function: ${p.scope || '(unspecified)'}`,
     p.objective ? `Strategic objective: ${p.objective}` : '',
     p.context ? `Engagement context: ${p.context}` : '',
-    repo ? `\nPROJECT REPOSITORY (org context, budgets, dashboards, briefs — use for baselines and context):\n${repo}` : '',
+    econ
+      ? `\nDEPARTMENT ECONOMICS & CONTEXT (shared across every sub-process — use these figures in your reasoning and value estimates; do NOT ask the client to re-supply anything listed here):\n${econ}`
+      : '',
+    repo
+      ? `\nENGAGEMENT REPOSITORY (org charts, budgets, dashboards, briefs — shared across every sub-process; use for baselines and context, and do not re-request documents already present here):\n${repo}`
+      : '',
   ]
     .filter(Boolean)
     .join('\n');
@@ -631,7 +648,8 @@ export async function ingestSource(opts: {
           ? 'Read the document/image carefully and extract everything relevant to how the process works.'
           : 'Extract everything relevant to how the process works.';
   const system = `SOURCE INGESTION. You are processing one raw source for a process-mapping engagement. ${guidance}
-Be faithful — do not invent. Capture exactly what the source says (and flag where it is unclear). Use the FLUX vocabulary (steps, actors, systems, pains, timings).`;
+Be faithful — do not invent. Capture exactly what the source says (and flag where it is unclear). Use the FLUX vocabulary (steps, actors, systems, pains, timings).
+Also capture any ECONOMICS & ORG detail present — costs, budgets, headcount/FTE, pay grades, roles, rates, volumes and KPIs — in the metrics/actors fields; these feed the engagement's department economics and the business case.`;
   const baseUser = `ENGAGEMENT\n${projectContext(opts.project)}\n\nSOURCE: ${opts.name} (${opts.kind})`;
 
   if (attachKind && opts.file) {

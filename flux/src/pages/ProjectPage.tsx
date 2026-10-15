@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { now, uid } from '../db';
 import { putProcess, putProject, useAllOpportunities, useProcessesByProject, useProject } from '../store';
@@ -40,6 +40,7 @@ export default function ProjectPage() {
       </div>
 
       <ProjectOverview project={project} processes={processes ?? []} />
+      <DepartmentCard project={project} />
       <ProjectRepository project={project} />
       <DiagnosticPanel project={project} />
       <ProcessPanel project={project} processes={processes ?? []} onOpen={(p) => nav(`/processes/${p.id}`)} />
@@ -66,8 +67,9 @@ function ProjectOverview({ project, processes }: { project: Project; processes: 
 
   // What data would sharpen the analysis.
   const needs: string[] = [];
-  if (!project.org?.loadedHourlyCost) needs.push('Loaded labour cost / hour (engagement settings) — unlocks all £ figures');
-  if (!(project.sources ?? []).length) needs.push('Project repository: org chart, budget, headcount roster, KPI dashboards');
+  if (!project.org?.loadedHourlyCost) needs.push('Loaded labour cost / hour (Department context) — unlocks all £ figures');
+  if (!project.department?.headcount && !project.department?.annualCost) needs.push('Department headcount, annual cost & key roles (Department context) — grounds the business case');
+  if (!(project.sources ?? []).length) needs.push('Engagement repository: org chart, budget, headcount roster, KPI dashboards');
   const noVolume = processes.filter((p) => !p.annualVolume).map((p) => p.name);
   if (noVolume.length) needs.push(`Annual volume for: ${noVolume.slice(0, 4).join(', ')}${noVolume.length > 4 ? '…' : ''}`);
   const undiagnosed = processes.filter((p) => p.status === 'draft' || p.status === 'mapped');
@@ -115,6 +117,64 @@ function Stat({ label, value, sub, tone }: { label: string; value: string; sub?:
       <div className={`font-display text-2xl font-bold ${tone ? 'text-flux-600' : 'text-ink-800'}`}>{value}</div>
       {sub && <div className="mt-0.5 text-xs text-ink-400">{sub}</div>}
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Department context & economics — captured once, reused by every sub-process
+// ---------------------------------------------------------------------------
+
+function DeptField({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div>
+      <label className="label">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+function DepartmentCard({ project }: { project: Project }) {
+  const d = project.department ?? {};
+  async function saveOrg(patch: Partial<NonNullable<Project['org']>>) {
+    await putProject({ ...project, org: { ...(project.org ?? {}), ...patch }, updatedAt: now() });
+  }
+  async function saveDept(patch: Partial<NonNullable<Project['department']>>) {
+    await putProject({ ...project, department: { ...(project.department ?? {}), ...patch }, updatedAt: now() });
+  }
+  const num = (v: string) => (v ? Number(v) : undefined);
+
+  return (
+    <section className="card p-5">
+      <div className="mb-1 flex items-center gap-2">
+        <Icon name="portfolio" className="h-5 w-5 text-flux-600" />
+        <h3 className="font-semibold text-ink-800">Department context &amp; economics</h3>
+        <span className="text-sm text-ink-400">— captured once, used across every sub-process</span>
+      </div>
+      <p className="mb-4 text-sm text-ink-500">
+        Give FLUX the overall numbers and roles up front. It uses them in every sub-process's diagnosis and business case — and won't re-ask for what you provide here.
+      </p>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <DeptField label="Loaded cost / hour">
+          <input className="input" type="number" defaultValue={project.org?.loadedHourlyCost ?? ''} onBlur={(e) => saveOrg({ loadedHourlyCost: num(e.target.value) })} />
+        </DeptField>
+        <DeptField label="Currency">
+          <input className="input" defaultValue={project.org?.currency ?? 'GBP'} onBlur={(e) => saveOrg({ currency: e.target.value || 'GBP' })} />
+        </DeptField>
+        <DeptField label="Hours / FTE / year">
+          <input className="input" type="number" placeholder="1760" defaultValue={project.org?.annualHoursPerFte ?? ''} onBlur={(e) => saveOrg({ annualHoursPerFte: num(e.target.value) })} />
+        </DeptField>
+        <DeptField label="Department headcount (FTE)">
+          <input className="input" type="number" defaultValue={d.headcount ?? ''} onBlur={(e) => saveDept({ headcount: num(e.target.value) })} />
+        </DeptField>
+        <DeptField label="Department annual cost / budget">
+          <input className="input" type="number" defaultValue={d.annualCost ?? ''} onBlur={(e) => saveDept({ annualCost: num(e.target.value) })} />
+        </DeptField>
+      </div>
+      <label className="label mt-4">Key roles &amp; grades</label>
+      <input className="input" placeholder="e.g. 3 AP clerks, 1 team lead, 1 finance manager" defaultValue={d.roles ?? ''} onBlur={(e) => saveDept({ roles: e.target.value || undefined })} />
+      <label className="label mt-4">Other departmental context</label>
+      <textarea className="input min-h-[70px]" placeholder="Shared-services model, locations, systems landscape, targets, known constraints…" defaultValue={d.notes ?? ''} onBlur={(e) => saveDept({ notes: e.target.value || undefined })} />
+    </section>
   );
 }
 
@@ -250,10 +310,10 @@ function ProcessPanel({ project, processes, onOpen }: { project: Project; proces
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="flex h-7 w-7 items-center justify-center rounded-full bg-flux-100 text-xs font-bold text-flux-700">02</span>
-          <h2 className="font-display text-lg font-bold text-ink-800">MAP — Processes</h2>
+          <h2 className="font-display text-lg font-bold text-ink-800">MAP — Sub-processes</h2>
         </div>
         <button className="btn-primary" onClick={() => setOpen(true)}>
-          <Icon name="plus" className="h-4 w-4" /> New process
+          <Icon name="plus" className="h-4 w-4" /> New sub-process
         </button>
       </div>
 
@@ -310,9 +370,9 @@ function NewProcessModal({ project, open, onClose, onCreated }: { project: Proje
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="New process">
+    <Modal open={open} onClose={onClose} title="New sub-process">
       <p className="mb-3 text-sm text-ink-500">
-        Name the process, then you'll land in the <strong>Ingest Studio</strong> — drop in interviews, recordings, documents or notes and FLUX synthesises the standardized map and flags what to follow up.
+        Add a sub-process under this engagement. Name it, then you'll land in the <strong>Ingest Studio</strong> — drop in interviews, recordings, documents or notes and FLUX synthesises the standardized map and flags what to follow up. It automatically inherits this engagement's department economics and repository.
       </p>
       <label className="label">Process name</label>
       <input

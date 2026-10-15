@@ -57,6 +57,20 @@ export interface Project {
   /** Free-text engagement context the AI uses across all stages. */
   context?: string;
   org?: OrgDefaults;
+  /**
+   * Department-level economics & context, captured once and reused across every
+   * sub-process so the AI reasons with real figures and doesn't re-ask for them.
+   */
+  department?: {
+    /** Total FTE headcount in the department/function in scope. */
+    headcount?: number;
+    /** Key roles / grades involved (free text, e.g. "3 AP clerks, 1 team lead, 1 manager"). */
+    roles?: string;
+    /** Total annual run-cost / budget of the department (in the engagement currency). */
+    annualCost?: number;
+    /** Any other standing departmental context. */
+    notes?: string;
+  };
   /** Stage 1 SPOT diagnostic (signals + AI-surfaced high-drag areas). */
   diagnostic?: Diagnostic;
   /** Project-level repository: org charts, budgets, dashboards, briefs — context for every process. */
