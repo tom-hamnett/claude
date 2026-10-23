@@ -161,7 +161,7 @@ def is_laughter_turn(start: float, end: float, text: str, hits: list[tuple[float
     return covered >= 0.6 * span
 
 
-def interaction(turns: list[dict]) -> dict:
+def interaction(turns: list[dict], overlaps: dict | None = None) -> dict:
     """Turn-taking per speaker: airtime, interruptions, overlaps, response gaps."""
     stats: dict[str, dict] = {}
     total = sum(t["end"] - t["start"] for t in turns) or 1.0
@@ -183,6 +183,10 @@ def interaction(turns: list[dict]) -> dict:
                     s["interruptions"] += 1
             elif gap < 5:
                 s["gaps"].append(gap)
+    for name, c in (overlaps or {}).items():
+        if name in stats:  # overlaps seen in raw diarization replace the turn-gap estimate
+            stats[name]["interruptions"] = c["interruptions"]
+            stats[name]["backchannels"] = c["backchannels"]
     for s in stats.values():
         s["talk_share"] = round(s["talk_s"] / total, 2)
         s["talk_s"] = round(s["talk_s"], 1)

@@ -103,3 +103,19 @@ def test_turn_acoustics_on_tone():
     a = prosody.turn_acoustics(tone)
     assert abs(a["pitch_median_hz"] - 120) < 3
     assert a["pitch_range_st"] < 0.5
+
+
+def test_label_speech_gives_each_stretch_one_speaker():
+    from recorder.transcribe import label_speech
+    speech = [(0.0, 10.0)]
+    raw = [(0.0, 6.0, 0), (5.0, 10.0, 1)]  # overlap 5-6 s
+    out = label_speech(speech, raw)
+    assert [k for _, _, k in out] == [0, 1]
+    assert abs(out[0][1] - out[1][0]) < 1e-6  # no overlap, no gap
+
+
+def test_overlap_counts_split_backchannels_from_interruptions():
+    from recorder.transcribe import overlap_counts
+    raw = [(0.0, 20.0, 0), (5.0, 5.8, 1), (10.0, 18.0, 1)]
+    c = overlap_counts(raw, {0: "Tom", 1: "Speaker A"})
+    assert c["Speaker A"] == {"interruptions": 1, "backchannels": 1}

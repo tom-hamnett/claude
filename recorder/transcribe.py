@@ -107,6 +107,55 @@ def reletter(turns: list[dict]) -> list[dict]:
     return turns
 
 
+FRAME_S = 0.1
+
+
+def label_speech(speech: list[tuple[float, float]], raw: list[tuple[float, float, int]]) -> list[tuple[float, float, int]]:
+    """Give every stretch of detected speech exactly one speaker, so overlapping diarization
+    turns never transcribe the same words twice. Where turns overlap, the longer turn wins."""
+    if not raw:
+        return [(s, e, 0) for s, e in speech]
+    ordered = sorted(raw, key=lambda t: t[1] - t[0])  # short first, so long turns overwrite
+    out: list[tuple[float, float, int]] = []
+    for s0, e0 in speech:
+        n = max(1, int(round((e0 - s0) / FRAME_S)))
+        frames = [-1] * n
+        for s, e, k in ordered:
+            if e <= s0 or s >= e0:
+                continue
+            a, b = max(0, int((s - s0) / FRAME_S)), min(n, int(round((e - s0) / FRAME_S)))
+            for i in range(a, b):
+                frames[i] = k
+        # frames with no turn take the nearest labelled neighbour
+        last = next((k for k in frames if k >= 0), None)
+        if last is None:
+            continue
+        for i in range(n):
+            if frames[i] < 0:
+                frames[i] = last
+            last = frames[i]
+        start = 0
+        for i in range(1, n + 1):
+            if i == n or frames[i] != frames[start]:
+                out.append((s0 + start * FRAME_S, min(e0, s0 + i * FRAME_S), frames[start]))
+                start = i
+    return [t for t in out if t[1] - t[0] >= 0.3]
+
+
+def overlap_counts(raw: list[tuple[float, float, int]], names: dict[int, str]) -> dict[str, dict]:
+    """From raw (overlapping) diarization turns: per speaker, how often they started talking
+    over someone else, split into short supportive overlaps and real interruptions."""
+    out: dict[str, dict] = {}
+    by_start = sorted(raw)
+    for i, (s, e, k) in enumerate(by_start):
+        over = [t for t in by_start[:i] if t[2] != k and t[0] < s - 0.3 and t[1] > s + 0.3]
+        if not over:
+            continue
+        c = out.setdefault(names.get(k, str(k)), {"interruptions": 0, "backchannels": 0})
+        c["backchannels" if e - s < 1.5 else "interruptions"] += 1
+    return out
+
+
 def load_audio(path: Path):
     import soundfile as sf
 
@@ -167,7 +216,7 @@ def analyse(audio_path: Path, model: str, models_dir: Path, voiceprint_path: Pat
     duration = len(audio) / SAMPLE_RATE
     speech = find_speech(audio, models_dir)
 
-    raw = speakers.diarize(audio, models_dir, num_speakers) if diarize else []
+    raw = speakers.diarize_long(audio, models_dir, num_speakers) if diarize else []
     if not raw:  # no diarization, or it found nothing: treat as one speaker
         raw = [(s, e, 0) for s, e in speech]
     raw = join_turns(raw)
@@ -181,12 +230,14 @@ def analyse(audio_path: Path, model: str, models_dir: Path, voiceprint_path: Pat
     raw = join_turns([(s, e, ids[names[k]]) for s, e, k in raw])
     names = {i: n for n, i in ids.items()}
 
+    overlaps = overlap_counts(raw, names)
+    labelled = join_turns(label_speech(speech, raw), gap=MERGE_GAP_S)
     hits = prosody.laughter_hits(audio, models_dir) if laughter else []
     rec = recogniser(model, models_dir)
     turns = []
-    for start, end, spk in raw:
+    for start, end, spk in labelled:
         parts = []
-        for cs, ce in merge_segments(clip_spans(speech, start, end)):
+        for cs, ce in merge_segments([(start, end)]):
             s = rec.create_stream()
             s.accept_waveform(SAMPLE_RATE, audio[int(cs * SAMPLE_RATE):int(ce * SAMPLE_RATE)])
             rec.decode_stream(s)
@@ -203,7 +254,11 @@ def analyse(audio_path: Path, model: str, models_dir: Path, voiceprint_path: Pat
         turn.update(prosody.text_markers(text))
         turns.append(turn)
 
-    turns = reletter(collapse_laughter(turns))
+    turns = collapse_laughter(turns)
+    before = [t["speaker"] for t in turns]
+    turns = reletter(turns)
+    renamed = {b: t["speaker"] for b, t in zip(before, turns)}
+    overlaps = {renamed.get(k, k): v for k, v in overlaps.items()}
     speech = [t for t in turns if not t.get("laughter")]
     laughs = prosody.attribute_laughter(prosody.laugh_events(hits), turns)
 
@@ -216,7 +271,7 @@ def analyse(audio_path: Path, model: str, models_dir: Path, voiceprint_path: Pat
         "speakers": sorted({t["speaker"] for t in speech}),
         "voiceprint_match": match if scores else None,
         "speaker_summary": prosody.speaker_summary(speech),
-        "interaction": prosody.interaction(speech),
+        "interaction": prosody.interaction(speech, overlaps),
         "laughter": laughs,
         "turns": turns,
         "processing_s": round(time.time() - t0, 1),
