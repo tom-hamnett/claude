@@ -117,11 +117,14 @@ textarea { min-height: 84px; resize: vertical }
 .flag { color: var(--bad); font-weight: 600; font-size: 13px }
 .empty { display: grid; gap: 8px; padding: 22px 16px; border: 1px dashed var(--line); border-radius: var(--r); color: var(--muted) }
 .empty strong { color: var(--ink); font-family: var(--display); font-stretch: 80%; font-size: 19px }
+.notice { font-size: 12.5px; line-height: 1.45; color: var(--muted); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; background: var(--surface) }
+.notice strong { color: var(--ink) }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; z-index: 20 }
 @media (prefers-reduced-motion: no-preference) { .view { animation: in .18s ease-out } @keyframes in { from { opacity: .4; transform: translateY(4px) } to { opacity: 1; transform: none } } }
 </style>
 
 <div class="wrap">
+  <p class="notice" role="note"><strong>Privacy and consent.</strong> Recorded conversations are not stored: audio is deleted after analysis, and only scores, short evidence quotes and summaries are kept. Every conversation uploaded here is assumed to have the explicit consent and approval of all parties involved.</p>
   <header class="top">
     <h1>Presence Coach</h1>
     <div class="standing">
