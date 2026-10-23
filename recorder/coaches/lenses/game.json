@@ -1,0 +1,183 @@
+{
+ "id": "game",
+ "name": "Game",
+ "rubric_version": 1,
+ "settings": [
+  "social",
+  "date",
+  "flirtation",
+  "networking"
+ ],
+ "library": "recorder/library/game",
+ "scale": {
+  "0": "absent or counter-productive",
+  "1": "weak",
+  "2": "competent adult in this context",
+  "3": "strong, consistent",
+  "4": "exceptional, top decile"
+ },
+ "capabilities": [
+  {
+   "id": "inner",
+   "name": "Inner Game & Frame",
+   "weight": 1,
+   "library_capabilities": [
+    "Inner Game & Non-Neediness",
+    "Frame Control & Composure"
+   ],
+   "subs": [
+    {
+     "id": "inner.outcome",
+     "name": "Outcome independence"
+    },
+    {
+     "id": "inner.frame",
+     "name": "Holding frame when tested"
+    },
+    {
+     "id": "inner.nosupp",
+     "name": "No supplication, clear boundaries"
+    },
+    {
+     "id": "inner.composure",
+     "name": "Composure"
+    }
+   ]
+  },
+  {
+   "id": "play",
+   "name": "Playfulness & Impudence",
+   "weight": 1,
+   "library_capabilities": [
+    "Playfulness & Impudence"
+   ],
+   "subs": [
+    {
+     "id": "play.cocky",
+     "name": "Cocky-funny and teasing"
+    },
+    {
+     "id": "play.roleplay",
+     "name": "Role-play and playful misreads"
+    },
+    {
+     "id": "play.callbacks",
+     "name": "Callbacks and self-amusement"
+    }
+   ]
+  },
+  {
+   "id": "voice",
+   "name": "Gravitas & Vocal Presence",
+   "weight": 1,
+   "library_capabilities": [
+    "Gravitas & Vocal Presence"
+   ],
+   "subs": [
+    {
+     "id": "voice.pace",
+     "name": "Unhurried pace and pauses"
+    },
+    {
+     "id": "voice.endings",
+     "name": "Certain endings and fluency"
+    },
+    {
+     "id": "voice.tone",
+     "name": "Tonal range and warmth"
+    }
+   ]
+  },
+  {
+   "id": "story",
+   "name": "Storytelling & Disclosure",
+   "weight": 1,
+   "library_capabilities": [
+    "Storytelling & Self-Disclosure"
+   ],
+   "subs": [
+    {
+     "id": "story.structure",
+     "name": "Story structure and vivid detail"
+    },
+    {
+     "id": "story.value",
+     "name": "Value shown through story"
+    },
+    {
+     "id": "story.disclosure",
+     "name": "Two-way, deepening disclosure"
+    }
+   ]
+  },
+  {
+   "id": "engage",
+   "name": "Engagement & Listening",
+   "weight": 1,
+   "library_capabilities": [
+    "Engagement & Emotional Connection",
+    "Calibration & Social Intelligence"
+   ],
+   "subs": [
+    {
+     "id": "engage.followups",
+     "name": "Curious follow-ups and threading"
+    },
+    {
+     "id": "engage.statements",
+     "name": "Statements over interview questions"
+    },
+    {
+     "id": "engage.depth",
+     "name": "Emotional depth"
+    },
+    {
+     "id": "engage.reading",
+     "name": "Reading her interest"
+    }
+   ]
+  },
+  {
+   "id": "tension",
+   "name": "Tension & Leading",
+   "weight": 1,
+   "library_capabilities": [
+    "Tension, Polarity & Flirtation",
+    "Leading & Decisiveness",
+    "Status, Value & Screening"
+   ],
+   "subs": [
+    {
+     "id": "tension.intent",
+     "name": "Clear intent and verbal escalation"
+    },
+    {
+     "id": "tension.charge",
+     "name": "Tension, release and charged silence"
+    },
+    {
+     "id": "tension.lead",
+     "name": "Concrete plans and decisive choices"
+    },
+    {
+     "id": "tension.prestige",
+     "name": "Prestige over dominance"
+    }
+   ]
+  }
+ ],
+ "derailers": [
+  {
+   "id": "approval",
+   "name": "Approval-seeking"
+  },
+  {
+   "id": "tryhard",
+   "name": "Try-hard or monologuing"
+  },
+  {
+   "id": "manipulative",
+   "name": "Manipulative tactic used"
+  }
+ ]
+}

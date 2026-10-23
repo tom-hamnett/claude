@@ -1,0 +1,184 @@
+{
+ "id": "executive_presence",
+ "name": "Executive Presence",
+ "rubric_version": 1,
+ "settings": [
+  "work meeting",
+  "1:1",
+  "presentation",
+  "call",
+  "networking"
+ ],
+ "library": "recorder/library/executive_presence",
+ "scale": {
+  "0": "absent or counter-productive",
+  "1": "weak",
+  "2": "competent adult in this context",
+  "3": "strong, consistent",
+  "4": "exceptional, top decile"
+ },
+ "capabilities": [
+  {
+   "id": "gravitas",
+   "name": "Gravitas & Composure",
+   "weight": 1,
+   "library_capabilities": [
+    "Gravitas & Composure"
+   ],
+   "subs": [
+    {
+     "id": "gravitas.tempo",
+     "name": "Settled tempo"
+    },
+    {
+     "id": "gravitas.steady",
+     "name": "Steady after a jab"
+    },
+    {
+     "id": "gravitas.ownership",
+     "name": "Owning mistakes cleanly"
+    }
+   ]
+  },
+  {
+   "id": "voice",
+   "name": "Vocal Authority",
+   "weight": 1,
+   "library_capabilities": [
+    "Vocal Authority & Delivery"
+   ],
+   "subs": [
+    {
+     "id": "voice.landing",
+     "name": "Landing statements"
+    },
+    {
+     "id": "voice.variety",
+     "name": "Variety and emphasis"
+    },
+    {
+     "id": "voice.pace",
+     "name": "Pace and pause"
+    },
+    {
+     "id": "voice.fluency",
+     "name": "Fluency"
+    }
+   ]
+  },
+  {
+   "id": "clarity",
+   "name": "Clarity & Brevity",
+   "weight": 1,
+   "library_capabilities": [
+    "Clarity & Structure",
+    "Brevity & Executive Communication"
+   ],
+   "subs": [
+    {
+     "id": "clarity.answerfirst",
+     "name": "Answer first"
+    },
+    {
+     "id": "clarity.structure",
+     "name": "Clear structure"
+    },
+    {
+     "id": "clarity.sowhat",
+     "name": "Length and so-what"
+    },
+    {
+     "id": "clarity.ask",
+     "name": "Clear ask"
+    }
+   ]
+  },
+  {
+   "id": "conviction",
+   "name": "Conviction",
+   "weight": 1,
+   "library_capabilities": [
+    "Conviction & Calibrated Certainty"
+   ],
+   "subs": [
+    {
+     "id": "conviction.committed",
+     "name": "Committed language"
+    },
+    {
+     "id": "conviction.calibrated",
+     "name": "Precise about uncertainty"
+    },
+    {
+     "id": "conviction.noapology",
+     "name": "No over-apologising"
+    }
+   ]
+  },
+  {
+   "id": "charisma",
+   "name": "Charisma & Connection",
+   "weight": 1,
+   "library_capabilities": [
+    "Charisma & Storytelling",
+    "Warmth & Connection"
+   ],
+   "subs": [
+    {
+     "id": "charisma.story",
+     "name": "Story, metaphor and contrast"
+    },
+    {
+     "id": "charisma.warmth",
+     "name": "Warmth and we-framing"
+    },
+    {
+     "id": "charisma.humour",
+     "name": "Humour"
+    }
+   ]
+  },
+  {
+   "id": "room",
+   "name": "Command of the Room",
+   "weight": 1,
+   "library_capabilities": [
+    "Listening & Command of the Room",
+    "Handling Challenge & Pressure",
+    "Poise in Hierarchy"
+   ],
+   "subs": [
+    {
+     "id": "room.listening",
+     "name": "Follow-ups and paraphrase"
+    },
+    {
+     "id": "room.airtime",
+     "name": "Airtime and holding the floor"
+    },
+    {
+     "id": "room.challenge",
+     "name": "Handling challenge"
+    },
+    {
+     "id": "room.poise",
+     "name": "Poise with seniors"
+    }
+   ]
+  }
+ ],
+ "derailers": [
+  {
+   "id": "rambling",
+   "name": "Rambling"
+  },
+  {
+   "id": "defensive",
+   "name": "Defensive under challenge"
+  },
+  {
+   "id": "talkover",
+   "name": "Talking over people"
+  }
+ ]
+}

@@ -1,0 +1,172 @@
+{
+ "id": "leadership",
+ "name": "Leadership",
+ "rubric_version": 1,
+ "settings": [
+  "work meeting",
+  "1:1",
+  "team session",
+  "stakeholder",
+  "call"
+ ],
+ "library": "recorder/library/leadership",
+ "scale": {
+  "0": "absent or counter-productive",
+  "1": "weak",
+  "2": "competent adult in this context",
+  "3": "strong, consistent",
+  "4": "exceptional, top decile"
+ },
+ "capabilities": [
+  {
+   "id": "direction",
+   "name": "Direction",
+   "weight": 1,
+   "library_capabilities": [
+    "Direction & Strategic Thinking"
+   ],
+   "subs": [
+    {
+     "id": "direction.why",
+     "name": "The why"
+    },
+    {
+     "id": "direction.priorities",
+     "name": "Priorities"
+    },
+    {
+     "id": "direction.framing",
+     "name": "Framing the problem and trade-offs aloud"
+    }
+   ]
+  },
+  {
+   "id": "decisions",
+   "name": "Decisions",
+   "weight": 1,
+   "library_capabilities": [
+    "Decision-Making"
+   ],
+   "subs": [
+    {
+     "id": "decisions.rights",
+     "name": "Who decides"
+    },
+    {
+     "id": "decisions.debate",
+     "name": "Quality of debate"
+    },
+    {
+     "id": "decisions.closure",
+     "name": "Closing with commitment"
+    }
+   ]
+  },
+  {
+   "id": "accountability",
+   "name": "Accountability",
+   "weight": 1,
+   "library_capabilities": [
+    "Accountability & Ownership"
+   ],
+   "subs": [
+    {
+     "id": "accountability.www",
+     "name": "Who, what, when"
+    },
+    {
+     "id": "accountability.review",
+     "name": "Reviewing last time's actions"
+    },
+    {
+     "id": "accountability.ownmiss",
+     "name": "Owning the miss"
+    }
+   ]
+  },
+  {
+   "id": "people",
+   "name": "Developing People",
+   "weight": 1,
+   "library_capabilities": [
+    "Coaching & Developing Others",
+    "Delegation & Empowerment",
+    "Feedback & Candour"
+   ],
+   "subs": [
+    {
+     "id": "people.coaching",
+     "name": "Coaching questions over advice"
+    },
+    {
+     "id": "people.giveback",
+     "name": "Giving the work back"
+    },
+    {
+     "id": "people.feedback",
+     "name": "Specific praise and caring criticism"
+    }
+   ]
+  },
+  {
+   "id": "influence",
+   "name": "Influence & Conflict",
+   "weight": 1,
+   "library_capabilities": [
+    "Influence & Stakeholder Management",
+    "Conflict & Difficult Conversations"
+   ],
+   "subs": [
+    {
+     "id": "influence.interests",
+     "name": "Interests before positions"
+    },
+    {
+     "id": "influence.hardissue",
+     "name": "Raising the hard issue"
+    },
+    {
+     "id": "influence.facts",
+     "name": "Facts before stories"
+    }
+   ]
+  },
+  {
+   "id": "meetings",
+   "name": "Meetings & Safety",
+   "weight": 1,
+   "library_capabilities": [
+    "Meeting Leadership",
+    "Psychological Safety & Trust"
+   ],
+   "subs": [
+    {
+     "id": "meetings.purpose",
+     "name": "Purpose and facilitation"
+    },
+    {
+     "id": "meetings.voice",
+     "name": "Inviting voice"
+    },
+    {
+     "id": "meetings.badnews",
+     "name": "How bad news is received"
+    }
+   ]
+  }
+ ],
+ "derailers": [
+  {
+   "id": "rescuing",
+   "name": "Rescuing or deciding for everyone"
+  },
+  {
+   "id": "avoidance",
+   "name": "Avoiding conflict"
+  },
+  {
+   "id": "noclose",
+   "name": "No outcome from the meeting"
+  }
+ ]
+}

@@ -45,8 +45,7 @@ Type: Voice note | Conversation (Tom + <others>) · Setting: <work meeting / 1:1
 ## Key quotes   (conversations only, max 3)
 ## Open questions / risks
 ## Coaching
-- Executive presence: <top "sharpen" line> → /Recorder/Coaching/Executive/...
-- Social confidence: <top "sharpen" line> → /Recorder/Coaching/Social/...
+- <Coach>: <overall %> · <top work-on> (see the <Coach> app)
 
 ---
 ## Transcript (automatic, may contain errors)
@@ -60,12 +59,22 @@ If the setting is social, date or flirtation, the note **omits the Transcript se
 - The listening measures: Tom's follow-up question share, talk share, median reply gap, backchannels, interruptions, and how often Tom builds on her last point vs changes topic.
 At most about 20 evidence items. Delete `WORK/transcript.md` with the audio.
 
-## 4. Coaching (conversations with Tom only)
-1. History: `list_folder` `/Recorder/Metrics` (recursive). Fetch the 20 most recent `.json` files (`download_link` in batches of up to 25, curl each once) into `WORK/history/`.
-2. Run **two independent subagents in parallel** (Agent tool, one message), each given: `recorder/coaches/brief.md`, its rubric, and the paths to `WORK/transcript.md`, `WORK/features.json`, `WORK/history/`, plus the note's date, type, setting and who.
-   - Executive presence & leadership: rubric `recorder/rubrics/executive_presence.md`
-   - Social confidence & charisma: rubric `recorder/rubrics/social_confidence.md`
-3. Save each report to `/Recorder/Coaching/Executive/YYYY-MM/<base>.md` and `/Recorder/Coaching/Social/YYYY-MM/<base>.md`.
+## 4. Coaching apps (conversations with Tom only)
+Three independent coaches, each with its own app (Artifact) and database:
+
+| Coach | Lens id | App |
+|---|---|---|
+| Game | `game` | https://claude.ai/artifact/CLfJ87TWZu9NjNjoaiS9oQ |
+| Executive Presence | `executive_presence` | https://claude.ai/artifact/2Np1bFcS2K8CK5mzhgPa3q |
+| Leadership | `leadership` | https://claude.ai/artifact/8odaZUGAN8JTWTw9jAJicd |
+
+**Routing.** Use the setting from step 2: social, date, flirtation → Game. Work meeting, 1:1, presentation, team session, stakeholder, work call → Executive Presence and Leadership. Networking → all three. If unclear, run all three; a coach that finds the conversation outside its lens returns `relevant: false` and nothing is written.
+
+For each routed coach:
+1. **Read its app state** with ArtifactData (load via ToolSearch "select:ArtifactData"), saving to `WORK/state_<lens>/` with `out_dir`: `get` ratings/current, `get` dossier/main, `list` workplan, `list` assessments (limit 5, newest first: query order_by date desc), `query` notes where status == "new", `query` proposals where status == "approved". Record each document's reported `version` in `WORK/state_<lens>/versions.json` as {"ratings/current": n, "dossier/main": n, "workplan/<id>": n, "notes/<id>": n}.
+2. **Run the coach as its own subagent** (Agent tool; send all routed coaches in ONE message so they run in parallel). Give each: its lens id, `recorder/coaches/brief.md`, and the paths to `WORK/transcript.md`, `WORK/features.json` and `WORK/state_<lens>/`, plus date, setting and who. It writes its JSON to `WORK/coach_<lens>.json` and replies only with the overall verdict's first line.
+3. **Build the writes**: `python3 -I recorder/coaches/publish.py --lens <lens> --coach WORK/coach_<lens>.json --features WORK/features.json --state WORK/state_<lens> --versions WORK/state_<lens>/versions.json --base <base> --date <YYYY-MM-DDTHH:MM> --setting <setting> --out WORK/out_<lens>`
+4. **Write**: one ArtifactData `batch` to that app's url with the `writes` from `WORK/out_<lens>/writes.json`. If it fails on a version conflict, re-read that document, update versions.json, rebuild and retry once.
 
 ## 5. Metrics → `/Recorder/Metrics/YYYY-MM/<base>.json` (every recording)
 ```json
@@ -75,9 +84,9 @@ At most about 20 evidence items. Delete `WORK/transcript.md` with the audio.
  "tom_interaction": {<features.interaction.Tom>},
  "laughs_after_tom": 0, "laughs_total": 0,
  "others_engagement": {"questions": 0, "mean_turn_s": 0, "median_response_gap_s": 0},
- "executive": {<coach JSON or null>}, "social": {<coach JSON or null>}}
+ "coaches": {"<lens>": {"overall_pct": 0, "top_work_on": "..."}}}
 ```
-This history is each coach's baseline, so write it even for voice notes.
+Write it even for voice notes: it's the raw voice baseline over time.
 
 ## 6. Tom OS (all actions, IHG included)
 Per the `tom-os-capture` skill's write format: artifact https://claude.ai/artifact/13q2HP71YqTNvQaw9QGVQz, collection `tasks`, one `batch`, each `{title, area, priority, due, done:false, source:"recorder", createdAt}` with a doc_id like `rec-<slug>-<4 random chars>`. Default P2; relative dates count from the recording date.
@@ -92,5 +101,5 @@ Only after the note and metrics saved: delete the audio from `/Recorder/Inbox` (
 Per recording:
 ```
 <Title> (<duration>, <type>): <TL;DR line>
-Tom OS: n tasks (n IHG) · Exec: <top sharpen> · Social: <top sharpen>
+Tom OS: n tasks (n IHG) · <Coach> <overall %>: <top work-on> (one per coach run)
 ```

@@ -11,7 +11,7 @@ Watch (Just Press Record) -> iPhone -> iCloud Drive
                       wording markers (fillers, hedges, certainty, questions),
                       turn-taking (airtime, interruptions, reply gaps), laughter
        note -> /Recorder/Notes · actions -> Tom OS (IHG labelled)
-       two coaching agents (rubrics/) -> /Recorder/Coaching/{Executive,Social}
+       three coaching agents -> their apps (Game, Presence, Leadership)
        metrics -> /Recorder/Metrics (the coaches' baseline over time)
        delete audio from the inbox
 ```
@@ -22,7 +22,10 @@ Free to run: all audio processing is local to the Claude session (sherpa-onnx mo
 - `transcribe.py`: pipeline entry point (also `--enrol` to build a voiceprint).
 - `speakers.py`: diarization and voiceprint matching. `prosody.py`: voice, wording, turn-taking and laughter measures. `models.py`: model downloads.
 - `PROCESS.md`: what each scheduled run does.
-- `coaches/brief.md`: the coaching agents' brief. `rubrics/`: the researched rubrics (executive presence; social confidence), with sources.
+- `coaches/brief.md`: the coaching agents' brief. `coaches/lenses/*.json`: each coach's capabilities and sub-capabilities. `coaches/publish.py`: turns a coach verdict into app database writes.
+- `scoring.py`: overall %, balance penalty, coverage band, and per-skill ratings with uncertainty.
+- `library/<lens>/`: technique libraries (taxonomy, techniques.json, sources). `research/benchmark.md`: market benchmark. `rubrics/`: earlier evidence rubrics.
+- `apps/`: the three coach apps (template + `build.py`). Live: Game https://claude.ai/artifact/CLfJ87TWZu9NjNjoaiS9oQ · Presence https://claude.ai/artifact/2Np1bFcS2K8CK5mzhgPa3q · Leadership https://claude.ai/artifact/8odaZUGAN8JTWTw9jAJicd
 - `IPHONE_SETUP.md`: one-tap recording, the Send to Recorder shortcut and its automations.
 - `../tests/test_recorder.py`: unit tests (`pytest tests/test_recorder.py`).
 - Dropbox `/Recorder/people_terms.md` (glossary, edit from the Dropbox app) and `/Recorder/System/tom_voice.json` (voiceprint; private, never in the repo).
