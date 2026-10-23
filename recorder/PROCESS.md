@@ -68,7 +68,8 @@ Three independent coaches, each with its own app (Artifact) and database:
 | Executive Presence | `executive_presence` | https://claude.ai/artifact/2Np1bFcS2K8CK5mzhgPa3q |
 | Leadership | `leadership` | https://claude.ai/artifact/8odaZUGAN8JTWTw9jAJicd |
 
-**Routing.** Use the setting from step 2: social, date, flirtation → Game. Work meeting, 1:1, presentation, team session, stakeholder, work call → Executive Presence and Leadership. Networking → all three. If unclear, run all three; a coach that finds the conversation outside its lens returns `relevant: false` and nothing is written.
+**Spoken tag wins.** If Tom says a tag in the first 2 minutes ("game", "work", "note only", "all coaches"), follow it.
+**Routing.** Otherwise use the setting from step 2. Never skip coaching on your own judgement (e.g. because children were present): Tom's rule (23 Oct 2026). Use the setting: social, date, flirtation → Game. Work meeting, 1:1, presentation, team session, stakeholder, work call → Executive Presence and Leadership. Networking → all three. If unclear, run all three; a coach that finds the conversation outside its lens returns `relevant: false` and nothing is written.
 
 For each routed coach:
 1. **Read its app state** with ArtifactData (load via ToolSearch "select:ArtifactData"), saving to `WORK/state_<lens>/` with `out_dir`: `get` ratings/current, `get` dossier/main, `list` workplan, `list` assessments (limit 5, newest first: query order_by date desc), `query` notes where status == "new", `query` proposals where status == "approved". Record each document's reported `version` in `WORK/state_<lens>/versions.json` as {"ratings/current": n, "dossier/main": n, "workplan/<id>": n, "notes/<id>": n}.
@@ -95,7 +96,7 @@ Per the `tom-os-capture` skill's write format: artifact https://claude.ai/artifa
 - No Gmail drafts.
 
 ## 7. Clean up
-Only after the note and metrics saved: delete the audio from `/Recorder/Inbox` (Dropbox keeps it in Deleted files about 30 days). On any failure, leave that recording's audio in the inbox and report why. Delete `WORK`.
+Only after the note, metrics AND every routed coach's writes are saved: delete the audio from `/Recorder/Inbox` (Dropbox keeps it in Deleted files about 30 days). On any failure, leave that recording's audio in the inbox and report why. Delete `WORK`.
 
 ## 8. Reply
 Per recording:
