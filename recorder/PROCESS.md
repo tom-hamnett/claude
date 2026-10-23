@@ -53,6 +53,13 @@ Type: Voice note | Conversation (Tom + <others>) · Setting: <work meeting / 1:1
 <transcript.md>
 ```
 
+### Social and date conversations: no full transcript (Tom's rule, 23 Oct 2026)
+If the setting is social, date or flirtation, the note **omits the Transcript section**, and the full transcript is never saved anywhere. Keep instead, under `## Evidence`:
+- Each quote that backs a coaching score: `[mm:ss]` plus Tom's line (25 words max), tagged with the capability/sub-capability it supports.
+- **Listening evidence:** for each moment used to judge listening or responsiveness, the other person's line just before Tom's reply (paraphrased in 20 words max, no names or identifying details) and Tom's reply, e.g. `[12:04] She: mentioned a sister's wedding stress → Tom: "Oh, so who's the drama?" (follow-up, picks up her thread)`.
+- The listening measures: Tom's follow-up question share, talk share, median reply gap, backchannels, interruptions, and how often Tom builds on her last point vs changes topic.
+At most about 20 evidence items. Delete `WORK/transcript.md` with the audio.
+
 ## 4. Coaching (conversations with Tom only)
 1. History: `list_folder` `/Recorder/Metrics` (recursive). Fetch the 20 most recent `.json` files (`download_link` in batches of up to 25, curl each once) into `WORK/history/`.
 2. Run **two independent subagents in parallel** (Agent tool, one message), each given: `recorder/coaches/brief.md`, its rubric, and the paths to `WORK/transcript.md`, `WORK/features.json`, `WORK/history/`, plus the note's date, type, setting and who.
