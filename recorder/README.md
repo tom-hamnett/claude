@@ -1,31 +1,37 @@
 # Recorder
 
-Tap record on the Apple Watch, and a few hours later a short analysis, the transcript and filed to-dos are waiting. The audio is then deleted.
+Tap record on the Apple Watch. By the next scheduled run (lunchtime or 11pm) you have a short note, a speaker-labelled transcript, tasks filed in Tom OS, and two coaching reports (executive presence; social confidence) built from *how* you spoke as well as what you said. The audio is then deleted.
 
 ```
 Watch (Just Press Record) -> iPhone -> iCloud Drive
   -> iPhone automation moves new files -> Dropbox /Recorder/Inbox
-  -> hourly Claude scheduled task (follows recorder/PROCESS.md)
-       transcribe offline (Whisper small.en, recorder/transcribe.py)
-       analyse -> /Recorder/Notes/YYYY-MM/<note>.md
-       personal actions -> Tom OS · IHG actions stay in the note only
+  -> scheduled Claude task (follows recorder/PROCESS.md)
+       transcribe.py: who spoke when (diarization + Tom's voiceprint), Whisper text,
+                      voice measures per turn (pitch, loudness, pace, pauses, uptalk),
+                      wording markers (fillers, hedges, certainty, questions),
+                      turn-taking (airtime, interruptions, reply gaps), laughter
+       note -> /Recorder/Notes · actions -> Tom OS (IHG labelled)
+       two coaching agents (rubrics/) -> /Recorder/Coaching/{Executive,Social}
+       metrics -> /Recorder/Metrics (the coaches' baseline over time)
        delete audio from the inbox
 ```
 
-Free to run: transcription happens inside the Claude session, and analysis uses the Claude plan.
+Free to run: all audio processing is local to the Claude session (sherpa-onnx models, Praat); analysis uses the Claude plan.
 
 ## Files
-- `transcribe.py`: audio in, `[mm:ss]` transcript out. Splits at pauses (Silero VAD), runs Whisper via sherpa-onnx.
-- `PROCESS.md`: what the hourly run does.
+- `transcribe.py`: pipeline entry point (also `--enrol` to build a voiceprint).
+- `speakers.py`: diarization and voiceprint matching. `prosody.py`: voice, wording, turn-taking and laughter measures. `models.py`: model downloads.
+- `PROCESS.md`: what each scheduled run does.
+- `coaches/brief.md`: the coaching agents' brief. `rubrics/`: the researched rubrics (executive presence; social confidence), with sources.
 - `IPHONE_SETUP.md`: one-tap recording, the Send to Recorder shortcut and its automations.
 - `../tests/test_recorder.py`: unit tests (`pytest tests/test_recorder.py`).
-- Dropbox `/Recorder/people_terms.md`: Tom's glossary of names and terms (edit from the Dropbox app).
+- Dropbox `/Recorder/people_terms.md` (glossary, edit from the Dropbox app) and `/Recorder/System/tom_voice.json` (voiceprint; private, never in the repo).
 
 ## Manual run
 ```bash
-pip install sherpa-onnx soundfile --break-system-packages
-python3 -I recorder/transcribe.py recording.m4a --out transcript.md   # small.en default
-python3 -I recorder/transcribe.py recording.m4a --model base.en       # faster, less accurate
+pip install sherpa-onnx soundfile praat-parselmouth --break-system-packages
+python3 -I recorder/transcribe.py rec.m4a --voiceprint tom_voice.json --out t.md --features f.json
+python3 -I recorder/transcribe.py tom_only.m4a --enrol tom_voice.json   # rebuild voiceprint
 ```
 
-Measured on the first test (3 min voice note, 4 vCPU): base.en 18 s, small.en 48 s. small.en got names right that base.en missed.
+Measured on 4 vCPU: about 20 minutes of processing per hour of audio (small.en). Tested on a 3-minute voice note (one speaker, Tom matched at 0.98) and a mock 3-speaker conversation with laughter (all speakers separated, Tom matched at 0.90 vs 0.14 for others, laugh attributed to the line before it).
