@@ -242,7 +242,7 @@
         "where": "technical vs adaptive challenges"
       }
     ],
-    "evidence": "practitioner-consensus",
+    "evidence": "single-author",
     "ethics": "ok"
   },
   {
@@ -2693,7 +2693,7 @@
         "where": "synergise"
       }
     ],
-    "evidence": "research-backed",
+    "evidence": "practitioner-consensus",
     "ethics": "ok"
   },
   {
@@ -2749,7 +2749,7 @@
         "where": "insist on objective criteria"
       }
     ],
-    "evidence": "practitioner-consensus",
+    "evidence": "single-author",
     "ethics": "ok"
   },
   {
@@ -4014,6 +4014,10 @@
         "where": "psychological safety and learning"
       },
       {
+        "ref": 61,
+        "where": "psychological safety meta-analysis"
+      },
+      {
         "ref": 33,
         "where": "psychological safety"
       }
@@ -4571,7 +4575,7 @@
         "where": "coaching habit"
       }
     ],
-    "evidence": "research-backed",
+    "evidence": "practitioner-consensus",
     "ethics": "ok"
   },
   {
