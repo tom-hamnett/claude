@@ -1,6 +1,8 @@
 # Leadership coach: capability taxonomy
 
-Version 1.0, 23 Oct 2026. Scope: what Tom *does* as a leader in recorded conversations (meetings, 1:1s, team sessions, stakeholder discussions): setting direction, deciding, driving ownership, delegating, developing people, giving feedback, influencing, handling conflict, running meetings and building trust. Numbers in square brackets refer to `sources.md`. Field names in `code` are produced by `recorder/prosody.py`.
+Version 1.0, 23 Oct 2026. Scope: what Tom *does* as a leader in recorded conversations (meetings, 1:1s, team sessions, stakeholder discussions): setting direction, deciding, driving ownership, delegating, developing people, giving feedback, influencing, handling conflict, running meetings and building trust.
+
+**Audio-only rule.** Everything here must be assessable from the audio and transcript of Tom's conversations. Leadership work that cannot be heard (org design, written strategy documents, hiring processes, body language, follow-through that never comes up in a conversation) is deliberately out of scope. Where a behaviour is only partly audible, the "in a recording" line says what can be heard. Numbers in square brackets refer to `sources.md`. Field names in `code` are produced by `recorder/prosody.py`.
 
 ## Boundary with the Executive Presence coach
 
@@ -27,7 +29,7 @@ Making clear where we are going, why, and what matters most; and reasoning about
 - **1.3 Intent and outcome clarity**: Stating the goal and the boundaries, not the method. / Specific, measurable outcome plus constraints; leaves the "how" open. / Outcome words (number, date, standard) present; "how" detail from Tom limited; others ask fewer "what do you want exactly?" questions.
 - **1.4 Framing the problem aloud**: Naming what kind of problem this is (technical vs adaptive, the real question) before solving it. / "Before we solve it, what's the actual question?"; distinguishes known-fix problems from ones needing people to change. / Problem restatements, "the real question is", separation of symptoms and causes early in the discussion.
 - **1.5 Thinking out loud: assumptions and trade-offs**: Exposing reasoning so it can be tested. / States facts vs assumptions vs judgements, gives probabilities, names the trade-off and second-order effects. / Phrases like "what I'm assuming is", "the bet here is", "if that's wrong then"; numeric likelihoods; invites "where's this wrong?".
-- **1.6 Situation diagnosis and transitions**: Reading what the context demands (start-up, turnaround, realignment, sustaining success) and adjusting. / Explicitly names the situation and matches pace and style to it. / Diagnostic questions in early-tenure conversations; explicit "this is a turnaround, so..." framing.
+- **1.6 Situation diagnosis and expectations**: Reading aloud what the context demands (start-up, turnaround, realignment, sustaining success) and agreeing expectations with the boss. / Names the situation in conversation and checks the boss sees it the same way. / Diagnostic questions in early-tenure conversations; explicit "this is a turnaround, so..." framing; expectation-setting questions in upward meetings.
 
 ### 2. Decision-Making
 Getting to good, timely decisions with clear rights, real debate and committed execution.
@@ -102,7 +104,7 @@ Using meetings as a tool for decisions, alignment and learning (substance; EP D1
 - **9.2 Facilitating contribution**: Making sure relevant information and views come from everyone. / Round-robins, independent views first, invites quiet experts. / Distinct speakers per item; spread of `talk_share`; Tom's `talk_share` relative to fair share; named invitations.
 - **9.3 Steering to solutions**: Moving from complaint cycles to action. / Notices problem-talk loops and redirects to "what will we do?". / Ratio of solution/action talk to complaint talk; redirection statements.
 - **9.4 Closing with commitments**: Recording decisions, owners, dates and what will be communicated. / Recaps decisions and who tells whom. / Decision + owner + date in last minutes; cascade agreement ("what are we telling our teams?").
-- **9.5 Operating rhythm and mechanisms**: Recurring forums and written pre-reads that make good behaviour routine. / Regular cadence, pre-reads, clear inputs. / References to pre-reads, recurring review meetings, written proposals discussed rather than slides read out.
+- **9.5 Recurring reviews in the room**: Using the regular meeting itself as a mechanism: reviewing the same metrics and commitments each time and discussing a shared proposal rather than presenting at people. / Same standing items each week; discussion starts from questions on a pre-read, not a read-out. / Standing review items heard across recordings of the same meeting; "you've all read it, so questions first" vs Tom reading slides aloud (long Tom monologues, `longest_turn_s`).
 
 ### 10. Psychological Safety & Trust
 Creating the conditions where people speak up, admit mistakes and trust Tom's word.
@@ -111,7 +113,7 @@ Creating the conditions where people speak up, admit mistakes and trust Tom's wo
 - **10.2 Acknowledging fallibility**: Admitting what Tom doesn't know and his mistakes. / Owns errors, says "I don't know", asks for help. / Fallibility statements; Tom's errors acknowledged in-meeting.
 - **10.3 Responding productively to bad news**: Thanking messengers and focusing on next steps. / Appreciation, curiosity, forward focus when someone raises a problem or mistake. / Tom's turn after bad news: thanks/question vs blame/sarcasm/sigh; whether the messenger speaks again later.
 - **10.4 Inviting voice**: Actively asking for concerns and ideas, especially from lower-power people. / Specific invitations; acts on input and says so. / Invitations by name; follow-through statements ("you raised X last time; we did Y").
-- **10.5 Credibility and consistency**: Doing what he says; being predictable and fair. / Keeps commitments, explains changes, consistent across audiences. / Tom's own actions closed across recordings; explanations when plans change.
+- **10.5 Credibility and consistency**: Doing what he says he will, as heard in later conversations; explaining changes of course. / Reports back on his own actions unprompted; explains reversals. / Tom's own spoken actions reported as done in later recordings; explanations when plans change; others' references to promises not kept.
 - **10.6 Care and recognition**: Showing genuine interest in people and sharing credit. / Personal check-ins; credits the team publicly; takes blame, gives credit. / Personal questions; credit statements naming people; "I" for blame and "we/they" for credit.
 
 ## Signals the coach can compute from a recording
@@ -140,4 +142,4 @@ Derived per conversation, interpreted by setting (below):
 
 ## Limits
 
-Audio shows talk, not the follow-through between meetings; many accountability and trust behaviours are only partly visible and need several recordings. The coach should judge trends against Tom's own baseline, avoid scoring single meetings harshly, and flag where evidence is thin. Popular leadership books are mostly practitioner wisdom; see evidence grades in `techniques.json`.
+Audio shows talk, not what happens between meetings; accountability and trust behaviours are scored only as far as they surface in conversation (e.g. actions reviewed in the next meeting) and need several recordings. The coach should judge trends against Tom's own baseline, avoid scoring single meetings harshly, and flag where evidence is thin. Popular leadership books are mostly practitioner wisdom; see evidence grades in `techniques.json`.
