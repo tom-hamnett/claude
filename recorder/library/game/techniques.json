@@ -1,0 +1,5192 @@
+[
+  {
+    "id": "game-inner-001",
+    "capability": "Inner Game & Non-Neediness",
+    "sub_capability": "Outcome independence",
+    "name": "Outcome independence",
+    "summary": "Caring about the person and the moment while not needing a particular result from the interaction.",
+    "how_to_apply": "Set the goal as 'enjoy this and be myself' before the conversation; treat a no or a lukewarm response as information, not a verdict.",
+    "example_line": "Either way, I've enjoyed this. You're good company.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "pitch_median_hz and speaking_rate_wpm stable after a rejection or flat moment",
+      "no persuasion or re-asking after a decline",
+      "apologies count low"
+    ],
+    "common_mistakes": [
+      "Faking indifference (coldness reads as disengagement)",
+      "Using 'outcome independence' as an excuse not to show interest"
+    ],
+    "drill": "Before each social event write one process goal (e.g. 'three follow-up questions') and score only that afterwards.",
+    "sources": [
+      {
+        "ref": 9,
+        "where": "non-neediness"
+      },
+      {
+        "ref": 24,
+        "where": "outcome independence"
+      },
+      {
+        "ref": 7,
+        "where": "abundance mentality"
+      },
+      {
+        "ref": 55,
+        "where": "selective vs unselective desire"
+      },
+      {
+        "ref": 40,
+        "where": "D2"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-inner-002",
+    "capability": "Inner Game & Non-Neediness",
+    "sub_capability": "Approval independence (no covert contracts)",
+    "name": "Spot and drop covert contracts",
+    "summary": "Noticing when niceness is secretly a trade (I'll be lovely, so you'll like me) and replacing it with open requests and honest giving.",
+    "how_to_apply": "Before a favour, compliment or agreement, ask: would I do this if it earned nothing? If not, either ask directly for what you want or don't do it.",
+    "example_line": "I'd like to see you again. Are you up for that?",
+    "observable_in_audio": "partial",
+    "markers": [
+      "flattery density early in conversation",
+      "over-agreeing (agreement tokens with no own view)",
+      "requests framed indirectly rather than asked"
+    ],
+    "common_mistakes": [
+      "Swinging to rudeness to prove you're not nice",
+      "Keeping score silently and resenting her"
+    ],
+    "drill": "For one week, log each time you did something hoping for a hidden payoff; for each, write the direct ask you could have made.",
+    "sources": [
+      {
+        "ref": 8,
+        "where": "covert contracts"
+      },
+      {
+        "ref": 18,
+        "where": "AFC / nice guy syndrome"
+      },
+      {
+        "ref": 5,
+        "where": "nice guy vs attractive"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-inner-003",
+    "capability": "Inner Game & Non-Neediness",
+    "sub_capability": "Approval independence (no covert contracts)",
+    "name": "Say your real opinion",
+    "summary": "Sharing genuine preferences and disagreements instead of mirroring what you think she wants.",
+    "how_to_apply": "When asked what you think, answer with your actual view in one sentence, then ask hers; disagree warmly when you disagree.",
+    "example_line": "Honestly? I think brunch is overrated. Fight me.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "certainty_per_100w up, hedges_per_100w down on opinion turns",
+      "agreement tokens ('totally', 'same') immediately after her opinions",
+      "opinions that flip when she disagrees"
+    ],
+    "common_mistakes": [
+      "Contrarianism for effect",
+      "Lecturing once you've stated a view"
+    ],
+    "drill": "In three conversations, state one mild, genuine disagreement and keep it friendly; note her reaction.",
+    "sources": [
+      {
+        "ref": 8,
+        "where": "integrity / stop seeking approval"
+      },
+      {
+        "ref": 9,
+        "where": "polarisation"
+      },
+      {
+        "ref": 10,
+        "where": "values"
+      },
+      {
+        "ref": 22,
+        "where": "power"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-inner-004",
+    "capability": "Inner Game & Non-Neediness",
+    "sub_capability": "Approval independence (no covert contracts)",
+    "name": "Stop approval-seeking tags",
+    "summary": "Removing verbal habits that ask for reassurance, like 'is that weird?', 'does that make sense?' and 'sorry, I'm rambling'.",
+    "how_to_apply": "End points with a full stop and a pause instead of a check-in; let her respond on her own.",
+    "example_line": "That's why I moved to Lisbon. (pause)",
+    "observable_in_audio": "yes",
+    "markers": [
+      "count of 'does that make sense', 'is that weird', 'sorry I'm rambling'",
+      "uptalk_share on statements",
+      "apologies"
+    ],
+    "common_mistakes": [
+      "Replacing tags with long silence that feels cold",
+      "Removing all checks, including genuine ones about her comfort"
+    ],
+    "drill": "Record a 2-minute story; tally every reassurance tag; redo with zero and compare.",
+    "sources": [
+      {
+        "ref": 8,
+        "where": "seeking approval"
+      },
+      {
+        "ref": 75,
+        "where": "powerless speech"
+      },
+      {
+        "ref": 40,
+        "where": "D1, D2"
+      },
+      {
+        "ref": 9,
+        "where": "neediness"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-inner-005",
+    "capability": "Inner Game & Non-Neediness",
+    "sub_capability": "Purpose & direction",
+    "name": "Purpose first",
+    "summary": "Building a life organised around a mission he cares about, so a woman joins his world rather than becoming its centre.",
+    "how_to_apply": "Keep commitments to your own projects even when dating is going well; talk about what you're building with genuine energy.",
+    "example_line": "I'm deep into building this product. It's eating my weekends, and I love it.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "energy (pitch_range_st, loudness_sd_db) rises when discussing his own work",
+      "content: specific goals and projects"
+    ],
+    "common_mistakes": [
+      "Using purpose as a reason to be unavailable or dismissive",
+      "Monologuing about work"
+    ],
+    "drill": "Write one paragraph on what you're building this year; practise saying the 20-second version with energy.",
+    "sources": [
+      {
+        "ref": 6,
+        "where": "purpose before relationship"
+      },
+      {
+        "ref": 7,
+        "where": "mission first"
+      },
+      {
+        "ref": 11,
+        "where": "put yourself first"
+      },
+      {
+        "ref": 12,
+        "where": "mental point of origin"
+      },
+      {
+        "ref": 17,
+        "where": "women as part of a full life"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-inner-006",
+    "capability": "Inner Game & Non-Neediness",
+    "sub_capability": "Purpose & direction",
+    "name": "Don't make her the mission",
+    "summary": "Avoiding pedestalising: treating one woman as the prize or main life goal before you know her.",
+    "how_to_apply": "Keep investment in step with what you actually know about her; keep friends, hobbies and plans intact in the early weeks.",
+    "example_line": "I'm away climbing on Saturday, but I'm free Sunday evening.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "early declarations of strong feelings",
+      "compliment rate far above hers",
+      "talk about rearranging plans for her"
+    ],
+    "common_mistakes": [
+      "Overcorrecting into unavailability games",
+      "Hiding real interest"
+    ],
+    "drill": "After a good date, list three non-dating things you'll do that week and do them.",
+    "sources": [
+      {
+        "ref": 17,
+        "where": "pedestal"
+      },
+      {
+        "ref": 18,
+        "where": "one-itis"
+      },
+      {
+        "ref": 7,
+        "where": "don't put her first too early"
+      },
+      {
+        "ref": 9,
+        "where": "investment"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-inner-007",
+    "capability": "Inner Game & Non-Neediness",
+    "sub_capability": "Abundance & selectivity",
+    "name": "Selective, specific interest",
+    "summary": "Showing interest in her in particular, rather than being enthusiastic about everyone, which research links to being desired back.",
+    "how_to_apply": "Compliment and ask about specific things she said or chose; don't gush generically.",
+    "example_line": "The way you talked about restoring that bike, that's the most alive you've looked all night.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "specific vs generic compliments ratio",
+      "references to earlier details she gave"
+    ],
+    "common_mistakes": [
+      "Pretending to be picky",
+      "Withholding all appreciation"
+    ],
+    "drill": "After each interaction write one specific thing you liked; say that kind of thing next time.",
+    "sources": [
+      {
+        "ref": 55,
+        "where": "selective desire is reciprocated"
+      },
+      {
+        "ref": 9,
+        "where": "screening"
+      },
+      {
+        "ref": 7,
+        "where": "abundance"
+      },
+      {
+        "ref": 40,
+        "where": "D2"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-inner-008",
+    "capability": "Inner Game & Non-Neediness",
+    "sub_capability": "Authenticity & honest vulnerability",
+    "name": "Honest expression of interest",
+    "summary": "Telling her plainly that you're attracted or want to see her again, accepting the risk of rejection.",
+    "how_to_apply": "Once you feel it and she's engaged, say it once, warmly, without a question tag; then let her respond.",
+    "example_line": "I like you. I'd like to take you out properly.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "direct statement of interest present",
+      "no hedge cluster around it",
+      "falling final_rise_st"
+    ],
+    "common_mistakes": [
+      "Saying it before any rapport",
+      "Repeating it to get reassurance"
+    ],
+    "drill": "In your next three dates, state your interest once, clearly, before the end.",
+    "sources": [
+      {
+        "ref": 9,
+        "where": "honest communication"
+      },
+      {
+        "ref": 3,
+        "where": "intimacy over tactics"
+      },
+      {
+        "ref": 26,
+        "where": "be clear about intent"
+      },
+      {
+        "ref": 25,
+        "where": "women want clarity"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-inner-009",
+    "capability": "Inner Game & Non-Neediness",
+    "sub_capability": "Authenticity & honest vulnerability",
+    "name": "Vulnerability as a mindset",
+    "summary": "Being willing to show real feelings, flaws and wants without performing; strength shown by not hiding.",
+    "how_to_apply": "Share one real thing that matters to you, briefly, then return the floor; don't use vulnerability to fish for sympathy.",
+    "example_line": "I was nervous coming here, which is funny because you're very easy to talk to.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "self-disclosure statements with feeling words",
+      "followed by her own disclosure (reciprocity)"
+    ],
+    "common_mistakes": [
+      "Trauma-dumping on a first date",
+      "Strategic 'vulnerability' as a technique"
+    ],
+    "drill": "Once per date, share one honest feeling in the moment in a single sentence.",
+    "sources": [
+      {
+        "ref": 9,
+        "where": "vulnerability"
+      },
+      {
+        "ref": 3,
+        "where": "intimacy"
+      },
+      {
+        "ref": 68,
+        "where": "reciprocal disclosure"
+      },
+      {
+        "ref": 22,
+        "where": "warmth"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-inner-010",
+    "capability": "Inner Game & Non-Neediness",
+    "sub_capability": "Authenticity & honest vulnerability",
+    "name": "Polarise rather than please",
+    "summary": "Expressing your real personality so that some people like you a lot and some don't, instead of everyone feeling lukewarm.",
+    "how_to_apply": "Show genuine tastes, humour and opinions early; read a mismatch as a successful filter.",
+    "example_line": "I'm a total morning person. If you hate sunrises, this may be a dealbreaker.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "clear preference statements",
+      "low hedges on self-description"
+    ],
+    "common_mistakes": [
+      "Being abrasive and calling it polarising",
+      "Testing her with provocations"
+    ],
+    "drill": "Name three genuine tastes you usually hide and mention one per conversation.",
+    "sources": [
+      {
+        "ref": 9,
+        "where": "polarisation"
+      },
+      {
+        "ref": 10,
+        "where": "rejection as filter"
+      },
+      {
+        "ref": 8,
+        "where": "be yourself"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-inner-011",
+    "capability": "Inner Game & Non-Neediness",
+    "sub_capability": "State management",
+    "name": "Warm-up before you go out",
+    "summary": "Getting into a sociable, talkative mood before the important conversation rather than starting cold.",
+    "how_to_apply": "Have a few easy chats (barista, friends) before the date or event; music and movement help.",
+    "example_line": "(Habit: three small chats en route.)",
+    "observable_in_audio": "partial",
+    "markers": [
+      "opening-minute loudness_db and pitch_range_st vs his baseline",
+      "fillers in first 2 minutes"
+    ],
+    "common_mistakes": [
+      "Using alcohol as the warm-up",
+      "Overly hyped energy that doesn't match hers"
+    ],
+    "drill": "Before your next social event, have three brief friendly exchanges with strangers on the way.",
+    "sources": [
+      {
+        "ref": 24,
+        "where": "state / warm-up sets"
+      },
+      {
+        "ref": 2,
+        "where": "Stylelife Challenge"
+      },
+      {
+        "ref": 21,
+        "where": "energy"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-inner-012",
+    "capability": "Inner Game & Non-Neediness",
+    "sub_capability": "State management",
+    "name": "Presence over performance",
+    "summary": "Putting full attention on what's happening now rather than on planning the next line or judging yourself.",
+    "how_to_apply": "When you notice yourself rehearsing, return attention to her words, her face, the setting; respond to what's actually said.",
+    "example_line": "Wait, go back. You said 'technically' a lawyer?",
+    "observable_in_audio": "partial",
+    "markers": [
+      "follow-up question share",
+      "median_response_gap_s in normal range (not frozen, not jumping in)",
+      "fewer non-sequitur topic switches"
+    ],
+    "common_mistakes": [
+      "Mistaking silence for presence",
+      "Over-mirroring"
+    ],
+    "drill": "During one conversation, do a 1-second body check (feet, breath) whenever you catch yourself rehearsing.",
+    "sources": [
+      {
+        "ref": 22,
+        "where": "presence"
+      },
+      {
+        "ref": 6,
+        "where": "presence"
+      },
+      {
+        "ref": 21,
+        "where": "conviction and attention"
+      },
+      {
+        "ref": 52,
+        "where": "follow-ups"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-inner-013",
+    "capability": "Inner Game & Non-Neediness",
+    "sub_capability": "State management",
+    "name": "Counter the liking gap",
+    "summary": "Remembering that people usually like us more than we think after a conversation, so pessimism fuels needy behaviour.",
+    "how_to_apply": "When you leave thinking it went badly, look for her objective engagement signals before concluding anything.",
+    "example_line": "(Self-talk: what did she actually do?)",
+    "observable_in_audio": "partial",
+    "markers": [
+      "her questions and turn length vs his own self-assessment"
+    ],
+    "common_mistakes": [
+      "Overcorrecting into overconfidence",
+      "Ignoring real disinterest signals"
+    ],
+    "drill": "After each recorded chat, rate how much she liked you (1-10) before the coach review, then compare to her engagement markers.",
+    "sources": [
+      {
+        "ref": 70,
+        "where": "liking gap"
+      },
+      {
+        "ref": 63,
+        "where": "attachment anxiety"
+      },
+      {
+        "ref": 40,
+        "where": "D2, wellbeing"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-inner-014",
+    "capability": "Inner Game & Non-Neediness",
+    "sub_capability": "Outcome independence",
+    "name": "Rejection reframe",
+    "summary": "Treating rejection as a sign you took a risk and a filter for fit, not as evidence of low worth.",
+    "how_to_apply": "After a no, say something gracious, leave, and note what you'd keep doing; never argue or sulk.",
+    "example_line": "No problem at all. Have a great night.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "response to a decline: brief, warm, no persuasion",
+      "pitch_median_hz stable"
+    ],
+    "common_mistakes": [
+      "Pretending you don't care while sulking",
+      "Instantly turning cold"
+    ],
+    "drill": "Collect three small rejections this month (ask for small favours or numbers) and practise the gracious exit.",
+    "sources": [
+      {
+        "ref": 9,
+        "where": "rejection"
+      },
+      {
+        "ref": 7,
+        "where": "next"
+      },
+      {
+        "ref": 18,
+        "where": "next"
+      },
+      {
+        "ref": 2,
+        "where": "challenge missions"
+      },
+      {
+        "ref": 40,
+        "where": "D2"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-frame-001",
+    "capability": "Frame Control & Composure",
+    "sub_capability": "Holding frame",
+    "name": "Hold your frame without arguing",
+    "summary": "Keeping your own calm reading of a situation when she challenges it, without needing her to agree.",
+    "how_to_apply": "Restate your view briefly and good-humouredly once; don't stack justifications; move on.",
+    "example_line": "Ha, maybe. I still think pineapple belongs on pizza. Anyway...",
+    "observable_in_audio": "yes",
+    "markers": [
+      "justification length after a challenge (words in next turn)",
+      "apologies",
+      "back-pedalling phrases ('I mean, I didn't mean...')"
+    ],
+    "common_mistakes": [
+      "Turning 'frame' into dominance or arguing to win",
+      "Refusing to update when actually wrong"
+    ],
+    "drill": "When challenged in low-stakes chats, answer in one sentence max, then ask a question.",
+    "sources": [
+      {
+        "ref": 12,
+        "where": "frame"
+      },
+      {
+        "ref": 11,
+        "where": "frame"
+      },
+      {
+        "ref": 7,
+        "where": "be the rock"
+      },
+      {
+        "ref": 4,
+        "where": "frame"
+      },
+      {
+        "ref": 40,
+        "where": "D2"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "caution",
+    "ethics_note": "Frame control can slide into refusing to hear her view; the coach checks that Tom still listens and updates when she has a point."
+  },
+  {
+    "id": "game-frame-002",
+    "capability": "Frame Control & Composure",
+    "sub_capability": "Holding frame",
+    "name": "Don't over-explain",
+    "summary": "Cutting long justifications, which signal you need her approval of your choices.",
+    "how_to_apply": "Give the reason in one clause or none; let silence do the rest.",
+    "example_line": "I left finance because it bored me.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "turn length after 'why' questions vs baseline",
+      "hedges_per_100w in justifications"
+    ],
+    "common_mistakes": [
+      "Becoming curt or evasive",
+      "Refusing to share anything personal"
+    ],
+    "drill": "Answer five 'why' questions about your life in one sentence each; record and check.",
+    "sources": [
+      {
+        "ref": 8,
+        "where": "stop explaining"
+      },
+      {
+        "ref": 7,
+        "where": "don't explain"
+      },
+      {
+        "ref": 75,
+        "where": "hedges"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-frame-003",
+    "capability": "Frame Control & Composure",
+    "sub_capability": "Handling tests & challenges",
+    "name": "Agree and amplify",
+    "summary": "Responding to a playful jab by agreeing and exaggerating it until it's absurd, which shows it didn't land.",
+    "how_to_apply": "Take the accusation, inflate it humorously, smile, move on.",
+    "example_line": "Player? I have a spreadsheet. Colour-coded. You're row 412.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "laughter after his reply (after_speaker = Tom)",
+      "fast, fluent response (low median_response_gap_s)"
+    ],
+    "common_mistakes": [
+      "Using it on sincere concerns (she might really be checking)",
+      "Repeating the bit too long"
+    ],
+    "drill": "Have a friend throw ten mock-accusations; answer each with agree-and-amplify, then with a sincere answer.",
+    "sources": [
+      {
+        "ref": 5,
+        "where": "agree and amplify"
+      },
+      {
+        "ref": 4,
+        "where": "shit tests"
+      },
+      {
+        "ref": 24,
+        "where": "tests"
+      },
+      {
+        "ref": 12,
+        "where": "amused mastery"
+      },
+      {
+        "ref": 66,
+        "where": "playful markers"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-frame-004",
+    "capability": "Frame Control & Composure",
+    "sub_capability": "Handling tests & challenges",
+    "name": "Sincere answer to sincere question",
+    "summary": "Recognising when a 'test' is a real question about safety or values and answering it straight.",
+    "how_to_apply": "If she asks about intentions, exes or safety, give a short honest answer without jokes.",
+    "example_line": "Fair question. I'm looking for something real, not a string of dates.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "joke vs plain-answer to direct value questions",
+      "her follow-up engagement"
+    ],
+    "common_mistakes": [
+      "Treating every question as a test to be beaten",
+      "Becoming defensive"
+    ],
+    "drill": "List three questions women often ask on early dates; write a one-line honest answer for each.",
+    "sources": [
+      {
+        "ref": 25,
+        "where": "women's perspective on tests"
+      },
+      {
+        "ref": 26,
+        "where": "female perspective"
+      },
+      {
+        "ref": 9,
+        "where": "honesty"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-frame-005",
+    "capability": "Frame Control & Composure",
+    "sub_capability": "Handling tests & challenges",
+    "name": "Pass the 'are you rattled?' check",
+    "summary": "Staying relaxed when she teases or provokes, which practitioners say is the actual point of many tests.",
+    "how_to_apply": "Don't flinch, don't sulk, don't overreact; a smile, a light line or a calm plain statement all pass.",
+    "example_line": "You're trying to make me nervous. It's working a little.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "pitch_median_hz and speaking_rate_wpm stable after a provocation",
+      "no apology cascade"
+    ],
+    "common_mistakes": [
+      "Retaliating with a bigger jab",
+      "Freezing"
+    ],
+    "drill": "Notice the next three times you're teased; respond within two seconds with something light.",
+    "sources": [
+      {
+        "ref": 4,
+        "where": "shit tests"
+      },
+      {
+        "ref": 5,
+        "where": "congruence tests"
+      },
+      {
+        "ref": 7,
+        "where": "tests"
+      },
+      {
+        "ref": 12,
+        "where": "frame"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-frame-006",
+    "capability": "Frame Control & Composure",
+    "sub_capability": "Reframing",
+    "name": "Reframe awkwardness as shared fun",
+    "summary": "Turning an awkward moment into an in-joke, which removes its sting for both people.",
+    "how_to_apply": "Name it lightly and make it 'ours'.",
+    "example_line": "So that was the worst handshake in recorded history. We'll laugh about it later.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "laughter after the reframe",
+      "her playing back",
+      "short recovery gap"
+    ],
+    "common_mistakes": [
+      "Over-dramatising small things",
+      "Making her the butt"
+    ],
+    "drill": "In a week of chats, find two small awkward moments and name them out loud playfully.",
+    "sources": [
+      {
+        "ref": 33,
+        "where": "accepting offers"
+      },
+      {
+        "ref": 21,
+        "where": "own the awkward"
+      },
+      {
+        "ref": 2,
+        "where": "rules"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-frame-007",
+    "capability": "Frame Control & Composure",
+    "sub_capability": "Reframing",
+    "name": "Reframe the role: you're choosing too",
+    "summary": "Shifting your internal frame from 'auditioning for her' to 'two people seeing if they fit'.",
+    "how_to_apply": "Ask yourself during the date what you're learning about her values and whether you like them.",
+    "example_line": "I'm curious, what's something you're stubborn about?",
+    "observable_in_audio": "partial",
+    "markers": [
+      "his questions about her values",
+      "talk_share balance",
+      "fewer self-promoting monologues"
+    ],
+    "common_mistakes": [
+      "Turning it into an interview or judging out loud",
+      "Signalling superiority"
+    ],
+    "drill": "Write three qualities you want in a partner; listen for evidence of them on your next date.",
+    "sources": [
+      {
+        "ref": 7,
+        "where": "you're the prize"
+      },
+      {
+        "ref": 4,
+        "where": "qualification"
+      },
+      {
+        "ref": 23,
+        "where": "qualification"
+      },
+      {
+        "ref": 9,
+        "where": "screening"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-frame-008",
+    "capability": "Frame Control & Composure",
+    "sub_capability": "Composure under pressure",
+    "name": "Slow down under pressure",
+    "summary": "Deliberately lowering pace and pitch when stakes rise, countering the stress pattern of speeding up and pitching higher.",
+    "how_to_apply": "When you notice adrenaline, breathe out, slow your next sentence and land it with a falling ending.",
+    "example_line": "(Slowly) I'd like that.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "pitch_median_hz rise > 2 st vs relaxed baseline (heuristic flag)",
+      "speaking_rate_wpm > 15% above baseline (heuristic flag)"
+    ],
+    "common_mistakes": [
+      "Forcing an artificially deep voice",
+      "Becoming robotic"
+    ],
+    "drill": "Record yourself telling the same story relaxed and then while standing in front of a friend; compare rate and pitch.",
+    "sources": [
+      {
+        "ref": 40,
+        "where": "D2 stress markers"
+      },
+      {
+        "ref": 57,
+        "where": "pitch tracks felt status"
+      },
+      {
+        "ref": 22,
+        "where": "presence"
+      },
+      {
+        "ref": 21,
+        "where": "slow down"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-frame-009",
+    "capability": "Frame Control & Composure",
+    "sub_capability": "Composure under pressure",
+    "name": "Comfortable silence",
+    "summary": "Letting a pause sit for a couple of seconds without rushing to fill it.",
+    "how_to_apply": "In lulls, count to two silently, smile, then say something light or ask a real question.",
+    "example_line": "(Pause) ...You've got a story there, I can tell.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "who breaks silences and how fast (gaps)",
+      "silences 1-3 s not immediately filled by Tom"
+    ],
+    "common_mistakes": [
+      "Using silence as a power move to unsettle her",
+      "Long cold freezes"
+    ],
+    "drill": "In low-stakes chats, let one pause run to a slow count of three before you speak.",
+    "sources": [
+      {
+        "ref": 40,
+        "where": "D2 silence tolerance"
+      },
+      {
+        "ref": 22,
+        "where": "presence"
+      },
+      {
+        "ref": 6,
+        "where": "presence"
+      },
+      {
+        "ref": 12,
+        "where": "frame"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-frame-010",
+    "capability": "Frame Control & Composure",
+    "sub_capability": "Amused tolerance",
+    "name": "Amused tolerance",
+    "summary": "Meeting friction, provocation or drama with warm amusement rather than anger or anxiety.",
+    "how_to_apply": "Smile through it, keep tone warm, respond with lightness, and don't escalate.",
+    "example_line": "You're a lot of trouble, you know that?",
+    "observable_in_audio": "partial",
+    "markers": [
+      "his laughter after challenges",
+      "no rise in loudness_db during disagreement"
+    ],
+    "common_mistakes": [
+      "Condescension (laughing at her rather than with the situation)",
+      "Using it to dismiss real concerns"
+    ],
+    "drill": "When you feel irritated in a conversation this week, choose one amused response before reacting.",
+    "sources": [
+      {
+        "ref": 12,
+        "where": "amused mastery"
+      },
+      {
+        "ref": 6,
+        "where": "humour and love in the face of her tests"
+      },
+      {
+        "ref": 7,
+        "where": "be the rock"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "caution",
+    "ethics_note": "Red-pill 'amused mastery' is often framed as condescension toward women; the coach keeps only the warm, non-reactive version."
+  },
+  {
+    "id": "game-frame-011",
+    "capability": "Frame Control & Composure",
+    "sub_capability": "Holding frame",
+    "name": "Keep your plans",
+    "summary": "Not cancelling commitments or bending boundaries at the first sign of interest from her.",
+    "how_to_apply": "Offer alternatives instead of dropping what you had planned.",
+    "example_line": "I can't Friday, I've got the gig. Saturday works.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "proposals offered as alternatives rather than cancellations"
+    ],
+    "common_mistakes": [
+      "Rigidity; never making room",
+      "Using scarcity on purpose"
+    ],
+    "drill": "Next time someone asks for your time when you're busy, offer an alternative rather than cancelling.",
+    "sources": [
+      {
+        "ref": 7,
+        "where": "don't rearrange your life"
+      },
+      {
+        "ref": 17,
+        "where": "put yourself first"
+      },
+      {
+        "ref": 8,
+        "where": "self-respect"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-frame-012",
+    "capability": "Frame Control & Composure",
+    "sub_capability": "Composure under pressure",
+    "name": "Don't react to bait",
+    "summary": "Choosing not to take the hook when someone (including other men) tries to provoke or one-up you.",
+    "how_to_apply": "Acknowledge lightly or ignore; redirect to the group or to her.",
+    "example_line": "Ha, fair enough. Anyway, you were saying about Porto?",
+    "observable_in_audio": "yes",
+    "markers": [
+      "no escalation in loudness_db or interruptions after provocation",
+      "topic redirect"
+    ],
+    "common_mistakes": [
+      "Passive acceptance of real disrespect",
+      "Getting drawn into status contests"
+    ],
+    "drill": "When someone tries to one-up you this week, respond with genuine interest in their story instead.",
+    "sources": [
+      {
+        "ref": 1,
+        "where": "AMOGing (counter-frame)"
+      },
+      {
+        "ref": 12,
+        "where": "frame"
+      },
+      {
+        "ref": 59,
+        "where": "prestige over dominance"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-play-001",
+    "capability": "Playfulness & Impudence",
+    "sub_capability": "Cocky-funny / impudence",
+    "name": "Cocky-funny",
+    "summary": "Combining exaggerated self-confidence with humour so it's obviously a joke, signalling ease without real arrogance.",
+    "how_to_apply": "Say a cheeky, over-the-top line about yourself or the situation with a smile; keep the target safe and the warmth obvious.",
+    "example_line": "Careful, I'm very charming after one coffee.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "laughter after his line (after_speaker = Tom)",
+      "her playing back (teasing him)",
+      "wider pitch_range_st on the line"
+    ],
+    "common_mistakes": [
+      "Real arrogance without the wink",
+      "Every line a bit; no sincerity",
+      "Cocky without funny or funny without cocky"
+    ],
+    "drill": "Write five over-the-top lines about your own charm; deliver each with a deadpan then a smile; keep the two that make friends laugh.",
+    "sources": [
+      {
+        "ref": 5,
+        "where": "cocky-funny"
+      },
+      {
+        "ref": 4,
+        "where": "cocky-funny / C&F"
+      },
+      {
+        "ref": 1,
+        "where": "C&F"
+      },
+      {
+        "ref": 23,
+        "where": "C&F"
+      },
+      {
+        "ref": 61,
+        "where": "overconfidence vs arrogance"
+      },
+      {
+        "ref": 40,
+        "where": "D3"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-play-002",
+    "capability": "Playfulness & Impudence",
+    "sub_capability": "Cocky-funny / impudence",
+    "name": "Mock accusation",
+    "summary": "Playfully accusing her of something absurd (e.g. trying to seduce you, being a troublemaker) to create a fun dynamic.",
+    "how_to_apply": "Pick a harmless, obviously untrue 'accusation' linked to something she just did; smile.",
+    "example_line": "Are you hitting on me? I'm flattered, but I barely know you.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "her laughter and playful denial",
+      "she adopts the frame back"
+    ],
+    "common_mistakes": [
+      "Accusations about real flaws or sexual behaviour",
+      "Overuse"
+    ],
+    "drill": "Use one mock accusation per conversation for a week; note when it lands and when it doesn't.",
+    "sources": [
+      {
+        "ref": 5,
+        "where": "cocky-funny"
+      },
+      {
+        "ref": 4,
+        "where": "role reversal"
+      },
+      {
+        "ref": 23,
+        "where": "role reversal"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-play-003",
+    "capability": "Playfulness & Impudence",
+    "sub_capability": "Cocky-funny / impudence",
+    "name": "Role reversal",
+    "summary": "Playfully treating yourself as the one being pursued or needing to be won over.",
+    "how_to_apply": "Flip the usual script with a smile: you're the one being careful with her, she has to behave.",
+    "example_line": "Slow down. I'm not that kind of guy... on a Tuesday.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "laughter",
+      "her playful counters"
+    ],
+    "common_mistakes": [
+      "Coming across as genuinely disinterested",
+      "Making her feel judged"
+    ],
+    "drill": "Write three role-reversal lines for common moments (she pays a compliment, she suggests a drink, she touches your arm).",
+    "sources": [
+      {
+        "ref": 4,
+        "where": "role reversal"
+      },
+      {
+        "ref": 5,
+        "where": "cocky-funny"
+      },
+      {
+        "ref": 23,
+        "where": "attraction material"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-play-004",
+    "capability": "Playfulness & Impudence",
+    "sub_capability": "Affectionate teasing",
+    "name": "Tease the safe stuff",
+    "summary": "Teasing her about choices she's proud of or neutral things (her drink, her strong opinions), never insecurities.",
+    "how_to_apply": "Tease, smile, and land on warmth within a turn or two.",
+    "example_line": "Oat milk and three shots. You're clearly the chaotic one.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "laughter and her teasing back",
+      "warmth token after the tease ('I love that though')"
+    ],
+    "common_mistakes": [
+      "Teasing looks, weight, intelligence, identity",
+      "No warm follow-up",
+      "Teasing someone who isn't playing back"
+    ],
+    "drill": "For each tease you make this week, add a warm line within your next turn.",
+    "sources": [
+      {
+        "ref": 66,
+        "where": "playful vs hostile teasing"
+      },
+      {
+        "ref": 64,
+        "where": "aggressive humour harms"
+      },
+      {
+        "ref": 5,
+        "where": "teasing"
+      },
+      {
+        "ref": 21,
+        "where": "teasing"
+      },
+      {
+        "ref": 40,
+        "where": "D3"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-play-005",
+    "capability": "Playfulness & Impudence",
+    "sub_capability": "Affectionate teasing",
+    "name": "Tease back when teased",
+    "summary": "Matching her playful challenges with your own, so the banter becomes two-way.",
+    "how_to_apply": "Accept her jab with a smile and return one in the same register.",
+    "example_line": "Says the woman who just admitted she irons her jeans.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "back-and-forth teasing turns",
+      "co-laughter"
+    ],
+    "common_mistakes": [
+      "Escalating sharper each time",
+      "Getting defensive"
+    ],
+    "drill": "In banter, aim for at least two back-and-forth exchanges before shifting to sincere.",
+    "sources": [
+      {
+        "ref": 66,
+        "where": "teasing is reciprocal"
+      },
+      {
+        "ref": 67,
+        "where": "shared laughter"
+      },
+      {
+        "ref": 64,
+        "where": "shared humour"
+      },
+      {
+        "ref": 24,
+        "where": "banter"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-play-006",
+    "capability": "Playfulness & Impudence",
+    "sub_capability": "Affectionate teasing",
+    "name": "Tease, then sincere",
+    "summary": "Alternating playful teasing with genuine appreciation so she knows the fun comes from liking her.",
+    "how_to_apply": "After a run of banter, say one sincere specific compliment or ask a real question.",
+    "example_line": "Okay, jokes aside, the way you talk about your sister is lovely.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "sincere statements follow teasing sequences",
+      "her disclosure increases after sincere turns"
+    ],
+    "common_mistakes": [
+      "Never dropping the act",
+      "Sincerity that feels like a tactic"
+    ],
+    "drill": "Practise 'three jokes, one sincere' in a conversation and note how she responds to the sincere beat.",
+    "sources": [
+      {
+        "ref": 5,
+        "where": "cocky-funny balance"
+      },
+      {
+        "ref": 15,
+        "where": "tension and release"
+      },
+      {
+        "ref": 14,
+        "where": "tension"
+      },
+      {
+        "ref": 66,
+        "where": "teasing then affiliation"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-play-007",
+    "capability": "Playfulness & Impudence",
+    "sub_capability": "Role-play & absurd premises",
+    "name": "Role-play premise",
+    "summary": "Inventing a playful fictional scenario about the two of you, which builds 'we' and fun.",
+    "how_to_apply": "Take a detail and spin it into a mini-scenario; invite her to add to it.",
+    "example_line": "We'd be a terrible heist team. You'd stop for snacks mid-robbery.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "'we/us' tokens",
+      "her building on the premise",
+      "laughter"
+    ],
+    "common_mistakes": [
+      "Forcing it when she's not playful",
+      "Running the bit for too long"
+    ],
+    "drill": "Pick three ordinary situations (queue, cooking, travel) and write one absurd 'us' premise for each.",
+    "sources": [
+      {
+        "ref": 4,
+        "where": "role-playing"
+      },
+      {
+        "ref": 23,
+        "where": "role play"
+      },
+      {
+        "ref": 33,
+        "where": "yes-and"
+      },
+      {
+        "ref": 50,
+        "where": "we in flirting"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-play-008",
+    "capability": "Playfulness & Impudence",
+    "sub_capability": "Role-play & absurd premises",
+    "name": "Yes-and her bits",
+    "summary": "Building on her joke rather than topping it with an unrelated one, the improv rule that creates co-created humour.",
+    "how_to_apply": "When she says something playful, accept and extend it in the same direction.",
+    "example_line": "She: 'I'd be a great pirate.' You: 'Obviously. You'd be the one who negotiates the treasure split.'",
+    "observable_in_audio": "yes",
+    "markers": [
+      "his turn content extends her premise",
+      "co-laughter"
+    ],
+    "common_mistakes": [
+      "Stealing the spotlight with your own joke",
+      "Agreeing without adding"
+    ],
+    "drill": "Count yes-and builds per conversation; aim to raise the number each week.",
+    "sources": [
+      {
+        "ref": 33,
+        "where": "yes-and / accepting offers"
+      },
+      {
+        "ref": 64,
+        "where": "shared humour predicts satisfaction"
+      },
+      {
+        "ref": 40,
+        "where": "D3"
+      },
+      {
+        "ref": 83,
+        "where": "playfulness valued in partners"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-play-009",
+    "capability": "Playfulness & Impudence",
+    "sub_capability": "Playful misinterpretation",
+    "name": "Playful misinterpretation",
+    "summary": "Deliberately reading her innocent words as flirtatious or ridiculous, as an obvious joke.",
+    "how_to_apply": "Pick up a double meaning, twist it lightly, then let it go.",
+    "example_line": "So you're saying you want to see me again. Bold.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "laughter or mock protest",
+      "quick drop of the bit"
+    ],
+    "common_mistakes": [
+      "Sexual twists before any rapport",
+      "Doing it constantly"
+    ],
+    "drill": "Listen for one ambiguous phrase per conversation and twist it lightly.",
+    "sources": [
+      {
+        "ref": 5,
+        "where": "misinterpretation"
+      },
+      {
+        "ref": 24,
+        "where": "misinterpretation"
+      },
+      {
+        "ref": 23,
+        "where": "playful frames"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-play-010",
+    "capability": "Playfulness & Impudence",
+    "sub_capability": "Callbacks & running jokes",
+    "name": "Callback humour",
+    "summary": "Bringing back an earlier detail or joke later, which shows attention and creates in-jokes.",
+    "how_to_apply": "Note one funny or distinctive detail early; reuse it once or twice later.",
+    "example_line": "...which as a future pirate negotiator, you'd appreciate.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "references to earlier content after > 5 minutes",
+      "laughter on callback"
+    ],
+    "common_mistakes": [
+      "Overusing one callback",
+      "Callbacks to something she didn't enjoy"
+    ],
+    "drill": "Note one detail in the first five minutes and call back to it later; review if it landed.",
+    "sources": [
+      {
+        "ref": 21,
+        "where": "callbacks"
+      },
+      {
+        "ref": 1,
+        "where": "callbacks"
+      },
+      {
+        "ref": 40,
+        "where": "D3"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-play-011",
+    "capability": "Playfulness & Impudence",
+    "sub_capability": "Callbacks & running jokes",
+    "name": "Nicknames and in-jokes",
+    "summary": "Giving a playful, affectionate nickname based on something she said, creating a private shared world.",
+    "how_to_apply": "Use a nickname tied to a specific moment, only if she responds warmly.",
+    "example_line": "Alright, Captain Spreadsheet, where next?",
+    "observable_in_audio": "yes",
+    "markers": [
+      "her reaction to the nickname (laughter vs flat)",
+      "repetition in later turns"
+    ],
+    "common_mistakes": [
+      "Nicknames about looks",
+      "Generic pet names too early"
+    ],
+    "drill": "Try one moment-based nickname on a playful date; drop it if she doesn't smile.",
+    "sources": [
+      {
+        "ref": 4,
+        "where": "nicknames / roleplay"
+      },
+      {
+        "ref": 23,
+        "where": "comfort material"
+      },
+      {
+        "ref": 13,
+        "where": "creating a private world"
+      }
+    ],
+    "evidence": "single-author",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-play-012",
+    "capability": "Playfulness & Impudence",
+    "sub_capability": "Self-amusement",
+    "name": "Entertain yourself",
+    "summary": "Saying things because they amuse you, not to get a reaction, which makes humour feel effortless.",
+    "how_to_apply": "Follow your curiosity and comedic instinct; don't check her face after every line.",
+    "example_line": "I've decided this pigeon is our waiter.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "laughter share: Tom laughs naturally but not at every own line",
+      "low approval-check tags after jokes"
+    ],
+    "common_mistakes": [
+      "Laughing at your own jokes when she doesn't",
+      "Ignoring her completely"
+    ],
+    "drill": "On your next outing, say one thing purely because it amuses you, then let it go whatever her reaction.",
+    "sources": [
+      {
+        "ref": 24,
+        "where": "self-amusement"
+      },
+      {
+        "ref": 9,
+        "where": "non-neediness"
+      },
+      {
+        "ref": 64,
+        "where": "humour perceived, not forced"
+      },
+      {
+        "ref": 83,
+        "where": "playfulness valued in partners"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-play-013",
+    "capability": "Playfulness & Impudence",
+    "sub_capability": "Self-amusement",
+    "name": "Laugh off a missed joke",
+    "summary": "Handling a joke that flops by acknowledging it lightly and moving on.",
+    "how_to_apply": "Name it in under five words, smile, carry on.",
+    "example_line": "Okay, that one died. Moving on.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "recovery gap short",
+      "no apology cascade"
+    ],
+    "common_mistakes": [
+      "Explaining the joke",
+      "Repeated apologies"
+    ],
+    "drill": "Deliberately tell a terrible pun to a friend and practise the five-word recovery.",
+    "sources": [
+      {
+        "ref": 40,
+        "where": "D2 example"
+      },
+      {
+        "ref": 21,
+        "where": "own the awkward"
+      },
+      {
+        "ref": 65,
+        "where": "self-deprecation only when secure"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-play-014",
+    "capability": "Playfulness & Impudence",
+    "sub_capability": "Cocky-funny / impudence",
+    "name": "Light challenge",
+    "summary": "Playfully challenging her to earn your interest, e.g. questioning whether she's adventurous enough.",
+    "how_to_apply": "Frame the challenge as a game with a smile, about an activity or taste, never her worth.",
+    "example_line": "Wait, you've never had durian? I'm not sure we can be friends.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "laughter",
+      "her playful defence"
+    ],
+    "common_mistakes": [
+      "Challenges about her looks or worth",
+      "Sounding genuinely judgemental"
+    ],
+    "drill": "Write three playful 'can we be friends?' challenges about tastes; use one per date.",
+    "sources": [
+      {
+        "ref": 5,
+        "where": "challenge her"
+      },
+      {
+        "ref": 4,
+        "where": "challenges"
+      },
+      {
+        "ref": 15,
+        "where": "tension"
+      },
+      {
+        "ref": 60,
+        "where": "dominance only with agreeableness"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "caution",
+    "ethics_note": "Only ethical if it's about tastes or activities and clearly playful; a challenge to her worth slides into negging."
+  },
+  {
+    "id": "game-play-015",
+    "capability": "Playfulness & Impudence",
+    "sub_capability": "Role-play & absurd premises",
+    "name": "Exaggeration",
+    "summary": "Inflating small things to absurd proportions for comic effect.",
+    "how_to_apply": "Take a mundane fact and treat it as epic.",
+    "example_line": "Four trips to Lisbon? At this point you're legally Portuguese.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "laughter",
+      "wider pitch_range_st on the line"
+    ],
+    "common_mistakes": [
+      "Exaggerating about her flaws"
+    ],
+    "drill": "Retell three boring facts about your week with one absurd exaggeration each.",
+    "sources": [
+      {
+        "ref": 66,
+        "where": "exaggeration as playful marker"
+      },
+      {
+        "ref": 40,
+        "where": "D3 example"
+      },
+      {
+        "ref": 21,
+        "where": "humour"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-play-016",
+    "capability": "Playfulness & Impudence",
+    "sub_capability": "Self-amusement",
+    "name": "Self-deprecation only from strength",
+    "summary": "Using self-deprecating humour sparingly and about trivial things, since it helps mainly when status is already clear.",
+    "how_to_apply": "Joke about small foibles, not core worth; keep it rare.",
+    "example_line": "My cooking is mainly a fire safety exercise.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "count of self-deprecating remarks per conversation",
+      "content: trivial vs core"
+    ],
+    "common_mistakes": [
+      "Running self-put-downs",
+      "Fishing for reassurance"
+    ],
+    "drill": "Audit a recording for self-deprecation; keep at most one trivial one.",
+    "sources": [
+      {
+        "ref": 65,
+        "where": "self-deprecation and status"
+      },
+      {
+        "ref": 64,
+        "where": "self-defeating humour"
+      },
+      {
+        "ref": 40,
+        "where": "D3"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-play-017",
+    "capability": "Playfulness & Impudence",
+    "sub_capability": "Affectionate teasing",
+    "name": "Tease the situation, not the person",
+    "summary": "Directing humour at the setting, the moment or shared absurdities, a lower-risk way to be playful.",
+    "how_to_apply": "Comment wryly on the venue, the queue or the music.",
+    "example_line": "This DJ is clearly going through something.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "laughter",
+      "her adding observations"
+    ],
+    "common_mistakes": [
+      "Sneering at staff or other people"
+    ],
+    "drill": "Make one observational joke about the setting in the first two minutes of each conversation.",
+    "sources": [
+      {
+        "ref": 21,
+        "where": "observational humour"
+      },
+      {
+        "ref": 24,
+        "where": "situational"
+      },
+      {
+        "ref": 2,
+        "where": "openers"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-voice-001",
+    "capability": "Gravitas & Vocal Presence",
+    "sub_capability": "Unhurried pace & pauses",
+    "name": "Slow, unhurried delivery",
+    "summary": "Speaking at a relaxed, steady pace that suggests you're not worried about losing her attention.",
+    "how_to_apply": "Slightly slower than your nervous pace; pause between ideas; don't rush endings.",
+    "example_line": "(Measured) I've been thinking about that, actually.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "articulation_rate_wpm vs baseline",
+      "pauses_per_min (deliberate pauses present)",
+      "rushing = high rate + few pauses + rising ends"
+    ],
+    "common_mistakes": [
+      "Sounding sleepy or monotone",
+      "Over-slow drawl"
+    ],
+    "drill": "Read a paragraph aloud at your normal pace, then with a breath after each sentence; compare.",
+    "sources": [
+      {
+        "ref": 22,
+        "where": "presence"
+      },
+      {
+        "ref": 21,
+        "where": "slow down"
+      },
+      {
+        "ref": 29,
+        "where": "vocal cues"
+      },
+      {
+        "ref": 74,
+        "where": "rate and confidence"
+      },
+      {
+        "ref": 40,
+        "where": "D1"
+      },
+      {
+        "ref": 31,
+        "where": "podcast: vocal presence"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-voice-002",
+    "capability": "Gravitas & Vocal Presence",
+    "sub_capability": "Unhurried pace & pauses",
+    "name": "Pause before the point",
+    "summary": "A short pause before a key line, which adds weight and draws attention.",
+    "how_to_apply": "Take a beat before punchlines, compliments and invitations.",
+    "example_line": "You know what I like about you? (pause) You don't take yourself seriously.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "long_pauses immediately before a falling, fluent statement"
+    ],
+    "common_mistakes": [
+      "Long mid-phrase pauses with fillers",
+      "Theatrical pausing"
+    ],
+    "drill": "Mark three pause points in a story and practise hitting them.",
+    "sources": [
+      {
+        "ref": 40,
+        "where": "D1 long_pauses"
+      },
+      {
+        "ref": 21,
+        "where": "pauses"
+      },
+      {
+        "ref": 32,
+        "where": "pause"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-voice-003",
+    "capability": "Gravitas & Vocal Presence",
+    "sub_capability": "Falling, certain endings",
+    "name": "Land statements with a downward inflection",
+    "summary": "Ending statements on a falling pitch so they sound decided rather than asked.",
+    "how_to_apply": "Drop your pitch on the last stressed word; stop talking.",
+    "example_line": "Let's go to the one by the river.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "uptalk_share on statements",
+      "final_rise_st < 0 on proposals"
+    ],
+    "common_mistakes": [
+      "Every sentence flat and heavy",
+      "Misreading UK floor-holding rises as weakness"
+    ],
+    "drill": "Full-stop drill: five opinions, each with a clear fall and a one-second silence.",
+    "sources": [
+      {
+        "ref": 74,
+        "where": "falling intonation signals confidence"
+      },
+      {
+        "ref": 40,
+        "where": "D1"
+      },
+      {
+        "ref": 22,
+        "where": "power"
+      },
+      {
+        "ref": 30,
+        "where": "vocal cues"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-voice-004",
+    "capability": "Gravitas & Vocal Presence",
+    "sub_capability": "Clean fluency",
+    "name": "Replace fillers with silence",
+    "summary": "Swapping 'um', 'like' and 'you know' for brief silent pauses.",
+    "how_to_apply": "When you feel a filler coming, close your mouth and pause.",
+    "example_line": "(Instead of 'Um, so, like, I...') So. I moved to London in 2019.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "fillers_per_100w vs baseline",
+      "restarts"
+    ],
+    "common_mistakes": [
+      "Over-correcting into stilted speech"
+    ],
+    "drill": "Two-minute story drill: every filler replaced by silence; check fillers_per_100w.",
+    "sources": [
+      {
+        "ref": 75,
+        "where": "powerless speech"
+      },
+      {
+        "ref": 40,
+        "where": "D1 filler swap"
+      },
+      {
+        "ref": 29,
+        "where": "fillers"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-voice-005",
+    "capability": "Gravitas & Vocal Presence",
+    "sub_capability": "Clean fluency",
+    "name": "Cut hedges from opinions",
+    "summary": "Removing 'maybe', 'sort of', 'I guess' from opinions and plans, while keeping honest uncertainty when it's real.",
+    "how_to_apply": "State the view plainly; if unsure, say 'my guess is' once rather than scattering hedges.",
+    "example_line": "That film is overrated.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "hedges_per_100w",
+      "certainty_per_100w"
+    ],
+    "common_mistakes": [
+      "Fake certainty about things you don't know"
+    ],
+    "drill": "Rewrite five of your recent text messages without hedges; read them aloud.",
+    "sources": [
+      {
+        "ref": 75,
+        "where": "hedges lower credibility and attractiveness"
+      },
+      {
+        "ref": 40,
+        "where": "D1"
+      },
+      {
+        "ref": 21,
+        "where": "conviction"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-voice-006",
+    "capability": "Gravitas & Vocal Presence",
+    "sub_capability": "Tonal range & warmth",
+    "name": "Vocal variety in stories",
+    "summary": "Using a wider range of pitch, pace and volume when telling stories, which reads as charismatic.",
+    "how_to_apply": "Lift energy in the exciting part, drop low and slow for the punchline or the personal bit.",
+    "example_line": "(Building) ...and then the door opens, and (drops) it's my mum.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "pitch_range_st and loudness_sd_db in story turns vs neutral turns"
+    ],
+    "common_mistakes": [
+      "Overacting; sing-song",
+      "Monotone"
+    ],
+    "drill": "Tell the same 60-second story flat, then with deliberate variation; compare pitch_range_st.",
+    "sources": [
+      {
+        "ref": 86,
+        "where": "charismatic speech correlates"
+      },
+      {
+        "ref": 21,
+        "where": "energy"
+      },
+      {
+        "ref": 77,
+        "where": "charisma teachable"
+      },
+      {
+        "ref": 40,
+        "where": "D10"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-voice-007",
+    "capability": "Gravitas & Vocal Presence",
+    "sub_capability": "Tonal range & warmth",
+    "name": "Lower, softer voice for intimacy",
+    "summary": "Dropping volume and slowing down when the conversation turns personal or flirtatious.",
+    "how_to_apply": "When she shares something personal or you compliment her, lower volume and slow down.",
+    "example_line": "(Quieter) I'm really glad you came out tonight.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "loudness_db drop in flirtatious stretches vs his networking baseline",
+      "pitch changes toward attractive partner"
+    ],
+    "common_mistakes": [
+      "Whispering creepily",
+      "Dropping too early"
+    ],
+    "drill": "Practise one sincere compliment at normal volume then at 70%; ask a friend which felt warmer.",
+    "sources": [
+      {
+        "ref": 50,
+        "where": "flirting men quieter"
+      },
+      {
+        "ref": 58,
+        "where": "voice changes toward attractive partners"
+      },
+      {
+        "ref": 32,
+        "where": "late-night FM DJ voice"
+      },
+      {
+        "ref": 40,
+        "where": "D8"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-voice-008",
+    "capability": "Gravitas & Vocal Presence",
+    "sub_capability": "Tonal range & warmth",
+    "name": "Warm tone: smile in the voice",
+    "summary": "Letting warmth be audible (smiling while speaking, relaxed breath), balancing strength with friendliness.",
+    "how_to_apply": "Smile slightly while greeting and asking questions; relax your jaw.",
+    "example_line": "Hey! Good to see you.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "pitch_range_st on greetings",
+      "partner's response warmth"
+    ],
+    "common_mistakes": [
+      "Ingratiating overly high pitch"
+    ],
+    "drill": "Record a greeting neutral and with a smile; listen for the difference.",
+    "sources": [
+      {
+        "ref": 22,
+        "where": "warmth"
+      },
+      {
+        "ref": 30,
+        "where": "warmth cues"
+      },
+      {
+        "ref": 84,
+        "where": "warmth and competence"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-voice-009",
+    "capability": "Gravitas & Vocal Presence",
+    "sub_capability": "Projection & holding the floor",
+    "name": "Hold the floor gracefully",
+    "summary": "Finishing your thought when lightly interrupted rather than immediately giving up the turn.",
+    "how_to_apply": "Raise a hand or say 'one sec' and finish briefly; then hand over with a question.",
+    "example_line": "Hang on, let me finish this bit, it's the best part.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "interruptions received vs turns abandoned",
+      "trailing endings"
+    ],
+    "common_mistakes": [
+      "Steamrolling her",
+      "Never yielding"
+    ],
+    "drill": "In group chats, finish one interrupted thought per evening, then hand over.",
+    "sources": [
+      {
+        "ref": 40,
+        "where": "D1 interaction"
+      },
+      {
+        "ref": 85,
+        "where": "speaking time and leadership"
+      },
+      {
+        "ref": 28,
+        "where": "conversation skills"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-voice-010",
+    "capability": "Gravitas & Vocal Presence",
+    "sub_capability": "Projection & holding the floor",
+    "name": "Project to be heard",
+    "summary": "Speaking loudly enough for the setting, as quiet mumbled speech signals low confidence in noisy venues.",
+    "how_to_apply": "Speak from the chest, aim your voice at her, adjust up in bars.",
+    "example_line": "(Clear, audible opener in a loud bar.)",
+    "observable_in_audio": "yes",
+    "markers": [
+      "loudness_db vs ambient (note mic caveats)",
+      "her 'sorry?' or 'what?' requests"
+    ],
+    "common_mistakes": [
+      "Shouting",
+      "Not adjusting down in quiet settings"
+    ],
+    "drill": "Count how many times you're asked to repeat yourself in a loud venue; aim for zero.",
+    "sources": [
+      {
+        "ref": 4,
+        "where": "vocal projection"
+      },
+      {
+        "ref": 1,
+        "where": "voice"
+      },
+      {
+        "ref": 21,
+        "where": "voice"
+      },
+      {
+        "ref": 31,
+        "where": "podcast: vocal presence"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-voice-011",
+    "capability": "Gravitas & Vocal Presence",
+    "sub_capability": "Presence (attention)",
+    "name": "Full attention, quick fitting responses",
+    "summary": "Responding promptly and on-topic, which signals engagement; fast, fitting replies track 'clicking'.",
+    "how_to_apply": "Listen fully; let your reply come from what she said, not a prepared line.",
+    "example_line": "Wait, you quit on your first day?",
+    "observable_in_audio": "partial",
+    "markers": [
+      "median_response_gap_s near natural turn-taking",
+      "follow-up share"
+    ],
+    "common_mistakes": [
+      "Jumping in over her end",
+      "Long laggy gaps from rehearsing"
+    ],
+    "drill": "In one conversation, make every reply begin with a word she just used.",
+    "sources": [
+      {
+        "ref": 54,
+        "where": "fast responses signal connection"
+      },
+      {
+        "ref": 22,
+        "where": "presence"
+      },
+      {
+        "ref": 52,
+        "where": "follow-ups"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-voice-012",
+    "capability": "Gravitas & Vocal Presence",
+    "sub_capability": "Unhurried pace & pauses",
+    "name": "Don't rush to answer compliments or questions",
+    "summary": "Taking a breath before answering charged questions or compliments, rather than rushing to deflect.",
+    "how_to_apply": "Accept a compliment with 'thank you' and a pause; answer personal questions after a beat.",
+    "example_line": "(Pause) Thank you. That's nice to hear.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "response gap after compliments",
+      "deflection phrases ('no, I'm not')"
+    ],
+    "common_mistakes": [
+      "Overly long pauses that read as cold"
+    ],
+    "drill": "Accept the next five compliments you get with only 'thank you' and a smile.",
+    "sources": [
+      {
+        "ref": 22,
+        "where": "accepting compliments"
+      },
+      {
+        "ref": 28,
+        "where": "techniques"
+      },
+      {
+        "ref": 10,
+        "where": "self-acceptance"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-voice-013",
+    "capability": "Gravitas & Vocal Presence",
+    "sub_capability": "Falling, certain endings",
+    "name": "Decisive yes/no answers",
+    "summary": "Answering simple questions directly instead of with waffling.",
+    "how_to_apply": "Lead with yes, no or a choice; add reason only if needed.",
+    "example_line": "Red. Definitely red.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "latency and hedges on simple preference questions"
+    ],
+    "common_mistakes": [
+      "Pretending certainty about real dilemmas"
+    ],
+    "drill": "For a day, answer every simple preference question with a choice in the first word.",
+    "sources": [
+      {
+        "ref": 75,
+        "where": "powerful speech"
+      },
+      {
+        "ref": 7,
+        "where": "be decisive"
+      },
+      {
+        "ref": 6,
+        "where": "decisiveness"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-voice-014",
+    "capability": "Gravitas & Vocal Presence",
+    "sub_capability": "Presence (attention)",
+    "name": "Presence-power-warmth balance",
+    "summary": "Charisma as a mix of presence (attention), power (capability) and warmth (goodwill); missing one makes the others read worse.",
+    "how_to_apply": "Check each conversation: was I present, did I sound capable, did I sound kind?",
+    "example_line": "(Not a line: a self-check.)",
+    "observable_in_audio": "partial",
+    "markers": [
+      "presence: follow-ups",
+      "power: low hedges/uptalk",
+      "warmth: appreciation and sympathy tokens"
+    ],
+    "common_mistakes": [
+      "Power without warmth (reads as cold or arrogant)",
+      "Warmth without power (reads as nice guy)"
+    ],
+    "drill": "After each recording, score yourself 1-5 on presence, power and warmth; compare with the coach's read.",
+    "sources": [
+      {
+        "ref": 22,
+        "where": "presence, power, warmth"
+      },
+      {
+        "ref": 84,
+        "where": "warmth and competence"
+      },
+      {
+        "ref": 29,
+        "where": "warmth and competence"
+      },
+      {
+        "ref": 59,
+        "where": "prestige"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-story-001",
+    "capability": "Storytelling & Self-Disclosure",
+    "sub_capability": "Story structure",
+    "name": "Hook, tension, payoff",
+    "summary": "Telling stories with a clear opening hook, a moment of tension and a payoff, which research links to men's attractiveness and status.",
+    "how_to_apply": "Open with the most intriguing line, build to one obstacle, deliver the payoff, stop.",
+    "example_line": "I once got locked in a museum overnight. Worth it, mostly.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "story turn length (longest_turn_s)",
+      "her reaction at the payoff (laughter, questions)"
+    ],
+    "common_mistakes": [
+      "Burying the hook at the end",
+      "Endless set-up"
+    ],
+    "drill": "Write your three best stories as hook / tension / payoff in three lines each; tell each in under 90 seconds.",
+    "sources": [
+      {
+        "ref": 72,
+        "where": "storytelling and attractiveness"
+      },
+      {
+        "ref": 4,
+        "where": "stories / DHV spikes"
+      },
+      {
+        "ref": 21,
+        "where": "storytelling"
+      },
+      {
+        "ref": 23,
+        "where": "stories"
+      },
+      {
+        "ref": 40,
+        "where": "D9"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-story-002",
+    "capability": "Storytelling & Self-Disclosure",
+    "sub_capability": "Story structure",
+    "name": "Keep it short",
+    "summary": "Trimming stories to their essential beats so the other person stays engaged and gets a turn.",
+    "how_to_apply": "Aim for under about 90 seconds (heuristic); cut background she doesn't need.",
+    "example_line": "(A tight 60-second version of a travel story.)",
+    "observable_in_audio": "yes",
+    "markers": [
+      "longest_turn_s and mean_turn_s vs her turns",
+      "her interruptions or backchannels fading during his story"
+    ],
+    "common_mistakes": [
+      "Monologues",
+      "Cutting so much there's no detail"
+    ],
+    "drill": "Time your go-to story; cut it by a third without losing the payoff.",
+    "sources": [
+      {
+        "ref": 40,
+        "where": "D9 heuristic"
+      },
+      {
+        "ref": 28,
+        "where": "talk less"
+      },
+      {
+        "ref": 29,
+        "where": "conversation sparks"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-story-003",
+    "capability": "Storytelling & Self-Disclosure",
+    "sub_capability": "Vivid, sensory detail",
+    "name": "Paint the scene",
+    "summary": "Using concrete images, dialogue and feelings so she can picture the moment.",
+    "how_to_apply": "Include one sensory detail and one line of dialogue in each story.",
+    "example_line": "The man in the hat just looked at me and said, 'You're in the wrong country, mate.'",
+    "observable_in_audio": "yes",
+    "markers": [
+      "concrete nouns and quoted speech in story turns",
+      "pitch_range_st during dialogue"
+    ],
+    "common_mistakes": [
+      "Over-describing",
+      "Abstract summary ('it was crazy')"
+    ],
+    "drill": "Retell yesterday as a story with one smell, one sound and one quote.",
+    "sources": [
+      {
+        "ref": 21,
+        "where": "storytelling"
+      },
+      {
+        "ref": 4,
+        "where": "stories"
+      },
+      {
+        "ref": 1,
+        "where": "routines as stories"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-story-004",
+    "capability": "Storytelling & Self-Disclosure",
+    "sub_capability": "Value through story (show, don't tell)",
+    "name": "Demonstrate, don't declare",
+    "summary": "Letting qualities like competence, courage or kindness come out through what happened, not by stating them.",
+    "how_to_apply": "Choose stories where the trait is visible in your actions; never add 'I'm a pretty adventurous guy'.",
+    "example_line": "I'd never sailed, but the skipper broke his wrist, so I learnt fast.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "self-describing trait claims ('I'm very...')",
+      "brag phrases vs narrative events"
+    ],
+    "common_mistakes": [
+      "Story as thinly disguised brag",
+      "Humblebrags"
+    ],
+    "drill": "Rewrite one 'I'm the kind of guy who...' claim as a 20-second story.",
+    "sources": [
+      {
+        "ref": 4,
+        "where": "DHV (demonstrations of higher value)"
+      },
+      {
+        "ref": 1,
+        "where": "DHV"
+      },
+      {
+        "ref": 73,
+        "where": "humblebragging backfires"
+      },
+      {
+        "ref": 59,
+        "where": "prestige"
+      },
+      {
+        "ref": 40,
+        "where": "D9, D11"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-story-005",
+    "capability": "Storytelling & Self-Disclosure",
+    "sub_capability": "Value through story (show, don't tell)",
+    "name": "Character over credentials",
+    "summary": "Choosing stories that reveal values and emotions (curiosity, loyalty, fear overcome) rather than income or achievements.",
+    "how_to_apply": "Pick stories where something mattered to you emotionally.",
+    "example_line": "The best day of that trip was teaching my nephew to swim.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "emotional words in stories",
+      "her follow-up questions about feelings"
+    ],
+    "common_mistakes": [
+      "Résumé recitation"
+    ],
+    "drill": "List five stories; mark each as 'credential' or 'character'; lead with character ones.",
+    "sources": [
+      {
+        "ref": 9,
+        "where": "honesty / lifestyle"
+      },
+      {
+        "ref": 21,
+        "where": "storytelling"
+      },
+      {
+        "ref": 51,
+        "where": "women connect with appreciation and focus on them"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-story-006",
+    "capability": "Storytelling & Self-Disclosure",
+    "sub_capability": "Reciprocal, escalating disclosure",
+    "name": "Match and step up disclosure",
+    "summary": "Sharing personal information at roughly the same depth as her, then going slightly deeper, which builds closeness.",
+    "how_to_apply": "After she shares, share something comparable; occasionally go one notch deeper.",
+    "example_line": "That's a big move. I nearly did the same thing after my dad got ill.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "disclosure depth of his turn vs her previous turn",
+      "her next disclosure"
+    ],
+    "common_mistakes": [
+      "Over-sharing heavy topics early",
+      "Never disclosing (interview mode)"
+    ],
+    "drill": "Practise the Aron-style progression with a friend: three question sets of increasing depth.",
+    "sources": [
+      {
+        "ref": 68,
+        "where": "escalating reciprocal disclosure"
+      },
+      {
+        "ref": 4,
+        "where": "comfort phase"
+      },
+      {
+        "ref": 23,
+        "where": "comfort"
+      },
+      {
+        "ref": 40,
+        "where": "D5"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-story-007",
+    "capability": "Storytelling & Self-Disclosure",
+    "sub_capability": "Story-prompting",
+    "name": "Stories that invite hers",
+    "summary": "Ending a story with a hook that naturally invites her to share a similar experience.",
+    "how_to_apply": "Finish with a beat or a light question tied to the theme.",
+    "example_line": "...so that's my worst travel story. I bet yours is better.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "her next turn length and whether she tells a story"
+    ],
+    "common_mistakes": [
+      "Mechanically asking 'what about you?' after everything"
+    ],
+    "drill": "Add a natural invitation to the end of each of your three best stories.",
+    "sources": [
+      {
+        "ref": 29,
+        "where": "conversation sparks"
+      },
+      {
+        "ref": 28,
+        "where": "conversation"
+      },
+      {
+        "ref": 52,
+        "where": "questions"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-story-008",
+    "capability": "Storytelling & Self-Disclosure",
+    "sub_capability": "Story structure",
+    "name": "Use 'you' and 'we' in stories",
+    "summary": "Pulling her into the story by relating it to her or to an imagined shared future.",
+    "how_to_apply": "Connect a story to something she said, or end with 'we should...'.",
+    "example_line": "You'd have loved it. You'd have negotiated us a free dinner.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "'you/we' tokens in story turns"
+    ],
+    "common_mistakes": [
+      "Forcing 'we' too soon"
+    ],
+    "drill": "For one story, add a line that links it to her.",
+    "sources": [
+      {
+        "ref": 50,
+        "where": "flirting men used more you/we"
+      },
+      {
+        "ref": 4,
+        "where": "future projection"
+      },
+      {
+        "ref": 40,
+        "where": "D8"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-story-009",
+    "capability": "Storytelling & Self-Disclosure",
+    "sub_capability": "Vivid, sensory detail",
+    "name": "Open threads in stories",
+    "summary": "Leaving interesting loose details she can ask about, which hands her easy ways in.",
+    "how_to_apply": "Mention a curious detail without explaining it fully.",
+    "example_line": "That was the summer I lived on a boat. Anyway...",
+    "observable_in_audio": "yes",
+    "markers": [
+      "her questions about details he dropped"
+    ],
+    "common_mistakes": [
+      "Teasing details then refusing to explain (feels manipulative)"
+    ],
+    "drill": "Drop one unexplained interesting detail per conversation and see if she picks it up.",
+    "sources": [
+      {
+        "ref": 23,
+        "where": "hooks / threading"
+      },
+      {
+        "ref": 1,
+        "where": "hooks"
+      },
+      {
+        "ref": 29,
+        "where": "conversation threads"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-story-010",
+    "capability": "Storytelling & Self-Disclosure",
+    "sub_capability": "Value through story (show, don't tell)",
+    "name": "Avoid humblebrags",
+    "summary": "Not dressing up boasts as complaints, which lowers liking more than straight bragging.",
+    "how_to_apply": "Either state the fact plainly when relevant or leave it out.",
+    "example_line": "(Instead of 'Ugh, so tired of all these work trips to Tokyo') I go to Tokyo for work a lot. Love it.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "complaint frames around status facts"
+    ],
+    "common_mistakes": [
+      "Hiding every achievement out of fear"
+    ],
+    "drill": "Scan a recording for humblebrags; restate any as plain facts.",
+    "sources": [
+      {
+        "ref": 73,
+        "where": "humblebragging"
+      },
+      {
+        "ref": 40,
+        "where": "D11"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-engage-001",
+    "capability": "Engagement & Emotional Connection",
+    "sub_capability": "Curious follow-ups",
+    "name": "Follow-up questions",
+    "summary": "Asking questions that build on what she just said; the strongest research-backed liking behaviour in early conversations.",
+    "how_to_apply": "Take a word from her answer and ask about it, two levels deep before switching topic.",
+    "example_line": "You said 'technically' a nurse. What's the non-technical version?",
+    "observable_in_audio": "yes",
+    "markers": [
+      "questions classified as follow-up vs switch",
+      "her answer length after his questions"
+    ],
+    "common_mistakes": [
+      "Interview mode (rapid unrelated questions)",
+      "Questions with no disclosure back"
+    ],
+    "drill": "Two-deep rule: two follow-ups on any interesting answer before changing topic.",
+    "sources": [
+      {
+        "ref": 52,
+        "where": "follow-up questions increase liking"
+      },
+      {
+        "ref": 51,
+        "where": "connection"
+      },
+      {
+        "ref": 34,
+        "where": "interest in others"
+      },
+      {
+        "ref": 40,
+        "where": "D4"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-engage-002",
+    "capability": "Engagement & Emotional Connection",
+    "sub_capability": "Statements & assumptions (cold reads)",
+    "name": "Statements instead of questions",
+    "summary": "Making observations or guesses about her instead of asking interview questions, which creates more engaging conversation.",
+    "how_to_apply": "Turn 'where are you from?' into a guess: 'You seem like you grew up by the sea.'",
+    "example_line": "You seem like the friend who organises the group holiday.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "ratio of 'you seem/you strike me' statements to closed questions",
+      "her elaborations after statements"
+    ],
+    "common_mistakes": [
+      "Guesses that are insults in disguise",
+      "Never asking anything"
+    ],
+    "drill": "Convert five standard first-date questions into playful statements.",
+    "sources": [
+      {
+        "ref": 14,
+        "where": "statements create attraction (robjudge.net)"
+      },
+      {
+        "ref": 4,
+        "where": "statements"
+      },
+      {
+        "ref": 23,
+        "where": "cold reads"
+      },
+      {
+        "ref": 24,
+        "where": "statements over questions"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-engage-003",
+    "capability": "Engagement & Emotional Connection",
+    "sub_capability": "Statements & assumptions (cold reads)",
+    "name": "Playful cold read",
+    "summary": "Making a perceptive but general guess about her personality; it often feels accurate because of the Barnum effect.",
+    "how_to_apply": "Base it on something she actually said; frame it as a guess; be curious if wrong.",
+    "example_line": "I'm guessing you're social, but you need your alone time to recharge.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "her response: confirms and elaborates vs corrects"
+    ],
+    "common_mistakes": [
+      "Presenting it as psychic insight",
+      "Using reads to fake deep connection"
+    ],
+    "drill": "Practise three reads on friends from observed details only; note accuracy.",
+    "sources": [
+      {
+        "ref": 19,
+        "where": "cold reading"
+      },
+      {
+        "ref": 81,
+        "where": "Barnum effect"
+      },
+      {
+        "ref": 4,
+        "where": "cold reads"
+      },
+      {
+        "ref": 23,
+        "where": "cold reads"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "caution",
+    "ethics_note": "Cold reads work partly through a cognitive bias; keep them as light, openly-guessing curiosity, never to manufacture a false sense of special connection."
+  },
+  {
+    "id": "game-engage-004",
+    "capability": "Engagement & Emotional Connection",
+    "sub_capability": "Emotional labelling & empathy",
+    "name": "Label the feeling",
+    "summary": "Naming the emotion behind what she's describing, which shows understanding.",
+    "how_to_apply": "Use 'sounds like...' or 'seems like...' plus the feeling, then pause.",
+    "example_line": "Sounds like that job made you feel invisible.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "'sounds like/seems like' + emotion word",
+      "her elaboration after the label"
+    ],
+    "common_mistakes": [
+      "Labelling wrongly and insisting",
+      "Therapising"
+    ],
+    "drill": "In three conversations, make one emotional label each and note her response.",
+    "sources": [
+      {
+        "ref": 32,
+        "where": "labelling"
+      },
+      {
+        "ref": 82,
+        "where": "affect labelling"
+      },
+      {
+        "ref": 69,
+        "where": "responsiveness"
+      },
+      {
+        "ref": 51,
+        "where": "sympathy"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-engage-005",
+    "capability": "Engagement & Emotional Connection",
+    "sub_capability": "Emotional labelling & empathy",
+    "name": "Appreciation and sympathy",
+    "summary": "Specific appreciation ('that's brilliant') and sympathy ('that must have been hard') made women feel connected in speed-date research.",
+    "how_to_apply": "Respond to good news with specific appreciation and to hard news with sympathy before moving on.",
+    "example_line": "That must have been brutal. And you still finished the course?",
+    "observable_in_audio": "yes",
+    "markers": [
+      "appreciation and sympathy tokens",
+      "generic backchannels vs specific responses"
+    ],
+    "common_mistakes": [
+      "Generic 'cool' and 'nice'",
+      "Over-sympathising"
+    ],
+    "drill": "Replace every 'cool' in a conversation with a specific reaction.",
+    "sources": [
+      {
+        "ref": 51,
+        "where": "appreciation and sympathy"
+      },
+      {
+        "ref": 69,
+        "where": "responsiveness"
+      },
+      {
+        "ref": 40,
+        "where": "D5"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-engage-006",
+    "capability": "Engagement & Emotional Connection",
+    "sub_capability": "Emotional labelling & empathy",
+    "name": "Collaborative completion",
+    "summary": "Briefly finishing or adding to her sentence to show you're following, which signalled understanding in speed dates.",
+    "how_to_apply": "Use sparingly when you clearly get where she's going.",
+    "example_line": "She: 'And I just thought, why am I even...' You: '...still there.'",
+    "observable_in_audio": "yes",
+    "markers": [
+      "overlaps that complete her thought (cooperative interruptions)"
+    ],
+    "common_mistakes": [
+      "Hijacking her point",
+      "Getting it wrong repeatedly"
+    ],
+    "drill": "Listen for one moment per chat where a short completion fits.",
+    "sources": [
+      {
+        "ref": 51,
+        "where": "cooperative interruption"
+      },
+      {
+        "ref": 40,
+        "where": "D5"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-engage-007",
+    "capability": "Engagement & Emotional Connection",
+    "sub_capability": "Threading",
+    "name": "Threading",
+    "summary": "Picking one of several hooks in her answer to continue, so the conversation never hits a dead end.",
+    "how_to_apply": "Listen for 2-3 hooks in each answer; follow the most emotional or unusual one.",
+    "example_line": "Wait, back up, the circus part?",
+    "observable_in_audio": "yes",
+    "markers": [
+      "topic continuity; dead-end count (long gaps followed by new unrelated topic)"
+    ],
+    "common_mistakes": [
+      "Jumping between threads too fast"
+    ],
+    "drill": "Listen to a podcast interview; pause after each answer and list three hooks.",
+    "sources": [
+      {
+        "ref": 23,
+        "where": "threading"
+      },
+      {
+        "ref": 4,
+        "where": "conversation"
+      },
+      {
+        "ref": 24,
+        "where": "threading"
+      },
+      {
+        "ref": 29,
+        "where": "hooks"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-engage-008",
+    "capability": "Engagement & Emotional Connection",
+    "sub_capability": "Depth escalation",
+    "name": "Go from facts to feelings",
+    "summary": "Shifting questions from what she does to why, how it felt and what she wants.",
+    "how_to_apply": "After a fact, ask about the motivation or emotion behind it.",
+    "example_line": "What made you pick nursing over medicine?",
+    "observable_in_audio": "yes",
+    "markers": [
+      "share of why/how/feel questions after 10 minutes"
+    ],
+    "common_mistakes": [
+      "Going deep too fast",
+      "Staying on logistics all night"
+    ],
+    "drill": "For each fact she gives, ask one 'why' or 'what was that like'.",
+    "sources": [
+      {
+        "ref": 68,
+        "where": "deeper conversations less awkward than expected"
+      },
+      {
+        "ref": 23,
+        "where": "comfort"
+      },
+      {
+        "ref": 28,
+        "where": "talking"
+      },
+      {
+        "ref": 4,
+        "where": "comfort phase"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-engage-009",
+    "capability": "Engagement & Emotional Connection",
+    "sub_capability": "Depth escalation",
+    "name": "Deep but light questions",
+    "summary": "Asking more interesting questions than small talk, delivered playfully, since people underestimate how much strangers enjoy depth.",
+    "how_to_apply": "Swap 'what do you do?' for 'what are you excited about at the moment?'",
+    "example_line": "What's something you're weirdly good at?",
+    "observable_in_audio": "yes",
+    "markers": [
+      "question novelty (non-small-talk)",
+      "her energy (pitch_range_st) in reply"
+    ],
+    "common_mistakes": [
+      "Intense philosophical interrogation"
+    ],
+    "drill": "Prepare five 'deep but light' questions and rotate them.",
+    "sources": [
+      {
+        "ref": 68,
+        "where": "Kardas et al."
+      },
+      {
+        "ref": 29,
+        "where": "conversation sparks"
+      },
+      {
+        "ref": 28,
+        "where": "questions"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-engage-010",
+    "capability": "Engagement & Emotional Connection",
+    "sub_capability": "Rapport & matching",
+    "name": "Language and energy matching",
+    "summary": "Converging with her style of speech, energy and vocabulary; style matching predicts relationship initiation.",
+    "how_to_apply": "Notice her pace, energy and favourite words; meet her nearer to them.",
+    "example_line": "(She's quiet and wry; you drop your volume and use dry humour.)",
+    "observable_in_audio": "partial",
+    "markers": [
+      "speaking_rate_wpm and loudness_db convergence across the conversation",
+      "shared word reuse"
+    ],
+    "common_mistakes": [
+      "Obvious mimicry",
+      "Losing your own personality"
+    ],
+    "drill": "Review a recording: where did your energies diverge? Practise one adjustment.",
+    "sources": [
+      {
+        "ref": 56,
+        "where": "language style matching"
+      },
+      {
+        "ref": 71,
+        "where": "chameleon effect"
+      },
+      {
+        "ref": 20,
+        "where": "pacing (NLP)"
+      },
+      {
+        "ref": 32,
+        "where": "mirroring"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-engage-011",
+    "capability": "Engagement & Emotional Connection",
+    "sub_capability": "Rapport & matching",
+    "name": "Mirror her last words",
+    "summary": "Repeating the last few key words she said with a curious tone, prompting her to expand.",
+    "how_to_apply": "Repeat 1-3 words, slight upward tone, then wait.",
+    "example_line": "She: 'I just got back from Peru.' You: 'Peru?'",
+    "observable_in_audio": "yes",
+    "markers": [
+      "his turn echoes her final words",
+      "her elaboration length"
+    ],
+    "common_mistakes": [
+      "Overuse (feels like a parrot)"
+    ],
+    "drill": "Use three mirrors in a low-stakes chat; count how long she talks after each.",
+    "sources": [
+      {
+        "ref": 32,
+        "where": "mirroring"
+      },
+      {
+        "ref": 71,
+        "where": "mimicry raises liking"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-engage-012",
+    "capability": "Engagement & Emotional Connection",
+    "sub_capability": "Curious follow-ups",
+    "name": "Focus the conversation on her",
+    "summary": "Keeping much of the topical focus on her life and views; both sexes reported more 'click' when talk centred on the woman.",
+    "how_to_apply": "Return the spotlight to her after your stories; don't let it drift into your résumé.",
+    "example_line": "Enough about me. What's the thing you'd do if money didn't matter?",
+    "observable_in_audio": "yes",
+    "markers": [
+      "topic-owner share (her life vs his)",
+      "talk_share around 40-60% (heuristic)"
+    ],
+    "common_mistakes": [
+      "Interview without disclosure",
+      "Making her carry the conversation"
+    ],
+    "drill": "Review a recording and mark whose life each topic was about.",
+    "sources": [
+      {
+        "ref": 51,
+        "where": "focus on the woman"
+      },
+      {
+        "ref": 34,
+        "where": "talk in terms of their interests"
+      },
+      {
+        "ref": 53,
+        "where": "talk more, but responsive"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-engage-013",
+    "capability": "Engagement & Emotional Connection",
+    "sub_capability": "Curious follow-ups",
+    "name": "Don't make her carry it",
+    "summary": "Taking responsibility for keeping conversation flowing so she isn't forced to ask all the questions.",
+    "how_to_apply": "If she's asked two questions in a row, ask one back or offer a story.",
+    "example_line": "(After she asks twice) Okay, my turn to be nosy.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "questions ratio Tom:her (heuristic 1:3 to 3:1)",
+      "her turns ending in questions"
+    ],
+    "common_mistakes": [
+      "Overcorrecting into interrogation"
+    ],
+    "drill": "Track the question ratio in your next three recordings.",
+    "sources": [
+      {
+        "ref": 51,
+        "where": "women disconnected when they had to ask"
+      },
+      {
+        "ref": 40,
+        "where": "D4"
+      },
+      {
+        "ref": 7,
+        "where": "lead"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-engage-014",
+    "capability": "Engagement & Emotional Connection",
+    "sub_capability": "Statements & assumptions (cold reads)",
+    "name": "Use her name and specifics",
+    "summary": "Using her name and specific details she shared, which makes her feel noticed.",
+    "how_to_apply": "Use her name once or twice; refer back to specifics.",
+    "example_line": "Sophie, you've ruined all other coffee for me.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "name use count",
+      "references back"
+    ],
+    "common_mistakes": [
+      "Name every sentence (salesy)"
+    ],
+    "drill": "Use the name of three new people in conversation this week.",
+    "sources": [
+      {
+        "ref": 34,
+        "where": "names"
+      },
+      {
+        "ref": 28,
+        "where": "techniques"
+      },
+      {
+        "ref": 29,
+        "where": "names"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-engage-015",
+    "capability": "Engagement & Emotional Connection",
+    "sub_capability": "Depth escalation",
+    "name": "Ask about her passions",
+    "summary": "Steering towards what lights her up, so her emotional state during the conversation is positive and associated with you.",
+    "how_to_apply": "Listen for energy spikes in her voice and ask more there.",
+    "example_line": "You lit up when you mentioned the band. Tell me about that.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "her pitch_range_st and loudness rise in her turns",
+      "her turn length on that topic"
+    ],
+    "common_mistakes": [
+      "Ignoring topics she enjoys to return to yours"
+    ],
+    "drill": "In a recording, find her highest-energy moment and note whether you followed it.",
+    "sources": [
+      {
+        "ref": 29,
+        "where": "sparks / passion questions"
+      },
+      {
+        "ref": 23,
+        "where": "comfort"
+      },
+      {
+        "ref": 26,
+        "where": "what women enjoy"
+      },
+      {
+        "ref": 69,
+        "where": "responsiveness"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-engage-016",
+    "capability": "Engagement & Emotional Connection",
+    "sub_capability": "Rapport & matching",
+    "name": "Find commonalities, then differ playfully",
+    "summary": "Building rapport through genuine shared interests, then adding contrast so it isn't bland agreement.",
+    "how_to_apply": "Note a real shared thing; enjoy it; then playfully disagree on a detail.",
+    "example_line": "We both love Japan. But you're wrong about the ramen.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "'me too' moments followed by playful divergence"
+    ],
+    "common_mistakes": [
+      "Fake commonalities",
+      "Everything 'same!'"
+    ],
+    "drill": "Look for one genuine commonality and one playful disagreement per date.",
+    "sources": [
+      {
+        "ref": 23,
+        "where": "comfort and attraction mix"
+      },
+      {
+        "ref": 14,
+        "where": "tension"
+      },
+      {
+        "ref": 28,
+        "where": "rapport"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-engage-017",
+    "capability": "Engagement & Emotional Connection",
+    "sub_capability": "Emotional labelling & empathy",
+    "name": "Validate before disagreeing",
+    "summary": "Acknowledging her perspective before offering a different one, keeping warmth and frame.",
+    "how_to_apply": "'I see why you'd think that' then your view.",
+    "example_line": "Fair, I get why people love it. For me it's a bit much.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "validation phrase preceding disagreement"
+    ],
+    "common_mistakes": [
+      "Validation as empty formula"
+    ],
+    "drill": "In the next disagreement, validate first in one sentence.",
+    "sources": [
+      {
+        "ref": 69,
+        "where": "responsiveness"
+      },
+      {
+        "ref": 32,
+        "where": "tactical empathy"
+      },
+      {
+        "ref": 22,
+        "where": "warmth"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-tension-001",
+    "capability": "Tension, Polarity & Flirtation",
+    "sub_capability": "Clear romantic intent",
+    "name": "Make intent clear",
+    "summary": "Signalling romantic rather than friendly interest so you don't drift into the friend zone and she can respond honestly.",
+    "how_to_apply": "Once rapport is there, say something clearly romantic once, warmly, and see how she responds.",
+    "example_line": "I'm enjoying this more than I expected. You're trouble.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "presence of an explicit or clearly romantic statement",
+      "her response (reciprocal, neutral, pull-back)"
+    ],
+    "common_mistakes": [
+      "Waiting until it's too late",
+      "Jumping in before any rapport"
+    ],
+    "drill": "In your next date, say one clearly romantic line before the halfway point.",
+    "sources": [
+      {
+        "ref": 9,
+        "where": "showing intent"
+      },
+      {
+        "ref": 26,
+        "where": "be clear"
+      },
+      {
+        "ref": 25,
+        "where": "women want men to show interest"
+      },
+      {
+        "ref": 7,
+        "where": "be bold"
+      },
+      {
+        "ref": 40,
+        "where": "D8"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-tension-002",
+    "capability": "Tension, Polarity & Flirtation",
+    "sub_capability": "Clear romantic intent",
+    "name": "Specific compliment on character",
+    "summary": "One sincere compliment about something she chose (a story, a view, her style), said once and left alone.",
+    "how_to_apply": "Make it specific, say it calmly, don't wait for a reaction.",
+    "example_line": "I like how you talk about your work. You actually care.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "compliments: specific vs generic, looks vs choices",
+      "compliment count (not excessive)"
+    ],
+    "common_mistakes": [
+      "Gushing about looks early",
+      "Compliment as opener for a request"
+    ],
+    "drill": "One specific choice-based compliment per date, then drop it.",
+    "sources": [
+      {
+        "ref": 40,
+        "where": "D8 drill"
+      },
+      {
+        "ref": 55,
+        "where": "selectivity"
+      },
+      {
+        "ref": 26,
+        "where": "female perspective"
+      },
+      {
+        "ref": 28,
+        "where": "compliments"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-tension-003",
+    "capability": "Tension, Polarity & Flirtation",
+    "sub_capability": "Verbal escalation & subtext",
+    "name": "Escalate in step with her",
+    "summary": "Gradually moving to more personal and flirtatious topics only after signs she's enjoying it.",
+    "how_to_apply": "After each step, read her next three turns; continue if she matches, step back if she pulls away.",
+    "example_line": "(After she teases back) So what's your type, then? Besides dangerously charming.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "her turn length, questions and laughter after each step",
+      "topic intimacy progression"
+    ],
+    "common_mistakes": [
+      "Escalating with no reciprocity",
+      "Sexual remarks too early"
+    ],
+    "drill": "After each escalation, check her next three turns in the recording.",
+    "sources": [
+      {
+        "ref": 40,
+        "where": "D8 signal check"
+      },
+      {
+        "ref": 50,
+        "where": "people misread flirting"
+      },
+      {
+        "ref": 4,
+        "where": "escalation"
+      },
+      {
+        "ref": 23,
+        "where": "escalation"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-tension-004",
+    "capability": "Tension, Polarity & Flirtation",
+    "sub_capability": "Verbal escalation & subtext",
+    "name": "Flirty subtext, not explicit content",
+    "summary": "Letting flirtation live in implication and playfulness rather than explicit sexual talk early on.",
+    "how_to_apply": "Hint, imply, let her fill the gap; keep it deniable and light.",
+    "example_line": "You should probably stop looking at me like that. People will talk.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "innuendo vs explicit sexual words",
+      "her response"
+    ],
+    "common_mistakes": [
+      "Crude talk",
+      "Innuendo she doesn't reciprocate"
+    ],
+    "drill": "Rewrite three blunt flirty lines as subtext.",
+    "sources": [
+      {
+        "ref": 13,
+        "where": "indirection / insinuation"
+      },
+      {
+        "ref": 5,
+        "where": "sexual tension"
+      },
+      {
+        "ref": 15,
+        "where": "tension"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "caution",
+    "ethics_note": "Only appropriate when she's reciprocating; persisting with innuendo she ignores is pressure."
+  },
+  {
+    "id": "game-tension-005",
+    "capability": "Tension, Polarity & Flirtation",
+    "sub_capability": "Tension & release (ethical push-pull)",
+    "name": "Tension and release",
+    "summary": "Alternating playful challenge or teasing with warmth, giving the conversation emotional rhythm.",
+    "how_to_apply": "After a playful jab or disagreement, follow with appreciation; keep both honest.",
+    "example_line": "You're a terrible influence. I like it.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "alternation of teasing and warm turns",
+      "her laughter and engagement"
+    ],
+    "common_mistakes": [
+      "Hot-and-cold behaviour to unsettle her",
+      "Constant teasing"
+    ],
+    "drill": "Write five lines that pair a playful challenge with a compliment.",
+    "sources": [
+      {
+        "ref": 15,
+        "where": "tension and release"
+      },
+      {
+        "ref": 14,
+        "where": "tension (robjudge.net)"
+      },
+      {
+        "ref": 5,
+        "where": "push-pull"
+      },
+      {
+        "ref": 4,
+        "where": "push-pull"
+      },
+      {
+        "ref": 78,
+        "where": "uncertainty and attraction"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "caution",
+    "ethics_note": "Ethical only as playful conversational rhythm; deliberately alternating approval and withdrawal to create anxiety is manipulative (see off-limits push-pull)."
+  },
+  {
+    "id": "game-tension-006",
+    "capability": "Tension, Polarity & Flirtation",
+    "sub_capability": "Comfort with charged silence",
+    "name": "Let tension sit",
+    "summary": "Not defusing every charged moment with a joke or nervous chatter.",
+    "how_to_apply": "When a moment feels charged, hold it for a beat before speaking.",
+    "example_line": "(Pause, smile) ...What?",
+    "observable_in_audio": "partial",
+    "markers": [
+      "gap length after flirtatious lines",
+      "nervous laughter by Tom after charged moments"
+    ],
+    "common_mistakes": [
+      "Prolonged staring silence that's uncomfortable for her"
+    ],
+    "drill": "Next charged moment, count one breath before responding.",
+    "sources": [
+      {
+        "ref": 14,
+        "where": "tension"
+      },
+      {
+        "ref": 6,
+        "where": "presence"
+      },
+      {
+        "ref": 22,
+        "where": "presence"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-tension-007",
+    "capability": "Tension, Polarity & Flirtation",
+    "sub_capability": "Polarity & masculine presence",
+    "name": "Keep your edges",
+    "summary": "Maintaining your own views and direction rather than merging into constant agreement; difference keeps attraction alive.",
+    "how_to_apply": "Disagree warmly, keep your own interests visible, don't mirror everything she says.",
+    "example_line": "I see it differently, actually.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "agreement rate",
+      "calm disagreement turns"
+    ],
+    "common_mistakes": [
+      "Contrarianism",
+      "Gender-role lecturing"
+    ],
+    "drill": "Notice your agreement rate in a recording; aim for honest agreement only.",
+    "sources": [
+      {
+        "ref": 6,
+        "where": "polarity"
+      },
+      {
+        "ref": 27,
+        "where": "desire needs distance"
+      },
+      {
+        "ref": 9,
+        "where": "polarisation"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "caution",
+    "ethics_note": "Deida's masculine/feminine polarity is untested and essentialist; the coach keeps only the behaviour (stable identity, calm difference)."
+  },
+  {
+    "id": "game-tension-008",
+    "capability": "Tension, Polarity & Flirtation",
+    "sub_capability": "Polarity & masculine presence",
+    "name": "Keep some mystery",
+    "summary": "Not revealing everything at once; letting her discover you over time.",
+    "how_to_apply": "Answer honestly but not exhaustively; leave some stories for later.",
+    "example_line": "That's a story for the second date.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "his disclosure volume early vs later",
+      "her curiosity questions"
+    ],
+    "common_mistakes": [
+      "Evasiveness or secrecy that feels deceptive",
+      "Withholding basic facts"
+    ],
+    "drill": "Pick one good story you'll save for a later date.",
+    "sources": [
+      {
+        "ref": 27,
+        "where": "mystery and separateness"
+      },
+      {
+        "ref": 13,
+        "where": "mystery"
+      },
+      {
+        "ref": 7,
+        "where": "don't tell everything"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-tension-009",
+    "capability": "Tension, Polarity & Flirtation",
+    "sub_capability": "Verbal escalation & subtext",
+    "name": "Future projection",
+    "summary": "Playfully imagining future shared scenarios, which builds 'we' and romantic frame.",
+    "how_to_apply": "Light, obviously playful 'we' futures, not commitment talk.",
+    "example_line": "When we go to Japan, you're in charge of the itinerary.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "'we' + future tense",
+      "her playing along"
+    ],
+    "common_mistakes": [
+      "Sounding needy or serious too early",
+      "Promising things you don't mean"
+    ],
+    "drill": "Use one playful future projection on your next date.",
+    "sources": [
+      {
+        "ref": 4,
+        "where": "future projection"
+      },
+      {
+        "ref": 23,
+        "where": "future projection"
+      },
+      {
+        "ref": 50,
+        "where": "we language in flirting"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "caution",
+    "ethics_note": "Keep it obviously playful; using false future promises to secure intimacy is deception."
+  },
+  {
+    "id": "game-tension-010",
+    "capability": "Tension, Polarity & Flirtation",
+    "sub_capability": "Clear romantic intent",
+    "name": "Express attraction directly and calmly",
+    "summary": "Saying you find her attractive in a relaxed, specific way, rather than hiding behind jokes.",
+    "how_to_apply": "Say it once, calmly, without asking for a response.",
+    "example_line": "You look really good tonight.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "direct compliment present; falling final_rise_st"
+    ],
+    "common_mistakes": [
+      "Repeating it",
+      "Saying it as a question"
+    ],
+    "drill": "Practise one calm, direct compliment with a friend until it feels natural.",
+    "sources": [
+      {
+        "ref": 9,
+        "where": "honesty"
+      },
+      {
+        "ref": 7,
+        "where": "direct"
+      },
+      {
+        "ref": 26,
+        "where": "female perspective"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-tension-011",
+    "capability": "Tension, Polarity & Flirtation",
+    "sub_capability": "Tension & release (ethical push-pull)",
+    "name": "Playful disqualification",
+    "summary": "Joking that you two could never work, which creates playful tension when interest is already clear.",
+    "how_to_apply": "Use only when rapport and mutual interest are obvious; keep it absurd.",
+    "example_line": "This would never work. You like Marmite.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "laughter",
+      "her counter-argument (investment)"
+    ],
+    "common_mistakes": [
+      "Using it when she's unsure (reads as rejection)"
+    ],
+    "drill": "Pair a playful disqualification with a warm comment.",
+    "sources": [
+      {
+        "ref": 5,
+        "where": "disqualification"
+      },
+      {
+        "ref": 4,
+        "where": "false disqualifiers"
+      },
+      {
+        "ref": 23,
+        "where": "disqualifiers"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "caution",
+    "ethics_note": "Keep it obviously playful and pair it with warmth; using it to make her chase or doubt herself is manipulative."
+  },
+  {
+    "id": "game-tension-012",
+    "capability": "Tension, Polarity & Flirtation",
+    "sub_capability": "Polarity & masculine presence",
+    "name": "Desire needs separateness (long-term)",
+    "summary": "In relationships, maintaining individual lives, interests and some novelty sustains desire.",
+    "how_to_apply": "Keep your own passions; talk about them with energy; plan new experiences together.",
+    "example_line": "I'm off to the climbing trip this weekend. Tell me about yours when I'm back.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "references to his own pursuits",
+      "novelty in plans"
+    ],
+    "common_mistakes": [
+      "Distance as punishment"
+    ],
+    "drill": "Name one solo pursuit to maintain and one novel shared activity per month.",
+    "sources": [
+      {
+        "ref": 27,
+        "where": "erotic intelligence"
+      },
+      {
+        "ref": 6,
+        "where": "polarity"
+      },
+      {
+        "ref": 7,
+        "where": "own life"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-lead-001",
+    "capability": "Leading & Decisiveness",
+    "sub_capability": "Concrete proposals",
+    "name": "Default plus easy out",
+    "summary": "Proposing a specific plan while giving her an easy way to decline or adjust.",
+    "how_to_apply": "Name day, place and activity; add a light 'unless you'd rather...'.",
+    "example_line": "Thursday, the wine bar on Exmouth Market. Unless you've a better idea.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "specific proposals vs vague ('we should hang out')",
+      "final_rise_st falling on proposal"
+    ],
+    "common_mistakes": [
+      "Bulldozing",
+      "Vague permission-seeking"
+    ],
+    "drill": "Phrase every suggestion this week as a concrete default with an easy exit.",
+    "sources": [
+      {
+        "ref": 40,
+        "where": "D7"
+      },
+      {
+        "ref": 7,
+        "where": "lead"
+      },
+      {
+        "ref": 23,
+        "where": "logistics"
+      },
+      {
+        "ref": 2,
+        "where": "have a plan"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-lead-002",
+    "capability": "Leading & Decisiveness",
+    "sub_capability": "Concrete proposals",
+    "name": "Lead without asking permission at every step",
+    "summary": "Moving things along (next topic, next drink, leaving) with light assertive statements instead of repeated check-ins.",
+    "how_to_apply": "Suggest, don't poll; still read her reaction.",
+    "example_line": "Let's grab food. I know a place.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "'let's' statements vs 'do you want to maybe' questions"
+    ],
+    "common_mistakes": [
+      "Ignoring her preference",
+      "Never checking in at all"
+    ],
+    "drill": "Use 'let's' for three small decisions on your next outing.",
+    "sources": [
+      {
+        "ref": 7,
+        "where": "lead"
+      },
+      {
+        "ref": 6,
+        "where": "direction"
+      },
+      {
+        "ref": 4,
+        "where": "leading"
+      },
+      {
+        "ref": 75,
+        "where": "powerful speech"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-lead-003",
+    "capability": "Leading & Decisiveness",
+    "sub_capability": "Conversational leading",
+    "name": "Move on when energy dips",
+    "summary": "Switching topic, activity or venue before the conversation goes flat.",
+    "how_to_apply": "When answers shorten, change topic or suggest moving.",
+    "example_line": "Right, we've solved politics. Dessert?",
+    "observable_in_audio": "yes",
+    "markers": [
+      "her turn length declining",
+      "his transition timing"
+    ],
+    "common_mistakes": [
+      "Abrupt switches that ignore her"
+    ],
+    "drill": "In a recording, find the first energy dip and note how long you took to shift.",
+    "sources": [
+      {
+        "ref": 4,
+        "where": "momentum"
+      },
+      {
+        "ref": 24,
+        "where": "momentum"
+      },
+      {
+        "ref": 23,
+        "where": "structure"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-lead-004",
+    "capability": "Leading & Decisiveness",
+    "sub_capability": "Conversational leading",
+    "name": "Smooth transitions",
+    "summary": "Changing topics with a link or a light marker so it feels natural.",
+    "how_to_apply": "Bridge with a word from the last topic or a playful 'random question'.",
+    "example_line": "Speaking of terrible decisions, have you ever done karaoke?",
+    "observable_in_audio": "yes",
+    "markers": [
+      "topic transitions with bridges vs abrupt"
+    ],
+    "common_mistakes": [
+      "Overly scripted segues"
+    ],
+    "drill": "Practise three bridges in a chat with a friend.",
+    "sources": [
+      {
+        "ref": 28,
+        "where": "bridging"
+      },
+      {
+        "ref": 23,
+        "where": "transitions"
+      },
+      {
+        "ref": 29,
+        "where": "conversation"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-lead-005",
+    "capability": "Leading & Decisiveness",
+    "sub_capability": "Decisive choices",
+    "name": "Choose when asked",
+    "summary": "Making the choice when she says 'you pick', which takes the planning burden off her.",
+    "how_to_apply": "Pick quickly and say why in a few words.",
+    "example_line": "Thai. They do a ridiculous green curry.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "response latency and hedges after 'you choose'"
+    ],
+    "common_mistakes": [
+      "Choosing and ignoring her stated preferences"
+    ],
+    "drill": "Next time someone says 'you choose', decide within three seconds.",
+    "sources": [
+      {
+        "ref": 7,
+        "where": "be decisive"
+      },
+      {
+        "ref": 6,
+        "where": "decisiveness"
+      },
+      {
+        "ref": 75,
+        "where": "powerful speech"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-lead-006",
+    "capability": "Leading & Decisiveness",
+    "sub_capability": "Asking for the date / number",
+    "name": "Ask clearly",
+    "summary": "Asking for a date or number directly, without hedging or disguising it as something else.",
+    "how_to_apply": "Name what you want and a plan: 'I'd like to take you out. Saturday?'",
+    "example_line": "I'd like to see you again. Saturday, a drink?",
+    "observable_in_audio": "yes",
+    "markers": [
+      "explicit ask present",
+      "hedges around it"
+    ],
+    "common_mistakes": [
+      "Waiting for her to suggest",
+      "Vague 'we should hang out'"
+    ],
+    "drill": "End your next three good conversations with a clear ask.",
+    "sources": [
+      {
+        "ref": 7,
+        "where": "ask her out"
+      },
+      {
+        "ref": 2,
+        "where": "number close"
+      },
+      {
+        "ref": 26,
+        "where": "female perspective"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-lead-007",
+    "capability": "Leading & Decisiveness",
+    "sub_capability": "Asking for the date / number",
+    "name": "Accept the answer gracefully",
+    "summary": "Taking any answer, including no or maybe, lightly and without persuasion.",
+    "how_to_apply": "Respond warmly and move on; a maybe is not a yes to chase.",
+    "example_line": "No problem. It was lovely meeting you.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "persuasion attempts after decline",
+      "tone stability"
+    ],
+    "common_mistakes": [
+      "Arguing, pleading or negotiating"
+    ],
+    "drill": "Role-play three declines with a friend, answering each in one gracious line.",
+    "sources": [
+      {
+        "ref": 40,
+        "where": "D2, D7"
+      },
+      {
+        "ref": 9,
+        "where": "rejection"
+      },
+      {
+        "ref": 7,
+        "where": "next"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-lead-008",
+    "capability": "Leading & Decisiveness",
+    "sub_capability": "Concrete proposals",
+    "name": "End on a high",
+    "summary": "Leaving or wrapping up while energy is good, rather than letting it fade.",
+    "how_to_apply": "When things peak, propose the next step and wrap up.",
+    "example_line": "I've got to head off, but this was great. Let's do Thursday.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "closing timing relative to her engagement peak"
+    ],
+    "common_mistakes": [
+      "Leaving abruptly to seem scarce"
+    ],
+    "drill": "Notice the peak moment of your next date and close within 15 minutes of it.",
+    "sources": [
+      {
+        "ref": 4,
+        "where": "ending on a high"
+      },
+      {
+        "ref": 7,
+        "where": "leave her wanting more"
+      },
+      {
+        "ref": 28,
+        "where": "exits"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-lead-009",
+    "capability": "Leading & Decisiveness",
+    "sub_capability": "Conversational leading",
+    "name": "Set the frame early",
+    "summary": "Establishing the tone (playful, curious, warm) in the first minute, which tends to carry through.",
+    "how_to_apply": "Open with an easy, positive, slightly playful line that sets the mood.",
+    "example_line": "Okay, important question before we start: sweet or savoury breakfast?",
+    "observable_in_audio": "yes",
+    "markers": [
+      "first-minute energy and laughter",
+      "her engagement early"
+    ],
+    "common_mistakes": [
+      "Overly rehearsed openers"
+    ],
+    "drill": "Prepare three situational openers and use one per day for a week.",
+    "sources": [
+      {
+        "ref": 1,
+        "where": "openers"
+      },
+      {
+        "ref": 2,
+        "where": "situational openers"
+      },
+      {
+        "ref": 4,
+        "where": "openers"
+      },
+      {
+        "ref": 21,
+        "where": "first impressions"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-calib-001",
+    "capability": "Calibration & Social Intelligence",
+    "sub_capability": "Reading interest (verbal IOIs)",
+    "name": "Verbal indicators of interest",
+    "summary": "Recognising audible signs she's interested: her questions, longer answers, laughter, 'we' talk, her own teasing.",
+    "how_to_apply": "Check these before escalating; treat them as a running total, not one signal.",
+    "example_line": "(Not a line: a read.)",
+    "observable_in_audio": "yes",
+    "markers": [
+      "her questions count",
+      "her mean_turn_s",
+      "laughter after Tom",
+      "her 'we' tokens"
+    ],
+    "common_mistakes": [
+      "Reading politeness as interest",
+      "Projecting your own interest"
+    ],
+    "drill": "After each recording, estimate her interest, then compare with these counts.",
+    "sources": [
+      {
+        "ref": 4,
+        "where": "IOIs"
+      },
+      {
+        "ref": 1,
+        "where": "IOIs"
+      },
+      {
+        "ref": 50,
+        "where": "people misread flirting"
+      },
+      {
+        "ref": 40,
+        "where": "D8, 4.2"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-calib-002",
+    "capability": "Calibration & Social Intelligence",
+    "sub_capability": "Reading disinterest & discomfort",
+    "name": "Spot disinterest early",
+    "summary": "Noticing short answers, no questions back, topic changes or attempts to leave, and stepping back.",
+    "how_to_apply": "When two or more signs appear, de-escalate or offer an easy exit.",
+    "example_line": "Anyway, I'll let you get back to your friends. Nice meeting you.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "her turn shortening",
+      "her questions dropping",
+      "increasing response gaps"
+    ],
+    "common_mistakes": [
+      "Ignoring signs and pressing on",
+      "Over-reading one short answer"
+    ],
+    "drill": "Mark the moment in a recording where her engagement dropped; note your next move.",
+    "sources": [
+      {
+        "ref": 4,
+        "where": "IODs"
+      },
+      {
+        "ref": 26,
+        "where": "female perspective"
+      },
+      {
+        "ref": 25,
+        "where": "female perspective"
+      },
+      {
+        "ref": 40,
+        "where": "4.2"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-calib-003",
+    "capability": "Calibration & Social Intelligence",
+    "sub_capability": "Reading disinterest & discomfort",
+    "name": "Respect her signals over your plan",
+    "summary": "Prioritising her responses over any technique or plan; a calibrated man adjusts.",
+    "how_to_apply": "If something doesn't land, drop it.",
+    "example_line": "(Drops the bit and asks a sincere question.)",
+    "observable_in_audio": "yes",
+    "markers": [
+      "continuing a tactic after negative response"
+    ],
+    "common_mistakes": [
+      "Doubling down"
+    ],
+    "drill": "Review one recording: list where you persisted with a bit that wasn't landing.",
+    "sources": [
+      {
+        "ref": 4,
+        "where": "calibration"
+      },
+      {
+        "ref": 24,
+        "where": "calibration"
+      },
+      {
+        "ref": 9,
+        "where": "honesty"
+      },
+      {
+        "ref": 36,
+        "where": "risky plays"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-calib-004",
+    "capability": "Calibration & Social Intelligence",
+    "sub_capability": "Energy matching",
+    "name": "Match her energy level",
+    "summary": "Adjusting your energy to slightly above hers, not wildly higher or lower.",
+    "how_to_apply": "If she's calm, slow down; if she's lively, lift up.",
+    "example_line": "(Brings energy down to match her quiet mood.)",
+    "observable_in_audio": "partial",
+    "markers": [
+      "loudness_db and speaking_rate_wpm vs hers"
+    ],
+    "common_mistakes": [
+      "Overbearing energy",
+      "Flat mismatch"
+    ],
+    "drill": "In a recording, compare your rate and loudness with hers in the first 5 minutes.",
+    "sources": [
+      {
+        "ref": 24,
+        "where": "energy"
+      },
+      {
+        "ref": 71,
+        "where": "mimicry"
+      },
+      {
+        "ref": 56,
+        "where": "style matching"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-calib-005",
+    "capability": "Calibration & Social Intelligence",
+    "sub_capability": "Recovering from misfires",
+    "name": "Repair a joke that offended",
+    "summary": "Acknowledging quickly and sincerely when a joke hurt, without grovelling.",
+    "how_to_apply": "One sincere line, then move on.",
+    "example_line": "That came out wrong. Sorry, I didn't mean it that way.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "apology length",
+      "her engagement after repair"
+    ],
+    "common_mistakes": [
+      "Grovelling",
+      "Pretending nothing happened"
+    ],
+    "drill": "Practise a one-line repair for three plausible misfires.",
+    "sources": [
+      {
+        "ref": 76,
+        "where": "apologies build trust"
+      },
+      {
+        "ref": 40,
+        "where": "D2"
+      },
+      {
+        "ref": 22,
+        "where": "warmth"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-calib-006",
+    "capability": "Calibration & Social Intelligence",
+    "sub_capability": "Recovering from misfires",
+    "name": "Recover from awkward silences",
+    "summary": "Using a light observation or callback to restart after a lull, without panic.",
+    "how_to_apply": "Have a few easy re-starters: observation, callback, playful question.",
+    "example_line": "Okay, so the pigeon situation is escalating.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "gap length before re-start",
+      "fillers in re-start"
+    ],
+    "common_mistakes": [
+      "Panicked rapid-fire questions"
+    ],
+    "drill": "Keep three re-starters in mind for your next outing.",
+    "sources": [
+      {
+        "ref": 21,
+        "where": "conversation"
+      },
+      {
+        "ref": 29,
+        "where": "sparks"
+      },
+      {
+        "ref": 40,
+        "where": "D2"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-calib-007",
+    "capability": "Calibration & Social Intelligence",
+    "sub_capability": "Group & social-circle dynamics",
+    "name": "Win the group",
+    "summary": "Engaging her friends warmly and including everyone, rather than isolating her.",
+    "how_to_apply": "Address the group first; be friendly to everyone; don't rush to separate her.",
+    "example_line": "So how do you all know each other?",
+    "observable_in_audio": "partial",
+    "markers": [
+      "multi-speaker turn-taking",
+      "others' laughter"
+    ],
+    "common_mistakes": [
+      "Ignoring friends",
+      "Treating friends as obstacles"
+    ],
+    "drill": "In group settings, make sure each person has spoken to you at least once.",
+    "sources": [
+      {
+        "ref": 4,
+        "where": "groups / obstacles"
+      },
+      {
+        "ref": 1,
+        "where": "groups"
+      },
+      {
+        "ref": 24,
+        "where": "social"
+      },
+      {
+        "ref": 25,
+        "where": "friends' perspective"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "caution",
+    "ethics_note": "Treating friends as 'obstacles' to neutralise is manipulative framing; the coach keeps only genuine inclusion."
+  },
+  {
+    "id": "game-calib-008",
+    "capability": "Calibration & Social Intelligence",
+    "sub_capability": "Group & social-circle dynamics",
+    "name": "Include, don't compete",
+    "summary": "Responding to other men in the group with friendliness rather than competing or putting them down.",
+    "how_to_apply": "Be friendly, share the spotlight, praise others' stories.",
+    "example_line": "Ha, that's a better story than mine.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "interruptions of other men",
+      "put-downs"
+    ],
+    "common_mistakes": [
+      "Status battles"
+    ],
+    "drill": "Praise one other person's story in your next group chat.",
+    "sources": [
+      {
+        "ref": 59,
+        "where": "prestige"
+      },
+      {
+        "ref": 1,
+        "where": "AMOGing (avoid)"
+      },
+      {
+        "ref": 22,
+        "where": "warmth"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-calib-009",
+    "capability": "Calibration & Social Intelligence",
+    "sub_capability": "Reading interest (verbal IOIs)",
+    "name": "Check your read (projection bias)",
+    "summary": "Knowing that people mainly project their own intentions when guessing whether someone's flirting.",
+    "how_to_apply": "Check her behaviour, not your feelings, before concluding she's interested.",
+    "example_line": "(Self-check.)",
+    "observable_in_audio": "partial",
+    "markers": [
+      "his self-rating vs her objective signals"
+    ],
+    "common_mistakes": [
+      "Assuming because you're interested"
+    ],
+    "drill": "Rate her interest before the coach review and compare with her signals.",
+    "sources": [
+      {
+        "ref": 50,
+        "where": "self vs other correlation"
+      },
+      {
+        "ref": 40,
+        "where": "D8"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-calib-010",
+    "capability": "Calibration & Social Intelligence",
+    "sub_capability": "Energy matching",
+    "name": "Context-appropriate humour",
+    "summary": "Adjusting humour type and intensity to the setting and her personality.",
+    "how_to_apply": "Gentler humour with serious or reserved people; bolder in playful settings.",
+    "example_line": "(Swaps cocky lines for warm observational humour with a reserved date.)",
+    "observable_in_audio": "partial",
+    "markers": [
+      "laughter rate by humour type"
+    ],
+    "common_mistakes": [
+      "One-size-fits-all jokes"
+    ],
+    "drill": "Track which kind of humour gets laughs in which settings.",
+    "sources": [
+      {
+        "ref": 24,
+        "where": "calibration"
+      },
+      {
+        "ref": 21,
+        "where": "humour"
+      },
+      {
+        "ref": 64,
+        "where": "humour styles"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-calib-011",
+    "capability": "Calibration & Social Intelligence",
+    "sub_capability": "Reading disinterest & discomfort",
+    "name": "Offer an easy out",
+    "summary": "Giving her a graceful way to end or decline, which lowers pressure and often increases comfort.",
+    "how_to_apply": "Make it easy for her to leave, decline or change her mind.",
+    "example_line": "No pressure. If you'd rather call it a night, totally fine.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "exit offers present at escalation points"
+    ],
+    "common_mistakes": [
+      "Offering it in a passive-aggressive way"
+    ],
+    "drill": "At each escalation point, include one easy-out phrase.",
+    "sources": [
+      {
+        "ref": 40,
+        "where": "D7 default plus out"
+      },
+      {
+        "ref": 25,
+        "where": "female perspective"
+      },
+      {
+        "ref": 26,
+        "where": "comfort"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-status-001",
+    "capability": "Status, Value & Screening",
+    "sub_capability": "Prestige over dominance",
+    "name": "Prestige, not dominance",
+    "summary": "Gaining status through competence, generosity and humour rather than intimidation; women in studies prefer prestige.",
+    "how_to_apply": "Share expertise generously; never put others down to rise.",
+    "example_line": "If you're into photography I can show you a trick for night shots.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "put-downs count",
+      "helpful expertise shares"
+    ],
+    "common_mistakes": [
+      "Showing off",
+      "Domineering behaviour"
+    ],
+    "drill": "Share one useful piece of expertise per week without being asked twice.",
+    "sources": [
+      {
+        "ref": 59,
+        "where": "two ways to status"
+      },
+      {
+        "ref": 60,
+        "where": "women prefer prestige"
+      },
+      {
+        "ref": 40,
+        "where": "D11"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-status-002",
+    "capability": "Status, Value & Screening",
+    "sub_capability": "Prestige over dominance",
+    "name": "Pre-selection without bragging",
+    "summary": "Being seen as socially valued (friends, warm greetings) can raise appeal; mention social life naturally, not as a boast.",
+    "how_to_apply": "Mention friends and social life casually where relevant; never list women.",
+    "example_line": "My friend Anna, who's a chef, dragged me there.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "mentions of friends in stories",
+      "explicit brag about women (flag)"
+    ],
+    "common_mistakes": [
+      "Bragging about other women",
+      "Jealousy plots"
+    ],
+    "drill": "Notice whether your stories include other people; add one where natural.",
+    "sources": [
+      {
+        "ref": 4,
+        "where": "pre-selection"
+      },
+      {
+        "ref": 1,
+        "where": "social proof"
+      },
+      {
+        "ref": 23,
+        "where": "social proof"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "caution",
+    "ethics_note": "Mentioning other women to make her jealous or insecure is manipulative; the coach keeps only natural mention of a social life."
+  },
+  {
+    "id": "game-status-003",
+    "capability": "Status, Value & Screening",
+    "sub_capability": "Qualification & screening",
+    "name": "Screen for compatibility",
+    "summary": "Asking questions that reveal her values and whether she fits what you want.",
+    "how_to_apply": "Ask about things that matter to you (ambition, kindness, humour) with curiosity.",
+    "example_line": "What's something you'd never compromise on?",
+    "observable_in_audio": "yes",
+    "markers": [
+      "value-focused questions"
+    ],
+    "common_mistakes": [
+      "Interrogation",
+      "Judging out loud"
+    ],
+    "drill": "Write your top three partner values and one question for each.",
+    "sources": [
+      {
+        "ref": 23,
+        "where": "qualification"
+      },
+      {
+        "ref": 4,
+        "where": "qualification"
+      },
+      {
+        "ref": 9,
+        "where": "screening"
+      },
+      {
+        "ref": 7,
+        "where": "standards"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-status-004",
+    "capability": "Status, Value & Screening",
+    "sub_capability": "Qualification & screening",
+    "name": "Appreciate good answers",
+    "summary": "When she shows a quality you value, say so, which signals you have standards and makes her feel seen.",
+    "how_to_apply": "Name the quality simply.",
+    "example_line": "I like that. You actually follow through on things.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "appreciation of qualities (not looks)"
+    ],
+    "common_mistakes": [
+      "Making her 'earn' approval",
+      "Hoops and tests"
+    ],
+    "drill": "Once per date, appreciate a quality she shows.",
+    "sources": [
+      {
+        "ref": 23,
+        "where": "qualification"
+      },
+      {
+        "ref": 4,
+        "where": "qualification"
+      },
+      {
+        "ref": 51,
+        "where": "appreciation"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "caution",
+    "ethics_note": "Qualifying should be genuine; making her jump through hoops to win approval slides into manipulation."
+  },
+  {
+    "id": "game-status-005",
+    "capability": "Status, Value & Screening",
+    "sub_capability": "Personal boundaries",
+    "name": "Calm boundaries",
+    "summary": "Saying no or naming disrespect calmly and briefly, without lecturing or punishing.",
+    "how_to_apply": "State the boundary in one sentence; move on or leave if it's crossed again.",
+    "example_line": "I'm not up for that. Let's do something else.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "boundary statement clarity",
+      "loudness_db stable"
+    ],
+    "common_mistakes": [
+      "Angry lecturing",
+      "No boundary at all"
+    ],
+    "drill": "Practise three boundary sentences aloud for common situations.",
+    "sources": [
+      {
+        "ref": 8,
+        "where": "boundaries"
+      },
+      {
+        "ref": 7,
+        "where": "boundaries"
+      },
+      {
+        "ref": 11,
+        "where": "frame"
+      },
+      {
+        "ref": 17,
+        "where": "self-respect"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-status-006",
+    "capability": "Status, Value & Screening",
+    "sub_capability": "Personal boundaries",
+    "name": "Don't tolerate flaking or disrespect silently",
+    "summary": "Responding to repeated cancellations or rudeness by lowering investment, not pleading.",
+    "how_to_apply": "Respond briefly and warmly, then let her re-initiate.",
+    "example_line": "No worries. Let me know when you're free.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "pleading or rescheduling pressure in messages"
+    ],
+    "common_mistakes": [
+      "Punishing with silence games"
+    ],
+    "drill": "When someone flakes, reply once, warmly, and leave the next move to them.",
+    "sources": [
+      {
+        "ref": 7,
+        "where": "match her investment"
+      },
+      {
+        "ref": 18,
+        "where": "next"
+      },
+      {
+        "ref": 9,
+        "where": "investment"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-status-007",
+    "capability": "Status, Value & Screening",
+    "sub_capability": "Avoiding supplication",
+    "name": "Match her investment",
+    "summary": "Keeping your effort roughly in step with hers, so you don't over-pursue.",
+    "how_to_apply": "Notice who asks more questions, initiates more, compliments more.",
+    "example_line": "(Not a line: a pattern.)",
+    "observable_in_audio": "partial",
+    "markers": [
+      "talk_share",
+      "question ratio",
+      "compliment counts by speaker"
+    ],
+    "common_mistakes": [
+      "Scorekeeping coldly",
+      "Withholding to seem cool"
+    ],
+    "drill": "In a recording, compare your and her questions and compliments.",
+    "sources": [
+      {
+        "ref": 7,
+        "where": "mirror her interest"
+      },
+      {
+        "ref": 9,
+        "where": "investment"
+      },
+      {
+        "ref": 5,
+        "where": "don't chase"
+      },
+      {
+        "ref": 55,
+        "where": "selectivity"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-status-008",
+    "capability": "Status, Value & Screening",
+    "sub_capability": "Avoiding supplication",
+    "name": "Don't over-compliment",
+    "summary": "Limiting compliments so each one means something, since gushing reads as unselective.",
+    "how_to_apply": "One or two specific compliments per date.",
+    "example_line": "(One compliment, well placed.)",
+    "observable_in_audio": "yes",
+    "markers": [
+      "compliment count"
+    ],
+    "common_mistakes": [
+      "Zero warmth"
+    ],
+    "drill": "Count your compliments in a recording; keep the best one or two.",
+    "sources": [
+      {
+        "ref": 55,
+        "where": "unselective desire"
+      },
+      {
+        "ref": 5,
+        "where": "supplication"
+      },
+      {
+        "ref": 17,
+        "where": "pedestal"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-status-009",
+    "capability": "Status, Value & Screening",
+    "sub_capability": "Humble confidence",
+    "name": "Accept compliments simply",
+    "summary": "Taking compliments with a thank you rather than deflecting or bragging.",
+    "how_to_apply": "Thank you, smile, maybe return the warmth.",
+    "example_line": "Thanks. That's nice of you.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "deflection phrases after compliments"
+    ],
+    "common_mistakes": [
+      "Deflecting ('no, I'm not')",
+      "Over-agreeing"
+    ],
+    "drill": "Accept five compliments this week with just 'thank you'.",
+    "sources": [
+      {
+        "ref": 22,
+        "where": "compliments"
+      },
+      {
+        "ref": 28,
+        "where": "compliments"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-status-010",
+    "capability": "Status, Value & Screening",
+    "sub_capability": "Humble confidence",
+    "name": "Plain facts, no humblebrag",
+    "summary": "Stating achievements plainly when relevant, not hiding or overselling them.",
+    "how_to_apply": "Say it once, matter-of-factly, then return to her.",
+    "example_line": "I run a small software company. It's fun.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "humblebrags",
+      "unprompted achievement lists"
+    ],
+    "common_mistakes": [
+      "False modesty",
+      "Résumé dumping"
+    ],
+    "drill": "Write a one-line plain description of your work and practise it.",
+    "sources": [
+      {
+        "ref": 73,
+        "where": "humblebrag"
+      },
+      {
+        "ref": 61,
+        "where": "overconfidence vs arrogance"
+      },
+      {
+        "ref": 40,
+        "where": "D11"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-status-011",
+    "capability": "Status, Value & Screening",
+    "sub_capability": "Avoiding supplication",
+    "name": "Don't seek reassurance",
+    "summary": "Not asking her to confirm she's having a good time or likes you.",
+    "how_to_apply": "Trust the signals; if unsure, read her behaviour.",
+    "example_line": "(Instead of 'Are you having fun? Is this okay?') —",
+    "observable_in_audio": "yes",
+    "markers": [
+      "reassurance requests ('are you having fun?', 'do you like me?')"
+    ],
+    "common_mistakes": [
+      "Never checking comfort when it matters"
+    ],
+    "drill": "Count reassurance requests in a recording; cut to zero except genuine comfort checks.",
+    "sources": [
+      {
+        "ref": 8,
+        "where": "approval-seeking"
+      },
+      {
+        "ref": 63,
+        "where": "attachment anxiety"
+      },
+      {
+        "ref": 40,
+        "where": "D2"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "game-offlimits-001",
+    "capability": "Off-limits tactics (recognise only)",
+    "sub_capability": "Esteem-lowering",
+    "name": "Negging",
+    "summary": "Backhanded compliments or mild put-downs meant to lower her confidence so she seeks your approval.",
+    "how_to_apply": "Do not use. Ethical alternative: affectionate teasing about safe topics, followed by warmth.",
+    "example_line": "(Flag example) Nice hair, is it real?",
+    "observable_in_audio": "yes",
+    "markers": [
+      "backhanded compliments",
+      "comments on looks with a put-down twist"
+    ],
+    "common_mistakes": [
+      "Using it at all"
+    ],
+    "drill": "Coach flags it; Tom practises the ethical alternative instead.",
+    "sources": [
+      {
+        "ref": 4,
+        "where": "negs"
+      },
+      {
+        "ref": 1,
+        "where": "negs"
+      },
+      {
+        "ref": 40,
+        "where": "myth vs evidence"
+      },
+      {
+        "ref": 64,
+        "where": "aggressive humour harms"
+      }
+    ],
+    "evidence": "contested",
+    "ethics": "manipulative",
+    "ethics_note": "Designed to lower self-esteem; no peer-reviewed support and contrary to humour research."
+  },
+  {
+    "id": "game-offlimits-002",
+    "capability": "Off-limits tactics (recognise only)",
+    "sub_capability": "Esteem-lowering",
+    "name": "Disqualifying her looks",
+    "summary": "Openly suggesting she's not attractive enough to interest you, to unsettle her.",
+    "how_to_apply": "Do not use. Ethical alternative: honest, selective interest.",
+    "example_line": "(Flag example) You're not usually my type.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "statements diminishing her attractiveness"
+    ],
+    "common_mistakes": [
+      "Using it at all"
+    ],
+    "drill": "Coach flags it; Tom practises the ethical alternative instead.",
+    "sources": [
+      {
+        "ref": 4,
+        "where": "negs"
+      },
+      {
+        "ref": 12,
+        "where": "dread / attention"
+      },
+      {
+        "ref": 66,
+        "where": "hostile teasing"
+      }
+    ],
+    "evidence": "single-author",
+    "ethics": "manipulative",
+    "ethics_note": "Manipulates self-worth."
+  },
+  {
+    "id": "game-offlimits-003",
+    "capability": "Off-limits tactics (recognise only)",
+    "sub_capability": "Pressure & consent violations (verbal)",
+    "name": "Overriding last-minute resistance",
+    "summary": "Treating her hesitation or no as something to get past.",
+    "how_to_apply": "Do not use. Ethical alternative: stop, check in, respect the answer.",
+    "example_line": "(Flag) Come on, we're both adults...",
+    "observable_in_audio": "yes",
+    "markers": [
+      "persistence after 'no' or hesitation",
+      "minimising her objections"
+    ],
+    "common_mistakes": [
+      "Using it at all"
+    ],
+    "drill": "Coach flags it; Tom practises the ethical alternative instead.",
+    "sources": [
+      {
+        "ref": 4,
+        "where": "LMR"
+      },
+      {
+        "ref": 37,
+        "where": "LMR critique"
+      },
+      {
+        "ref": 1,
+        "where": "LMR"
+      }
+    ],
+    "evidence": "contested",
+    "ethics": "manipulative",
+    "ethics_note": "Coercive; ignores consent."
+  },
+  {
+    "id": "game-offlimits-004",
+    "capability": "Off-limits tactics (recognise only)",
+    "sub_capability": "Pressure & consent violations (verbal)",
+    "name": "Persistence after a decline",
+    "summary": "Repeatedly asking or arguing after she has said no.",
+    "how_to_apply": "Do not use. Ethical alternative: accept the answer gracefully.",
+    "example_line": "(Flag) Just one drink, why not?",
+    "observable_in_audio": "yes",
+    "markers": [
+      "re-asks after decline"
+    ],
+    "common_mistakes": [
+      "Using it at all"
+    ],
+    "drill": "Coach flags it; Tom practises the ethical alternative instead.",
+    "sources": [
+      {
+        "ref": 40,
+        "where": "D7 failure modes"
+      },
+      {
+        "ref": 38,
+        "where": "sexism and coercion"
+      },
+      {
+        "ref": 24,
+        "where": "persistence teaching"
+      }
+    ],
+    "evidence": "contested",
+    "ethics": "manipulative",
+    "ethics_note": "Pressure; undermines consent."
+  },
+  {
+    "id": "game-offlimits-005",
+    "capability": "Off-limits tactics (recognise only)",
+    "sub_capability": "Pressure & consent violations (verbal)",
+    "name": "Pressing drinks",
+    "summary": "Encouraging her to drink more to lower inhibitions.",
+    "how_to_apply": "Do not use. Ethical alternative: let her set her own pace.",
+    "example_line": "(Flag) Have another, it's on me.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "repeated offers of alcohol after she declines"
+    ],
+    "common_mistakes": [
+      "Using it at all"
+    ],
+    "drill": "Coach flags it; Tom practises the ethical alternative instead.",
+    "sources": [
+      {
+        "ref": 40,
+        "where": "ethics"
+      },
+      {
+        "ref": 37,
+        "where": "PUA discourse"
+      }
+    ],
+    "evidence": "single-author",
+    "ethics": "manipulative",
+    "ethics_note": "Exploits impaired judgement."
+  },
+  {
+    "id": "game-offlimits-006",
+    "capability": "Off-limits tactics (recognise only)",
+    "sub_capability": "Pressure & consent violations (verbal)",
+    "name": "Isolating her",
+    "summary": "Steering her away from her friends to remove social support.",
+    "how_to_apply": "Do not use. Ethical alternative: include her friends; propose moving only with her clear yes.",
+    "example_line": "(Flag) Let's lose your friends.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "pushing to separate",
+      "dismissing friends' concerns"
+    ],
+    "common_mistakes": [
+      "Using it at all"
+    ],
+    "drill": "Coach flags it; Tom practises the ethical alternative instead.",
+    "sources": [
+      {
+        "ref": 4,
+        "where": "isolation"
+      },
+      {
+        "ref": 1,
+        "where": "isolation"
+      },
+      {
+        "ref": 40,
+        "where": "ethics"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "manipulative",
+    "ethics_note": "Removes her safety net."
+  },
+  {
+    "id": "game-offlimits-007",
+    "capability": "Off-limits tactics (recognise only)",
+    "sub_capability": "Pressure & consent violations (verbal)",
+    "name": "Verbal escalation ignoring her cues",
+    "summary": "Continuing sexual or intimate talk when she shows discomfort.",
+    "how_to_apply": "Do not use. Ethical alternative: step back at the first sign of discomfort.",
+    "example_line": "(Flag) Continued innuendo after she changes subject.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "innuendo after topic change or short replies"
+    ],
+    "common_mistakes": [
+      "Using it at all"
+    ],
+    "drill": "Coach flags it; Tom practises the ethical alternative instead.",
+    "sources": [
+      {
+        "ref": 40,
+        "where": "D8"
+      },
+      {
+        "ref": 36,
+        "where": "risky plays"
+      }
+    ],
+    "evidence": "contested",
+    "ethics": "manipulative",
+    "ethics_note": "Ignores consent cues."
+  },
+  {
+    "id": "game-offlimits-008",
+    "capability": "Off-limits tactics (recognise only)",
+    "sub_capability": "Deception",
+    "name": "False time constraint",
+    "summary": "Claiming you have to leave soon to lower her guard, without meaning it.",
+    "how_to_apply": "Do not use. Ethical alternative: be honest about your time.",
+    "example_line": "(Flag) I can only stay a minute (stays an hour).",
+    "observable_in_audio": "yes",
+    "markers": [
+      "stated time limit contradicted by conduct"
+    ],
+    "common_mistakes": [
+      "Using it at all"
+    ],
+    "drill": "Coach flags it; Tom practises the ethical alternative instead.",
+    "sources": [
+      {
+        "ref": 4,
+        "where": "false time constraint"
+      },
+      {
+        "ref": 1,
+        "where": "false time constraint"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "manipulative",
+    "ethics_note": "Deceptive."
+  },
+  {
+    "id": "game-offlimits-009",
+    "capability": "Off-limits tactics (recognise only)",
+    "sub_capability": "Deception",
+    "name": "Invented stories and fake personas",
+    "summary": "Telling fabricated stories or claiming false credentials to impress.",
+    "how_to_apply": "Do not use. Ethical alternative: true stories told well.",
+    "example_line": "(Flag) Pretending to be a pilot.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "inconsistencies",
+      "claims Tom has said are untrue"
+    ],
+    "common_mistakes": [
+      "Using it at all"
+    ],
+    "drill": "Coach flags it; Tom practises the ethical alternative instead.",
+    "sources": [
+      {
+        "ref": 1,
+        "where": "routines"
+      },
+      {
+        "ref": 23,
+        "where": "routines"
+      },
+      {
+        "ref": 9,
+        "where": "honesty critique"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "manipulative",
+    "ethics_note": "Deception."
+  },
+  {
+    "id": "game-offlimits-010",
+    "capability": "Off-limits tactics (recognise only)",
+    "sub_capability": "Deception",
+    "name": "Embedded commands and NLP patterns",
+    "summary": "Covertly inserting suggestive phrases to influence her feelings without awareness.",
+    "how_to_apply": "Do not use. Ethical alternative: direct, honest expression.",
+    "example_line": "(Flag) 'Imagine how it feels when you... melt into...'",
+    "observable_in_audio": "yes",
+    "markers": [
+      "hypnotic patterning language"
+    ],
+    "common_mistakes": [
+      "Using it at all"
+    ],
+    "drill": "Coach flags it; Tom practises the ethical alternative instead.",
+    "sources": [
+      {
+        "ref": 20,
+        "where": "speed seduction"
+      },
+      {
+        "ref": 35,
+        "where": "NLP"
+      },
+      {
+        "ref": 80,
+        "where": "NLP evidence weak"
+      }
+    ],
+    "evidence": "contested",
+    "ethics": "manipulative",
+    "ethics_note": "Covert influence; also unsupported by evidence."
+  },
+  {
+    "id": "game-offlimits-011",
+    "capability": "Off-limits tactics (recognise only)",
+    "sub_capability": "Deception",
+    "name": "Fake cold-read 'psychic' connection",
+    "summary": "Using Barnum statements to make her believe you understand her uniquely.",
+    "how_to_apply": "Do not use. Ethical alternative: openly playful guesses.",
+    "example_line": "(Flag) 'I can tell you've been hurt deeply.'",
+    "observable_in_audio": "yes",
+    "markers": [
+      "universal statements framed as insight"
+    ],
+    "common_mistakes": [
+      "Using it at all"
+    ],
+    "drill": "Coach flags it; Tom practises the ethical alternative instead.",
+    "sources": [
+      {
+        "ref": 19,
+        "where": "cold reading"
+      },
+      {
+        "ref": 81,
+        "where": "Barnum"
+      },
+      {
+        "ref": 4,
+        "where": "cold reads"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "manipulative",
+    "ethics_note": "Exploits a cognitive bias to create false intimacy."
+  },
+  {
+    "id": "game-offlimits-012",
+    "capability": "Off-limits tactics (recognise only)",
+    "sub_capability": "Emotional manipulation",
+    "name": "Push-pull to unsettle",
+    "summary": "Alternating approval and rejection specifically to create anxiety and chase.",
+    "how_to_apply": "Do not use. Ethical alternative: honest tension-and-release with consistent warmth.",
+    "example_line": "(Flag) 'You're great... actually never mind, I'm off.'",
+    "observable_in_audio": "yes",
+    "markers": [
+      "abrupt warm/cold switches",
+      "withdrawal after her investment"
+    ],
+    "common_mistakes": [
+      "Using it at all"
+    ],
+    "drill": "Coach flags it; Tom practises the ethical alternative instead.",
+    "sources": [
+      {
+        "ref": 4,
+        "where": "push-pull"
+      },
+      {
+        "ref": 79,
+        "where": "hard to get lowers liking"
+      },
+      {
+        "ref": 78,
+        "where": "uncertainty"
+      }
+    ],
+    "evidence": "contested",
+    "ethics": "manipulative",
+    "ethics_note": "Uses anxiety to drive attraction."
+  },
+  {
+    "id": "game-offlimits-013",
+    "capability": "Off-limits tactics (recognise only)",
+    "sub_capability": "Emotional manipulation",
+    "name": "Dread game",
+    "summary": "Hinting she could lose you to other women to keep her insecure.",
+    "how_to_apply": "Do not use. Ethical alternative: secure, honest commitment and a full life of your own.",
+    "example_line": "(Flag) 'That girl at work keeps texting me.'",
+    "observable_in_audio": "yes",
+    "markers": [
+      "mentions of other women designed to provoke jealousy"
+    ],
+    "common_mistakes": [
+      "Using it at all"
+    ],
+    "drill": "Coach flags it; Tom practises the ethical alternative instead.",
+    "sources": [
+      {
+        "ref": 12,
+        "where": "dread"
+      },
+      {
+        "ref": 11,
+        "where": "abundance framing"
+      }
+    ],
+    "evidence": "contested",
+    "ethics": "manipulative",
+    "ethics_note": "Manufactures insecurity."
+  },
+  {
+    "id": "game-offlimits-014",
+    "capability": "Off-limits tactics (recognise only)",
+    "sub_capability": "Emotional manipulation",
+    "name": "Freeze-outs and silent treatment",
+    "summary": "Withdrawing warmth to punish or control.",
+    "how_to_apply": "Do not use. Ethical alternative: calm, direct boundary statements.",
+    "example_line": "(Flag) Sudden cold, one-word replies after she disagrees.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "abrupt warmth withdrawal after her disagreement"
+    ],
+    "common_mistakes": [
+      "Using it at all"
+    ],
+    "drill": "Coach flags it; Tom practises the ethical alternative instead.",
+    "sources": [
+      {
+        "ref": 4,
+        "where": "freeze-out"
+      },
+      {
+        "ref": 1,
+        "where": "freeze-out"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "manipulative",
+    "ethics_note": "Coercive control."
+  },
+  {
+    "id": "game-offlimits-015",
+    "capability": "Off-limits tactics (recognise only)",
+    "sub_capability": "Emotional manipulation",
+    "name": "Manufactured jealousy plotline",
+    "summary": "Deliberately triggering jealousy to raise her investment.",
+    "how_to_apply": "Do not use. Ethical alternative: natural mention of social life.",
+    "example_line": "(Flag) Talking up other women's interest.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "boasts about other women's attention"
+    ],
+    "common_mistakes": [
+      "Using it at all"
+    ],
+    "drill": "Coach flags it; Tom practises the ethical alternative instead.",
+    "sources": [
+      {
+        "ref": 13,
+        "where": "jealousy"
+      },
+      {
+        "ref": 12,
+        "where": "pre-selection"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "manipulative",
+    "ethics_note": "Manipulates emotions."
+  },
+  {
+    "id": "game-offlimits-016",
+    "capability": "Off-limits tactics (recognise only)",
+    "sub_capability": "Emotional manipulation",
+    "name": "Seduction-as-strategy of creating need",
+    "summary": "Greene-style steps of creating emptiness or confusion to make her dependent.",
+    "how_to_apply": "Do not use. Ethical alternative: genuine connection and honesty.",
+    "example_line": "(Flag) Deliberately confusing mixed signals.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "contradictory signals designed to confuse"
+    ],
+    "common_mistakes": [
+      "Using it at all"
+    ],
+    "drill": "Coach flags it; Tom practises the ethical alternative instead.",
+    "sources": [
+      {
+        "ref": 13,
+        "where": "create a need / mixed signals"
+      },
+      {
+        "ref": 12,
+        "where": "frame"
+      }
+    ],
+    "evidence": "single-author",
+    "ethics": "manipulative",
+    "ethics_note": "Intentionally destabilising."
+  }
+]

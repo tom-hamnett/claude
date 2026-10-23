@@ -2,10 +2,11 @@
 
 Capability tree for the "Game" coach, which reviews recordings of Tom's real social and romantic conversations. It builds on `recorder/rubrics/social_confidence.md` (cited here as "rubric Dn"); it does not repeat that rubric's evidence. Technique records live in `techniques.json`, sources in `sources.md` (bracketed numbers below).
 
+**Scope.** This library covers only what can be assessed from the audio recording and transcript. Mainly non-verbal skills (body language, eye contact, touch/kino, physical escalation, appearance, grooming, venue logistics) are deliberately left out of both the taxonomy and `techniques.json`. The one exception is capability 11: manipulative *verbal* tactics stay indexed so the coach can spot them.
+
 **Audio visibility key.** Each sub-capability says how it shows up in a recording:
 - **High**: directly visible in transcript or `prosody.py` fields.
 - **Partial**: inferable from words, timing or the other person's response, but needs judgement.
-- **Low**: mostly body language, touch, eye contact, appearance or the behaviour behind the conversation. The coach should ask Tom, not guess.
 
 **House rules carried over from the rubric.** Judge success mainly by the other person's engagement (her turn length, questions, laughter, "we" language, her own escalation). Read numbers against Tom's own baseline. Never recommend anything in capability 11.
 
@@ -89,9 +90,8 @@ Making romantic intent visible and keeping some charge alive. (Deida [6], Perel 
 | 7.1 Clear romantic intent | Letting her know he's interested as a man, not a friend. | One direct, warm statement of interest at the right moment. | **High**: transcript. |
 | 7.2 Verbal escalation & subtext | Gradual moves to personal, flirtatious and playful-sexual topics in step with her. | Each step follows a sign of reciprocity. | **High**: transcript + her response. |
 | 7.3 Tension & release (ethical push-pull) | Alternating playful challenge with warmth so the conversation has rhythm. | Honest, light, never designed to unsettle her worth. | **High**: transcript. |
-| 7.4 Comfort with silence & eye contact | Letting charged pauses sit. | 1-3 s comfortable silences; doesn't rush. | **Partial**: gaps; eye contact itself is **low**. |
+| 7.4 Comfort with charged silence | Letting charged pauses sit. | 1-3 s comfortable silences; doesn't rush. | **Partial**: response gaps and who breaks silences. |
 | 7.5 Polarity & masculine presence | Grounded direction contrasting with her expression; keeping some mystery and separateness. | Not merging into agreement; has his own views. | **Partial**: disagreement handled calmly; agreement rate. |
-| 7.6 Touch (kino) | Physical contact calibrated to her signals. | Only with clear reciprocity. | **Low**: ask Tom; only verbal cues ("you're cold, come here") visible. |
 
 ## 8. Leading & Decisiveness
 Taking responsibility for where things go. (Wayne [7], Deida [6], Mystery [4], Love Systems [23], Strauss [2], Judge [15]; rubric D7.)
@@ -100,9 +100,8 @@ Taking responsibility for where things go. (Wayne [7], Deida [6], Mystery [4], L
 |---|---|---|---|
 | 8.1 Concrete proposals | Specific plan plus easy out. | "Thursday, the wine bar on X. Unless you'd rather...". | **High**: transcript, `final_rise_st` on proposals. |
 | 8.2 Conversational leading | Moving topics, venues and energy along. | Smooth transitions; he moves things when energy dips. | **High**: transcript. |
-| 8.3 Logistics | Thinking ahead about time, place, transport, next step. | Plans that make saying yes easy. | **Partial**: transcript. |
-| 8.4 Decisive choices | Picking when asked ("you choose"). | Quick, falling-tone decision. | **High**: response latency, hedges. |
-| 8.5 Asking for the date / number | Closing the interaction with a clear next step. | Direct ask, accepts any answer. | **High**: transcript. |
+| 8.3 Decisive choices | Picking when asked ("you choose"). | Quick, falling-tone decision. | **High**: response latency, hedges. |
+| 8.4 Asking for the date / number | Closing the interaction with a clear next step. | Direct ask, accepts any answer. | **High**: transcript. |
 
 ## 9. Calibration & Social Intelligence
 Reading her and the room accurately, and adjusting. (Mystery [4], Strauss [1], Hussey [26], Kinrys [25], Van Edwards [30], Love Systems [23]; rubric 4.2, D8.)
@@ -132,7 +131,7 @@ Not a skill. Manipulative or coercive techniques from the seduction literature a
 | Sub-group | Covers |
 |---|---|
 | 11.1 Esteem-lowering | Negging, backhanded compliments, disqualifying her looks. |
-| 11.2 Pressure & consent violations | LMR "overriding", persistence after no, alcohol, isolation, kino without consent cues. |
+| 11.2 Pressure & consent violations (verbal) | Talking past "no" / LMR, persistence after a decline, pressing drinks, verbal pressure to isolate, verbal escalation that ignores her cues. |
 | 11.3 Deception | False time constraints, invented stories, fake personas, NLP "hidden commands". |
 | 11.4 Emotional manipulation | Push-pull to unsettle, dread game, freeze-outs, jealousy plotlines, manufactured insecurity. |
 

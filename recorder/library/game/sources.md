@@ -94,4 +94,5 @@ Credibility shorthand: **P** practitioner (no controlled testing), **R** peer-re
 - *The Light Switch* by Rob Judge: no record found; [14] uses his site instead.
 - *Practical Female Psychology*: the author is not Kevin Garcia; listings credit Joseph W. South, David Clare and "Franco" [16].
 - Wing Girl Method [25], Art of Charm [31], Lowndes [28], Van Edwards [29][30] and Voss [32] content is drawn from widely known summaries and author sites, not re-verified page by page in this session.
+- Listed for context but not cited by any record: [16] (content unverifiable beyond blurbs), [39] (tertiary cross-check), [62] (responsiveness nuance, kept for the coach's background).
 - No controlled study was found testing negging, cocky-funny as a style, Mystery's A-C-S sequence, Deida's polarity model, or "frame control" as such. Records citing only these are graded practitioner-consensus or single-author.
