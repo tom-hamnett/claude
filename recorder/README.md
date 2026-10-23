@@ -17,6 +17,7 @@ Free to run: transcription happens inside the Claude session, and analysis uses 
 ## Files
 - `transcribe.py`: audio in, `[mm:ss]` transcript out. Splits at pauses (Silero VAD), runs Whisper via sherpa-onnx.
 - `PROCESS.md`: what the hourly run does.
+- `IPHONE_SETUP.md`: one-tap recording, the Send to Recorder shortcut and its automations.
 - `../tests/test_recorder.py`: unit tests (`pytest tests/test_recorder.py`).
 - Dropbox `/Recorder/people_terms.md`: Tom's glossary of names and terms (edit from the Dropbox app).
 
