@@ -1,0 +1,4501 @@
+[
+  {
+    "id": "ep-gravitas-001",
+    "name": "Reframe nerves as excitement",
+    "capability": "Gravitas & Composure",
+    "sub_capability": "Settled state",
+    "summary": "Instead of trying to calm down before a high-stakes moment, relabel the racing heart as excitement. Arousal stays high but points towards opportunity rather than threat.",
+    "how_to_apply": "Just before the meeting or turn, tell yourself (silently or aloud) that you are excited and name what you are excited to get across. Do not try to suppress the arousal.",
+    "example_line": "(to self, before the board item) I'm excited; this is the bit where I get to show them the numbers.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Early-turn stress markers vs. baseline: pitch_median_hz and pitch_drift_st in Tom's first five turns",
+      "speaking_rate_wpm spike and fillers_per_100w in the opening minutes",
+      "Self-report from Tom (pre-meeting note) needed to confirm the technique was used"
+    ],
+    "common_mistakes": [
+      "Telling yourself to calm down, which fights the arousal",
+      "Treating the label as magic and skipping preparation"
+    ],
+    "drill": "Before each of the next five high-stakes meetings, say 'I'm excited about X' once. The coach compares first-five-turn pitch and rate with meetings where you did not.",
+    "sources": [
+      {
+        "ref": 47,
+        "where": "Brooks 2014, speech and singing studies"
+      },
+      {
+        "ref": 22,
+        "where": "anxiety management; reframing"
+      },
+      {
+        "ref": 3,
+        "where": "Presence: approach vs. threat mindset"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-gravitas-002",
+    "name": "Long-exhale reset",
+    "capability": "Gravitas & Composure",
+    "sub_capability": "Settled state",
+    "summary": "A few breaths with an exhale longer than the inhale lower physiological arousal within a minute or two. It is the fastest legal sedative before a hard conversation.",
+    "how_to_apply": "Two to five cycles: a full inhale through the nose, a short top-up inhale, then a slow, long exhale through the mouth. Do it in the minute before speaking or while someone else is talking.",
+    "example_line": "(no line; done silently while the chair introduces the item)",
+    "observable_in_audio": "partial",
+    "markers": [
+      "pitch_median_hz in the first substantive turn vs. Tom's calm-1:1 baseline",
+      "speaking_rate_wpm and pauses_per_min in the first two minutes of Tom's speech",
+      "Audible sighs on the recording are not a problem unless captured mid-sentence"
+    ],
+    "common_mistakes": [
+      "Holding the breath instead of lengthening the exhale",
+      "Doing it so visibly it reads as exasperation",
+      "Expecting it to fix poor preparation"
+    ],
+    "drill": "Daily for two weeks: five minutes of exhale-focused breathing, then use two cycles before every meeting you chair. Track first-turn pitch against baseline.",
+    "sources": [
+      {
+        "ref": 48,
+        "where": "Balban et al. 2023, cyclic sighing arm"
+      },
+      {
+        "ref": 16,
+        "where": "breath as the base of presence"
+      },
+      {
+        "ref": 22,
+        "where": "breathing to manage speaking anxiety"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-gravitas-003",
+    "name": "Settle your pitch in the first turns",
+    "capability": "Gravitas & Composure",
+    "sub_capability": "Settled state",
+    "summary": "The opening minutes set your rank in a group: people whose pitch climbs early tend to be ranked lower, those who settle lower and steadier gain influence. The aim is your own relaxed level, not an artificially deep one.",
+    "how_to_apply": "Make your first one or two contributions short and on firm ground, at your relaxed conversational pitch. Breathe out before the first word.",
+    "example_line": "Morning all. Quick context before we start: we've got two decisions today and I'll take the second.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "pitch_drift_st and pitch_median_hz of Tom's first five turns vs. his median for the meeting",
+      "uptalk_share in the opening turns",
+      "loudness_db relative to others in the same recording"
+    ],
+    "common_mistakes": [
+      "Pushing the voice down (strain, creak)",
+      "Opening with a long, complex point before the voice has settled",
+      "Staying silent for 20 minutes, then entering at a high-stakes moment with cold voice"
+    ],
+    "drill": "For four weeks, plan a short, easy first line for each group meeting. The coach charts first-five-turn pitch drift week by week.",
+    "sources": [
+      {
+        "ref": 34,
+        "where": "Cheng et al. 2016, early pitch change and emergent rank"
+      },
+      {
+        "ref": 35,
+        "where": "Ko et al. 2015, power and voice"
+      },
+      {
+        "ref": 64,
+        "where": "rubric D5 early-meeting drift"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-gravitas-004",
+    "name": "Let the end of your turn breathe",
+    "capability": "Gravitas & Composure",
+    "sub_capability": "Unhurried tempo",
+    "summary": "Confident speakers do not rush to fill the silence after their point or tack on extra clauses. A clean stop followed by a beat of silence signals that you are not afraid of the response.",
+    "how_to_apply": "When you have made your point, stop, hold a one to two second silence, and let others respond. Resist adding 'so, yeah' or a second version.",
+    "example_line": "That's my recommendation: hold the price. [pause]",
+    "observable_in_audio": "yes",
+    "markers": [
+      "Turn-final trailers ('so yeah', 'anyway', 'if that makes sense') in the transcript",
+      "Gap between Tom's last word and the next speaker",
+      "Tom re-starting within 1 s of his own stop (negative)"
+    ],
+    "common_mistakes": [
+      "Filling the silence with a restatement",
+      "Ending with a question that dilutes the point",
+      "Pausing so long it sounds like lost thread"
+    ],
+    "drill": "For a week, end every substantive turn in meetings with a full stop and silence. The coach counts turn-final trailers before and after.",
+    "sources": [
+      {
+        "ref": 6,
+        "where": "Charisma Myth: pausing and not rushing"
+      },
+      {
+        "ref": 16,
+        "where": "Second Circle: unhurried presence"
+      },
+      {
+        "ref": 43,
+        "where": "silent pauses and listener attention"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-gravitas-005",
+    "name": "Slow down for the sentence that matters",
+    "capability": "Gravitas & Composure",
+    "sub_capability": "Unhurried tempo",
+    "summary": "You do not need to slow down everything; slowing and pausing around the key claim, number or decision makes it register and remember better while the rest can run at normal speed.",
+    "how_to_apply": "Mark the one sentence per turn that carries the point. Slow it, pause before the key word, and pause after it.",
+    "example_line": "We'll save [pause] four million [pause] in year one.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "speaking_rate_wpm on the key-sentence segment vs. Tom's turn average",
+      "long_pauses placed before numerals or decision words",
+      "articulation_rate_wpm stable (not slurred) on the key sentence"
+    ],
+    "common_mistakes": [
+      "Slowing everything until it drags (lower warmth)",
+      "Speeding up through the key number because it feels awkward",
+      "Pausing mid-phrase in a way that invites interruption"
+    ],
+    "drill": "Read a three-paragraph update aloud, slowing only the headline sentence. Record it; the coach compares rate on the headline vs. the rest.",
+    "sources": [
+      {
+        "ref": 43,
+        "where": "MacGregor et al. 2010, pauses before words aid memory"
+      },
+      {
+        "ref": 56,
+        "where": "rate effects: competence vs. dominance"
+      },
+      {
+        "ref": 37,
+        "where": "Jobs vs. Zuckerberg rate and phrasing"
+      },
+      {
+        "ref": 24,
+        "where": "pace as one of five vocal elements"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-gravitas-006",
+    "name": "Same voice after the jab",
+    "capability": "Gravitas & Composure",
+    "sub_capability": "Emotional restraint",
+    "summary": "When a comment stings, hold your volume, pitch and pace exactly where they were. A visible jump in any of them is the clearest audible sign that someone got to you.",
+    "how_to_apply": "On the turn after a provocation, consciously match your previous loudness and rate, start with a short neutral sentence, then answer.",
+    "example_line": "Fair question. Here's the number.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "loudness_db jump vs. Tom's previous three turns",
+      "pitch_median_hz rise of more than ~1-2 st",
+      "speaking_rate_wpm rise of more than ~15-20% (rubric heuristics)",
+      "pitch_sd_st collapse (flat, clipped delivery)"
+    ],
+    "common_mistakes": [
+      "Going cold and clipped (also a tell)",
+      "Sarcasm",
+      "Over-correcting into a whisper"
+    ],
+    "drill": "With a colleague, rehearse five provocative challenges. Answer each at baseline volume and pace; the coach reads loudness and rate on each reply.",
+    "sources": [
+      {
+        "ref": 18,
+        "where": "Bates: composure and restraint facets"
+      },
+      {
+        "ref": 1,
+        "where": "Executive Presence: grace under fire"
+      },
+      {
+        "ref": 35,
+        "where": "Ko et al. 2015: vocal cues of power"
+      },
+      {
+        "ref": 64,
+        "where": "rubric D10 thresholds"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-gravitas-007",
+    "name": "Let minor errors pass",
+    "capability": "Gravitas & Composure",
+    "sub_capability": "Emotional restraint",
+    "summary": "Correcting every small inaccuracy or slight makes you look anxious about status. Restraint means choosing which points are worth contesting.",
+    "how_to_apply": "When someone misstates something minor, ask yourself whether it changes the decision. If not, let it go or note it after the meeting.",
+    "example_line": "(lets 'roughly 10%' stand when the true figure is 9.6%)",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Count of Tom's corrective interjections ('just to correct', 'actually it was') in the transcript",
+      "interruptions by Tom that add only a correction"
+    ],
+    "common_mistakes": [
+      "Letting a material error stand to avoid conflict",
+      "Correcting with a sigh or edge in the voice"
+    ],
+    "drill": "For one week, write down every correction you were tempted to make in meetings and whether it mattered. Make only the ones that did.",
+    "sources": [
+      {
+        "ref": 18,
+        "where": "Bates: restraint facet"
+      },
+      {
+        "ref": 33,
+        "where": "dominance vs. prestige routes to influence"
+      }
+    ],
+    "evidence": "single-author",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-gravitas-008",
+    "name": "Do not laugh off your own point",
+    "capability": "Gravitas & Composure",
+    "sub_capability": "Emotional restraint",
+    "summary": "Nervous laughter after your own serious statement undercuts it. Laughter that only you produce, with no one joining, usually signals discomfort rather than ease.",
+    "how_to_apply": "After making a serious point, hold a neutral face and voice. Save laughter for when something is actually funny.",
+    "example_line": "The pilot failed. [no laugh] Here's what we learned.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "Laughter events attributed right after Tom's own turn with no other laughter",
+      "Laughter immediately following bad news or a recommendation"
+    ],
+    "common_mistakes": [
+      "Laughing to soften bad news",
+      "Laughing while apologising"
+    ],
+    "drill": "The coach lists every Tom-only laugh for two weeks with the line before it. Pick the pattern (e.g. after bad news) and drop it for the following two weeks.",
+    "sources": [
+      {
+        "ref": 51,
+        "where": "Bitterly et al. 2017: failed humour lowers status"
+      },
+      {
+        "ref": 25,
+        "where": "Cues: laughter and nervous cues"
+      },
+      {
+        "ref": 64,
+        "where": "rubric D12 laughter review"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-gravitas-009",
+    "name": "Own it in one breath, then fix",
+    "capability": "Gravitas & Composure",
+    "sub_capability": "Clean ownership of mistakes",
+    "summary": "When something you own went wrong, a short, plain admission followed straight away by the fix reads as strength. Long explanations read as defensiveness.",
+    "how_to_apply": "One sentence of ownership with 'I', one sentence of what you are doing about it. No preamble, no blame, no third sentence of justification.",
+    "example_line": "That's on me; I didn't check the supplier terms. I've fixed the contract and we'll have the signed copy Friday.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Transcript: 'that's on me', 'I got that wrong' followed by a next step within two sentences",
+      "apologies count low, no repeated apologies",
+      "Turn length on ownership turns (short is better)"
+    ],
+    "common_mistakes": [
+      "Apologising three times",
+      "Owning it while blaming circumstances in the same breath",
+      "Taking the blame for things that were not yours (over-ownership)"
+    ],
+    "drill": "Think of a recent mistake. Write and say the two-sentence version until it comes out in under 15 seconds.",
+    "sources": [
+      {
+        "ref": 59,
+        "where": "Owens & Hekman 2012: admitting mistakes as humble leadership"
+      },
+      {
+        "ref": 39,
+        "where": "Tenney et al.: calibration and credibility"
+      },
+      {
+        "ref": 1,
+        "where": "gravitas and integrity"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-gravitas-010",
+    "name": "A deliberate beat before hard answers",
+    "capability": "Gravitas & Composure",
+    "sub_capability": "Considered response",
+    "summary": "A short, visible pause before answering a difficult question can read as thought rather than panic, especially if a crisp answer follows. But long gaps before agreeing to a request can sound reluctant.",
+    "how_to_apply": "On a hard or important question, pause about one to two seconds, then open with a direct first sentence. On simple requests you are happy to grant, answer promptly.",
+    "example_line": "[1.5 s pause] No. We shouldn't launch in March, and here's why.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "median_response_gap_s on challenge turns vs. other turns",
+      "First sentence after the pause: direct answer vs. fillers or restart",
+      "Gap before agreeing to a request (>0.6 s can sound reluctant)"
+    ],
+    "common_mistakes": [
+      "Pausing then rambling (worse than no pause)",
+      "Pausing before saying yes to a favour",
+      "Pausing every time, making the conversation feel slow"
+    ],
+    "drill": "In a mock Q&A, take a full breath before each answer and open with yes, no or a number. The coach checks gaps and first words.",
+    "sources": [
+      {
+        "ref": 6,
+        "where": "Charisma Myth: wait before answering"
+      },
+      {
+        "ref": 46,
+        "where": "response gaps and perceived willingness"
+      },
+      {
+        "ref": 22,
+        "where": "buying time in spontaneous speaking"
+      }
+    ],
+    "evidence": "contested",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-voice-001",
+    "name": "Land the full stop",
+    "capability": "Vocal Authority & Delivery",
+    "sub_capability": "Landing statements",
+    "summary": "Let pitch fall at the end of a statement so it sounds finished and owned. A rise at the end of a recommendation turns it into a request for approval and invites interruption.",
+    "how_to_apply": "On recommendations, decisions and introductions, let the last stressed word drop to a low, settled pitch and hold a beat of silence after it.",
+    "example_line": "We go with option B. [falling, then pause]",
+    "observable_in_audio": "yes",
+    "markers": [
+      "final_rise_st < 0 on recommendation and decision turns",
+      "uptalk_share on statements (ignore list items and genuine questions)",
+      "Others starting to speak right after a rising ending"
+    ],
+    "common_mistakes": [
+      "Pushing the drop so hard it sounds curt or creaky",
+      "Correcting genuine questions into statements",
+      "Treating all rises as bad (list items rise naturally)"
+    ],
+    "drill": "Read ten recommendation sentences aloud, landing each with a falling pitch and one-beat pause. The coach checks final_rise_st on each.",
+    "sources": [
+      {
+        "ref": 6,
+        "where": "Charisma Myth: lowering intonation at sentence ends"
+      },
+      {
+        "ref": 25,
+        "where": "Cues: question inflection on introductions"
+      },
+      {
+        "ref": 23,
+        "where": "prosody in the vocal toolbox"
+      },
+      {
+        "ref": 57,
+        "where": "uptalk evidence is mixed"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-voice-002",
+    "name": "Speak from your natural pitch, not a forced low one",
+    "capability": "Vocal Authority & Delivery",
+    "sub_capability": "Settled pitch & resonance",
+    "summary": "Lower voices are associated with leadership perceptions, but later work found pitch predicts electability rather than ability, and forcing the voice down causes strain and creak. The coachable goal is your relaxed, breath-supported pitch that does not climb under pressure.",
+    "how_to_apply": "Find your relaxed pitch (e.g. say 'mm-hmm' as if agreeing with a friend) and return to it before key turns. Never try to sound deeper than that.",
+    "example_line": "(said at relaxed pitch) Let me take you through the risks.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "pitch_median_hz vs. Tom's relaxed baseline in high-stakes segments (stability, not lowness)",
+      "Creak or fry at phrase ends (not currently measured)",
+      "pitch_drift_st across the meeting"
+    ],
+    "common_mistakes": [
+      "Pushing the voice into the throat for gravitas",
+      "Monotone as a side-effect of forcing low",
+      "Comparing with someone else's voice"
+    ],
+    "drill": "Each morning for a week, hum and speak a sentence at relaxed pitch; before key meetings repeat once. The coach tracks pitch stability, not level.",
+    "sources": [
+      {
+        "ref": 36,
+        "where": "Mayew 2013; Klofstad 2012 and 2018"
+      },
+      {
+        "ref": 35,
+        "where": "Ko et al. 2015: power raised pitch slightly"
+      },
+      {
+        "ref": 24,
+        "where": "Love: finding the natural speaking voice"
+      },
+      {
+        "ref": 16,
+        "where": "Rodenburg: freeing the voice"
+      }
+    ],
+    "evidence": "contested",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-voice-003",
+    "name": "Breathe before the sentence, not mid-sentence",
+    "capability": "Vocal Authority & Delivery",
+    "sub_capability": "Settled pitch & resonance",
+    "summary": "Taking a low, full breath before you start a sentence gives the voice support to the end. Running out of breath leads to rushing, trailing off and creaky endings.",
+    "how_to_apply": "Before a key sentence, breathe low (belly expands, shoulders still), then speak the whole thought on that breath. Shorten sentences if you run out.",
+    "example_line": "[breath] Three things changed this quarter.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "Loudness tailing off at the end of sentences (loudness_db within-turn decline)",
+      "Gasps or audible mid-phrase breaths",
+      "Creaky voice at phrase ends (when measured)"
+    ],
+    "common_mistakes": [
+      "High, gasping chest breaths",
+      "Breathing so slowly it creates long gaps",
+      "Sentences too long for one breath"
+    ],
+    "drill": "Read a paragraph aloud taking one low breath per sentence. Repeat daily for a week; listen for sentence endings staying full.",
+    "sources": [
+      {
+        "ref": 24,
+        "where": "Set Your Voice Free: breathing chapter"
+      },
+      {
+        "ref": 16,
+        "where": "Rodenburg: breath and support"
+      },
+      {
+        "ref": 23,
+        "where": "Treasure: breathing for timbre"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-voice-004",
+    "name": "Stress the operative word",
+    "capability": "Vocal Authority & Delivery",
+    "sub_capability": "Vocal variety & emphasis",
+    "summary": "In each important sentence, one or two words carry the meaning. Giving them a pitch peak and slight loudness bump makes the point audible without any extra words.",
+    "how_to_apply": "Before speaking, pick the operative word (often the number, the contrast or the verb) and lift pitch and volume a touch on it.",
+    "example_line": "This isn't a COST problem. It's a SPEED problem.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "pitch_sd_st and loudness_sd_db on persuasive turns vs. baseline",
+      "Peaks aligning with contrast words, numbers and decisions",
+      "Monotone (low pitch_sd_st) on Tom's key turns"
+    ],
+    "common_mistakes": [
+      "Stressing every word (no contrast left)",
+      "Stressing filler words ('I REALLY think')",
+      "Sing-song delivery in a 1:1"
+    ],
+    "drill": "Mark one operative word per sentence in a short script and read it twice: flat, then stressed. The coach compares pitch_sd_st.",
+    "sources": [
+      {
+        "ref": 29,
+        "where": "Toastmasters vocal variety: where to place emphasis"
+      },
+      {
+        "ref": 7,
+        "where": "animated voice as a charismatic tactic"
+      },
+      {
+        "ref": 37,
+        "where": "Niebuhr: prosodic charisma"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-voice-005",
+    "name": "Widen your pitch range when persuading",
+    "capability": "Vocal Authority & Delivery",
+    "sub_capability": "Vocal variety & emphasis",
+    "summary": "Speakers rated as more charismatic use more pitch movement. Monotone delivery in a pitch or recommendation reads as low energy or low belief.",
+    "how_to_apply": "In persuasive turns, let your voice move more than in routine updates: higher on the new or exciting idea, lower on the conclusion.",
+    "example_line": "Imagine every branch with this in place by spring. That's the prize.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "pitch_range_st and pitch_sd_st up vs. Tom's baseline in persuasive turns",
+      "A drop of >25% in pitch_sd_st when Tom is making his case (rubric heuristic)"
+    ],
+    "common_mistakes": [
+      "Performative swoops that sound sales-y",
+      "Range collapsing under challenge",
+      "Copying a TED cadence in a small meeting"
+    ],
+    "drill": "Read a paragraph twice, 'to a friend' and 'to a board'; keep the board version varied but slower. Compare pitch_range_st.",
+    "sources": [
+      {
+        "ref": 37,
+        "where": "Niebuhr 2020; training study 2019"
+      },
+      {
+        "ref": 7,
+        "where": "animated voice tactic"
+      },
+      {
+        "ref": 55,
+        "where": "Schroeder & Epley 2015: voice conveys intellect"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-voice-006",
+    "name": "Contrast in loudness, not more loudness",
+    "capability": "Vocal Authority & Delivery",
+    "sub_capability": "Vocal variety & emphasis",
+    "summary": "Authority comes from varying volume to mark what matters, not from being loud throughout. Greater loudness variability is linked to perceived dominance and power.",
+    "how_to_apply": "Keep a comfortable base volume and add a small lift on key words; occasionally drop volume to draw people in on a crucial point.",
+    "example_line": "(quieter) And this is the part I'd ask you to remember.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "loudness_sd_db up vs. baseline in persuasive turns",
+      "Mean loudness_db relative to others in the same recording (only if Tom is markedly quieter)"
+    ],
+    "common_mistakes": [
+      "Shouting to hold the floor",
+      "Dropping so quiet that remote listeners lose words",
+      "Uniform volume throughout"
+    ],
+    "drill": "Deliver a two-minute update with one deliberate quiet moment and two lifted key words. The coach checks loudness_sd_db.",
+    "sources": [
+      {
+        "ref": 56,
+        "where": "Tusing & Dillard 2000: loudness and dominance"
+      },
+      {
+        "ref": 35,
+        "where": "Ko et al. 2015: loudness variability in high-power speakers"
+      },
+      {
+        "ref": 29,
+        "where": "Toastmasters: volume"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-voice-007",
+    "name": "Pause before the key word",
+    "capability": "Vocal Authority & Delivery",
+    "sub_capability": "Pace & strategic pause",
+    "summary": "A short silent pause just before an important word or number makes listeners attend to it and remember it better.",
+    "how_to_apply": "Place a half to one second silence right before the number, name or decision you want remembered.",
+    "example_line": "Revenue grew [pause] eleven percent.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "long_pauses or pauses_per_min with pauses located before numerals and decision words",
+      "Filled pauses ('um') in the same position (negative)"
+    ],
+    "common_mistakes": [
+      "Pausing before every word",
+      "Filling the pause with 'um'",
+      "Pauses so long in a competitive group that someone takes the floor"
+    ],
+    "drill": "Before any number in your next five meetings, pause one beat. The coach checks pause placement before numerals in the transcript.",
+    "sources": [
+      {
+        "ref": 43,
+        "where": "MacGregor et al. 2010"
+      },
+      {
+        "ref": 63,
+        "where": "Conrad et al. 2013: brief frequent pauses"
+      },
+      {
+        "ref": 24,
+        "where": "pace and pausing"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-voice-008",
+    "name": "Pause after the point to let it land",
+    "capability": "Vocal Authority & Delivery",
+    "sub_capability": "Pace & strategic pause",
+    "summary": "After a key point, silence gives listeners time to absorb it and signals confidence. Rushing on makes the point feel disposable.",
+    "how_to_apply": "After a headline, a striking fact or a decision, stop for one to two seconds before moving on.",
+    "example_line": "We're closing the Leeds site. [2 s] Here's how we'll look after the team.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "Silence after headline or decision sentences within Tom's turns",
+      "pause_time_s share in presentation turns vs. baseline"
+    ],
+    "common_mistakes": [
+      "Silence that ends up handing away the floor in a fast group",
+      "Pausing after trivial points too"
+    ],
+    "drill": "Record a three-minute presentation with a two-second silence after each of your three main points; listen back for impact.",
+    "sources": [
+      {
+        "ref": 9,
+        "where": "Talk Like TED: delivery"
+      },
+      {
+        "ref": 15,
+        "where": "TED Talks: delivery and pacing"
+      },
+      {
+        "ref": 29,
+        "where": "Toastmasters vocal variety"
+      },
+      {
+        "ref": 6,
+        "where": "Charisma Myth: pausing"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-voice-009",
+    "name": "Swap fillers for silence",
+    "capability": "Vocal Authority & Delivery",
+    "sub_capability": "Fluency",
+    "summary": "Filled pauses ('um', 'uh', 'you know') make listeners think you know less, and are the strongest single cue to perceived uncertainty. A silent pause does the same planning job without the cost.",
+    "how_to_apply": "When you feel a filler coming, close your mouth and pause instead. Focus on fillers just before your main claim first.",
+    "example_line": "The answer is [silence] no.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "fillers_per_100w vs. baseline (note ASR under-counts 'um')",
+      "Fillers within the 3 words before a claim or number",
+      "pauses_per_min rising as fillers fall (expected)"
+    ],
+    "common_mistakes": [
+      "Aiming for zero (sounds scripted)",
+      "Replacing 'um' with 'so' or 'basically'",
+      "Speaking faster to avoid pauses"
+    ],
+    "drill": "Record a two-minute impromptu answer daily for a week, replacing every 'um' with silence. The coach tracks fillers_per_100w.",
+    "sources": [
+      {
+        "ref": 42,
+        "where": "Brennan & Williams 1995; Kirkland et al. 2022"
+      },
+      {
+        "ref": 29,
+        "where": "Toastmasters Ah-Counter role"
+      },
+      {
+        "ref": 22,
+        "where": "fluency in spontaneous speaking"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-voice-010",
+    "name": "Finish the sentence you started",
+    "capability": "Vocal Authority & Delivery",
+    "sub_capability": "Fluency",
+    "summary": "False starts and abandoned sentences are part of the 'powerless' style that lowers credibility. Finishing one complete sentence beats starting three.",
+    "how_to_apply": "If you lose the thread, finish the current sentence simply, pause, then start the next thought cleanly.",
+    "example_line": "The risk is timing. [pause] Let me explain why.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Restarts and abandoned clauses in the transcript ('So we... the thing is... basically')",
+      "Fillers clustered around restarts"
+    ],
+    "common_mistakes": [
+      "Pressing on with a broken sentence",
+      "Starting with long subordinate clauses that cannot be finished"
+    ],
+    "drill": "Answer five unexpected questions with a rule: first sentence under 12 words and complete. The coach counts restarts.",
+    "sources": [
+      {
+        "ref": 38,
+        "where": "powerless speech: hesitation forms"
+      },
+      {
+        "ref": 42,
+        "where": "disfluency and perceived knowing"
+      },
+      {
+        "ref": 21,
+        "where": "Get to the Point: complete points"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-voice-011",
+    "name": "Late-night radio voice to calm things down",
+    "capability": "Vocal Authority & Delivery",
+    "sub_capability": "Tone register",
+    "summary": "A slower, lower, softer, downward-inflected voice calms a tense exchange better than telling people to calm down. Voss presents it as his de-escalation register.",
+    "how_to_apply": "When tension rises, drop your pace and volume a notch and let sentences end downward. Keep it warm, not patronising.",
+    "example_line": "(slow, low) I can hear this has been a frustrating few weeks.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "speaking_rate_wpm and loudness_db falling on Tom's turns as tension rises",
+      "Other speaker's loudness and turn length after Tom's turn (de-escalation)"
+    ],
+    "common_mistakes": [
+      "Sounding condescending or therapeutic",
+      "Using it in a routine meeting where it sounds odd",
+      "Monotone"
+    ],
+    "drill": "Rehearse three tense scenarios with a colleague using the calm register; the coach compares rate and loudness against your normal challenge replies.",
+    "sources": [
+      {
+        "ref": 26,
+        "where": "Never Split the Difference; MasterClass on tone"
+      }
+    ],
+    "evidence": "single-author",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-voice-012",
+    "name": "Warm, light default register",
+    "capability": "Vocal Authority & Delivery",
+    "sub_capability": "Tone register",
+    "summary": "For most work conversation, a relaxed, positive tone (smiling in the voice) makes people more cooperative and open than a flat or assertive tone. The assertive register is best kept for rare moments.",
+    "how_to_apply": "Default to an easy, upbeat tone; let a smile into the voice on greetings and requests. Reserve the clipped, assertive tone for a real line in the sand.",
+    "example_line": "Morning! Good news first, then one thing I need your help with.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Laughter and back-channels around Tom's turns",
+      "pitch_sd_st moderate (not flat) in routine turns",
+      "Others' reply speed and length"
+    ],
+    "common_mistakes": [
+      "Forced cheerfulness in bad-news moments",
+      "Never switching to firmness when needed"
+    ],
+    "drill": "In the first minute of each 1:1 this week, open with a light, warm line. The coach notes laughter and the other person's first-turn length.",
+    "sources": [
+      {
+        "ref": 26,
+        "where": "positive/playful voice"
+      },
+      {
+        "ref": 25,
+        "where": "Cues: vocal warmth"
+      },
+      {
+        "ref": 23,
+        "where": "timbre and the warm voice"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-voice-013",
+    "name": "Warm up the voice before big meetings",
+    "capability": "Vocal Authority & Delivery",
+    "sub_capability": "Settled pitch & resonance",
+    "summary": "Singers and actors warm up; speakers rarely do. A few minutes of humming, lip trills and sirens makes the first words of the meeting sound like the tenth.",
+    "how_to_apply": "Five minutes before: hum on a comfortable note, do lip trills sliding up and down, then say your opening line aloud twice.",
+    "example_line": "(warm-up) Mmm-mmm... brrr... 'Thanks all, two decisions today.'",
+    "observable_in_audio": "yes",
+    "markers": [
+      "Pitch and loudness stability in the first two turns vs. later turns",
+      "Creak or roughness in the opening turn"
+    ],
+    "common_mistakes": [
+      "Doing it in an open-plan office where it becomes a distraction",
+      "Over-straining the voice"
+    ],
+    "drill": "Do a five-minute warm-up before the next three presentations; compare your first-turn pitch and loudness with meetings where you did not.",
+    "sources": [
+      {
+        "ref": 24,
+        "where": "Love: vocal exercises"
+      },
+      {
+        "ref": 16,
+        "where": "Rodenburg: voice preparation"
+      },
+      {
+        "ref": 23,
+        "where": "Treasure: vocal warm-up exercises"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-voice-014",
+    "name": "Vary pace with meaning",
+    "capability": "Vocal Authority & Delivery",
+    "sub_capability": "Pace & strategic pause",
+    "summary": "Pace is a tool: slower for weight, risk and decisions; a little quicker for context and momentum. Studies disagree on whether faster or slower is better overall, which is a reason to vary, not to fix one speed.",
+    "how_to_apply": "Speed up slightly through background, slow down for the conclusion and any number, and avoid speeding up when challenged.",
+    "example_line": "(brisk) Quick background on the pilot. (slower) What it tells us is: we should stop.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "speaking_rate_wpm by segment within a turn",
+      "Rate rise >15-20% on challenge turns (rushing, rubric heuristic)"
+    ],
+    "common_mistakes": [
+      "One steady rate for everything",
+      "Rushing at the end of long turns",
+      "Dragging so slowly it sounds condescending"
+    ],
+    "drill": "Record a two-minute update in three segments (context, finding, recommendation) at three deliberate speeds. The coach plots rate by segment.",
+    "sources": [
+      {
+        "ref": 56,
+        "where": "Smith et al. 1975 rate; Tusing & Dillard 2000"
+      },
+      {
+        "ref": 37,
+        "where": "Jobs vs. Zuckerberg"
+      },
+      {
+        "ref": 24,
+        "where": "pace"
+      },
+      {
+        "ref": 23,
+        "where": "pace in the vocal toolbox"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-voice-015",
+    "name": "Short phrases, short sentences",
+    "capability": "Vocal Authority & Delivery",
+    "sub_capability": "Fluency",
+    "summary": "Shorter phrases between pauses and shorter sentences are easier to follow, easier to stress and leave fewer chances to stumble. The more charismatic speaker in Niebuhr's comparison used shorter phrases.",
+    "how_to_apply": "Break long thoughts into short sentences of one idea each. One clause, breathe, next clause.",
+    "example_line": "Sales are up. Margin is down. That's the problem we need to fix.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Average words per sentence in the transcript",
+      "Phrase length between pauses (from pause timestamps)",
+      "mean_turn_s alongside sentence length"
+    ],
+    "common_mistakes": [
+      "Choppy, robotic delivery",
+      "Over-simplifying nuanced content"
+    ],
+    "drill": "Take one long sentence from last week's transcript and rewrite it as three. Say both versions aloud and record.",
+    "sources": [
+      {
+        "ref": 37,
+        "where": "Niebuhr 2020: phrase lengths"
+      },
+      {
+        "ref": 10,
+        "where": "Bezos Blueprint: simple, short sentences"
+      },
+      {
+        "ref": 20,
+        "where": "Simply Said: simple sentences"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-voice-016",
+    "name": "Watch the creak at phrase ends",
+    "capability": "Vocal Authority & Delivery",
+    "sub_capability": "Settled pitch & resonance",
+    "summary": "Vocal fry (a creaky, low rattle at the end of phrases) often comes from running out of breath. One study found it penalised, but critics say the speakers were imitating fry unnaturally.",
+    "how_to_apply": "Take a breath before you run out, keep a little air at sentence ends, and avoid pushing pitch below your comfortable floor.",
+    "example_line": "(sentence ends clean, not crackling) ...and that's why I'd delay.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Creaky phonation at phrase ends (not yet measured by prosody.py)",
+      "Octave errors in pitch tracking can signal creak; treat pitch_median_hz drops with care"
+    ],
+    "common_mistakes": [
+      "Over-correcting into a breathy or pushed voice",
+      "Worrying about it more than content"
+    ],
+    "drill": "Read a paragraph aloud recording only sentence endings; repeat with a breath before each sentence and compare.",
+    "sources": [
+      {
+        "ref": 57,
+        "where": "Anderson et al. 2014 and Liberman critique"
+      },
+      {
+        "ref": 24,
+        "where": "breath support"
+      }
+    ],
+    "evidence": "contested",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-voice-017",
+    "name": "Project to the back of the room (or the far microphone)",
+    "capability": "Vocal Authority & Delivery",
+    "sub_capability": "Volume & projection",
+    "summary": "Presence needs to be heard. Quiet, swallowed speech loses authority in rooms and on calls, and makes people ask you to repeat, which costs momentum.",
+    "how_to_apply": "Aim your voice at the furthest person (or into the mic at a steady distance). Keep energy to the end of each sentence.",
+    "example_line": "(projected) Can everyone at the back hear me? Good.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "Tom's mean loudness_db vs. other speakers in the same recording (same mic)",
+      "Requests to repeat ('sorry, you dropped out')",
+      "Loudness decline across a sentence"
+    ],
+    "common_mistakes": [
+      "Shouting",
+      "Leaning away from the mic on calls",
+      "Projection that becomes broadcasting (third circle)"
+    ],
+    "drill": "In an empty room, speak a paragraph to the far wall without shouting; then do it to a phone recording from across the room and check every word is clear.",
+    "sources": [
+      {
+        "ref": 16,
+        "where": "Rodenburg: projection and the circles"
+      },
+      {
+        "ref": 23,
+        "where": "Treasure: volume"
+      },
+      {
+        "ref": 29,
+        "where": "Toastmasters: volume"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-clarity-001",
+    "name": "Bottom line up front",
+    "capability": "Clarity & Structure",
+    "sub_capability": "Answer first",
+    "summary": "Put the conclusion, recommendation or answer in the first sentence, then the reasons, then detail. A busy listener can stop at any point and still have the point.",
+    "how_to_apply": "Start substantive turns with 'My recommendation is', 'The answer is' or 'In short'. Context comes after, and only if needed.",
+    "example_line": "My recommendation is we delay two weeks. Two reasons: payments aren't tested and the contract isn't signed.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Position of the first claim or recommendation phrase in substantive turns (target: within ~25 words)",
+      "certainty_per_100w in turn openings",
+      "Others asking 'so what are you proposing?' (negative)"
+    ],
+    "common_mistakes": [
+      "Chronological storytelling before the point",
+      "Leading with caveats",
+      "Answering first then undoing it with ten qualifications"
+    ],
+    "drill": "Before each update this week, write one sentence starting 'I recommend' or 'The answer is' and say it first. The coach checks claim position.",
+    "sources": [
+      {
+        "ref": 11,
+        "where": "Pyramid Principle: start with the answer"
+      },
+      {
+        "ref": 12,
+        "where": "BLUF convention"
+      },
+      {
+        "ref": 10,
+        "where": "Bezos Blueprint: clear, direct writing"
+      },
+      {
+        "ref": 20,
+        "where": "Simply Said: lead with the message"
+      },
+      {
+        "ref": 22,
+        "where": "structures for spontaneous speech"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-clarity-002",
+    "name": "The 'I believe that' test",
+    "capability": "Clarity & Structure",
+    "sub_capability": "Point, not topic",
+    "summary": "A topic is a subject area; a point is a claim someone could disagree with. If your opening cannot follow 'I believe that...', you have a topic, not a point.",
+    "how_to_apply": "Before speaking, finish the sentence 'I believe that...' and use the completion as your opening line.",
+    "example_line": "(not 'Let's talk about hiring') We should pause hiring until the March numbers are in.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Turn openings that name a subject ('on pricing', 'about the roadmap') without a claim",
+      "Presence of a contestable claim in the first two sentences"
+    ],
+    "common_mistakes": [
+      "Points so hedged they become topics again",
+      "Multiple competing points in one turn"
+    ],
+    "drill": "Take the agenda of your next meeting and turn each item into an 'I believe that' sentence before you go in.",
+    "sources": [
+      {
+        "ref": 21,
+        "where": "Get to the Point: point vs. topic, 'I believe that' test"
+      }
+    ],
+    "evidence": "single-author",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-clarity-003",
+    "name": "Point, reason, example, point",
+    "capability": "Clarity & Structure",
+    "sub_capability": "Signposted structure",
+    "summary": "A simple four-beat structure for a contribution: state the point, give the main reason, give one concrete example, restate the point. It keeps impromptu contributions short and complete.",
+    "how_to_apply": "Use PREP for any contribution longer than a sentence or two; aim for under a minute.",
+    "example_line": "We should keep the London office. It's where our clients are. Last month three of five new deals came from walk-in meetings. So London stays.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Restatement of the opening claim at the end of the turn",
+      "A concrete example (number, name, event) inside the turn",
+      "Turn length 30-60 s for contributions"
+    ],
+    "common_mistakes": [
+      "Three examples instead of one",
+      "Skipping the closing restatement",
+      "Using it robotically in casual chat"
+    ],
+    "drill": "Answer five practice questions with PREP aloud, each under 45 seconds. The coach checks the four beats.",
+    "sources": [
+      {
+        "ref": 29,
+        "where": "Toastmasters table topics / evaluation practice"
+      },
+      {
+        "ref": 22,
+        "where": "Think Faster, Talk Smarter: structure"
+      },
+      {
+        "ref": 21,
+        "where": "supporting a point"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-clarity-004",
+    "name": "Situation, complication, question, answer",
+    "capability": "Clarity & Structure",
+    "sub_capability": "Answer first",
+    "summary": "For topics that need context, a short opener names the situation everyone agrees on, the complication that changed it, the question this raises, and then your answer. It keeps context brief and purposeful.",
+    "how_to_apply": "Spend one sentence each on situation, complication and implied question, then give your answer and support.",
+    "example_line": "We planned to launch in March. The supplier has slipped six weeks. So: launch late or launch thin? I'd launch thin.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Context portion of a turn kept to two or three sentences before the answer",
+      "Explicit answer following the complication"
+    ],
+    "common_mistakes": [
+      "Letting the situation part grow into a history lesson",
+      "Omitting the answer"
+    ],
+    "drill": "Rewrite your next status update as four lines (S, C, Q, A) and say it in under 40 seconds.",
+    "sources": [
+      {
+        "ref": 11,
+        "where": "Pyramid Principle: SCQ introduction"
+      }
+    ],
+    "evidence": "single-author",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-clarity-005",
+    "name": "Announce the number of points",
+    "capability": "Clarity & Structure",
+    "sub_capability": "Signposted structure",
+    "summary": "Telling listeners how many points are coming ('three reasons') gives them a map, signals preparation and makes it easier to hold the floor until you finish.",
+    "how_to_apply": "Say the number before the list, then label each one ('first', 'second'). Keep it to two or three.",
+    "example_line": "Two risks. First, supplier lead time. Second, the contract.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Signpost phrases ('two things', 'first', 'second', 'finally') in the transcript",
+      "Announced count matching delivered count"
+    ],
+    "common_mistakes": [
+      "Announcing three and delivering five",
+      "Forgetting the third mid-way",
+      "Signposting trivial remarks"
+    ],
+    "drill": "In every substantive turn this week, announce a count before listing. The coach checks announced vs. delivered counts.",
+    "sources": [
+      {
+        "ref": 11,
+        "where": "Pyramid Principle: grouping"
+      },
+      {
+        "ref": 20,
+        "where": "Simply Said: organising content"
+      },
+      {
+        "ref": 22,
+        "where": "structure in spontaneous speech"
+      },
+      {
+        "ref": 29,
+        "where": "Toastmasters: speech organisation"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-clarity-006",
+    "name": "Distinct reasons that cover the case",
+    "capability": "Clarity & Structure",
+    "sub_capability": "Grouped, non-overlapping support",
+    "summary": "Supporting points should not overlap and together should cover what the listener needs. Overlapping reasons sound like padding; gaps invite the obvious challenge.",
+    "how_to_apply": "Before a key meeting, list your reasons and check: does any repeat another? Is there an obvious category missing (cost, risk, people, time)?",
+    "example_line": "Three reasons: it's cheaper, it's faster, and it's lower risk.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Repeated reasons in different words within one turn",
+      "Others raising an obvious category Tom omitted"
+    ],
+    "common_mistakes": [
+      "Over-engineering structure in casual conversation",
+      "Forcing a four-box framework onto everything"
+    ],
+    "drill": "Take last week's main recommendation and sort its reasons into non-overlapping groups. Cut the duplicates.",
+    "sources": [
+      {
+        "ref": 11,
+        "where": "MECE grouping"
+      }
+    ],
+    "evidence": "single-author",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-clarity-007",
+    "name": "What? So what? Now what?",
+    "capability": "Clarity & Structure",
+    "sub_capability": "Signposted structure",
+    "summary": "A three-part structure for impromptu contributions: what is happening, why it matters, what we should do next. Useful when asked for a view without warning.",
+    "how_to_apply": "When called on, organise your reply into the three beats, one or two sentences each.",
+    "example_line": "Churn rose to 4%. That's two months of growth gone. I'd like us to call the top twenty accounts this week.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Presence of an implication ('which means') and a next step in impromptu turns",
+      "Length of impromptu turns (under ~60 s)"
+    ],
+    "common_mistakes": [
+      "Skipping the 'so what' and going straight to action",
+      "Using it for questions that need a yes or no"
+    ],
+    "drill": "Ask a colleague for five random workplace questions; answer each with What/So what/Now what in under 45 seconds.",
+    "sources": [
+      {
+        "ref": 22,
+        "where": "Think Faster, Talk Smarter: What-So What-Now What"
+      }
+    ],
+    "evidence": "single-author",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-clarity-008",
+    "name": "Problem, solution, benefit",
+    "capability": "Clarity & Structure",
+    "sub_capability": "Signposted structure",
+    "summary": "For proposals: name the problem, propose the solution, state the benefit. It moves a listener from concern to action in three beats.",
+    "how_to_apply": "Frame proposals as a problem the listener recognises, your fix, and what they get.",
+    "example_line": "Approvals take nine days. If we delegate sign-off under £10k, it'll be two. Your team gets a week back on every deal.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Proposal turns containing all three parts",
+      "Benefit stated in the listener's terms"
+    ],
+    "common_mistakes": [
+      "Overstating the problem to sell the solution",
+      "Benefits that matter to Tom, not the listener"
+    ],
+    "drill": "Draft your next proposal in three sentences using the pattern and rehearse it aloud.",
+    "sources": [
+      {
+        "ref": 22,
+        "where": "Think Faster, Talk Smarter: Problem-Solution-Benefit"
+      }
+    ],
+    "evidence": "single-author",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-clarity-009",
+    "name": "Make abstractions concrete",
+    "capability": "Clarity & Structure",
+    "sub_capability": "Concrete, plain language",
+    "summary": "Concrete language (specific numbers, names, objects, examples) is easier to understand, more memorable and makes listeners feel heard. Abstract corporate language feels evasive.",
+    "how_to_apply": "For every abstract claim, add one concrete anchor: a number, a person, a place or a picture.",
+    "example_line": "(not 'improve engagement') Get each branch manager opening the dashboard before 9am.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Numerals, named people and concrete nouns per substantive turn",
+      "Jargon phrases ('drive synergies', 'going forward', 'leverage')"
+    ],
+    "common_mistakes": [
+      "Drowning listeners in numbers",
+      "Anecdotes that are concrete but irrelevant"
+    ],
+    "drill": "The coach picks three abstract sentences from last week's transcript; rewrite each with a number, a person or an image.",
+    "sources": [
+      {
+        "ref": 58,
+        "where": "Packard & Berger 2021: concrete language"
+      },
+      {
+        "ref": 10,
+        "where": "Bezos Blueprint: plain language and analogies"
+      },
+      {
+        "ref": 15,
+        "where": "TED Talks: explanation through examples"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-clarity-010",
+    "name": "Plain words and no weasel words",
+    "capability": "Clarity & Structure",
+    "sub_capability": "Concrete, plain language",
+    "summary": "Simple words and short sentences make you sound clearer and more confident. Vague softeners ('sort of', 'kind of', 'basically') and passive voice blur ownership.",
+    "how_to_apply": "Choose the plain word, use active voice ('we missed the date', not 'the date was missed'), and remove vague softeners.",
+    "example_line": "We missed the date because we underestimated testing.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "hedges_per_100w (note 'sort of' / 'kind of' counted there)",
+      "Passive constructions on accountability statements",
+      "Jargon density"
+    ],
+    "common_mistakes": [
+      "Over-simplifying technical content for an expert audience",
+      "Sounding blunt to the point of rudeness"
+    ],
+    "drill": "Edit a page of your own notes to an easy reading level, then present from the edited version.",
+    "sources": [
+      {
+        "ref": 10,
+        "where": "Bezos Blueprint: plain writing, weasel words, active voice"
+      },
+      {
+        "ref": 20,
+        "where": "Simply Said: simple language"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-clarity-011",
+    "name": "Close by restating the headline",
+    "capability": "Clarity & Structure",
+    "sub_capability": "Clean landing",
+    "summary": "End a contribution or presentation by returning to the main point in a single sentence. Listeners remember beginnings and ends; a trailing ending wastes the strongest position.",
+    "how_to_apply": "Finish substantive turns with 'So, ...' plus your headline, then stop.",
+    "example_line": "So: delay two weeks, and we launch clean.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Final sentence of a turn matching the opening claim",
+      "Turn-final trailers ('anyway', 'so yeah', 'I don't know')"
+    ],
+    "common_mistakes": [
+      "Adding new information in the close",
+      "Summarising at length"
+    ],
+    "drill": "For each turn longer than 30 seconds this week, end with a 'So,' sentence. The coach checks the last sentence of long turns.",
+    "sources": [
+      {
+        "ref": 11,
+        "where": "Pyramid Principle"
+      },
+      {
+        "ref": 15,
+        "where": "TED Talks: ending well"
+      },
+      {
+        "ref": 29,
+        "where": "Toastmasters: conclusions"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-clarity-012",
+    "name": "Build from what they already know",
+    "capability": "Clarity & Structure",
+    "sub_capability": "Concrete, plain language",
+    "summary": "New ideas land when they are built step by step from concepts the audience already has. Starting from the listener's existing model keeps you from losing them.",
+    "how_to_apply": "Identify one concept the audience already holds and anchor your explanation to it before adding the new piece.",
+    "example_line": "You know how we price consulting by day rate. This works the same, except the 'day' is a data feed.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Explanations that reference the listener's known context",
+      "Clarifying questions from others after Tom's explanations (fewer is better)"
+    ],
+    "common_mistakes": [
+      "Patronising experts",
+      "Taking too long building the base"
+    ],
+    "drill": "Explain a complex part of your strategy to a non-specialist in two minutes, starting from something they already know.",
+    "sources": [
+      {
+        "ref": 15,
+        "where": "TED Talks: building the idea from familiar concepts"
+      },
+      {
+        "ref": 13,
+        "where": "Resonate: start where the audience is"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-clarity-013",
+    "name": "Signal the transitions",
+    "capability": "Clarity & Structure",
+    "sub_capability": "Signposted structure",
+    "summary": "Short transition lines ('That's the cost side; now the risk') tell listeners where they are. They make long contributions feel organised and make it harder to be interrupted mid-structure.",
+    "how_to_apply": "When moving between parts, say where you've been and where you're going in one short sentence.",
+    "example_line": "That's why it's affordable. Now, why it's safe.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Transition phrases in turns longer than ~60 s",
+      "Interruptions of Tom mid-structure (fewer is better)"
+    ],
+    "common_mistakes": [
+      "Over-signposting short answers",
+      "Transitions that repeat the whole previous section"
+    ],
+    "drill": "Present a three-part update and record it; check that each part is introduced with a one-line transition.",
+    "sources": [
+      {
+        "ref": 20,
+        "where": "Simply Said: organising"
+      },
+      {
+        "ref": 29,
+        "where": "Toastmasters: transitions"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-clarity-014",
+    "name": "Know, feel, do: define your intent first",
+    "capability": "Clarity & Structure",
+    "sub_capability": "Answer first",
+    "summary": "Before any important communication, decide what you want the listener to know, feel and do afterwards. Without that, people over-explain and drift.",
+    "how_to_apply": "Write the three lines before the meeting; open with the 'do' if it is a request, with the 'know' if it is an update.",
+    "example_line": "(prep note) Know: we're behind. Feel: confident we'll recover. Do: approve two contractors.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Whether the 'do' (ask) appears explicitly in the transcript",
+      "Drift: proportion of turn time on topics outside the stated intent"
+    ],
+    "common_mistakes": [
+      "Defining the intent but never stating the ask",
+      "Too many intents in one meeting"
+    ],
+    "drill": "Before the next three key meetings, write know/feel/do. The coach checks whether the 'do' was said aloud.",
+    "sources": [
+      {
+        "ref": 20,
+        "where": "Simply Said: define intent"
+      },
+      {
+        "ref": 17,
+        "where": "Power of Presence: intention and feeling"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-conviction-001",
+    "name": "Cut diffuse hedges from recommendations",
+    "capability": "Conviction & Calibrated Certainty",
+    "sub_capability": "Committed language",
+    "summary": "Stacked hedges ('I sort of think maybe') lower credibility and persuasion. In recommendation and decision turns, say what you think.",
+    "how_to_apply": "In recommendation turns, delete 'just', 'sort of', 'maybe', 'I guess', 'a bit'. Keep at most one precise qualifier, after the claim.",
+    "example_line": "(not 'I guess maybe B?') I'd back option B.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "hedges_per_100w in recommendation turns vs. baseline",
+      "certainty_per_100w in decision moments",
+      "British politeness forms in routine turns should not be over-penalised"
+    ],
+    "common_mistakes": [
+      "Removing all softening and sounding brusque with UK colleagues",
+      "Replacing hedges with false certainty"
+    ],
+    "drill": "The coach lists your top five hedge phrases each week; pick one to drop in recommendation turns for the next week.",
+    "sources": [
+      {
+        "ref": 38,
+        "where": "powerless speech research"
+      },
+      {
+        "ref": 10,
+        "where": "Bezos Blueprint: weasel words"
+      },
+      {
+        "ref": 1,
+        "where": "confidence and decisiveness in gravitas"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-conviction-002",
+    "name": "Commit, then qualify once",
+    "capability": "Conviction & Calibrated Certainty",
+    "sub_capability": "Precise uncertainty",
+    "summary": "State your position first, then the single most important uncertainty and how you will handle it. Committed and calibrated beats both diffuse hedging and blanket certainty.",
+    "how_to_apply": "Use the pattern: 'I recommend X. The main risk is Y; here's how we'd handle it.' One qualifier, after the commitment.",
+    "example_line": "I'd go with B. The risk I can't size yet is lead time; I'll have it Friday.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Recommendation phrase preceding the qualifier in the same turn",
+      "Count of qualifiers per recommendation (one is ideal)"
+    ],
+    "common_mistakes": [
+      "Qualifying before committing",
+      "Listing every conceivable risk",
+      "No qualifier on a genuinely uncertain call"
+    ],
+    "drill": "Practise five recommendations aloud using the commit-then-qualify pattern; the coach checks order in the transcript.",
+    "sources": [
+      {
+        "ref": 39,
+        "where": "Tenney et al.: calibration trumps confidence"
+      },
+      {
+        "ref": 40,
+        "where": "Gaertig & Simmons 2018"
+      },
+      {
+        "ref": 64,
+        "where": "rubric D2 drill"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-conviction-003",
+    "name": "Put a number on your confidence",
+    "capability": "Conviction & Calibrated Certainty",
+    "sub_capability": "Precise uncertainty",
+    "summary": "People do not dislike uncertain advice when it is expressed precisely (ranges, probabilities, 'more likely than'). Vague 'I'm not sure' is what costs credibility.",
+    "how_to_apply": "Replace 'I'm not sure' with a likelihood, range or comparison: '70%', 'between 3 and 5 weeks', 'more likely than not'.",
+    "example_line": "I'd put it at 70% we hit March; the range is three to five weeks late if we don't.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Numeric probabilities, ranges or comparative likelihood phrases (positive)",
+      "'I'm not sure / no idea' without a range (negative)"
+    ],
+    "common_mistakes": [
+      "False precision on things you have no basis to estimate",
+      "Using numbers to avoid committing to a recommendation"
+    ],
+    "drill": "For a week, every time you would say 'not sure', give a percentage or range instead. The coach counts calibrated phrases.",
+    "sources": [
+      {
+        "ref": 40,
+        "where": "Gaertig & Simmons 2018: uncertain advice not disliked when precise"
+      },
+      {
+        "ref": 39,
+        "where": "Tenney et al.: calibration"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-conviction-004",
+    "name": "Say what would change your mind",
+    "capability": "Conviction & Calibrated Certainty",
+    "sub_capability": "Precise uncertainty",
+    "summary": "Naming the evidence that would change your view shows confidence and openness at once. It reads as conviction held for reasons, not ego.",
+    "how_to_apply": "After stating a position on a contested topic, add one line: 'What would change my mind is...'",
+    "example_line": "I'd keep the price. What would change my mind is if churn tops 5% next month.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "'What would change my mind' / 'if X, I'd rethink' phrases",
+      "Other speakers responding with evidence rather than opposition"
+    ],
+    "common_mistakes": [
+      "Naming a condition that could never be met",
+      "Using it so often it sounds unsure"
+    ],
+    "drill": "In the next two debates, add a 'change my mind' line after your position.",
+    "sources": [
+      {
+        "ref": 45,
+        "where": "Yeomans et al. 2020: receptiveness"
+      },
+      {
+        "ref": 40,
+        "where": "expressing uncertainty without penalty"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-conviction-005",
+    "name": "Drop the permission tags",
+    "capability": "Conviction & Calibrated Certainty",
+    "sub_capability": "No permission-seeking or over-apology",
+    "summary": "Tags like 'does that make sense?', 'is that OK?' or 'right?' after a recommendation turn it into a request for approval. Tag questions lower perceived power and credibility.",
+    "how_to_apply": "End recommendations with a full stop. If you want input, ask a real question: 'What would you push back on?'",
+    "example_line": "(not 'We delay, if that's OK?') We delay. What would you push back on?",
+    "observable_in_audio": "yes",
+    "markers": [
+      "Tags at the end of recommendation turns ('make sense?', 'if that's OK', 'right?')",
+      "uptalk_share and final_rise_st on those turns"
+    ],
+    "common_mistakes": [
+      "Removing all invitations to respond",
+      "Replacing tags with an aggressive 'any objections?'"
+    ],
+    "drill": "The coach lists every tag after a recommendation for one week. Replace each with a full stop or a genuine open question.",
+    "sources": [
+      {
+        "ref": 38,
+        "where": "Hosman & Siltanen: tag questions and perceived power"
+      },
+      {
+        "ref": 6,
+        "where": "Charisma Myth: not seeking approval"
+      },
+      {
+        "ref": 25,
+        "where": "Cues: approval-seeking cues"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-conviction-006",
+    "name": "Contribute without apologising",
+    "capability": "Conviction & Calibrated Certainty",
+    "sub_capability": "No permission-seeking or over-apology",
+    "summary": "Opening with 'sorry, can I just...' or 'this might be a silly question' frames your contribution as an imposition and lowers its weight before you start.",
+    "how_to_apply": "Start with the content. If you need to break in, use the other person's name and a bridge ('Sam, building on that...').",
+    "example_line": "(not 'Sorry, quick thing, might be stupid') One question on the numbers.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "apologies count, especially at turn openings",
+      "Minimisers ('just', 'quick', 'silly', 'probably wrong but') in the first five words"
+    ],
+    "common_mistakes": [
+      "Cutting genuine apologies when you did err",
+      "Becoming brusque when interrupting"
+    ],
+    "drill": "For one week, no 'sorry' to open a contribution. The coach counts turn-opening apologies.",
+    "sources": [
+      {
+        "ref": 38,
+        "where": "powerless speech features"
+      },
+      {
+        "ref": 1,
+        "where": "gravitas and confidence"
+      },
+      {
+        "ref": 25,
+        "where": "Cues: self-deprecating openers"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-conviction-007",
+    "name": "Use 'I' for judgements and decisions",
+    "capability": "Conviction & Calibrated Certainty",
+    "sub_capability": "Owning the view",
+    "summary": "Presence includes owning your view. 'People are saying' or 'it was felt that' hides the judgement; 'I recommend' or 'my view is' owns it. Keep 'we' for shared work.",
+    "how_to_apply": "When giving a judgement, use first person singular; when describing team work, use 'we'.",
+    "example_line": "My view is we're not ready. The team has done great work; I'm the one saying wait.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "'I recommend / my view / I've decided' in decision turns",
+      "Passive or third-party attributions in place of a view ('it's been suggested')"
+    ],
+    "common_mistakes": [
+      "'I' for team achievements",
+      "Hiding behind 'we' when delivering bad news you decided"
+    ],
+    "drill": "Review three past recommendations; rewrite each opening line in first person, and use that form next time.",
+    "sources": [
+      {
+        "ref": 1,
+        "where": "gravitas: confidence and decisiveness"
+      },
+      {
+        "ref": 18,
+        "where": "Bates: confidence and authenticity facets"
+      },
+      {
+        "ref": 54,
+        "where": "we-referencing; balance with ownership"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-conviction-008",
+    "name": "Give a verdict at the decision point",
+    "capability": "Conviction & Calibrated Certainty",
+    "sub_capability": "Committing in the moment",
+    "summary": "When the room needs a position, give one: yes, no, or not yet with a date. Executives name decisiveness as a core gravitas trait; dithering at decision points costs more than an imperfect call.",
+    "how_to_apply": "When asked for a decision, open with the verdict word, then the reason. If you need more data, say exactly what and by when.",
+    "example_line": "Not yet. I need the legal view, and I'll decide by Thursday.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Direct verdict word (yes/no/not yet/I'd do X) in the first sentence of decision turns",
+      "Others asking 'so is that a yes?' (negative)"
+    ],
+    "common_mistakes": [
+      "Deciding things that are not yours to decide (Leadership coach territory)",
+      "Faux-decisiveness without information"
+    ],
+    "drill": "In the next five decision moments, open with a verdict word. The coach checks first words.",
+    "sources": [
+      {
+        "ref": 1,
+        "where": "gravitas: decisiveness"
+      },
+      {
+        "ref": 2,
+        "where": "2022 survey: confidence and decisiveness remain top"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-conviction-009",
+    "name": "Do not overclaim",
+    "capability": "Conviction & Calibrated Certainty",
+    "sub_capability": "Precise uncertainty",
+    "summary": "Confidence attracts trust at first, but confident sources who turn out to be wrong lose more credibility than cautious ones. Certainty should match your evidence.",
+    "how_to_apply": "Match your words to your evidence: 'I know' for facts you have checked, 'I expect' for forecasts, 'I suspect' for hunches.",
+    "example_line": "I know we lost the Hartley account. I suspect pricing was part of it.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Certainty words ('definitely', 'guaranteed', 'always') attached to forecasts",
+      "Later recordings where those forecasts are revisited"
+    ],
+    "common_mistakes": [
+      "Overcorrecting into constant hedging",
+      "Hiding behind 'I suspect' to avoid commitment"
+    ],
+    "drill": "For one week, tag each claim you make in meetings as know/expect/suspect in your notes afterwards and check your wording matched.",
+    "sources": [
+      {
+        "ref": 39,
+        "where": "Tenney et al. 2007/2008"
+      },
+      {
+        "ref": 41,
+        "where": "Price & Stone 2004: confidence heuristic"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-conviction-010",
+    "name": "Express confidence you actually have",
+    "capability": "Conviction & Calibrated Certainty",
+    "sub_capability": "Committed language",
+    "summary": "Listeners prefer advisors who sound confident, often even when they are overconfident. If you are confident, sound it; under-signalling real confidence leaves influence on the table.",
+    "how_to_apply": "When you are sure, say so plainly and once: 'I'm confident about this because...'",
+    "example_line": "I'm confident on this one: we've run it in three markets and it held each time.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "certainty_per_100w on topics where Tom has strong evidence",
+      "Hedges attached to well-evidenced claims (mismatch)"
+    ],
+    "common_mistakes": [
+      "Using the heuristic to mask weak evidence (see 'Do not overclaim')",
+      "Stacking intensifiers ('really, really sure')"
+    ],
+    "drill": "Pick the three topics where you have the strongest evidence; prepare one confident sentence for each and use it when they come up.",
+    "sources": [
+      {
+        "ref": 41,
+        "where": "Price & Stone 2004"
+      },
+      {
+        "ref": 40,
+        "where": "Gaertig & Simmons 2018: confident advisors favoured"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-conviction-011",
+    "name": "Translate British understatement on serious points",
+    "capability": "Conviction & Calibrated Certainty",
+    "sub_capability": "Committed language",
+    "summary": "Understatement ('not ideal', 'a bit behind') is normal in UK business but can hide the severity of an issue, especially for international or direct-culture listeners. On serious points, say the plain version.",
+    "how_to_apply": "When the issue is serious, state its size plainly, then soften the delivery if needed with tone rather than words.",
+    "example_line": "(not 'it's a bit behind') It's six weeks late and that puts the contract at risk.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Downgraders ('a bit', 'slightly', 'not ideal', 'quite') attached to serious issues",
+      "Follow-up questions from others seeking the real size of the problem"
+    ],
+    "common_mistakes": [
+      "Abandoning politeness entirely with UK colleagues",
+      "Over-dramatising"
+    ],
+    "drill": "Take three understated lines from recent transcripts and rewrite them with the plain severity; use that phrasing in the next international call.",
+    "sources": [
+      {
+        "ref": 32,
+        "where": "Culture Map: downgraders and directness"
+      },
+      {
+        "ref": 64,
+        "where": "rubric 4.3 UK notes"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-conviction-012",
+    "name": "Hold your position under first pushback",
+    "capability": "Conviction & Calibrated Certainty",
+    "sub_capability": "Committing in the moment",
+    "summary": "Folding at the first challenge signals that the view was not really held. Restate your position with reasons unless you hear a new fact or argument.",
+    "how_to_apply": "When challenged, ask yourself: is this new information? If not, acknowledge and restate. If yes, say so and update openly.",
+    "example_line": "I hear the concern. Nothing in it changes the numbers, so I'd still go ahead.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Position reversals within one exchange without new information in the challenger's turn",
+      "Restatement phrases after challenge"
+    ],
+    "common_mistakes": [
+      "Stubbornness in the face of a genuinely new fact",
+      "Restating louder rather than clearer"
+    ],
+    "drill": "In a practice debate, hold your view through two challenges without new facts, then update when a new fact is introduced.",
+    "sources": [
+      {
+        "ref": 1,
+        "where": "gravitas: confidence"
+      },
+      {
+        "ref": 18,
+        "where": "Bates: confidence and assertiveness"
+      },
+      {
+        "ref": 41,
+        "where": "confidence and credibility"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-conviction-013",
+    "name": "Strategic modesty when your expertise is known",
+    "capability": "Conviction & Calibrated Certainty",
+    "sub_capability": "Precise uncertainty",
+    "summary": "One study found that established experts who expressed some uncertainty were more persuasive (surprise draws attention), but a large 2024 replication did not support this and found certainty helped regardless. Treat as an experiment, not a rule.",
+    "how_to_apply": "Where everyone already knows you are the expert, you might try opening with a measured, less-than-certain framing and see how it lands.",
+    "example_line": "I've done twenty of these and I'm still only 70% sure on this one. Here's why.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Calibrated phrases from Tom on his core expertise topics",
+      "Others' engagement (questions, turn length) after such openings"
+    ],
+    "common_mistakes": [
+      "Using modesty on topics where you are not seen as expert",
+      "Expressing doubt you do not feel"
+    ],
+    "drill": "Try it in two expert contexts and compare engagement with two where you open confidently. Report as personal data only.",
+    "sources": [
+      {
+        "ref": 62,
+        "where": "Karmarkar & Tormala 2010; Løhre et al. 2024 replication"
+      }
+    ],
+    "evidence": "contested",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-charisma-001",
+    "name": "A short story with a point",
+    "capability": "Charisma & Storytelling",
+    "sub_capability": "Story & anecdote",
+    "summary": "A brief anecdote with a person, a moment and a point is more persuasive than an abstract claim: listeners get absorbed and notice fewer weak points. Stories are among the charismatic tactics that raise leadership ratings.",
+    "how_to_apply": "Tell 30-60 second stories: who, what happened at a specific moment, and the one-line point. Lead into the point you are making, not away from it.",
+    "example_line": "Last week a branch manager in Leeds opened the tool three times before nine. That's the bar: daily and useful.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Past-tense narrative segments with a named person or place",
+      "A point sentence following the story",
+      "Others referring back to the story later"
+    ],
+    "common_mistakes": [
+      "Stories with no point",
+      "Long setups",
+      "Stories where Tom is always the hero"
+    ],
+    "drill": "Build a bank of five 45-second work stories, each tagged with the point it makes. Use one in a meeting each week.",
+    "sources": [
+      {
+        "ref": 52,
+        "where": "Green & Brock 2000: transportation"
+      },
+      {
+        "ref": 7,
+        "where": "Charismatic Leadership Tactics: stories and anecdotes"
+      },
+      {
+        "ref": 9,
+        "where": "Talk Like TED: storytelling"
+      },
+      {
+        "ref": 15,
+        "where": "TED Talks: narration"
+      },
+      {
+        "ref": 13,
+        "where": "Resonate: story structure"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-charisma-002",
+    "name": "One fresh image for the core idea",
+    "capability": "Charisma & Storytelling",
+    "sub_capability": "Metaphor & analogy",
+    "summary": "A metaphor or analogy makes an abstract idea concrete and memorable. It is the charismatic tactic most often adopted by others, which spreads your framing.",
+    "how_to_apply": "For each main idea, find one image from everyday life. Use it early and repeat it once.",
+    "example_line": "This migration is a bridge, not a destination: we cross it and keep going.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "'It's like / think of it as / imagine' phrases",
+      "Others reusing Tom's image later in the meeting (strong positive)"
+    ],
+    "common_mistakes": [
+      "Mixed or tired metaphors ('move the needle')",
+      "Metaphors that need explaining",
+      "Too many images competing"
+    ],
+    "drill": "Rewrite your current strategic message using one metaphor; test it on two colleagues and keep the one they repeat back.",
+    "sources": [
+      {
+        "ref": 7,
+        "where": "CLTs: metaphors, similes, analogies"
+      },
+      {
+        "ref": 8,
+        "where": "Tur et al. 2022: verbal charisma in TED"
+      },
+      {
+        "ref": 10,
+        "where": "Bezos Blueprint: metaphor and analogy"
+      },
+      {
+        "ref": 9,
+        "where": "Talk Like TED: mental pictures"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-charisma-003",
+    "name": "Not this, but that",
+    "capability": "Charisma & Storytelling",
+    "sub_capability": "Contrast & rhythm",
+    "summary": "Contrasts ('not a cost problem, a speed problem') sharpen the point by showing what it is not. They are among the most effective charismatic tactics and give the voice a natural place to stress.",
+    "how_to_apply": "Frame your main point as a contrast with the obvious or old view, and stress the contrasting words.",
+    "example_line": "We're not selling software. We're selling time back.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "'Not X but Y', 'we used to... now...' structures",
+      "pitch and loudness peaks on contrasted words (loudness_sd_db, pitch_sd_st)"
+    ],
+    "common_mistakes": [
+      "Straw-manning colleagues' views",
+      "Every sentence a contrast (sounds like slogans)"
+    ],
+    "drill": "Turn your next headline into a not-X-but-Y line and deliver it with stress on X and Y.",
+    "sources": [
+      {
+        "ref": 7,
+        "where": "CLTs: contrasts"
+      },
+      {
+        "ref": 13,
+        "where": "Resonate: contrast between what is and what could be"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-charisma-004",
+    "name": "Lists of three",
+    "capability": "Charisma & Storytelling",
+    "sub_capability": "Contrast & rhythm",
+    "summary": "Three-part lists feel complete, are easy to remember, and are one of the verbal charismatic tactics. Two feels thin, four feels like a list.",
+    "how_to_apply": "Group supporting points, benefits or actions in threes when it is natural; build to the most important.",
+    "example_line": "It's faster, it's cheaper, and it's safer.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Three-item lists in the transcript",
+      "Rising emphasis on the third item"
+    ],
+    "common_mistakes": [
+      "Forcing a third item that is weak",
+      "Overuse until it sounds like a speech"
+    ],
+    "drill": "In the next presentation, use one deliberate three-part list per main section and check the third item is the strongest.",
+    "sources": [
+      {
+        "ref": 7,
+        "where": "CLTs: three-part lists"
+      },
+      {
+        "ref": 9,
+        "where": "Talk Like TED: rule of three"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-charisma-005",
+    "name": "Ask the question, then answer it",
+    "capability": "Charisma & Storytelling",
+    "sub_capability": "Contrast & rhythm",
+    "summary": "A rhetorical question creates a gap the audience wants filled; answering it yourself delivers the point with momentum.",
+    "how_to_apply": "Pose the question your audience is silently asking, pause briefly, then answer it.",
+    "example_line": "So why haven't competitors done this? [pause] Because it only works at our scale.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Question followed by Tom's own answer within the same turn",
+      "Short pause between question and answer"
+    ],
+    "common_mistakes": [
+      "Asking questions you then do not answer",
+      "Using it in a 1:1 where it feels like lecturing"
+    ],
+    "drill": "Put one rhetorical question into your next update at the point where people usually push back.",
+    "sources": [
+      {
+        "ref": 7,
+        "where": "CLTs: rhetorical questions"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-charisma-006",
+    "name": "Reflect the room's sentiment",
+    "capability": "Charisma & Storytelling",
+    "sub_capability": "Vision & stakes",
+    "summary": "Naming what the group is feeling ('I know everyone's tired of re-planning') shows you understand them, which is one of the verbal charismatic tactics and earns permission for what you say next.",
+    "how_to_apply": "Before a demanding message, put the group's likely feeling into one sentence, accurately and without exaggeration.",
+    "example_line": "I know this is the third plan this year and people are tired of it.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Sentiment-reflecting statements ('I know...', 'you're probably feeling...') before asks",
+      "Back-channels or agreement after them"
+    ],
+    "common_mistakes": [
+      "Projecting feelings people do not have",
+      "Using it as a manipulative softener"
+    ],
+    "drill": "Before your next team-wide message, write one line naming the group's feeling and test it with a colleague for accuracy.",
+    "sources": [
+      {
+        "ref": 7,
+        "where": "CLTs: reflecting the group's sentiments"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-charisma-007",
+    "name": "High bar plus belief they can meet it",
+    "capability": "Charisma & Storytelling",
+    "sub_capability": "Vision & stakes",
+    "summary": "Setting a demanding expectation and in the same breath expressing confidence that people can meet it is a charismatic tactic. Either half alone is weaker.",
+    "how_to_apply": "Pair the stretch goal with a specific reason you believe it is achievable.",
+    "example_line": "This is a hard target, and I've watched this team land two harder ones.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Expectation statement followed by a confidence statement with evidence"
+    ],
+    "common_mistakes": [
+      "Empty cheerleading",
+      "High bar with no reason to believe",
+      "This is about voicing it, not setting the goal (Leadership coach)"
+    ],
+    "drill": "Rewrite your next target announcement so it contains both a stretch and one concrete reason for confidence.",
+    "sources": [
+      {
+        "ref": 7,
+        "where": "CLTs: high expectations and confidence they can be met"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-charisma-008",
+    "name": "Moral conviction, sparingly",
+    "capability": "Charisma & Storytelling",
+    "sub_capability": "Vision & stakes",
+    "summary": "Expressing why something is right, not just efficient, is part of charismatic signalling. Overused or used in routine operational talk, it sounds inflated.",
+    "how_to_apply": "Reserve values language for decisions that really carry it; say it once, plainly.",
+    "example_line": "We owe our clients the truth on this, even though it costs us the renewal.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Values phrases ('the right thing', 'we owe') in the transcript, and their context",
+      "Frequency per meeting (rare is right)"
+    ],
+    "common_mistakes": [
+      "Moralising about trivial decisions",
+      "Values talk not matched by the decision"
+    ],
+    "drill": "Identify the one decision this month that truly carries a values dimension and prepare one sentence about it.",
+    "sources": [
+      {
+        "ref": 7,
+        "where": "CLTs: moral conviction"
+      },
+      {
+        "ref": 8,
+        "where": "Antonakis et al. 2016: values-based signalling"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-charisma-009",
+    "name": "Contrast what is with what could be",
+    "capability": "Charisma & Storytelling",
+    "sub_capability": "Vision & stakes",
+    "summary": "Persuasive presentations alternate between the current reality and the better future, then end on the new future. The gap creates tension the audience wants resolved.",
+    "how_to_apply": "Structure a pitch or vision talk as alternating beats of 'today...' and 'imagine instead...', ending on the future and the call to action.",
+    "example_line": "Today, a quote takes nine days. Imagine it taking nine minutes.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Alternating present/future framing in presentation turns",
+      "Final section focused on future state and call to action"
+    ],
+    "common_mistakes": [
+      "All vision, no reality (sounds naive)",
+      "All problem, no future (sounds negative)"
+    ],
+    "drill": "Storyboard your next pitch as four what-is/what-could-be beats and an ending; rehearse it aloud once.",
+    "sources": [
+      {
+        "ref": 13,
+        "where": "Resonate: sparkline of what is vs. what could be"
+      }
+    ],
+    "evidence": "single-author",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-charisma-010",
+    "name": "Engineer one memorable line",
+    "capability": "Charisma & Storytelling",
+    "sub_capability": "Memorable moment",
+    "summary": "Plan one moment people will remember and repeat: a crisp phrase, a striking number or a vivid image. Repeat it at the start and end.",
+    "how_to_apply": "Craft a short, repeatable line for your main point; say it early, use it again to close.",
+    "example_line": "Boring in the best way: that's the product.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Recurrence of the same phrase in Tom's speech",
+      "Others quoting the phrase later (strong positive)"
+    ],
+    "common_mistakes": [
+      "Gimmicks that overshadow the substance",
+      "A line that sounds rehearsed in a small meeting"
+    ],
+    "drill": "For your next presentation, write five candidate lines, test them on a colleague, keep the one they remember an hour later.",
+    "sources": [
+      {
+        "ref": 13,
+        "where": "Resonate: S.T.A.R. moment, repeatable soundbites"
+      },
+      {
+        "ref": 9,
+        "where": "Talk Like TED: jaw-dropping moments"
+      },
+      {
+        "ref": 15,
+        "where": "TED Talks: throughline"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-charisma-011",
+    "name": "Teach them something new",
+    "capability": "Charisma & Storytelling",
+    "sub_capability": "Memorable moment",
+    "summary": "Audiences pay attention to novelty: an unexpected fact, a counter-intuitive finding or a new way of seeing a familiar problem.",
+    "how_to_apply": "Lead with the one thing your audience probably does not know yet and that changes how they see the issue.",
+    "example_line": "Most of our churn isn't price. Two-thirds of leavers never logged in after week one.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Novel facts or findings early in presentation turns",
+      "Questions from others asking for more detail (engagement)"
+    ],
+    "common_mistakes": [
+      "Novelty for its own sake",
+      "Surprising claims you cannot back"
+    ],
+    "drill": "Before your next update, find one fact the audience doesn't know and open with it.",
+    "sources": [
+      {
+        "ref": 9,
+        "where": "Talk Like TED: teach something new"
+      },
+      {
+        "ref": 15,
+        "where": "TED Talks: curiosity"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-charisma-012",
+    "name": "Sensory, specific detail",
+    "capability": "Charisma & Storytelling",
+    "sub_capability": "Story & anecdote",
+    "summary": "A few specific sensory details (what someone said, the time, the place) make a story vivid. Generic summaries do not transport listeners.",
+    "how_to_apply": "In stories, include one specific detail: a time, a place, a short paraphrase of what someone said.",
+    "example_line": "It was 7am, the car park was empty, and the only light on was the night team's.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Specific times, places and named people in narrative segments"
+    ],
+    "common_mistakes": [
+      "Over-describing",
+      "Details that identify private individuals inappropriately"
+    ],
+    "drill": "Rewrite one of your stock stories with three specific details and tell it aloud.",
+    "sources": [
+      {
+        "ref": 9,
+        "where": "Talk Like TED: multisensory experiences"
+      },
+      {
+        "ref": 58,
+        "where": "concrete language"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-charisma-013",
+    "name": "Self-deprecate the trivial, never the core",
+    "capability": "Charisma & Storytelling",
+    "sub_capability": "Humour & levity",
+    "summary": "Light self-deprecation about small things (tech, coffee, handwriting) shows ease and warmth. Self-deprecation about your core competence undermines the very trust the room relies on.",
+    "how_to_apply": "Keep self-deprecating humour to non-essential traits, and keep it short.",
+    "example_line": "That's the last time I do maths before coffee. Correct figure is 11%.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "Laughter events after Tom's turn (laughter with others vs. Tom alone)",
+      "Self-deprecating content about strategy, numbers or judgement (negative)"
+    ],
+    "common_mistakes": [
+      "'I'm hopeless with numbers' from a strategy lead",
+      "Repeated self-deprecation that becomes a pattern"
+    ],
+    "drill": "Each week the coach lists Tom's self-deprecating lines; check none touched core competence.",
+    "sources": [
+      {
+        "ref": 51,
+        "where": "Bitterly et al. 2017: humour and status"
+      },
+      {
+        "ref": 64,
+        "where": "rubric D12"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-charisma-014",
+    "name": "Light humour to signal ease",
+    "capability": "Charisma & Storytelling",
+    "sub_capability": "Humour & levity",
+    "summary": "Successful humour raises perceived confidence and competence; failed or inappropriate humour signals confidence but lowers perceived competence. Low-risk, situational humour is the safest form.",
+    "how_to_apply": "Use gentle humour about the shared situation, mainly early in meetings or after tension resolves; avoid it during someone's serious concern.",
+    "example_line": "Third reschedule this month. I'm starting to take it personally.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "Laughter events by others after Tom's lines",
+      "Humour during challenges (possible deflection)"
+    ],
+    "common_mistakes": [
+      "Jokes at a junior colleague's expense",
+      "Banter in cross-cultural or very senior rooms",
+      "Humour to dodge a hard question"
+    ],
+    "drill": "Review a month of laughter events with the coach: which lines landed and in what context; repeat the pattern that worked.",
+    "sources": [
+      {
+        "ref": 51,
+        "where": "Bitterly et al. 2017"
+      },
+      {
+        "ref": 9,
+        "where": "Talk Like TED: lighten up"
+      },
+      {
+        "ref": 2,
+        "where": "2022 survey: banter valued less"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-charisma-015",
+    "name": "Let them hear why you care",
+    "capability": "Charisma & Storytelling",
+    "sub_capability": "Vision & stakes",
+    "summary": "Audiences respond to speakers who visibly care about their subject. Briefly saying why something matters to you personally adds energy and credibility.",
+    "how_to_apply": "In a pitch or big update, include one sentence on why this matters to you, then return to them.",
+    "example_line": "I've wanted to fix this since my first week here: I watched a client wait a month for an answer.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Personal-relevance statements in presentation turns",
+      "pitch_sd_st and loudness_sd_db rising on those sentences (animation)"
+    ],
+    "common_mistakes": [
+      "Making it about you for too long",
+      "Faking passion"
+    ],
+    "drill": "Write one 'why I care' sentence for your current biggest initiative and use it in the next relevant meeting.",
+    "sources": [
+      {
+        "ref": 9,
+        "where": "Talk Like TED: unleash the master within"
+      },
+      {
+        "ref": 15,
+        "where": "TED Talks: authenticity"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-warmth-001",
+    "name": "Connect, then lead",
+    "capability": "Warmth & Connection",
+    "sub_capability": "Warmth before strength",
+    "summary": "People judge warmth (can I trust you?) before competence (can you deliver?). Leading with warmth and then showing strength gets strength accepted rather than resisted.",
+    "how_to_apply": "Open conversations with a moment of genuine connection or acknowledgement, then move to substance and direction.",
+    "example_line": "Thanks for jumping on at short notice; I know it's month-end. Here's what I need us to decide.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "First 30-60 s of Tom-led conversations: acknowledgement, names, rapport",
+      "Others' first-turn length and tone"
+    ],
+    "common_mistakes": [
+      "Small talk that drags",
+      "Warmth with no strength (sounds like a peer, not a leader)",
+      "Strength with no warmth (respected, avoided)"
+    ],
+    "drill": "For a week, open each 1:1 and meeting you lead with one genuine acknowledgement line before the agenda.",
+    "sources": [
+      {
+        "ref": 5,
+        "where": "Connect, then lead (HBR 2013)"
+      },
+      {
+        "ref": 53,
+        "where": "Fiske, Cuddy & Glick 2007: warmth and competence"
+      },
+      {
+        "ref": 25,
+        "where": "Cues: warmth then competence"
+      },
+      {
+        "ref": 6,
+        "where": "Charisma Myth: warmth"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-warmth-002",
+    "name": "'We' for shared work, 'I' for decisions",
+    "capability": "Warmth & Connection",
+    "sub_capability": "Collective framing",
+    "summary": "Collective pronouns signal you speak for the group; leaders who win elections use them more. But 'I' remains right for owning decisions and mistakes.",
+    "how_to_apply": "Use 'we/us/our' for goals and shared work; keep 'I' for judgements, commitments and apologies.",
+    "example_line": "We've got a hard quarter. I'll take the client conversation; we'll share the rest.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "We-ratio (we/us/our vs. I/me/my) vs. baseline in group and vision contexts",
+      "'I' on decisions and apologies (positive)"
+    ],
+    "common_mistakes": [
+      "Royal 'we' that hides accountability",
+      "'We' while assigning all work to others"
+    ],
+    "drill": "The coach shows three 'I/my' sentences about shared work from last week; rewrite them as 'we'.",
+    "sources": [
+      {
+        "ref": 54,
+        "where": "Steffens & Haslam 2013"
+      },
+      {
+        "ref": 64,
+        "where": "rubric D4 we-ratio"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-warmth-003",
+    "name": "Name and credit specifics",
+    "capability": "Warmth & Connection",
+    "sub_capability": "Recognition",
+    "summary": "Crediting a named colleague for a specific contribution signals security and generosity, a core humble-leadership behaviour. Generic thanks does far less.",
+    "how_to_apply": "Once per meeting, credit someone by name for something specific they did or said.",
+    "example_line": "Priya's churn analysis is the reason we caught this early.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Name + specific contribution phrases in the transcript",
+      "Credit given in the presence of senior people (stronger)"
+    ],
+    "common_mistakes": [
+      "Generic 'great work everyone'",
+      "Credit as a prelude to criticism",
+      "Over-crediting that sounds performative"
+    ],
+    "drill": "In every meeting this week, name and credit one specific contribution. The coach counts them.",
+    "sources": [
+      {
+        "ref": 59,
+        "where": "Owens & Hekman 2012: spotlighting others' strengths"
+      },
+      {
+        "ref": 18,
+        "where": "Bates: concern and humility facets"
+      },
+      {
+        "ref": 33,
+        "where": "prestige via generosity"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-warmth-004",
+    "name": "Label what they seem to feel",
+    "capability": "Warmth & Connection",
+    "sub_capability": "Empathic labelling",
+    "summary": "Naming the other person's likely emotion or concern ('it sounds like this has been frustrating') shows you understand and tends to defuse it. It is the core of Voss's tactical empathy.",
+    "how_to_apply": "Use 'It sounds like / seems like / looks like...' followed by the emotion or concern, then stop and let them respond.",
+    "example_line": "It sounds like the timeline was set without your team's input.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Labels starting 'it sounds/seems/looks like' in the transcript",
+      "Other speaker's next turn: longer and calmer, or 'exactly' (positive)"
+    ],
+    "common_mistakes": [
+      "Labelling with 'I hear you're...' (focus on self)",
+      "Getting the emotion wrong and pressing on",
+      "Using labels mechanically"
+    ],
+    "drill": "In the next three difficult 1:1s, use at least one label and wait silently for the response.",
+    "sources": [
+      {
+        "ref": 26,
+        "where": "Never Split the Difference: labelling, tactical empathy"
+      },
+      {
+        "ref": 49,
+        "where": "affect labelling research (self-labelling mechanism)"
+      }
+    ],
+    "evidence": "single-author",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-warmth-005",
+    "name": "Single-task attention",
+    "capability": "Warmth & Connection",
+    "sub_capability": "Full attention",
+    "summary": "Presence in Cabane's sense is giving full attention to the person in front of you; people sense split attention quickly, even on calls.",
+    "how_to_apply": "Close other windows, put the phone away, and keep your attention on what the person is saying rather than on your next point.",
+    "example_line": "You said the pilot stalled in week three. What happened that week?",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Replies that reference the other person's specific words",
+      "'Sorry, could you repeat that?' moments (negative)",
+      "Response latency spikes that suggest distraction"
+    ],
+    "common_mistakes": [
+      "Pretend attention (nodding while rehearsing)",
+      "Multitasking on video calls"
+    ],
+    "drill": "In five 1:1s this week, ask at least one question that uses the other person's exact words. The coach checks.",
+    "sources": [
+      {
+        "ref": 6,
+        "where": "Charisma Myth: presence"
+      },
+      {
+        "ref": 16,
+        "where": "Second Circle: being present"
+      },
+      {
+        "ref": 17,
+        "where": "Power of Presence"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-warmth-006",
+    "name": "Second-circle energy",
+    "capability": "Warmth & Connection",
+    "sub_capability": "Full attention",
+    "summary": "Rodenburg describes three states: withdrawn (first circle), broadcasting at people (third circle), and connected two-way exchange (second circle). Presence lives in the second, with flexibility to use the others deliberately.",
+    "how_to_apply": "Notice when you are withdrawing (looking down, quiet, waiting) or broadcasting (talking at the room, not reading it), and return to focused exchange with specific people.",
+    "example_line": "(to one person, not the room) Mark, how does that land for your team?",
+    "observable_in_audio": "partial",
+    "markers": [
+      "First circle: low talk_share, quiet loudness_db, short hedged turns",
+      "Third circle: high talk_share, long monologues (longest_turn_s), few questions",
+      "Second circle: questions addressed to named people, responsive turns"
+    ],
+    "common_mistakes": [
+      "Trying to stay in second circle permanently",
+      "Confusing loudness with presence"
+    ],
+    "drill": "After each meeting this week, note which circle you spent most time in; the coach adds talk_share and question data.",
+    "sources": [
+      {
+        "ref": 16,
+        "where": "The Second Circle / Presence: three circles of energy"
+      }
+    ],
+    "evidence": "single-author",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-warmth-007",
+    "name": "Open with a question about them",
+    "capability": "Warmth & Connection",
+    "sub_capability": "Warmth before strength",
+    "summary": "Asking about the other person's priorities or situation, and following up on the answer, increases how much they like you. People underestimate this effect.",
+    "how_to_apply": "Open 1:1s with a genuine question about their world, then ask one follow-up before turning to your agenda.",
+    "example_line": "How did the board session go for you? What surprised you?",
+    "observable_in_audio": "partial",
+    "markers": [
+      "questions by Tom in the first two minutes",
+      "Follow-up question referencing their answer",
+      "Their first-turn length (longer is better)"
+    ],
+    "common_mistakes": [
+      "Formulaic 'how are you?' with no follow-up",
+      "Interrogating instead of conversing"
+    ],
+    "drill": "Open every 1:1 this week with a question about them plus one follow-up. The coach counts.",
+    "sources": [
+      {
+        "ref": 44,
+        "where": "Huang et al. 2017: question-asking increases liking"
+      },
+      {
+        "ref": 25,
+        "where": "Cues: warmth cues"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-warmth-008",
+    "name": "Acknowledge the cost to them",
+    "capability": "Warmth & Connection",
+    "sub_capability": "Empathic labelling",
+    "summary": "Recognising the burden or constraint your message places on someone ('I know this lands on your team') signals receptiveness and makes the message easier to accept.",
+    "how_to_apply": "Before or after a demanding ask, name its specific cost to the listener in one sentence.",
+    "example_line": "I know this means your team re-does the forecast, and I'm sorry about the timing.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Acknowledgement phrases tied to the other person's constraint",
+      "Other speaker's tone and turn length after the ask"
+    ],
+    "common_mistakes": [
+      "Acknowledgement followed by 'but' that cancels it",
+      "Over-apologising"
+    ],
+    "drill": "For each request you make this week, add one sentence acknowledging its cost to the person.",
+    "sources": [
+      {
+        "ref": 45,
+        "where": "Yeomans et al. 2020: acknowledgement as receptiveness"
+      },
+      {
+        "ref": 5,
+        "where": "Connect, then lead"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-warmth-009",
+    "name": "Mirror their key words",
+    "capability": "Warmth & Connection",
+    "sub_capability": "Full attention",
+    "summary": "Repeating the last few words or the key phrase someone used encourages them to keep talking and signals that you are tracking. Mimicry in negotiation research improved outcomes.",
+    "how_to_apply": "When someone says something important, repeat their key two or three words with a slight upward inflection, then wait.",
+    "example_line": "Them: 'The handover was chaotic.' Tom: 'Chaotic?'",
+    "observable_in_audio": "yes",
+    "markers": [
+      "Repetition of the other speaker's last words at the start of Tom's turn",
+      "The other person's next turn length (longer is the intended effect)"
+    ],
+    "common_mistakes": [
+      "Parroting constantly",
+      "Using it to extract information under false pretences",
+      "Mirroring tone when the other person is angry"
+    ],
+    "drill": "Use one mirror in each of three 1:1s this week and note whether the other person expanded.",
+    "sources": [
+      {
+        "ref": 26,
+        "where": "Never Split the Difference: mirroring"
+      },
+      {
+        "ref": 61,
+        "where": "Maddux et al. 2008: mimicry in negotiation"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "caution",
+    "ethics_note": "Use to understand, not to manipulate. Mirroring to draw out information the other person would not knowingly share crosses into manipulation, especially with juniors."
+  },
+  {
+    "id": "ep-warmth-010",
+    "name": "Smile in the voice",
+    "capability": "Warmth & Connection",
+    "sub_capability": "Warmth before strength",
+    "summary": "Warmth is audible: a slight smile changes the voice's tone, and listeners on calls hear it. It is one of the simplest warmth cues when there are no visual signals.",
+    "how_to_apply": "On greetings, thanks and requests, let a genuine smile shape your voice; keep it for moments that warrant it.",
+    "example_line": "(smiling) Great to hear from you. How's the new role?",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Not reliably measurable; pitch_sd_st slightly up and laughter around greetings are weak proxies"
+    ],
+    "common_mistakes": [
+      "Smiling through bad news",
+      "A fixed smile that sounds forced"
+    ],
+    "drill": "Record a voicemail-style greeting twice, with and without a smile, and listen back.",
+    "sources": [
+      {
+        "ref": 26,
+        "where": "positive/playful voice"
+      },
+      {
+        "ref": 25,
+        "where": "Cues: vocal warmth"
+      },
+      {
+        "ref": 23,
+        "where": "timbre: warm voice"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-warmth-011",
+    "name": "Small, relevant self-disclosure",
+    "capability": "Warmth & Connection",
+    "sub_capability": "Warmth before strength",
+    "summary": "Sharing a small, relevant personal experience or uncertainty makes you more relatable and authentic, which recent executive surveys weight more than they used to.",
+    "how_to_apply": "Occasionally share a brief, relevant personal angle (a lesson, a past mistake), then return to the topic.",
+    "example_line": "I made exactly this hire mistake in my first company, so I'm wary of it.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Brief first-person experience statements (one or two sentences)",
+      "Others reciprocating with their own experience"
+    ],
+    "common_mistakes": [
+      "Oversharing",
+      "Making the conversation about you",
+      "Disclosing to manipulate trust"
+    ],
+    "drill": "Plan one relevant disclosure for your next mentoring 1:1 and keep it under 30 seconds.",
+    "sources": [
+      {
+        "ref": 2,
+        "where": "Executive Presence 2.0: authenticity"
+      },
+      {
+        "ref": 17,
+        "where": "Power of Presence: authentic style"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-warmth-012",
+    "name": "Remember and refer back",
+    "capability": "Warmth & Connection",
+    "sub_capability": "Recognition",
+    "summary": "Referring back to something personal or professional the other person mentioned before (a project, a family event) shows they matter to you.",
+    "how_to_apply": "Note one thing from each 1:1 and open the next one by asking about it.",
+    "example_line": "Last time you were dreading the audit. How did it go?",
+    "observable_in_audio": "partial",
+    "markers": [
+      "References to prior conversations in the opening of 1:1s"
+    ],
+    "common_mistakes": [
+      "Using notes so obviously it feels like a CRM",
+      "Referring to private details in group settings"
+    ],
+    "drill": "Keep a one-line note after each 1:1 for a month and use it in the next one.",
+    "sources": [
+      {
+        "ref": 25,
+        "where": "Cues: warmth cues"
+      },
+      {
+        "ref": 6,
+        "where": "Charisma Myth: making people feel important"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-listening-001",
+    "name": "Two follow-ups before a view",
+    "capability": "Listening & Command of the Room",
+    "sub_capability": "Follow-up questions",
+    "summary": "Follow-up questions are the strongest single listening signal and increase liking. Asking two before giving your view also gathers better information.",
+    "how_to_apply": "In 1:1s and problem discussions, ask at least two questions that build on what the person just said before you offer an opinion.",
+    "example_line": "You mentioned the team's stretched. Which part of the work would you drop first?",
+    "observable_in_audio": "partial",
+    "markers": [
+      "questions by Tom that reference the other's previous turn",
+      "Others' turn length after Tom's questions",
+      "Number of follow-ups before Tom's first opinion turn"
+    ],
+    "common_mistakes": [
+      "Leading questions that are statements in disguise",
+      "Interrogation without any view",
+      "Interrupting the answer"
+    ],
+    "drill": "In each 1:1 this week, ask two follow-ups before giving a view. The coach counts them.",
+    "sources": [
+      {
+        "ref": 44,
+        "where": "Huang et al. 2017: follow-up questions"
+      },
+      {
+        "ref": 23,
+        "where": "How to Be Heard: listening"
+      },
+      {
+        "ref": 64,
+        "where": "rubric D8"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-listening-002",
+    "name": "Play it back before responding",
+    "capability": "Listening & Command of the Room",
+    "sub_capability": "Paraphrase & summary",
+    "summary": "Summarising what you heard before responding shows you listened and checks understanding; in disagreement it lowers heat and makes your reply more persuasive.",
+    "how_to_apply": "Before your counterpoint, restate the other view in one sentence and check: 'Have I got that right?'",
+    "example_line": "So your worry is that we'd lose the partner, not the cost. Have I got that right?",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Paraphrase phrases ('so what I'm hearing', 'if I've got this right')",
+      "Confirmation from the other speaker ('yes, exactly')"
+    ],
+    "common_mistakes": [
+      "Paraphrasing to set up a rebuttal in a mocking tone",
+      "Paraphrasing at length",
+      "Getting it wrong and not correcting"
+    ],
+    "drill": "Before any disagreement this week, restate the other view in one sentence first. The coach counts paraphrases before counterpoints.",
+    "sources": [
+      {
+        "ref": 23,
+        "where": "RASA: summarise"
+      },
+      {
+        "ref": 45,
+        "where": "Yeomans et al. 2020: acknowledging the other view"
+      },
+      {
+        "ref": 26,
+        "where": "summaries in tactical empathy"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-listening-003",
+    "name": "Talk the right share for the setting",
+    "capability": "Listening & Command of the Room",
+    "sub_capability": "Airtime calibration",
+    "summary": "Command of the room is not airtime. In 1:1s with reports, talking less than half the time is usually right; in groups, fewer, higher-impact contributions carry more weight.",
+    "how_to_apply": "Know your target band before you start (1:1 as manager ~30-50%; group participant ~1/N to 1.5/N), and check yourself at the halfway point.",
+    "example_line": "(halfway) I've been talking a lot. Sam, what's your read?",
+    "observable_in_audio": "yes",
+    "markers": [
+      "talk_share vs. rubric section 4 band for the setting",
+      "mean_turn_s and longest_turn_s (monologue risk above ~60-90 s in discussion)"
+    ],
+    "common_mistakes": [
+      "Going silent in senior rooms",
+      "Dominating because you know the material",
+      "Mechanically hitting a percentage"
+    ],
+    "drill": "For two weeks, the coach reports talk_share per setting; pick the setting furthest from its band and adjust.",
+    "sources": [
+      {
+        "ref": 66,
+        "where": "Gong talk-to-listen data (practitioner)"
+      },
+      {
+        "ref": 33,
+        "where": "dominance vs. prestige"
+      },
+      {
+        "ref": 64,
+        "where": "rubric section 4 talk-share bands"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-listening-004",
+    "name": "Finish the sentence, then yield",
+    "capability": "Listening & Command of the Room",
+    "sub_capability": "Holding & yielding the floor",
+    "summary": "When interrupted on an important point, neither fight (louder, faster) nor fold (stop mid-point). Finish the current sentence at the same volume and pace, then hand over or signal you will return.",
+    "how_to_apply": "Keep volume and pace steady, complete the sentence, then say 'let me finish this point, then I want your view' if needed.",
+    "example_line": "...which is why the date moves. Go ahead, then I'll come back to cost.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "interruptions of Tom and what follows (completion vs. abandonment)",
+      "loudness_db and speaking_rate_wpm during overlaps",
+      "Tom returning to the abandoned point later"
+    ],
+    "common_mistakes": [
+      "Raising volume to out-talk",
+      "Never returning to the dropped point",
+      "Using 'let me finish' aggressively"
+    ],
+    "drill": "With a colleague interrupting at random, practise finishing sentences at baseline volume. The coach checks loudness during overlaps.",
+    "sources": [
+      {
+        "ref": 33,
+        "where": "dominance vs. prestige"
+      },
+      {
+        "ref": 64,
+        "where": "rubric D9 drill"
+      },
+      {
+        "ref": 65,
+        "where": "Hall et al. 2005: status and nonverbal cues"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-listening-005",
+    "name": "Invite the quiet person by name",
+    "capability": "Listening & Command of the Room",
+    "sub_capability": "Holding & yielding the floor",
+    "summary": "Drawing in someone who has not spoken, with a specific question, shows command of the room and widens the information you get.",
+    "how_to_apply": "In each group meeting, name one person who has not spoken and ask a specific, answerable question.",
+    "example_line": "Ana, you ran the last rollout. What would you watch out for?",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Names in Tom's questions to people with low talk_share so far",
+      "The invited person's turn length"
+    ],
+    "common_mistakes": [
+      "Putting someone on the spot with a hard question",
+      "Calling only on the same people"
+    ],
+    "drill": "In every group meeting this week, invite one quiet person by name. The coach checks who spoke after.",
+    "sources": [
+      {
+        "ref": 64,
+        "where": "rubric D9 drill"
+      },
+      {
+        "ref": 59,
+        "where": "humble leadership: drawing out others"
+      },
+      {
+        "ref": 33,
+        "where": "prestige route"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-listening-006",
+    "name": "Do not interrupt to agree",
+    "capability": "Listening & Command of the Room",
+    "sub_capability": "Holding & yielding the floor",
+    "summary": "Supportive interruptions ('yes, exactly, and also...') still take the floor and can read as dominance or impatience. Let people land their point.",
+    "how_to_apply": "When you agree, wait for the end of the sentence, then build: 'Building on that...'",
+    "example_line": "(after Sam finishes) Building on Sam's point: the same applies to Leeds.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "interruptions by Tom with new content starting >0.3 s before the other ended",
+      "Supportive back-channels ('mm', 'yes') are fine and should not count"
+    ],
+    "common_mistakes": [
+      "Silence so complete it reads as disengagement",
+      "Saving up five points and delivering them at once"
+    ],
+    "drill": "The coach lists your competitive interruptions for a week; aim to halve them the next week.",
+    "sources": [
+      {
+        "ref": 33,
+        "where": "dominance cues"
+      },
+      {
+        "ref": 64,
+        "where": "rubric D9 detector caveats"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-listening-007",
+    "name": "Ask, then wait",
+    "capability": "Listening & Command of the Room",
+    "sub_capability": "Silence as a tool",
+    "summary": "After asking a real question, the silence that follows is where the good answer forms. Filling it, rephrasing or answering it yourself kills it.",
+    "how_to_apply": "Ask your question once, then count silently to five before saying anything else.",
+    "example_line": "What's the one thing we're not saying? [waits]",
+    "observable_in_audio": "yes",
+    "markers": [
+      "Gap after Tom's question before anyone speaks",
+      "Tom re-speaking within ~2 s of his own question (negative)",
+      "Stacked questions in one turn"
+    ],
+    "common_mistakes": [
+      "Rephrasing the question three times",
+      "Answering your own question",
+      "Waiting so long it becomes a power play"
+    ],
+    "drill": "In two meetings, after each open question, count to five silently. The coach measures the gaps.",
+    "sources": [
+      {
+        "ref": 22,
+        "where": "Think Faster, Talk Smarter: listening and pauses"
+      },
+      {
+        "ref": 26,
+        "where": "effective pauses"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-listening-008",
+    "name": "One question at a time",
+    "capability": "Listening & Command of the Room",
+    "sub_capability": "Follow-up questions",
+    "summary": "Stacking several questions in one turn lets the other person pick the easiest and signals nervousness. One clear, open question commands more.",
+    "how_to_apply": "Ask a single open question ('what', 'how') and stop.",
+    "example_line": "(not 'Is it the budget, or the team, or timing, or...?') What's really holding it up?",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Multiple question marks in one Tom turn",
+      "Closed vs. open question openers"
+    ],
+    "common_mistakes": [
+      "Closed questions when you want information",
+      "Leading questions"
+    ],
+    "drill": "For a week, the coach flags every stacked question; rewrite two of them as single open questions.",
+    "sources": [
+      {
+        "ref": 22,
+        "where": "asking questions"
+      },
+      {
+        "ref": 23,
+        "where": "conscious listening"
+      },
+      {
+        "ref": 44,
+        "where": "question types and liking"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-listening-009",
+    "name": "Check in when the signals change",
+    "capability": "Listening & Command of the Room",
+    "sub_capability": "Reading the room",
+    "summary": "Presence includes noticing when the room has shifted (confusion, disagreement, low energy) and adjusting out loud rather than ploughing on.",
+    "how_to_apply": "When you sense a shift, name it briefly and change approach: shorter, a different example, or a question.",
+    "example_line": "I'm seeing some puzzled looks. Let me come at this differently.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Others' clarifying questions or silence after Tom's turns",
+      "Tom's adjustment phrases ('let me put it another way', 'let me pause there')",
+      "Drop in back-channels during Tom's long turns"
+    ],
+    "common_mistakes": [
+      "Checking in so often it signals insecurity",
+      "Asking 'does that make sense?' as a reflex"
+    ],
+    "drill": "In your next presentation, plan two checkpoints where you read the room and adjust if needed.",
+    "sources": [
+      {
+        "ref": 17,
+        "where": "Power of Presence: reading others"
+      },
+      {
+        "ref": 6,
+        "where": "Charisma Myth: responsiveness"
+      },
+      {
+        "ref": 22,
+        "where": "audience-focused speaking"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-listening-010",
+    "name": "Receive and appreciate while listening",
+    "capability": "Listening & Command of the Room",
+    "sub_capability": "Paraphrase & summary",
+    "summary": "Small audible signals that you are taking it in ('mm', 'right') keep the speaker going and show presence, especially on calls where nods are invisible.",
+    "how_to_apply": "On calls, use brief back-channels at natural pauses; do not take the floor with them.",
+    "example_line": "Mm. Right. [lets them continue]",
+    "observable_in_audio": "yes",
+    "markers": [
+      "Short back-channel tokens from Tom during others' turns (supportive overlaps)",
+      "Should not be counted as competitive interruptions"
+    ],
+    "common_mistakes": [
+      "Over-frequent 'yeah yeah yeah' that sounds impatient",
+      "Back-channels that turn into interruptions"
+    ],
+    "drill": "On your next three calls, use back-channels deliberately and ask the other person afterwards if you seemed engaged.",
+    "sources": [
+      {
+        "ref": 23,
+        "where": "RASA: receive and appreciate"
+      }
+    ],
+    "evidence": "single-author",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-listening-011",
+    "name": "Synthesise where the room has got to",
+    "capability": "Listening & Command of the Room",
+    "sub_capability": "Reading the room",
+    "summary": "Pulling a scattered discussion together ('So far we agree on A and B; C is open') is a high-presence move: it shows you were tracking everyone and helps the group move.",
+    "how_to_apply": "When discussion loops, summarise in one or two sentences what is agreed and what remains open.",
+    "example_line": "So we agree on the date and the budget; the open question is who leads. Let's settle that.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Summary phrases ('so far', 'where we've got to', 'parking that') in group meetings",
+      "Discussion moving to a new topic after the summary"
+    ],
+    "common_mistakes": [
+      "Summarising in a way that misrepresents others",
+      "Summarising too early"
+    ],
+    "drill": "In each group meeting this week, offer one synthesis when the discussion loops.",
+    "sources": [
+      {
+        "ref": 64,
+        "where": "rubric D11 mid-meeting summaries"
+      },
+      {
+        "ref": 22,
+        "where": "structure and paraphrase"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-listening-012",
+    "name": "Listen for the question behind the question",
+    "capability": "Listening & Command of the Room",
+    "sub_capability": "Follow-up questions",
+    "summary": "Many questions carry an unstated concern (a cost question is often about risk or credibility). Answering the real concern shows depth and command.",
+    "how_to_apply": "Before answering, ask yourself what the person is really worried about; answer the literal question briefly, then the underlying one.",
+    "example_line": "The short answer is £40k. I suspect the real question is whether it pays back; it does, within a year.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Tom's answers addressing both literal and underlying concerns",
+      "Questioner's follow-ups (fewer repeated questions is better)"
+    ],
+    "common_mistakes": [
+      "Guessing wrong and lecturing",
+      "Skipping the literal answer"
+    ],
+    "drill": "After your next Q&A, list each question and the concern behind it; check whether you addressed both.",
+    "sources": [
+      {
+        "ref": 22,
+        "where": "Q&A: understanding the question"
+      },
+      {
+        "ref": 20,
+        "where": "Simply Said: audience focus"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-listening-013",
+    "name": "Command through calm, not volume",
+    "capability": "Listening & Command of the Room",
+    "sub_capability": "Holding & yielding the floor",
+    "summary": "In a noisy or heated room, dropping your volume slightly and slowing down often draws attention better than raising your voice.",
+    "how_to_apply": "When the room is loud or scattered, pause, then speak a little quieter and slower to bring people in.",
+    "example_line": "(quiet, slow) Let's take a breath. Here's where we are.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "loudness_db and speaking_rate_wpm on Tom's turns in heated segments",
+      "Others' loudness after Tom's turn (falling is good)"
+    ],
+    "common_mistakes": [
+      "Going so quiet people cannot hear on a call",
+      "Sounding patronising"
+    ],
+    "drill": "In the next heated discussion, try one deliberately quieter intervention and note the effect.",
+    "sources": [
+      {
+        "ref": 16,
+        "where": "Rodenburg: presence without force"
+      },
+      {
+        "ref": 26,
+        "where": "calm voice to de-escalate"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-challenge-001",
+    "name": "Acknowledge, answer, add",
+    "capability": "Handling Challenge & Pressure",
+    "sub_capability": "Receptive disagreement",
+    "summary": "Respond to challenge in three beats: acknowledge the point in one sentence, answer directly (yes, no, a number), add the reason or next step. Receptive replies are rated better and persuade more.",
+    "how_to_apply": "Practise the three beats until automatic; keep the acknowledgement genuine and short.",
+    "example_line": "Fair challenge. Yes, we're over budget by 8%. Here's what we're doing about it.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "First sentence of reply: acknowledgement; second: direct answer word or number",
+      "Defensive markers absent ('to be fair', 'as I said')",
+      "Challenger's next turn shorter and calmer"
+    ],
+    "common_mistakes": [
+      "Acknowledging at length (sounds like stalling)",
+      "Acknowledging then contradicting with 'but'",
+      "Skipping the direct answer"
+    ],
+    "drill": "Have a colleague fire ten tough questions; answer each with acknowledge-answer-add. The coach scores first sentences.",
+    "sources": [
+      {
+        "ref": 45,
+        "where": "Yeomans et al. 2020"
+      },
+      {
+        "ref": 30,
+        "where": "media training: acknowledge and answer"
+      },
+      {
+        "ref": 64,
+        "where": "rubric D10 drill"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-challenge-002",
+    "name": "Answer, detail, describe value",
+    "capability": "Handling Challenge & Pressure",
+    "sub_capability": "Direct answer",
+    "summary": "A Q&A structure: give the answer, support it with one specific example, then say why it matters to the person who asked.",
+    "how_to_apply": "Use it for questions after presentations and from senior stakeholders; adjust order if a quick example is needed first.",
+    "example_line": "Yes, it scales. We ran it with 40,000 users in Manchester. That means your region could go live in Q2.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Direct answer in first sentence of Q&A replies",
+      "A concrete example in the reply",
+      "A relevance sentence addressed to the questioner"
+    ],
+    "common_mistakes": [
+      "Long details before the answer",
+      "Generic 'value' statements"
+    ],
+    "drill": "Prepare five likely questions for your next presentation and draft ADD answers under 30 seconds each.",
+    "sources": [
+      {
+        "ref": 22,
+        "where": "Think Faster, Talk Smarter: ADD"
+      }
+    ],
+    "evidence": "single-author",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-challenge-003",
+    "name": "Neutralise the loaded question",
+    "capability": "Handling Challenge & Pressure",
+    "sub_capability": "Direct answer",
+    "summary": "Paraphrasing a hostile or loaded question into neutral terms before answering buys time, shows you listened, and stops you repeating the hostile framing.",
+    "how_to_apply": "Restate the core of the question without its loaded words, then answer the neutral version.",
+    "example_line": "Them: 'Why did you waste a year on this?' Tom: 'You're asking whether the year was worth it. Here's what it bought us.'",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Paraphrase of the question at the start of Tom's reply",
+      "Absence of the questioner's negative words in Tom's reply"
+    ],
+    "common_mistakes": [
+      "Paraphrasing into a different question (dodging)",
+      "Sounding like a politician"
+    ],
+    "drill": "Write five hostile questions you might face and practise a neutral paraphrase for each.",
+    "sources": [
+      {
+        "ref": 22,
+        "where": "Q&A: paraphrasing questions"
+      },
+      {
+        "ref": 30,
+        "where": "media training: do not repeat the negative"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-challenge-004",
+    "name": "Answer, then bridge",
+    "capability": "Handling Challenge & Pressure",
+    "sub_capability": "Bridging without dodging",
+    "summary": "Bridging moves from the question to your key message ('what matters most here is...'). Done after a genuine answer, it keeps a conversation on track; done instead of an answer, it reads as evasion.",
+    "how_to_apply": "Give a short real answer first, then use a bridging phrase to link to your key message.",
+    "example_line": "No, we didn't hit the target. What matters more is why, and what's changed since.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Direct answer present before bridge phrases ('what matters most', 'the bigger point')",
+      "Questioner re-asking the same question (negative: dodge detected)"
+    ],
+    "common_mistakes": [
+      "Bridging without answering",
+      "Using the same bridge phrase repeatedly",
+      "Bridging in internal meetings where it sounds like spin"
+    ],
+    "drill": "In a mock Q&A, answer every question in one sentence before bridging. The coach checks for an answer before each bridge.",
+    "sources": [
+      {
+        "ref": 30,
+        "where": "media training: ABC bridging"
+      },
+      {
+        "ref": 50,
+        "where": "Rogers & Norton 2011: dodges and detection"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "caution",
+    "ethics_note": "Bridging is legitimate only after a real answer. Used to avoid answering, it misleads listeners and erodes trust once noticed."
+  },
+  {
+    "id": "ep-challenge-005",
+    "name": "Answering a different question (recognise, do not use)",
+    "capability": "Handling Challenge & Pressure",
+    "sub_capability": "Bridging without dodging",
+    "summary": "Speakers can answer a similar but different question fluently, and listeners often fail to notice; detection rises sharply when the question is visible. It works in the moment and damages trust when caught.",
+    "how_to_apply": "The coach should flag this in Tom's own replies so he can answer the real question instead. Not to be practised.",
+    "example_line": "(dodge to avoid) Q: 'Did the launch slip?' A: 'Our launches are always rigorous...'",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Reply lacks the key term or answer type the question asked for (yes/no, number, date)",
+      "Questioner re-asks or narrows the question"
+    ],
+    "common_mistakes": [
+      "Thinking a fluent dodge is a win",
+      "Dodging in written follow-ups where the question is visible"
+    ],
+    "drill": "Review three tough questions from recent recordings: did each reply contain the answer type asked for? Rewrite any dodge as a direct answer.",
+    "sources": [
+      {
+        "ref": 50,
+        "where": "Rogers & Norton 2011: the artful dodger"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "manipulative",
+    "ethics_note": "Included so the coach can detect and discourage it. Deliberately answering a different question to mislead is manipulative; the coach must never recommend it."
+  },
+  {
+    "id": "ep-challenge-006",
+    "name": "Label the heat",
+    "capability": "Handling Challenge & Pressure",
+    "sub_capability": "Defusing hostility",
+    "summary": "When a challenger is angry or anxious, naming the emotion calmly ('it sounds like this has caused real problems for your team') often lowers the temperature faster than arguing facts.",
+    "how_to_apply": "Label first, pause, then address the substance. Use a calm, slower register.",
+    "example_line": "It sounds like this has landed badly for your team. Tell me what's hit hardest.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Label phrases at the start of replies to heated turns",
+      "Challenger's loudness_db and turn length after the label"
+    ],
+    "common_mistakes": [
+      "Labelling in a patronising tone",
+      "Using a label to avoid the substance"
+    ],
+    "drill": "Role-play two angry-stakeholder scenarios with a colleague, opening each reply with a label.",
+    "sources": [
+      {
+        "ref": 26,
+        "where": "Never Split the Difference: labelling negatives"
+      },
+      {
+        "ref": 49,
+        "where": "affect labelling"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-challenge-007",
+    "name": "Name their objections before they do",
+    "capability": "Handling Challenge & Pressure",
+    "sub_capability": "Defusing hostility",
+    "summary": "Before a tough message, list the criticisms the other side is likely to have and voice them first. It takes the sting out and often prompts them to soften.",
+    "how_to_apply": "Open a hard conversation with two or three of the likely objections, stated fairly and without exaggeration.",
+    "example_line": "You're probably thinking this is another reorganisation dressed up, and that it'll land on your team again.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Opening lines naming the listener's likely objections",
+      "The other side's reply tone (softer, 'it's not that bad')"
+    ],
+    "common_mistakes": [
+      "Exaggerating objections to provoke reassurance",
+      "Listing so many it becomes self-flagellation"
+    ],
+    "drill": "Before the next difficult message, write the three things they'll think, and open with them.",
+    "sources": [
+      {
+        "ref": 26,
+        "where": "Never Split the Difference: accusation audit"
+      },
+      {
+        "ref": 27,
+        "where": "Pre-Suasion / Influence: raising a weakness early"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "caution",
+    "ethics_note": "Only voice objections you genuinely believe they may hold. Exaggerating them to fish for reassurance is manipulative."
+  },
+  {
+    "id": "ep-challenge-008",
+    "name": "Concede the valid point quickly",
+    "capability": "Handling Challenge & Pressure",
+    "sub_capability": "Receptive disagreement",
+    "summary": "Agreeing fast with the part of a challenge that is right builds credibility for the part you dispute. Emphasising agreement is part of conversational receptiveness.",
+    "how_to_apply": "Find what is correct in the challenge, agree with it explicitly, then state where you differ.",
+    "example_line": "You're right that we under-forecast churn. Where I'd differ is on the cause.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "'You're right that / I agree that' phrases in replies to challenge",
+      "Followed by a clearly marked difference ('where I see it differently')"
+    ],
+    "common_mistakes": [
+      "Conceding too much and losing the point",
+      "Fake concessions"
+    ],
+    "drill": "In the next three disagreements, start with a genuine concession. The coach counts receptiveness markers.",
+    "sources": [
+      {
+        "ref": 45,
+        "where": "Yeomans et al. 2020"
+      },
+      {
+        "ref": 27,
+        "where": "Cialdini: acknowledging weaknesses builds credibility"
+      },
+      {
+        "ref": 28,
+        "where": "Radical Candor: challenge with care"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-challenge-009",
+    "name": "Disagree with receptive language",
+    "capability": "Handling Challenge & Pressure",
+    "sub_capability": "Receptive disagreement",
+    "summary": "Phrases that acknowledge the other view, state your claim as your view, and frame positively make disagreements more productive and persuasive, and others notice it even when the speaker doesn't.",
+    "how_to_apply": "Use 'I see why you'd say that', 'From my view...', 'Where I see it differently is...' instead of 'That's wrong' or 'To be fair...'.",
+    "example_line": "I see why you'd want to wait. From where I sit, waiting costs more.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Receptiveness markers vs. defensive markers in challenge turns",
+      "Challenger's next turn calmer and shorter"
+    ],
+    "common_mistakes": [
+      "Using the phrases as a formula with a hostile tone",
+      "Contradicting the acknowledgement with 'but'"
+    ],
+    "drill": "The coach lists your defensive phrases from last week; replace each with a receptive equivalent in practice.",
+    "sources": [
+      {
+        "ref": 45,
+        "where": "Yeomans et al. 2020: receptiveness recipe"
+      },
+      {
+        "ref": 28,
+        "where": "Radical Candor: care personally, challenge directly"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-challenge-010",
+    "name": "\"I don't know\" plus a plan",
+    "capability": "Handling Challenge & Pressure",
+    "sub_capability": "Not knowing, well",
+    "summary": "Admitting you don't know, with a specific plan to find out, preserves credibility; bluffing and being found out costs far more.",
+    "how_to_apply": "Say 'I don't know' plainly, then what you'll do and by when. Optionally share your best estimate, labelled as such.",
+    "example_line": "I don't know the exact figure. My estimate is around 15%; I'll confirm by Thursday.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Plain 'I don't know' + commitment phrases",
+      "Rambling or vague answers when the answer is unknown (negative)"
+    ],
+    "common_mistakes": [
+      "Over-apologising for not knowing",
+      "Saying 'I don't know' to things you should know",
+      "Never following up"
+    ],
+    "drill": "In a practice Q&A, include three questions you can't answer; use the not-knowing pattern each time.",
+    "sources": [
+      {
+        "ref": 39,
+        "where": "Tenney et al.: calibration"
+      },
+      {
+        "ref": 40,
+        "where": "Gaertig & Simmons 2018"
+      },
+      {
+        "ref": 22,
+        "where": "handling questions"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-challenge-011",
+    "name": "Treat Q&A as conversation, not combat",
+    "capability": "Handling Challenge & Pressure",
+    "sub_capability": "Defusing hostility",
+    "summary": "Framing tough questions as a dialogue with someone curious, rather than an attack, changes your voice and posture and reduces defensiveness.",
+    "how_to_apply": "Before Q&A, remind yourself that questions mean engagement; respond as you would to a curious colleague.",
+    "example_line": "Good question; it's the one I'd ask too.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Defensive markers in Q&A replies",
+      "pitch_median_hz and speaking_rate_wpm stability in Q&A vs. presentation"
+    ],
+    "common_mistakes": [
+      "Praising every question ('great question') as a tic",
+      "Treating hostile questions as friendly when they are not"
+    ],
+    "drill": "Before your next Q&A, write one line reframing it as a conversation; compare Q&A stress markers afterwards.",
+    "sources": [
+      {
+        "ref": 22,
+        "where": "Think Faster, Talk Smarter: Q&A as dialogue"
+      }
+    ],
+    "evidence": "single-author",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-challenge-012",
+    "name": "Lower and slow under fire",
+    "capability": "Handling Challenge & Pressure",
+    "sub_capability": "Defusing hostility",
+    "summary": "Under attack, the natural stress response pushes pitch up and pace faster. Deliberately keeping pace slower and pitch settled signals composure and helps you think.",
+    "how_to_apply": "When challenged, slow your first sentence and keep pitch at baseline; take a breath before answering.",
+    "example_line": "(slow, settled) Let me answer that directly.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "pitch_median_hz rise > ~1-2 st and speaking_rate_wpm rise > ~15-20% on challenged turns (rubric heuristics)",
+      "pitch_sd_st collapse"
+    ],
+    "common_mistakes": [
+      "Slowing so much it sounds patronising",
+      "Going monotone"
+    ],
+    "drill": "Record replies to five challenging questions and compare pitch and rate with baseline; repeat until within your normal range.",
+    "sources": [
+      {
+        "ref": 34,
+        "where": "Cheng et al. 2016: pitch and rank"
+      },
+      {
+        "ref": 26,
+        "where": "calm voice"
+      },
+      {
+        "ref": 16,
+        "where": "breath and centre under pressure"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-challenge-013",
+    "name": "Dare to be dull: aim for good enough",
+    "capability": "Handling Challenge & Pressure",
+    "sub_capability": "Impromptu composure",
+    "summary": "When put on the spot, trying to be brilliant creates freeze. Aiming for a clear, adequate answer reduces pressure and usually produces a better one.",
+    "how_to_apply": "When called on unexpectedly, give a plain, structured answer; drop the aim of being impressive.",
+    "example_line": "Honest answer: I'd want more data, but my instinct is yes, for two reasons.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Fillers and restarts in unplanned turns vs. planned ones",
+      "Length of impromptu turns (short is fine)"
+    ],
+    "common_mistakes": [
+      "Using 'good enough' as an excuse not to prepare for predictable questions"
+    ],
+    "drill": "Ask a colleague to spring three questions on you during the week; answer each plainly in under 30 seconds.",
+    "sources": [
+      {
+        "ref": 22,
+        "where": "Think Faster, Talk Smarter: dare to be dull, treat mistakes as missed takes"
+      }
+    ],
+    "evidence": "single-author",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-challenge-014",
+    "name": "Buy time honestly",
+    "capability": "Handling Challenge & Pressure",
+    "sub_capability": "Impromptu composure",
+    "summary": "Saying you need a moment, or restating the question, gives you a few seconds to structure your answer without sounding caught out.",
+    "how_to_apply": "Use a short honest buffer ('Let me think about that for a second') or a paraphrase, then answer with a structure.",
+    "example_line": "Let me take a second on that. [pause] Two things.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "median_response_gap_s on unexpected questions",
+      "Buffer phrase followed by structured answer (vs. fillers)"
+    ],
+    "common_mistakes": [
+      "Using buffers every time",
+      "Taking 'a second' and then rambling"
+    ],
+    "drill": "Practise five unexpected questions using a buffer and a two-point structure.",
+    "sources": [
+      {
+        "ref": 22,
+        "where": "spontaneous speaking techniques"
+      },
+      {
+        "ref": 46,
+        "where": "response gap perception"
+      }
+    ],
+    "evidence": "single-author",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-challenge-015",
+    "name": "Prepare a message house",
+    "capability": "Handling Challenge & Pressure",
+    "sub_capability": "Bridging without dodging",
+    "summary": "Before a high-stakes meeting or interview, prepare one headline message and three supporting pillars with evidence. Under pressure you return to the house instead of improvising.",
+    "how_to_apply": "Write the headline (roof) and three pillars with one proof each on a single card; return to them when answering.",
+    "example_line": "(headline) We're profitable next year. (pillars) Costs down, prices up, churn falling.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Recurrence of the headline and pillars across Tom's answers",
+      "Consistency of message across the meeting"
+    ],
+    "common_mistakes": [
+      "Repeating the message robotically regardless of the question",
+      "Pillars without evidence"
+    ],
+    "drill": "Build a message house for your next board or investor meeting and rehearse answering five questions from it.",
+    "sources": [
+      {
+        "ref": 30,
+        "where": "media training: key messages and message house"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-challenge-016",
+    "name": "Lead with a weakness before the strengths",
+    "capability": "Handling Challenge & Pressure",
+    "sub_capability": "Receptive disagreement",
+    "summary": "Mentioning a genuine drawback early (and then your strongest points) makes you come across as more honest and makes the strengths more believable.",
+    "how_to_apply": "When presenting a proposal, name its main real limitation briefly, then the strengths that outweigh it.",
+    "example_line": "It's not the cheapest option. It is the only one we can deliver by June.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Early mention of a limitation followed by strengths in proposal turns"
+    ],
+    "common_mistakes": [
+      "Dwelling on the weakness",
+      "Inventing a trivial weakness as a ploy"
+    ],
+    "drill": "Rewrite your next proposal opening so it names one real limitation in the first two sentences.",
+    "sources": [
+      {
+        "ref": 27,
+        "where": "Pre-Suasion / Influence: credibility via an early weakness"
+      }
+    ],
+    "evidence": "single-author",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-brevity-001",
+    "name": "One idea in fifteen words",
+    "capability": "Brevity & Executive Communication",
+    "sub_capability": "One throughline",
+    "summary": "Every talk or contribution should carry one main idea you can state in a single short sentence. If you cannot, the message is not ready.",
+    "how_to_apply": "Write the throughline in 15 words or fewer before any important meeting; everything you say should serve it.",
+    "example_line": "We should stop building features and fix onboarding first.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Recurrence of a single headline across Tom's turns",
+      "Number of distinct claims per substantive turn (fewer is better)"
+    ],
+    "common_mistakes": [
+      "A throughline so general it says nothing",
+      "Cramming in every point you know"
+    ],
+    "drill": "Before your next three key meetings, write your throughline in 15 words; afterwards, ask one attendee what your point was.",
+    "sources": [
+      {
+        "ref": 15,
+        "where": "TED Talks: the throughline"
+      },
+      {
+        "ref": 13,
+        "where": "Resonate: the big idea"
+      },
+      {
+        "ref": 10,
+        "where": "Bezos Blueprint: clear simple message"
+      },
+      {
+        "ref": 20,
+        "where": "Simply Said"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-brevity-002",
+    "name": "Halve it",
+    "capability": "Brevity & Executive Communication",
+    "sub_capability": "Length discipline",
+    "summary": "Most answers are better at half the length. Senior listeners reward economy; length often reads as uncertainty or lack of preparation.",
+    "how_to_apply": "Re-record or rewrite your answer at half the length, keeping the headline and the strongest reason.",
+    "example_line": "(two-minute answer cut to one) Yes. It pays back in a year, and the risk is low.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "mean_turn_s and longest_turn_s in senior settings vs. baseline",
+      "Word count of answers to direct questions"
+    ],
+    "common_mistakes": [
+      "Cutting the reason and leaving only the claim",
+      "Speaking faster instead of saying less"
+    ],
+    "drill": "Pick your longest answer from last week's transcript and re-record it at half the length; the coach compares word counts.",
+    "sources": [
+      {
+        "ref": 21,
+        "where": "Get to the Point: concision"
+      },
+      {
+        "ref": 10,
+        "where": "Bezos Blueprint: simplicity"
+      },
+      {
+        "ref": 64,
+        "where": "rubric D1 drill"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-brevity-003",
+    "name": "Thirty-second answers upward",
+    "capability": "Brevity & Executive Communication",
+    "sub_capability": "Length discipline",
+    "summary": "With senior stakeholders, aim to answer most questions in about thirty seconds, then offer more detail if wanted. It shows command and respects their time.",
+    "how_to_apply": "Answer, give one reason, then stop and offer: 'Want the detail?'",
+    "example_line": "We're on track for June. The one risk is supplier capacity. Happy to go deeper.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "Duration of Tom's answers to questions from senior speakers (target ~30-45 s)",
+      "longest_turn_s in board or investor recordings"
+    ],
+    "common_mistakes": [
+      "Cutting so short you sound evasive",
+      "Offering detail and then giving it anyway"
+    ],
+    "drill": "Practise ten likely senior questions with a timer; aim for 30 seconds each.",
+    "sources": [
+      {
+        "ref": 22,
+        "where": "concise responses"
+      },
+      {
+        "ref": 20,
+        "where": "Simply Said: right level of detail for the audience"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-brevity-004",
+    "name": "Attach the so-what to every fact",
+    "capability": "Brevity & Executive Communication",
+    "sub_capability": "So-what framing",
+    "summary": "Facts without implications make the listener do the work. Executives want to know what a number means for them.",
+    "how_to_apply": "After each fact, add 'which means...' or 'so...' in the listener's terms.",
+    "example_line": "Churn rose to 4%, which means we lose a month of growth every quarter.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Facts followed by implication phrases ('which means', 'so', 'the implication is')",
+      "Others asking 'so what does that mean?' (negative)"
+    ],
+    "common_mistakes": [
+      "Implications that overreach the data",
+      "Explaining obvious implications to experts"
+    ],
+    "drill": "Review a recent update; add a 'which means' after each number and present the revised version.",
+    "sources": [
+      {
+        "ref": 21,
+        "where": "Get to the Point: 'so what' test"
+      },
+      {
+        "ref": 11,
+        "where": "Pyramid Principle"
+      },
+      {
+        "ref": 19,
+        "where": "Executive Presence (Monarth): managing perception"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-brevity-005",
+    "name": "Lead with the ask",
+    "capability": "Brevity & Executive Communication",
+    "sub_capability": "Clear ask",
+    "summary": "When you need something (a decision, money, help), say so at the start. Burying the ask after context makes listeners wonder what the meeting is for.",
+    "how_to_apply": "Open with what you need and by when; then give the reasons.",
+    "example_line": "I need a yes on two contractors today. Here's why.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Explicit ask phrases ('I need', 'I'm asking for', 'the decision I'd like') in the first minute",
+      "Others asking 'what do you need from us?' (negative)"
+    ],
+    "common_mistakes": [
+      "Asking without context at all",
+      "Asking for several things at once"
+    ],
+    "drill": "For every meeting you request this week, put the ask in the first sentence. The coach checks first-minute asks.",
+    "sources": [
+      {
+        "ref": 12,
+        "where": "BLUF"
+      },
+      {
+        "ref": 20,
+        "where": "Simply Said: what you want them to do"
+      },
+      {
+        "ref": 10,
+        "where": "Bezos Blueprint: clarity"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-brevity-006",
+    "name": "Skip the backstory",
+    "capability": "Brevity & Executive Communication",
+    "sub_capability": "Length discipline",
+    "summary": "Chronological backstory before the point is the most common cause of long, unclear contributions. Context should come only as needed to support the conclusion.",
+    "how_to_apply": "Start with the conclusion; add backstory only if asked or if one fact is essential.",
+    "example_line": "(not 'So back in March, we started...') The vendor failed. Here's what we're doing.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Time words ('back in', 'initially', 'then') dominating the first half of a turn",
+      "Claim position late in the turn"
+    ],
+    "common_mistakes": [
+      "Removing context the listener genuinely needs",
+      "Over-terse answers to newcomers"
+    ],
+    "drill": "The coach flags your three longest chronological openings this week; re-record each starting from the conclusion.",
+    "sources": [
+      {
+        "ref": 11,
+        "where": "Pyramid Principle"
+      },
+      {
+        "ref": 12,
+        "where": "BLUF"
+      },
+      {
+        "ref": 64,
+        "where": "rubric D1 failure modes"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-brevity-007",
+    "name": "Make one number meaningful",
+    "capability": "Brevity & Executive Communication",
+    "sub_capability": "So-what framing",
+    "summary": "One well-chosen number, put into context (a comparison or a picture), lands better than a slide of figures.",
+    "how_to_apply": "Choose the one number that matters and compare it to something familiar.",
+    "example_line": "We lose 400 customers a month. That's a full branch, every month.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Count of numbers per turn (fewer, contextualised)",
+      "Comparison phrases attached to numbers"
+    ],
+    "common_mistakes": [
+      "Comparisons that distort scale",
+      "A string of unexplained figures"
+    ],
+    "drill": "For your next update, pick one number and write a comparison for it.",
+    "sources": [
+      {
+        "ref": 9,
+        "where": "Talk Like TED: making statistics meaningful"
+      },
+      {
+        "ref": 10,
+        "where": "Bezos Blueprint: data and analogy"
+      },
+      {
+        "ref": 58,
+        "where": "concrete language"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-brevity-008",
+    "name": "Three headlines before the meeting",
+    "capability": "Brevity & Executive Communication",
+    "sub_capability": "Prepared headline",
+    "summary": "Writing down the two or three things you most want to say before a meeting means you say them early and crisply rather than discovering them mid-sentence.",
+    "how_to_apply": "Before the meeting, write up to three one-sentence headlines; make sure each gets said.",
+    "example_line": "(card) 1: Delay launch. 2: Fund testing. 3: I'll brief the partner.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Prepared headlines appearing verbatim or near-verbatim in the transcript",
+      "Position of the first headline in Tom's first substantive turn"
+    ],
+    "common_mistakes": [
+      "Forcing headlines in regardless of the discussion",
+      "Having too many"
+    ],
+    "drill": "Before five meetings this week, write three headlines. The coach checks how many were said and when.",
+    "sources": [
+      {
+        "ref": 22,
+        "where": "preparing for spontaneity"
+      },
+      {
+        "ref": 20,
+        "where": "Simply Said: preparation"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-brevity-009",
+    "name": "Stop when you're done",
+    "capability": "Brevity & Executive Communication",
+    "sub_capability": "Length discipline",
+    "summary": "Adding 'just one more thing' or repeating a point in different words dilutes the message and signals uncertainty that it landed.",
+    "how_to_apply": "When you have made your point, stop. If you have one more genuinely new point, signal it ('one final, separate point').",
+    "example_line": "That's the recommendation. [stop]",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Restatements of the same point within one turn",
+      "Add-on phrases ('just to add', 'also, one more thing') at the end of turns"
+    ],
+    "common_mistakes": [
+      "Stopping before making the point at all"
+    ],
+    "drill": "The coach flags every repeated point within a turn for a week; aim to cut them by half.",
+    "sources": [
+      {
+        "ref": 21,
+        "where": "Get to the Point: concision"
+      },
+      {
+        "ref": 20,
+        "where": "Simply Said: avoiding over-explaining"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-brevity-010",
+    "name": "Status, risk, ask",
+    "capability": "Brevity & Executive Communication",
+    "sub_capability": "So-what framing",
+    "summary": "A three-part update for senior audiences: where we are, the main risk, and what you need. It replaces long progress narratives.",
+    "how_to_apply": "Structure updates as one sentence each for status, risk and ask.",
+    "example_line": "Status: on track for June. Risk: supplier capacity. Ask: approve a backup supplier.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "All three parts present in update turns",
+      "Update turn length under ~60 s"
+    ],
+    "common_mistakes": [
+      "Hiding the risk",
+      "No ask when one is needed"
+    ],
+    "drill": "Deliver your next three updates in status-risk-ask form and time them.",
+    "sources": [
+      {
+        "ref": 12,
+        "where": "BLUF"
+      },
+      {
+        "ref": 20,
+        "where": "Simply Said: structured updates"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-brevity-011",
+    "name": "Strip jargon and acronyms",
+    "capability": "Brevity & Executive Communication",
+    "sub_capability": "So-what framing",
+    "summary": "Jargon and internal acronyms make you sound like you are hiding behind language and lose people outside your team. Plain words sound more senior, not less.",
+    "how_to_apply": "Replace acronyms and buzzwords with plain words, or define them once.",
+    "example_line": "(not 'leverage our GTM synergies') Sell both products through the same sales team.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Acronym and buzzword density in the transcript",
+      "Others asking what a term means"
+    ],
+    "common_mistakes": [
+      "Over-explaining terms experts know"
+    ],
+    "drill": "The coach lists your top five jargon terms of the week; find a plain replacement for each.",
+    "sources": [
+      {
+        "ref": 10,
+        "where": "Bezos Blueprint: plain language"
+      },
+      {
+        "ref": 20,
+        "where": "Simply Said: simple words"
+      },
+      {
+        "ref": 58,
+        "where": "concrete language"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-brevity-012",
+    "name": "Time-box presentations well under the slot",
+    "capability": "Brevity & Executive Communication",
+    "sub_capability": "One throughline",
+    "summary": "Shorter presentations hold attention and leave room for discussion; TED caps talks at 18 minutes for this reason. For internal slots, aim to use about half the time to present.",
+    "how_to_apply": "Plan to finish presenting at roughly half the allotted time, leaving the rest for questions and decision.",
+    "example_line": "I'll take ten minutes, then I'd like twenty on the decision.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "Duration of Tom's presentation segment vs. meeting slot",
+      "longest_turn_s in presentation recordings"
+    ],
+    "common_mistakes": [
+      "Rushing to fit too much into less time",
+      "Cutting the structure instead of content"
+    ],
+    "drill": "Rehearse your next presentation with a timer set to half the slot.",
+    "sources": [
+      {
+        "ref": 9,
+        "where": "Talk Like TED: 18-minute rule"
+      },
+      {
+        "ref": 15,
+        "where": "TED Talks: talk length"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-hierarchy-001",
+    "name": "Bad news early, with a plan",
+    "capability": "Poise in Hierarchy",
+    "sub_capability": "Speaking truth to power",
+    "summary": "Raising bad news early and plainly, with a recommendation attached, is a mark of gravitas; executives list speaking truth to power among presence traits.",
+    "how_to_apply": "Put the bad news in the first sentence or two, state its size plainly, then your recommended response.",
+    "example_line": "We're going to miss Q3 by about 10%. Here's what I recommend we do.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Position of bad news in the turn (early is better)",
+      "hedges_per_100w and apologies in bad-news turns vs. baseline",
+      "Recommendation following the bad news"
+    ],
+    "common_mistakes": [
+      "Burying bad news after good news",
+      "Over-apologising",
+      "Bad news with no plan"
+    ],
+    "drill": "For your next difficult update upward, write the first two sentences in advance: the news and the recommendation.",
+    "sources": [
+      {
+        "ref": 1,
+        "where": "Executive Presence: speaking truth to power"
+      },
+      {
+        "ref": 2,
+        "where": "New Rules: gravitas traits"
+      },
+      {
+        "ref": 12,
+        "where": "BLUF"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-hierarchy-002",
+    "name": "Same voice up as across",
+    "capability": "Poise in Hierarchy",
+    "sub_capability": "Peer-level stance",
+    "summary": "Presence with a board or investors means sounding like you do with peers: same pace, pitch and directness. The usual tell is pitch and pace rising and hedges increasing when speaking up.",
+    "how_to_apply": "Before senior meetings, remind yourself to speak as a colleague; compare your recordings across settings.",
+    "example_line": "(to the chair, at peer pace) I disagree, and here's why.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "Deltas in pitch_median_hz, speaking_rate_wpm, hedges_per_100w and uptalk_share between senior and peer meetings",
+      "apologies in upward settings"
+    ],
+    "common_mistakes": [
+      "Overcorrecting into overfamiliarity",
+      "Mimicking senior people's style"
+    ],
+    "drill": "The coach produces a side-by-side of your voice and hedge measures in senior vs. peer meetings; pick the biggest gap to close.",
+    "sources": [
+      {
+        "ref": 31,
+        "where": "Acting with Power"
+      },
+      {
+        "ref": 34,
+        "where": "Cheng et al. 2016: vocal signals and rank"
+      },
+      {
+        "ref": 1,
+        "where": "gravitas"
+      },
+      {
+        "ref": 64,
+        "where": "rubric 4.2 speaking up"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-hierarchy-003",
+    "name": "Play high or low on purpose",
+    "capability": "Poise in Hierarchy",
+    "sub_capability": "Authority-approachability balance",
+    "summary": "Gruenfeld (drawing on theatre) describes 'playing high' (authority: fewer words, direct statements, unhurried delivery) and 'playing low' (approachability: questions, deference, warmth). Effective leaders choose deliberately.",
+    "how_to_apply": "Before a meeting, decide which you need: high with a sceptical board under challenge, lower with a junior team you want ideas from.",
+    "example_line": "(playing high) We'll proceed. (playing low) What am I missing?",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Ratio of questions to statements by setting",
+      "talk_share and interruptions by setting",
+      "Hedges and apologies when playing high (should be low)"
+    ],
+    "common_mistakes": [
+      "Playing high with juniors who need safety",
+      "Playing low with a board that needs a decision",
+      "Staying in one mode always"
+    ],
+    "drill": "For one week, label each meeting 'high' or 'low' in advance; the coach checks the questions-to-statements ratio against your label.",
+    "sources": [
+      {
+        "ref": 31,
+        "where": "Acting with Power: playing high and low"
+      }
+    ],
+    "evidence": "single-author",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-hierarchy-004",
+    "name": "Enter by building on the last speaker",
+    "capability": "Poise in Hierarchy",
+    "sub_capability": "Entering the conversation",
+    "summary": "In fast senior discussions, the cleanest way in is to connect to what was just said, then add your point. It earns the floor without fighting for it.",
+    "how_to_apply": "Use the previous speaker's name and point as your bridge, then make your contribution in one or two sentences.",
+    "example_line": "Building on Claire's point about cost: there's a timing risk too.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Name + 'building on / to Claire's point' openings",
+      "Time to Tom's first contribution in group meetings"
+    ],
+    "common_mistakes": [
+      "Waiting for a perfect gap that never comes",
+      "Building on someone just to repeat them"
+    ],
+    "drill": "In three group meetings, make your first contribution within the first ten minutes using a build. The coach checks timing.",
+    "sources": [
+      {
+        "ref": 22,
+        "where": "inserting your thoughts into meetings"
+      },
+      {
+        "ref": 17,
+        "where": "Power of Presence"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-hierarchy-005",
+    "name": "Open with substance, not deference",
+    "capability": "Poise in Hierarchy",
+    "sub_capability": "Entering the conversation",
+    "summary": "Openers like 'sorry, if I may, just a quick thought' signal low status before the content arrives. A direct, polite entry carries more weight.",
+    "how_to_apply": "Start with the person's name or a short bridge, then the point.",
+    "example_line": "(not 'Sorry, if I could just...') Chair, one point on risk.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "apologies and minimisers in the first five words of Tom's contributions in senior settings"
+    ],
+    "common_mistakes": [
+      "Sounding curt",
+      "Interrupting rather than waiting for a gap"
+    ],
+    "drill": "For one week, the coach flags every deferential opener in upward meetings; replace each with a name-plus-point opener.",
+    "sources": [
+      {
+        "ref": 38,
+        "where": "powerless speech: hedges and polite forms"
+      },
+      {
+        "ref": 25,
+        "where": "Cues: confidence cues"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-hierarchy-006",
+    "name": "Disagree upward with respect and reason",
+    "capability": "Poise in Hierarchy",
+    "sub_capability": "Speaking truth to power",
+    "summary": "Disagreeing with seniors works best when you acknowledge their view, state yours as your judgement, and give a reason. Receptive disagreement is persuasive without being insubordinate.",
+    "how_to_apply": "Use: 'I understand why you'd go that way. My concern is X, because Y. I'd suggest Z.'",
+    "example_line": "I see why you'd want to move fast. My concern is the contract, because it isn't signed. I'd wait two weeks.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Receptive markers + first-person judgement + reason in disagreement turns with seniors",
+      "Hedges and permission tags in those turns (negative)"
+    ],
+    "common_mistakes": [
+      "Disagreeing only in private afterwards",
+      "Over-softening so the disagreement is missed"
+    ],
+    "drill": "Prepare one respectful disagreement for your next senior meeting using the pattern.",
+    "sources": [
+      {
+        "ref": 45,
+        "where": "Yeomans et al. 2020"
+      },
+      {
+        "ref": 28,
+        "where": "Radical Candor: challenge directly"
+      },
+      {
+        "ref": 1,
+        "where": "speaking truth to power"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-hierarchy-007",
+    "name": "Frame for their agenda",
+    "capability": "Poise in Hierarchy",
+    "sub_capability": "Peer-level stance",
+    "summary": "Senior people listen for what matters to them. Framing your point in terms of their priorities shows strategic awareness and earns attention.",
+    "how_to_apply": "Before the meeting, identify the senior person's top concern and link your headline to it.",
+    "example_line": "Given your focus on cash this year, this frees up £2m by Q2.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "References to the listener's stated priorities in Tom's turns",
+      "Senior person's engagement (questions, follow-ups)"
+    ],
+    "common_mistakes": [
+      "Pandering",
+      "Guessing their priorities wrongly"
+    ],
+    "drill": "Before your next senior meeting, write their top priority and connect your headline to it.",
+    "sources": [
+      {
+        "ref": 19,
+        "where": "Executive Presence (Monarth): reading people and managing perception"
+      },
+      {
+        "ref": 20,
+        "where": "Simply Said: audience first"
+      },
+      {
+        "ref": 27,
+        "where": "Pre-Suasion: what is in focus at the moment of decision"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-hierarchy-008",
+    "name": "Ask the sharp question",
+    "capability": "Poise in Hierarchy",
+    "sub_capability": "Peer-level stance",
+    "summary": "In senior rooms, a precise, curious question often carries more presence than a statement. Influence earned through expertise and curiosity is respected and liked.",
+    "how_to_apply": "Prepare one incisive question that shows you've understood the core issue; ask it calmly.",
+    "example_line": "What would have to be true for this to pay back in a year?",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Tom's questions in senior meetings and the responses they trigger",
+      "Others picking up or repeating Tom's question"
+    ],
+    "common_mistakes": [
+      "Gotcha questions",
+      "Questions to show off"
+    ],
+    "drill": "For each senior meeting this month, prepare one sharp question.",
+    "sources": [
+      {
+        "ref": 33,
+        "where": "Cheng et al. 2013: prestige"
+      },
+      {
+        "ref": 44,
+        "where": "Huang et al. 2017: questions and liking"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-hierarchy-009",
+    "name": "Spell out the bottom line for direct cultures",
+    "capability": "Poise in Hierarchy",
+    "sub_capability": "Cross-cultural calibration",
+    "summary": "British indirectness can be read as weakness or missed entirely by Dutch, German or many US colleagues. With these audiences, state the conclusion and its severity explicitly.",
+    "how_to_apply": "In international meetings, say the bottom line explicitly and avoid understatement on key points.",
+    "example_line": "To be clear: this is a serious problem and we should stop.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Downgraders on serious issues in mixed-culture meetings",
+      "Clarifying questions from international colleagues"
+    ],
+    "common_mistakes": [
+      "Overcorrecting with UK colleagues",
+      "Assuming nationality defines style"
+    ],
+    "drill": "Before your next international call, rewrite your key point without understatement.",
+    "sources": [
+      {
+        "ref": 32,
+        "where": "Culture Map: directness and downgraders"
+      },
+      {
+        "ref": 64,
+        "where": "rubric 4.3"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-hierarchy-010",
+    "name": "Drop the over-deference",
+    "capability": "Poise in Hierarchy",
+    "sub_capability": "Peer-level stance",
+    "summary": "Excessive thanks, honorifics or 'if I may' in senior rooms signal that you see yourself as junior. Courtesy is good; deference is a status tell.",
+    "how_to_apply": "Thank once, use names rather than titles where culturally appropriate, and drop 'if I may' and 'with respect'.",
+    "example_line": "Thanks, James. Here's what I'd suggest.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "Count of deferential phrases ('if I may', 'with respect', 'sorry to take up time') in upward settings vs. peer settings",
+      "apologies"
+    ],
+    "common_mistakes": [
+      "Becoming over-familiar",
+      "Ignoring cultural norms where titles matter"
+    ],
+    "drill": "The coach counts deferential phrases in your next three senior meetings; cut them by half.",
+    "sources": [
+      {
+        "ref": 38,
+        "where": "powerless speech"
+      },
+      {
+        "ref": 31,
+        "where": "Acting with Power: status cues"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-hierarchy-011",
+    "name": "Have the one-minute version ready",
+    "capability": "Poise in Hierarchy",
+    "sub_capability": "Speaking truth to power",
+    "summary": "Senior slots get cut. Having a one-minute version of your message ready means you hold your ground when time shrinks instead of rushing a ten-minute version.",
+    "how_to_apply": "Prepare a 60-second version of every important presentation; if your time is cut, switch to it calmly.",
+    "example_line": "We've only got two minutes, so here's the one-minute version.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "speaking_rate_wpm spikes when time is cut (rushing, negative)",
+      "Clean shortened structure after a time cut"
+    ],
+    "common_mistakes": [
+      "Speeding through the full deck",
+      "Complaining about the time cut"
+    ],
+    "drill": "For your next presentation, rehearse the one-minute version twice.",
+    "sources": [
+      {
+        "ref": 22,
+        "where": "spontaneous speaking"
+      },
+      {
+        "ref": 15,
+        "where": "TED Talks: planning"
+      }
+    ],
+    "evidence": "practitioner-consensus",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-hierarchy-012",
+    "name": "Prestige, not dominance",
+    "capability": "Poise in Hierarchy",
+    "sub_capability": "Authority-approachability balance",
+    "summary": "There are two routes to influence: dominance (interrupting, pressure) and prestige (sharing expertise, generosity). Both work, but only prestige is liked and sustains respect.",
+    "how_to_apply": "Influence by teaching and sharing know-how freely; avoid floor-grabbing, sarcasm and pressure tactics.",
+    "example_line": "Happy to share how we did this at the last company; it might save you a month.",
+    "observable_in_audio": "partial",
+    "markers": [
+      "interruptions by Tom and sarcasm (dominance cues)",
+      "Offers to share expertise or help (prestige cues)",
+      "Others asking Tom for his view (prestige outcome)"
+    ],
+    "common_mistakes": [
+      "Lecturing (prestige tipping into dominance)",
+      "False modesty"
+    ],
+    "drill": "The coach tallies dominance and prestige cues across a month; review the balance.",
+    "sources": [
+      {
+        "ref": 33,
+        "where": "Cheng et al. 2013: dominance and prestige"
+      },
+      {
+        "ref": 65,
+        "where": "Hall et al. 2005: nonverbal status cues"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  },
+  {
+    "id": "ep-hierarchy-013",
+    "name": "Keep your pitch level when presenting up",
+    "capability": "Poise in Hierarchy",
+    "sub_capability": "Peer-level stance",
+    "summary": "Status nerves show up in the voice: pitch and rate rise when speaking to seniors. Keeping them near your baseline makes you sound like you belong in the room.",
+    "how_to_apply": "Before speaking up, breathe out, find your relaxed pitch, and slow the first sentence slightly.",
+    "example_line": "(settled) Thanks. Three points from me.",
+    "observable_in_audio": "yes",
+    "markers": [
+      "pitch_median_hz and speaking_rate_wpm in upward settings vs. peer baseline",
+      "pitch_drift_st across the senior meeting"
+    ],
+    "common_mistakes": [
+      "Forcing a low voice",
+      "Over-slowing"
+    ],
+    "drill": "Record your next two board or investor sessions; the coach compares pitch and rate with peer-meeting baseline.",
+    "sources": [
+      {
+        "ref": 34,
+        "where": "Cheng et al. 2016"
+      },
+      {
+        "ref": 35,
+        "where": "Ko et al. 2015"
+      },
+      {
+        "ref": 64,
+        "where": "rubric 4.2"
+      }
+    ],
+    "evidence": "research-backed",
+    "ethics": "ok"
+  }
+]
