@@ -2,10 +2,14 @@
   "extraKnownMarketplaces": {
     "superpowers-marketplace": {
       "source": { "source": "github", "repo": "obra/superpowers-marketplace" }
+    },
+    "hyperframes": {
+      "source": { "source": "github", "repo": "heygen-com/hyperframes" }
     }
   },
   "enabledPlugins": {
-    "superpowers@superpowers-marketplace": true
+    "superpowers@superpowers-marketplace": true,
+    "hyperframes@hyperframes": true
   },
   "enableAllProjectMcpServers": true
 }
