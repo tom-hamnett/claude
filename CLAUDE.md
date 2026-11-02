@@ -29,4 +29,6 @@ This repo holds several separate Quantum Tools products. Work on ONE project per
 - `.mcp.json`: Playwright (browser testing) and Context7 (current library docs).
 - `.claude/skills/design-taste-frontend/`: use for any UI work.
 - Tests for the GTM engine: `pytest` from the repo root.
+- Plugins added Nov 2026: `ui-ux-pro-max` (design styles, palettes, font pairings for site and app UI), `claude-code-setup` (Anthropic's plugin that recommends hooks, skills and tool servers for this repo), `council` (`/council <question>` stress-tests a big decision from many viewpoints; uses many tokens, so big decisions only).
+- `.claude/skills/anatomy/`: interactive explainer diagrams (isometric figures as HTML/SVG/PDF). Needs Node 20.10+.
 - Each web app deploys from its own folder via its own `netlify.toml`.

@@ -1,15 +1,42 @@
 {
   "extraKnownMarketplaces": {
     "superpowers-marketplace": {
-      "source": { "source": "github", "repo": "obra/superpowers-marketplace" }
+      "source": {
+        "source": "github",
+        "repo": "obra/superpowers-marketplace"
+      }
     },
     "hyperframes": {
-      "source": { "source": "github", "repo": "heygen-com/hyperframes" }
+      "source": {
+        "source": "github",
+        "repo": "heygen-com/hyperframes"
+      }
+    },
+    "ui-ux-pro-max-skill": {
+      "source": {
+        "source": "github",
+        "repo": "nextlevelbuilder/ui-ux-pro-max-skill"
+      }
+    },
+    "claude-plugins-official": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official"
+      }
+    },
+    "council-of-high-intelligence": {
+      "source": {
+        "source": "github",
+        "repo": "0xNyk/council-of-high-intelligence"
+      }
     }
   },
   "enabledPlugins": {
     "superpowers@superpowers-marketplace": true,
-    "hyperframes@hyperframes": true
+    "hyperframes@hyperframes": true,
+    "ui-ux-pro-max@ui-ux-pro-max-skill": true,
+    "claude-code-setup@claude-plugins-official": true,
+    "council@council-of-high-intelligence": true
   },
   "enableAllProjectMcpServers": true
 }
