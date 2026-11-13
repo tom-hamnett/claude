@@ -114,6 +114,8 @@ textarea{width:100%;min-height:140px;font:12px/1.4 ui-monospace,monospace;border
 'use strict';
 /* ---------- constants ---------- */
 const KEY='fairwaylog.v1';
+const COURSES={"quinta-da-marinha":{"name":"Onyria Quinta da Marinha","units":"m","tees":["58","55","51","47"],"holes":[["the first",[493,479,452,418],5,5],["good luck",[130,122,108,89],3,16],["village",[519,493,466,436],5,7],["thin",[379,355,320,299],4,9],["the bridge",[153,140,131,88],3,12],["snake",[489,475,446,421],5,4],["lucky seven",[152,142,120,111],3,18],["twin pines",[373,357,328,316],4,1],["half way",[165,155,128,111],3,15],["the lakes",[495,475,447,429],5,3],["gone with the wind",[527,508,457,450],5,6],["lefty",[417,393,374,363],4,2],["atlantic ocean",[334,323,303,277],4,8],["ravine",[148,130,115,95],3,11],["iron(y)",[275,262,234,222],4,13],["sweet sixteen",[152,139,119,104],3,17],["step by step",[326,315,282,269],4,10],["drive home",[343,332,297,260],4,14]]}};
+
 const CLUBS=['Dr','3W','5W','Hy','4i','5i','6i','7i','8i','9i','PW','GW','SW','LW','Putter'];
 const NAMES={Dr:'Driver',Hy:'Hybrid',PW:'Pitching wedge',GW:'Gap wedge',SW:'Sand wedge',LW:'Lob wedge',Putter:'Putter'};
 const RATINGS=[[5,'Pured'],[4,'Good'],[3,'OK'],[2,'Poor'],[1,'Mishit']];
@@ -158,10 +160,10 @@ async function keepAwake(){try{if('wakeLock' in navigator&&document.visibilitySt
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){keepAwake();if(S.round)startGPS()}});
 
 /* ---------- round logic ---------- */
-function newRound(course,holes,units){
-  S.units=units;
-  S.round={id:Date.now().toString(36),course:course||'Round',date:new Date().toISOString(),cur:0,active:null,
-    holes:Array.from({length:holes},(_,i)=>({n:i+1,par:4,shots:[],penalties:0,score:null,putts:null,done:false}))};
+function newRound(course,holes,units,cid,tee,hcp){
+  S.units=units;const C=COURSES[cid];const ti=C?Math.max(0,C.tees.indexOf(tee)):0;
+  S.round={id:Date.now().toString(36),course:C?C.name+(course?' · '+course:''):(course||'Round'),courseId:C?cid:null,tee:C?C.tees[ti]:null,hcp:hcp,date:new Date().toISOString(),cur:0,active:null,
+    holes:Array.from({length:C?18:holes},(_,i)=>{const ch=C&&C.holes[i];return {n:i+1,par:ch?ch[2]:4,si:ch?ch[3]:null,name:ch?ch[0]:null,len:ch?ch[1][ti]:null,lenUnit:C?C.units:null,shots:[],penalties:0,score:null,putts:null,done:false}})};
   save();
 }
 function measurePrev(h,pos){
@@ -285,7 +287,7 @@ function handleText(raw){
     if(hit){render();toast('Score '+sheet.score+', '+sheet.putts+' putts. Say “save” or tap Save.')}
     return hit}
   if(/ (undo|delete that|scratch that|cancel that|remove that) /.test(t)){undo();return true}
-  const club=parseClub(t);const fb=parseFb(t);
+  const club=parseClub(t);const fb=parseFb(t.replace(/ (sand wedge|sandwich|sandwedge) /g,' '));
   const holeDone=/ (hole done|finish hole|finished|next hole|holed|in the hole|hole out|holed out|picked up|pick up|score) /.test(t);
   if(club){logShot(club,fb);return true}
   if(fb){const s=activeShot();if(fb.penalty)addPenalty();if(s){applyFb(s,fb);save();render();toast(clubName(s.club)+': '+fbText(s))}else if(!fb.penalty)toast('Log a club first');if(holeDone)openFinish();return true}
@@ -294,6 +296,8 @@ function handleText(raw){
 function fbText(s){const r=RATINGS.find(x=>x[0]===s.rating);return [r&&r[1],s.dir,s.len,s.res].filter(Boolean).join(', ')||'no feedback yet'}
 
 /* ---------- stats ---------- */
+function lenText(h){if(h.len==null)return '';const m=h.lenUnit==='m'?h.len:h.len/1.09361;return conv(m)+unit()}
+function hcpStrokes(r,h){if(r.hcp==null||h.si==null)return 0;const n=r.holes.length;let k=Math.floor(r.hcp/n)+(h.si<=r.hcp%n?1:0);return k}
 function stats(r){
   const holes=r.holes.filter(h=>h.done);
   const score=holes.reduce((a,h)=>a+h.score,0),par=holes.reduce((a,h)=>a+h.par,0);
@@ -329,7 +333,10 @@ function homeView(){const r=S.round;
   <div class="stack">
   ${r?`<div class="card stack"><div class="label">Round in progress</div><h2>${esc(r.course)}</h2><div class="muted">Hole ${r.cur+1} of ${r.holes.length}</div><button class="btn primary" data-act="resume">Resume round</button></div>`:''}
   <div class="card stack"><div class="label">New round</div>
-    <div class="field"><label for="course">Course</label><input id="course" placeholder="e.g. Sunday at the club" autocomplete="off"></div>
+    <div class="field"><label for="cid">Course</label><select id="cid"><option value="quinta-da-marinha">Onyria Quinta da Marinha</option><option value="">Other course</option></select></div>
+    <div class="field"><span>Tee</span><div class="seg" id="tee">${COURSES['quinta-da-marinha'].tees.map((t,i)=>`<button data-act="seg" data-v="${t}" class="${i===1?'on':''}">${t}</button>`).join('')}</div></div>
+    <div class="field"><label for="hcp">Playing handicap (optional)</label><input id="hcp" inputmode="numeric" placeholder="e.g. 18" autocomplete="off"></div>
+    <div class="field"><label for="course">Note (optional)</label><input id="course" placeholder="e.g. with Dad" autocomplete="off"></div>
     <div class="field"><span>Holes</span><div class="seg" id="holes"><button data-act="seg" data-g="holes" data-v="18" class="on">18</button><button data-act="seg" data-g="holes" data-v="9">9</button></div></div>
     <div class="field"><span>Distances in</span><div class="seg" id="units"><button data-act="seg" data-g="units" data-v="y" class="${S.units!=='m'?'on':''}">Yards</button><button data-act="seg" data-g="units" data-v="m" class="${S.units==='m'?'on':''}">Metres</button></div></div>
     <button class="btn primary" data-act="start">${r?'Start a new round instead':'Start round'}</button>
@@ -349,7 +356,7 @@ function playView(){const r=S.round,h=H(),st=stats(r);const act=activeShot();
   <div class="stack">
   <div class="card"><div class="hole">
     <button class="nav" data-act="prevhole" aria-label="Previous hole">‹</button>
-    <div class="mid"><div class="label">Hole ${h.n} of ${r.holes.length}${h.done?' · saved '+h.score:''}</div><div class="big num">Shot ${h.shots.filter(s=>s.club!=='Putter').length+1+(h.shots.some(s=>s.club==='Putter')?0:0)}</div>
+    <div class="mid"><div class="label">Hole ${h.n} of ${r.holes.length}${h.done?' · saved '+h.score:''}</div>${h.name?`<div style="font-weight:600;text-transform:capitalize">${esc(h.name)}</div><div class="muted num" style="font-size:13px">${lenText(h)} · SI ${h.si}</div>`:''}<div class="big num">Shot ${h.shots.filter(s=>s.club!=='Putter').length+1+(h.shots.some(s=>s.club==='Putter')?0:0)}</div>
       <div class="parpick">${[3,4,5].map(p=>`<button data-act="par" data-v="${p}" class="${h.par===p?'on':''}">Par ${p}</button>`).join('')}</div>
       <div class="muted" style="font-size:13px;margin-top:6px">Strokes this hole <b class="num">${strokes}</b>${h.penalties?` (incl. ${h.penalties} pen)`:''} · Round <b class="num">${st.holes.length?toPar(st.score-st.par):'E'}</b></div></div>
     <button class="nav" data-act="nexthole" aria-label="Next hole">›</button></div></div>
@@ -375,7 +382,7 @@ function summaryView(r){const st=stats(r);const front=r.holes.slice(0,9),back=r.
   return `<div class="top"><button class="gps" data-act="home">‹ Back</button><div class="muted">${new Date(r.date).toLocaleDateString()}</div></div>
   <div class="stack">
   <div class="card"><div class="label">${esc(r.course)}</div><div class="row" style="align-items:baseline;gap:14px;margin-top:6px"><span class="hero num">${st.score||'–'}</span><span class="num" style="font-size:22px;font-weight:700">${st.holes.length?toPar(st.score-st.par):''}</span></div>
-    <div class="muted" style="margin-top:6px">${st.holes.length} holes · ${st.putts} putts · ${st.pens} penalties · fairways ${st.fwHit}/${st.fw} · greens in reg ${st.gir}/${st.holes.length}</div></div>
+    ${r.hcp!=null?(()=>{let net=0,pts=0;for(const h of st.holes){const k=hcpStrokes(r,h);net+=h.score-k;pts+=Math.max(0,2+h.par+k-h.score)}return `<div class="num" style="margin-top:6px"><b>Net ${net}</b> (${toPar(net-st.par)}) · <b>${pts} Stableford pts</b> · hcp ${r.hcp}${r.tee?' · tee '+esc(r.tee):''}</div>`})():''}<div class="muted" style="margin-top:6px">${st.holes.length} holes · ${st.putts} putts · ${st.pens} penalties · fairways ${st.fwHit}/${st.fw} · greens in reg ${st.gir}/${st.holes.length}</div></div>
   <div class="card"><div class="label" style="margin-bottom:6px">Clubs</div><div class="scroll"><table><tr><th>Club</th><th>Shots</th><th>Avg</th><th>Max</th><th>Strike</th><th>L / S / R</th></tr>
     ${st.list.map(c=>{const a=avg(c.d),rr=avg(c.r);return `<tr><td><b>${esc(c.club)}</b></td><td>${c.n}</td><td>${a!=null?conv(a)+unit():'–'}</td><td>${c.d.length?conv(Math.max(...c.d))+unit():'–'}</td><td>${rr!=null?rr.toFixed(1):'–'}</td><td>${c.L} / ${c.S} / ${c.R}</td></tr>`}).join('')||'<tr><td colspan="6" class="muted">No shots logged</td></tr>'}
   </table></div><div class="muted" style="font-size:12px;margin-top:8px">Strike is your 1–5 rating (Mishit 1, Pured 5). Avg ignores shots without a GPS reading.</div></div>
@@ -422,9 +429,9 @@ document.addEventListener('click',e=>{
   switch(a){
     case 'mic':listen();break;
     case 'seg':b.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));break;
-    case 'start':{const course=document.getElementById('course').value.trim();const holes=+document.querySelector('#holes .on').dataset.v;const units=document.querySelector('#units .on').dataset.v;
+    case 'start':{const course=document.getElementById('course').value.trim();const cid=document.getElementById('cid').value;const tee=(document.querySelector('#tee .on')||{}).dataset?.v;const hv=parseInt(document.getElementById('hcp').value,10);const hcp=isNaN(hv)?null:hv;const holes=+document.querySelector('#holes .on').dataset.v;const units=document.querySelector('#units .on').dataset.v;
       if(S.round&&S.round.holes.some(h=>h.shots.length||h.done)){S.round.ended=new Date().toISOString();S.history.unshift(S.round)}
-      newRound(course,holes,units);view='play';startGPS();keepAwake();
+      newRound(course,holes,units,cid,tee,hcp);view='play';startGPS();keepAwake();
       try{if(SR){const p=navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&navigator.mediaDevices.getUserMedia({audio:true});p&&p.then(s=>s.getTracks().forEach(t=>t.stop())).catch(()=>{})}}catch(e){}
       render();toast('Round started. Good luck!');break}
     case 'resume':view='play';startGPS();keepAwake();render();break;
