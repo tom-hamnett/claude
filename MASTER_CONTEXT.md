@@ -159,6 +159,7 @@ Every 20-second reel = 5 modular State Blocks of 3-4 seconds each.
 - **Reel production pipeline**: PIVOTING NOW to Core-Five character-based approach
 
 ## Decisions Log
+- 2026-11-19: Social engagement agent: all comments and DMs come from The Rational Strategist account (never Tom's personal profile). Agent finds people, ranks them and drafts messages; a human always sends, except Instagram's API-allowed private replies to commenters. Claude in Chrome reads only and never clicks send. Control surface is a phone-first PWA (same pattern as Tom's V-taper app).
 - 2026-04-11: HARD RESET to Core-Five framework. Presenter is a fictional Nano Banana character, not text-to-video. Five discrete State Blocks, never one 20-second generation.
 - 2026-04-11: Founder confirmed NO recorded footage of themselves. Presenter is AI-generated fictional character.
 - 2026-04-11: ffmpeg, TTS WAV wrapping, and Veo image encoding all fixed.
