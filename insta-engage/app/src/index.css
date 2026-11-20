@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body { background: #EEF1F6; color: #131A24; -webkit-tap-highlight-color: transparent; }
+body { font-family: 'IBM Plex Sans', system-ui, sans-serif; overscroll-behavior-y: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+:focus-visible { outline: 2px solid #1A6B5C; outline-offset: 2px; }
