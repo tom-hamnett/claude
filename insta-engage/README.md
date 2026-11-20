@@ -2,7 +2,7 @@
 
 Phone-first engagement desk for The Rational Strategist on Instagram: find people who engage, rank them, draft the next message in a funnel, and a human sends it.
 
-Status: planning. Built so far: `report-example/`.
+Status: v1 built. `app/` (phone PWA), `report-example/` (per-lead example reports), `docs/messaging-principles.md`, Claude run skill in `.claude/skills/insta-engage/`.
 
 ## report-example/
 
