@@ -92,12 +92,6 @@ export function FunnelEditPage() {
   };
 
   async function save() {
-    if (f!.active) {
-      // one active funnel at a time feeds "Draft for top N"
-      await db.funnels.toCollection().modify((x) => {
-        if (x.id !== f!.id) x.active = false;
-      });
-    }
     await db.funnels.put(f!);
     toast('Funnel saved. New drafts use it straight away.');
   }
@@ -115,7 +109,7 @@ export function FunnelEditPage() {
           <input className={inputCls} value={f.productUrl ?? ''} onChange={(e) => setF({ ...f, productUrl: e.target.value })} />
         </Field>
         <Chip active={f.active} onClick={() => setF({ ...f, active: !f.active })}>
-          {f.active ? 'Active funnel' : 'Make active'}
+          {f.active ? 'Active: drafts for its reels’ engagers' : 'Make active'}
         </Chip>
       </Card>
 

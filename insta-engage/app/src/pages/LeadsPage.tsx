@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Link } from 'react-router-dom';
 import { db, getSettings } from '../db';
-import { enrolTop, scoreAll } from '../lib/actions';
+import { enrolAllActive, scoreAll } from '../lib/actions';
 import { summariseEngagements } from '../lib/score';
 import { Button, Card, Chip, Empty, inputCls, useToast } from '../components/ui';
 
@@ -51,7 +51,7 @@ export function LeadsPage() {
           kind="primary"
           className="mt-3 w-full"
           onClick={async () => {
-            const n = await enrolTop(active.id);
+            const n = await enrolAllActive();
             toast(n ? `Drafted first messages for the top ${n}. See Today.` : 'Nobody new to enrol.');
           }}
         >

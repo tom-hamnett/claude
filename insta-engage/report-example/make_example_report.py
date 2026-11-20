@@ -95,6 +95,16 @@ def sector_vars(req: dict) -> dict:
     }
 
 
+def _one_pass(pairs):
+    """Replace every term in a single pass, so replaced text is never re-matched
+    (e.g. "1,000 hotels" -> "1,000 hotels" must not then hit "hotel" -> "site")."""
+    if not pairs:
+        return lambda s: s
+    rx = re.compile("|".join(f"(?P<t{i}>(?<![A-Za-z]){_flex(a)})" for i, (a, _) in enumerate(pairs)))
+    repl = {f"t{i}": b for i, (_, b) in enumerate(pairs)}
+    return lambda s: rx.sub(lambda m: repl[m.lastgroup], s)
+
+
 class Mapper:
     def __init__(self, profile: dict, req: dict, functions: dict):
         self.profile, self.req = profile, req
@@ -129,15 +139,15 @@ class Mapper:
         self.name_re = re.compile(rf"(?<![A-Za-z])({alt})(?![A-Za-z])((?:\s?[{MARKS}])*)")
         sv = sector_vars(req)
         self.sv = sv
-        self.terms = [(re.compile(rf"(?<![A-Za-z]){_flex(a)}"), b.format(**sv)) for a, b in profile["terms"]]
+        self.terms = _one_pass([(a, b.format(**sv)) for a, b in profile["terms"]])
         fn = req.get("function")
         base = profile.get("base_function")
         self.relabelled = bool(base and fn and fn != base)
-        self.fn_terms = []
+        self.fn_terms = None
         if self.relabelled:
             if fn not in functions:
                 raise SystemExit(f"Unknown function '{fn}'; known: {[k for k in functions if not k.startswith('_')]}")
-            self.fn_terms = [(re.compile(rf"(?<![A-Za-z]){_flex(a)}"), b) for a, b in functions[fn]["terms"]]
+            self.fn_terms = _one_pass(functions[fn]["terms"])
         self.protect = BASE_PROTECT + [re.escape(p.format(**sv)) for p in profile.get("protect", [])]
 
     def company_labels(self, starred: bool) -> list[str]:
@@ -148,18 +158,23 @@ class Mapper:
         return out
 
     def text(self, s: str) -> str:
+        # Company names go in as placeholders so sector/function word swaps can't
+        # touch them (e.g. "IHG Hotels & Resorts" as a real peer stays intact).
+        held: list[str] = []
+
         def sub(m):
             new = self.names[m.group(1)]
             if new == SENT:
                 return SENT
             mark = self.flag.get(new, "")
-            return new + (f" {mark}" if mark else "")
+            held.append(new + (f" {mark}" if mark else ""))
+            return chr(0xF000 + len(held) - 1)
 
         s = self.name_re.sub(sub, s)
-        for rx, new in self.fn_terms:
-            s = rx.sub(new, s)
-        for rx, new in self.terms:
-            s = rx.sub(new, s)
+        if self.fn_terms:
+            s = self.fn_terms(s)
+        s = self.terms(s)
+        s = re.sub("[\uf000-\uf8ff]", lambda m: held[ord(m.group(0)) - 0xF000], s)
         if SENT in s:  # drop an unused peer from lists like "A, B and C"
             s = re.sub(rf"\s*(,|and)?\s*{SENT}[’'s]*", "", s)
         return s
@@ -452,6 +467,8 @@ def _xml_texts(path: str):
 def leak_check(path: str, profile: dict, req: dict, mapper: Mapper | None = None, functions: dict | None = None) -> None:
     """Fail if any template name, sector word or unredacted number survives anywhere."""
     allowed = [req["subject"]["name"], req["subject"].get("short", ""), *[p["name"] for p in req.get("peers", [])]]
+    # the lead's own sector words are legitimate (e.g. a hotel lead's report says "hotels")
+    allowed += [v for v in sector_vars(req).values() if v]
     terms = list(profile["leak_terms"])
     if mapper and mapper.relabelled:
         terms += (functions or {}).get("_leak_terms_when_relabelled", [])

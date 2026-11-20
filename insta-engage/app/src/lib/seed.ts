@@ -7,8 +7,9 @@ export const DEFAULT_SETTINGS: Settings = {
   topN: 25,
   cohortThreshold: 5000,
   targetFunctions: ['procurement', 'finance', 'strategy', 'operations', 'hr', 'transformation', 'consulting'],
-  blockedSectors: ['hotels', 'hospitality'],
-  blockedCompanies: ['IHG', 'IHG Hotels & Resorts'],
+  // Every company at face value (Tom, 20 Nov 2026); add entries in More → Rules if ever needed.
+  blockedSectors: [],
+  blockedCompanies: [],
   bannedWords: [
     'free', 'exclusive', 'unlock', 'quick call', 'just checking in', 'circling back', 'touch base',
     'game-changer', 'game changer', 'synergy', 'limited time', 'act now', 'guaranteed', 'revolutionary',
@@ -165,6 +166,76 @@ export function analystsEdgeFunnel(): Funnel {
         followUpDays: null,
         branches: [],
       },
+    ],
+  };
+}
+
+/** ATLAS: people who engaged with the AI-trading experiment reels. */
+export function atlasFunnel(): Funnel {
+  const base = analystsEdgeFunnel();
+  const keep = (id: string) => base.stages.find((x) => x.id === id)!;
+  return {
+    id: 'atlas-experiment',
+    name: 'ATLAS: AI trading experiment',
+    artefact: 'The five-AI trading experiment write-up, then ATLAS early access',
+    productUrl: '',
+    active: true,
+    createdAt: now(),
+    stages: [
+      {
+        ...keep('thanks'),
+        template: "Hi {first_name}, thanks for {engagement_phrase}. Curious what got you: the results, how the five AIs were set up, or trying it yourself? One word is plenty.",
+        branches: [
+          { when: 'interested', goto: 'offer-writeup' },
+          { when: 'yes', goto: 'offer-writeup' },
+          { when: 'question', goto: 'offer-writeup' },
+          { when: 'named_company', goto: 'offer-writeup' },
+          { when: 'not_now', goto: 'nurture' },
+          { when: 'no', goto: 'stop' },
+          { when: 'no_reply', goto: 'nudge' },
+        ],
+      },
+      { ...keep('nudge'), template: 'Hi {first_name}, have you parked the AI trading stuff for now? No worries either way.', branches: [
+        { when: 'interested', goto: 'offer-writeup' }, { when: 'yes', goto: 'offer-writeup' }, { when: 'not_now', goto: 'nurture' }, { when: 'no', goto: 'stop' }, { when: 'no_reply', goto: 'stop' },
+      ] },
+      {
+        id: 'offer-writeup',
+        name: 'Offer the write-up',
+        kind: 'discovery',
+        goal: 'Ask permission to send the full experiment write-up. No link yet.',
+        template: 'Makes sense. I wrote up the whole experiment, including what went wrong and why. Want me to send it?',
+        maxWords: 45,
+        attachReport: false,
+        followUpDays: 4,
+        branches: [
+          { when: 'yes', goto: 'share-writeup' }, { when: 'interested', goto: 'share-writeup' }, { when: 'question', goto: 'share-writeup' },
+          { when: 'not_now', goto: 'nurture' }, { when: 'no', goto: 'stop' }, { when: 'no_reply', goto: 'nudge-2' },
+        ],
+      },
+      {
+        id: 'share-writeup',
+        name: 'Share the write-up',
+        kind: 'share_report',
+        goal: 'Send the write-up link, point to the most useful part, one easy question.',
+        template: "Here it is: {product_url}. The section most people skip is the one on risk. Are you building something like this yourself?",
+        maxWords: 60,
+        attachReport: false,
+        followUpDays: 3,
+        branches: [
+          { when: 'yes', goto: 'offer' }, { when: 'interested', goto: 'offer' }, { when: 'question', goto: 'offer' },
+          { when: 'not_now', goto: 'nurture' }, { when: 'no', goto: 'nurture' }, { when: 'no_reply', goto: 'nudge-2' },
+        ],
+      },
+      { ...keep('nudge-2'), branches: [
+        { when: 'yes', goto: 'nurture' }, { when: 'interested', goto: 'offer' }, { when: 'no', goto: 'stop' }, { when: 'no_reply', goto: 'stop' },
+      ] },
+      {
+        ...keep('offer'),
+        template: "ATLAS is the research tool behind it, open to a small early-access group. Want a place? No pressure either way.",
+        branches: [{ when: 'yes', goto: 'won' }, { when: 'question', goto: 'offer' }, { when: 'not_now', goto: 'nurture' }, { when: 'no', goto: 'nurture' }, { when: 'no_reply', goto: 'nurture' }],
+      },
+      { ...keep('nurture'), template: "No problem at all. I post what the AIs get right and wrong as it happens, so it'll be in your feed. Thanks again, {first_name}." },
+      { ...keep('won'), template: "Great, thanks {first_name}. Here's the link to join: {product_url}. Shout if anything's unclear." },
     ],
   };
 }

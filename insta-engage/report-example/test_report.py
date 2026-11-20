@@ -67,13 +67,16 @@ def test_function_hints():
 
 # ---- guardrail ----
 
-def test_blocklist_refuses_hotel_subject_or_peer():
-    req = {"subject": {"name": "Asana"}, "peers": [{"name": "Hilton"}], "sector": {"label": "software"}}
-    assert check_blocklist(req)
-    req = {"subject": {"name": "IHG Hotels & Resorts"}, "peers": [], "sector": {}}
-    assert check_blocklist(req)
-    req = {"subject": {"name": "Asana"}, "peers": [{"name": "Box"}], "sector": {"label": "hospitality groups"}}
-    assert check_blocklist(req)
+def test_blocklist_mechanism_refuses_listed_names(tmp_path):
+    bl = tmp_path / "bl.json"
+    bl.write_text('{"blocked_sectors": ["tobacco"], "blocked_companies": ["Acme"]}')
+    assert check_blocklist({"subject": {"name": "Asana"}, "peers": [{"name": "Acme"}], "sector": {}}, bl)
+    assert check_blocklist({"subject": {"name": "Asana"}, "peers": [], "sector": {"label": "tobacco firms"}}, bl)
+
+
+def test_default_blocklist_is_empty_every_company_at_face_value():
+    hotel = {"subject": {"name": "IHG Hotels & Resorts"}, "peers": [{"name": "Hilton"}], "sector": {"label": "hotel groups"}}
+    assert check_blocklist(hotel) == []
 
 
 def test_blocklist_allows_saas():

@@ -59,14 +59,39 @@ export async function requestReport(c: Contact, t: Thread): Promise<ReportReques
   return r;
 }
 
+async function contentFunnelMap(): Promise<Map<string, string>> {
+  const fallback = (await db.funnels.toArray()).find((f) => f.active && f.id === 'ae-example-report')?.id ?? (await db.funnels.toArray()).find((f) => f.active)?.id ?? '';
+  const m = new Map<string, string>((await db.content.toArray()).filter((c) => c.funnelId).map((c) => [c.id, c.funnelId!]));
+  m.set('*', fallback);
+  return m;
+}
+
+/** A person goes to the funnel of the content they engaged with most strongly. */
+export function routeFunnel(c: Contact, funnelOf: Map<string, string>): string {
+  const e = keyEngagement(c);
+  return (e?.contentId && funnelOf.get(e.contentId)) || funnelOf.get('*') || '';
+}
+
+/** Enrol each active funnel's top engagers (daily batch split across funnels). */
+export async function enrolAllActive(): Promise<number> {
+  const s = await getSettings();
+  const active = (await db.funnels.toArray()).filter((f) => f.active);
+  let total = 0;
+  for (const f of active) total += await enrolTop(f.id, Math.max(0, s.topN - total));
+  return total;
+}
+
 /** Enrol the top-N unenrolled contacts into a funnel at its first stage, with drafts. */
 export async function enrolTop(funnelId: string, n?: number): Promise<number> {
   const s = await getSettings();
   const f = await db.funnels.get(funnelId);
   if (!f) return 0;
-  const enrolled = new Set((await db.threads.where('funnelId').equals(funnelId).toArray()).map((t) => t.contactId));
+  // One conversation per person at a time, whichever funnel it is in.
+  const enrolled = new Set((await db.threads.toArray()).filter((t) => t.status !== 'stopped' || t.funnelId === funnelId).map((t) => t.contactId));
+  const funnelOf = await contentFunnelMap();
   const ranked = (await db.contacts.toArray())
     .filter((c) => !enrolled.has(c.id) && !c.doNotContact && !isBlocked(c, s))
+    .filter((c) => routeFunnel(c, funnelOf) === funnelId)
     .map((c) => ({ c, score: scoreContact(c, s).total }))
     .filter((x) => x.score > 0)
     .sort((a, b) => b.score - a.score)

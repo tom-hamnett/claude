@@ -1,6 +1,6 @@
 import Dexie, { type Table } from 'dexie';
 import type { Contact, ContentItem, Funnel, ReportRequest, Settings, Thread } from './types';
-import { DEFAULT_SETTINGS, analystsEdgeFunnel } from './lib/seed';
+import { DEFAULT_SETTINGS, analystsEdgeFunnel, atlasFunnel } from './lib/seed';
 
 class EngageDB extends Dexie {
   contacts!: Table<Contact, string>;
@@ -28,7 +28,8 @@ export const db = new EngageDB();
 export async function ensureSeeded(): Promise<void> {
   await db.transaction('rw', db.settings, db.funnels, async () => {
     if (!(await db.settings.get('settings'))) await db.settings.put(DEFAULT_SETTINGS);
-    if ((await db.funnels.count()) === 0) await db.funnels.put(analystsEdgeFunnel());
+    if ((await db.funnels.count()) === 0) await db.funnels.bulkPut([analystsEdgeFunnel(), atlasFunnel()]);
+    else if (!(await db.funnels.get('atlas-experiment'))) await db.funnels.put(atlasFunnel());
   });
 }
 

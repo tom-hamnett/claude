@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Link } from 'react-router-dom';
 import { db, getSettings } from '../db';
-import { advance, enrolTop, stageOf } from '../lib/actions';
+import { advance, enrolAllActive, stageOf } from '../lib/actions';
 import { scoreContact } from '../lib/score';
 import { MessageCard } from '../components/MessageCard';
 import { Button, Card, Chip, Empty, SectionTitle, timeAgo, useToast } from '../components/ui';
@@ -83,7 +83,7 @@ export function TodayPage() {
               kind="primary"
               className="mt-3"
               onClick={async () => {
-                const n = await enrolTop(activeFunnel.id);
+                const n = await enrolAllActive();
                 toast(n ? `Drafted messages for the top ${n}.` : 'Everyone scored is already in this funnel.');
               }}
             >

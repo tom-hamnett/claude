@@ -10,7 +10,7 @@ The phone app (`insta-engage/app`) holds leads, funnels and threads. Claude does
 Hard rules (Instagram and brand):
 - Claude in Chrome **reads only**. Never like, follow, comment, or send a DM. Never click Send. Human pace: pause 2–5 s between profile opens, at most ~150 profile views per run.
 - The account is the anonymous persona. Never mention Tom.
-- Skip and flag do-not-contact: anyone under 18 or plainly a personal/private account, anyone who said no before, blocked sectors/companies (default hotels/hospitality and IHG).
+- Skip and flag do-not-contact: anyone under 18 or plainly a personal/private account, anyone who said no before, any sector or company Tom has added to the blocklist in More → Rules (empty by default: every company at face value).
 - Store work facts only (title, employer, function, seniority, location, interests stated in the bio). No sensitive data (health, religion, politics, family).
 
 ## 1. Collect (Claude in Chrome, Tom's logged-in instagram.com)

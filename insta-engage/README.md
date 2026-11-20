@@ -32,7 +32,7 @@ Up to 7 peers; fewer drops the spare rows and bars. A peer with `rev_bn: null` g
 
 **Leak check:** every XML part including embedded chart workbooks and docProps; fails on any template name, sector word, relabelled-function word, unused-slot placeholder, leftover template image or unredacted number on a slide.
 
-**Guardrail:** `blocklist.json` refuses hotel / hospitality subjects or peers and IHG (marketing plan v2). Tom can lift entries.
+**Guardrail:** `blocklist.json` is empty: every company is taken at face value (Tom, 20 Nov 2026). Add sectors or companies there to refuse them. Company names are protected from sector word swaps, and the lead's own sector words are allowed by the leak check.
 
 **Templates:** never committed. Put `template_a.pptx` (HubSpot whole-company, Drive) and `template_b.pptx` (IHG purchasing deep-dive, Drive) in `report-example/templates/` (git-ignored) or set `$TEMPLATE_A` / `$TEMPLATE_B`.
 

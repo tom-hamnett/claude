@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db, ensureSeeded } from '../db';
-import { advance, enrolTop, importBundle, markSent, dueFollowUps } from '../lib/actions';
+import { advance, enrolAllActive, enrolTop, importBundle, markSent, dueFollowUps } from '../lib/actions';
 import { chooseView, lintMessage, wordCount } from '../lib/draft';
 import { scoreContact } from '../lib/score';
 import { sampleBundle } from '../lib/sample';
@@ -35,11 +35,12 @@ describe('rules', () => {
 });
 
 describe('funnel flow', () => {
-  it('imports, scores, blocks hotel sector, enrols top N with drafts that pass lint', async () => {
+  it('imports, scores (hotel sector at face value), enrols top N with drafts that pass lint', async () => {
     const r = await importBundle(sampleBundle());
     expect(r.added).toBe(8);
     const hotel = await db.contacts.where('handle').equals('sample_hotelier').first();
-    expect(scoreContact(hotel!, DEFAULT_SETTINGS).total).toBe(0);
+    expect(scoreContact(hotel!, DEFAULT_SETTINGS).total).toBeGreaterThan(0);
+    expect(scoreContact(hotel!, { ...DEFAULT_SETTINGS, blockedSectors: ['hotels'] }).total).toBe(0);
     const n = await enrolTop('ae-example-report', 5);
     expect(n).toBe(5);
     const threads = await db.threads.toArray();
@@ -54,7 +55,6 @@ describe('funnel flow', () => {
     expect(top).toContain('sample_priya.ops');
     const priyaThread = threads[top.indexOf('sample_priya.ops')];
     expect(priyaThread.draft).toContain('thanks for the comment on the procurement 30% reel');
-    expect(top).not.toContain('sample_hotelier');
   });
 
   it('send → reply naming a company → report requested → report ready → share draft', async () => {
@@ -96,5 +96,27 @@ describe('funnel flow', () => {
     p = await advance(p, 'no', 'not for me');
     expect(p.status).toBe('stopped');
     expect((await db.contacts.get(priya.id))!.doNotContact).toBe(true);
+  });
+
+  it('routes people to the funnel of the reel they engaged with', async () => {
+    const at = new Date().toISOString();
+    await importBundle({
+      version: 1,
+      content: [
+        { id: 'Dfk8muKM4pb', title: 'defendable reason', funnelId: 'ae-example-report' },
+        { id: 'DfEtmlnOhGC', title: 'five AIs', funnelId: 'atlas-experiment' },
+      ],
+      contacts: [
+        { handle: 'ops_lead', role: 'Head of Operations', seniority: 'director', followsUs: true, engagements: [{ type: 'like', contentId: 'Dfk8muKM4pb', at }] },
+        { handle: 'quant_curious', role: 'Analyst', seniority: 'ic', followsUs: true, engagements: [{ type: 'comment', contentId: 'DfEtmlnOhGC', at, text: 'how?' }] },
+      ],
+    });
+    expect(await enrolAllActive()).toBe(2);
+    const threads = await db.threads.toArray();
+    const byHandle = new Map(await Promise.all(threads.map(async (t) => [(await db.contacts.get(t.contactId))!.handle, t] as const)));
+    expect(byHandle.get('ops_lead')!.funnelId).toBe('ae-example-report');
+    expect(byHandle.get('quant_curious')!.funnelId).toBe('atlas-experiment');
+    expect(byHandle.get('quant_curious')!.draft).toContain('five AIs');
+    expect(await enrolAllActive()).toBe(0); // nobody enrolled twice
   });
 });

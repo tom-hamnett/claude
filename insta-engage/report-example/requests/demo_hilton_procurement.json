@@ -1,0 +1,56 @@
+{
+  "lead": "demo_hotel",
+  "interest": "Procurement manager",
+  "subject": {
+    "name": "Hilton",
+    "short": "Hilton",
+    "staff": 180000,
+    "rev_bn": 4.8,
+    "driver1": 8000
+  },
+  "peers": [
+    {
+      "name": "Marriott International",
+      "staff": 155000,
+      "rev_bn": 6.9,
+      "driver1": 9000
+    },
+    {
+      "name": "IHG Hotels & Resorts",
+      "staff": 13000,
+      "rev_bn": 2.5,
+      "driver1": 6900
+    },
+    {
+      "name": "Hyatt",
+      "staff": 52000,
+      "rev_bn": 3.5,
+      "driver1": 1400
+    },
+    {
+      "name": "Accor",
+      "staff": 290000,
+      "rev_bn": 3.2,
+      "driver1": 5600
+    },
+    {
+      "name": "Wyndham",
+      "staff": 2300,
+      "rev_bn": 0.87,
+      "driver1": 9200
+    },
+    {
+      "name": "Choice Hotels",
+      "staff": 1700,
+      "rev_bn": 0.98,
+      "driver1": 7500
+    }
+  ],
+  "sector": {
+    "label": "hotel groups",
+    "noun": "hospitality sector",
+    "short": "hotels",
+    "driver1": "hotels",
+    "driver1_singular": "hotel"
+  }
+}
