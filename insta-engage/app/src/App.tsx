@@ -7,6 +7,7 @@ import { ContactPage } from './pages/ContactPage';
 import { ThreadPage } from './pages/ThreadPage';
 import { FunnelEditPage, FunnelsPage } from './pages/FunnelsPage';
 import { MorePage } from './pages/MorePage';
+import { useSyncState } from './components/SyncPanel';
 
 const TABS = [
   { to: '/', label: 'Today', icon: 'M4 12h4l3-8 4 16 3-8h2' },
@@ -32,6 +33,7 @@ export default function App() {
   const nav = useNavigate();
   const title = TITLES.find(([r]) => r.test(loc.pathname))?.[1] ?? '';
   const isTab = TABS.some((t) => t.to === loc.pathname);
+  const sync = useSyncState();
   return (
     <ToastProvider>
       <div className="mx-auto min-h-[100dvh] max-w-xl pb-28">
@@ -46,6 +48,12 @@ export default function App() {
               <p className="font-mono text-[10px] uppercase tracking-[.16em] text-brand">The Rational Strategist · Insta Engage</p>
               <h1 className="font-display text-[22px] font-bold leading-tight">{title}</h1>
             </div>
+            {sync.enabled && (
+              <span
+                className={`ml-auto h-2.5 w-2.5 rounded-full ${sync.error ? 'bg-danger' : sync.signedIn ? (sync.busy ? 'bg-signal' : 'bg-brand') : 'bg-line'}`}
+                title={sync.error ?? (sync.signedIn ? 'Synced' : 'Not signed in: data on this device only')}
+              />
+            )}
           </div>
         </header>
         <main className="px-4 pt-4">

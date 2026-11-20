@@ -5,6 +5,7 @@ import type { Settings } from '../types';
 import { exportBundle, importBundle, type Bundle } from '../lib/actions';
 import { sampleBundle } from '../lib/sample';
 import { Button, Card, Field, SectionTitle, inputCls, useToast } from '../components/ui';
+import { SyncPanel } from '../components/SyncPanel';
 
 export function MorePage() {
   const toast = useToast();
@@ -41,6 +42,9 @@ export function MorePage() {
 
   return (
     <div>
+      <SectionTitle>Sync</SectionTitle>
+      <SyncPanel />
+
       <SectionTitle>Import a collection run</SectionTitle>
       <Card className="space-y-3">
         <p className="text-sm text-ink-soft">
@@ -63,7 +67,7 @@ export function MorePage() {
 
       <SectionTitle>Backup</SectionTitle>
       <Card className="space-y-2">
-        <p className="text-sm text-ink-soft">Everything lives on this phone until the database is connected. Export a backup now and then.</p>
+        <p className="text-sm text-ink-soft">Data lives on this phone and, once signed in, in your Supabase project. Export a JSON backup any time.</p>
         <Button className="w-full" onClick={doExport}>
           Export everything (JSON)
         </Button>
