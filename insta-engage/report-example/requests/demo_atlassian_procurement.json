@@ -1,0 +1,15 @@
+{
+  "lead": "demo_large_company",
+  "interest": "Head of Procurement",
+  "subject": {"name": "Atlassian", "short": "Atlassian", "staff": 12200, "rev_bn": 4.36, "driver1": 300},
+  "peers": [
+    {"name": "HubSpot", "staff": 8300, "rev_bn": 2.63, "driver1": 250},
+    {"name": "Snowflake", "staff": 9000, "rev_bn": 3.63, "driver1": 11},
+    {"name": "Datadog", "staff": 6500, "rev_bn": 2.68, "driver1": 30},
+    {"name": "Workday", "staff": 19000, "rev_bn": 8.45, "driver1": 11},
+    {"name": "ServiceNow", "staff": 26000, "rev_bn": 11.0, "driver1": 8.4},
+    {"name": "Canva", "staff": 5500, "rev_bn": null, "driver1": null, "flag": "‡"}
+  ],
+  "sector": {"label": "enterprise software companies", "noun": "software sector", "short": "SaaS",
+             "driver1": "customers", "driver1_singular": "customer"}
+}

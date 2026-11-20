@@ -1,0 +1,16 @@
+{
+  "lead": "demo_small_company",
+  "interest": "making a case for headcount",
+  "subject": {"name": "Asana", "short": "Asana", "staff": 3000, "rev_bn": 0.72, "driver1": 160},
+  "peers": [
+    {"name": "monday.com", "staff": 3000, "rev_bn": 0.91, "driver1": 245},
+    {"name": "Smartsheet", "staff": 3300, "rev_bn": null, "driver1": 100},
+    {"name": "Box", "staff": 2800, "rev_bn": 1.10, "driver1": 115},
+    {"name": "Freshworks", "staff": 5100, "rev_bn": 0.60, "driver1": 73},
+    {"name": "Dropbox", "staff": 2700, "rev_bn": 2.55, "driver1": 580},
+    {"name": "Notion", "staff": 1000, "rev_bn": null, "driver1": 100},
+    {"name": "ClickUp", "staff": 1000, "rev_bn": null, "driver1": 80}
+  ],
+  "sector": {"label": "work-management software companies", "noun": "software sector", "short": "SaaS",
+             "driver1": "customers", "driver1_singular": "customer"}
+}

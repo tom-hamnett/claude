@@ -1,0 +1,351 @@
+{
+  "_about": "Function label packs for Template B. The PRISM registry (subfunction_taxonomies.json, Drive) only holds a validated Purchasing taxonomy, so finance / hr / it below are DRAFT illustrative buckets for example reports only; they are not validated deep-dive scopes. Long sub-function names may wrap over lines in the template; matching ignores whitespace.",
+  "procurement": {
+    "status": "validated (PRISM Purchasing _default)",
+    "terms": []
+  },
+  "finance": {
+    "status": "draft",
+    "terms": [
+      [
+        "Procurement Leadership & Strategy",
+        "Finance Leadership & Strategy"
+      ],
+      [
+        "Strategic Sourcing & Category Management",
+        "FP&A & Business Partnering"
+      ],
+      [
+        "Procurement Operations (P2P / Buying)",
+        "Finance Operations (Accounting / AP / AR)"
+      ],
+      [
+        "Supplier & Vendor Management",
+        "Treasury & Tax"
+      ],
+      [
+        "Contracts & Compliance",
+        "Controls & Compliance"
+      ],
+      [
+        "Sourcing & category",
+        "FP&A & partnering"
+      ],
+      [
+        "Operations / P2P",
+        "Operations / accounting"
+      ],
+      [
+        "Supplier management",
+        "Treasury & tax"
+      ],
+      [
+        "Contracts & compliance",
+        "Controls & compliance"
+      ],
+      [
+        "Executive (VP / CPO)",
+        "Executive (VP / CFO)"
+      ],
+      [
+        "VP / CPO",
+        "VP / CFO"
+      ],
+      [
+        "Senior buyer / specialist",
+        "Senior accountant / specialist"
+      ],
+      [
+        "Senior buyer / spec.",
+        "Senior acct. / spec."
+      ],
+      [
+        "Analyst / buyer",
+        "Analyst / accountant"
+      ],
+      [
+        "category manager",
+        "finance manager"
+      ],
+      [
+        "PURCHASING",
+        "FINANCE"
+      ],
+      [
+        "Corporate procurement",
+        "Corporate finance"
+      ],
+      [
+        "corporate procurement",
+        "corporate finance"
+      ],
+      [
+        "Procurement",
+        "Finance"
+      ],
+      [
+        "procurement",
+        "finance"
+      ],
+      [
+        "Purchasing",
+        "Finance"
+      ],
+      [
+        "purchasing",
+        "finance"
+      ],
+      [
+        "buyers",
+        "accountants"
+      ],
+      [
+        "buyer",
+        "accountant"
+      ],
+      [
+        "Sourcing",
+        "Planning"
+      ],
+      [
+        "sourcing",
+        "planning"
+      ]
+    ]
+  },
+  "hr": {
+    "status": "draft",
+    "terms": [
+      [
+        "Procurement Leadership & Strategy",
+        "HR Leadership & Strategy"
+      ],
+      [
+        "Strategic Sourcing & Category Management",
+        "Talent Acquisition & Development"
+      ],
+      [
+        "Procurement Operations (P2P / Buying)",
+        "HR Operations (Shared Services / Payroll)"
+      ],
+      [
+        "Supplier & Vendor Management",
+        "Reward & Employee Relations"
+      ],
+      [
+        "Contracts & Compliance",
+        "HR Policy & Compliance"
+      ],
+      [
+        "Sourcing & category",
+        "Talent & development"
+      ],
+      [
+        "Operations / P2P",
+        "Operations / payroll"
+      ],
+      [
+        "Supplier management",
+        "Reward & relations"
+      ],
+      [
+        "Contracts & compliance",
+        "Policy & compliance"
+      ],
+      [
+        "Executive (VP / CPO)",
+        "Executive (VP / CHRO)"
+      ],
+      [
+        "VP / CPO",
+        "VP / CHRO"
+      ],
+      [
+        "Senior buyer / specialist",
+        "Senior HR advisor / specialist"
+      ],
+      [
+        "Senior buyer / spec.",
+        "Senior advisor / spec."
+      ],
+      [
+        "Analyst / buyer",
+        "Analyst / HR advisor"
+      ],
+      [
+        "category manager",
+        "HR business partner"
+      ],
+      [
+        "PURCHASING",
+        "HR"
+      ],
+      [
+        "Corporate procurement",
+        "Corporate HR"
+      ],
+      [
+        "corporate procurement",
+        "corporate HR"
+      ],
+      [
+        "Procurement",
+        "HR"
+      ],
+      [
+        "procurement",
+        "HR"
+      ],
+      [
+        "Purchasing",
+        "HR"
+      ],
+      [
+        "purchasing",
+        "HR"
+      ],
+      [
+        "buyers",
+        "HR advisors"
+      ],
+      [
+        "buyer",
+        "HR advisor"
+      ],
+      [
+        "Sourcing",
+        "Recruiting"
+      ],
+      [
+        "sourcing",
+        "recruiting"
+      ]
+    ]
+  },
+  "it": {
+    "status": "draft",
+    "terms": [
+      [
+        "Procurement Leadership & Strategy",
+        "IT Leadership & Strategy"
+      ],
+      [
+        "Strategic Sourcing & Category Management",
+        "Architecture & Engineering"
+      ],
+      [
+        "Procurement Operations (P2P / Buying)",
+        "IT Operations (Service Desk / Infrastructure)"
+      ],
+      [
+        "Supplier & Vendor Management",
+        "Vendor & Service Management"
+      ],
+      [
+        "Contracts & Compliance",
+        "Security & Compliance"
+      ],
+      [
+        "Sourcing & category",
+        "Architecture & engineering"
+      ],
+      [
+        "Operations / P2P",
+        "Operations / service desk"
+      ],
+      [
+        "Supplier management",
+        "Vendor & service mgmt"
+      ],
+      [
+        "Contracts & compliance",
+        "Security & compliance"
+      ],
+      [
+        "Executive (VP / CPO)",
+        "Executive (VP / CIO)"
+      ],
+      [
+        "VP / CPO",
+        "VP / CIO"
+      ],
+      [
+        "Senior buyer / specialist",
+        "Senior engineer / specialist"
+      ],
+      [
+        "Senior buyer / spec.",
+        "Senior eng. / spec."
+      ],
+      [
+        "Analyst / buyer",
+        "Analyst / engineer"
+      ],
+      [
+        "category manager",
+        "IT manager"
+      ],
+      [
+        "PURCHASING",
+        "IT"
+      ],
+      [
+        "Corporate procurement",
+        "Corporate IT"
+      ],
+      [
+        "corporate procurement",
+        "corporate IT"
+      ],
+      [
+        "Procurement",
+        "IT"
+      ],
+      [
+        "procurement",
+        "IT"
+      ],
+      [
+        "Purchasing",
+        "IT"
+      ],
+      [
+        "purchasing",
+        "IT"
+      ],
+      [
+        "buyers",
+        "engineers"
+      ],
+      [
+        "buyer",
+        "engineer"
+      ],
+      [
+        "Sourcing",
+        "Architecture"
+      ],
+      [
+        "sourcing",
+        "architecture"
+      ]
+    ]
+  },
+  "_leak_terms_when_relabelled": [
+    "procure",
+    "Procure",
+    "PROCURE",
+    "purchas",
+    "Purchas",
+    "PURCHAS",
+    "buyer",
+    "Buyer",
+    "Buying",
+    "P2P",
+    "CPO",
+    "Sourcing",
+    "sourcing",
+    "Supplier",
+    "supplier"
+  ]
+}

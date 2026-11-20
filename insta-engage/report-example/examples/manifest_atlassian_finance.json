@@ -1,0 +1,13 @@
+{
+  "view": "function",
+  "function": "finance",
+  "reason": "headcount 12,200 >= 5,000: finance function view",
+  "pptx": "examples/example_atlassian_finance.pptx",
+  "pdf": "examples/example_atlassian_finance.pdf",
+  "carousel": [
+    "examples/carousel_atlassian_finance/01_cover.png",
+    "examples/carousel_atlassian_finance/02_summary.png",
+    "examples/carousel_atlassian_finance/03_sizing.png",
+    "examples/carousel_atlassian_finance/04_structure.png"
+  ]
+}

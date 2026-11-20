@@ -1,0 +1,8 @@
+{
+  "_about": "Sector guardrail (marketing plan v2): demo subjects only in non-conflict sectors, never a current or past employer, no hotel group at all. Generation refuses if the subject or any peer matches. Tom can lift entries here.",
+  "blocked_sectors": ["hotel", "hotels", "hospitality", "lodging", "resorts"],
+  "blocked_companies": ["IHG", "InterContinental", "Holiday Inn", "Hilton", "Marriott", "Hyatt", "Accor", "Wyndham",
+                        "Choice Hotels", "Radisson", "Best Western", "Minor Hotels", "Kerzner", "One&Only", "Four Seasons",
+                        "Mandarin Oriental", "Shangri-La", "Jumeirah", "Rosewood", "Whitbread", "Premier Inn", "Melia",
+                        "NH Hotel", "Scandic", "Deutsche Hospitality", "Ennismore", "Belmond", "Aman"]
+}

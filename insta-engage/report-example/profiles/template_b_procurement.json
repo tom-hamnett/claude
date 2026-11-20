@@ -1,0 +1,178 @@
+{
+  "_about": "Template B function deep-dive. Reference deck: IHG purchasing sub-function deep-dive (Drive, 19 Nov 2026). The deck itself is never committed; put it at templates/template_b.pptx or set TEMPLATE_B.",
+  "view": "function",
+  "template_file": "template_b.pptx",
+  "template_env": "TEMPLATE_B",
+  "base_function": "procurement",
+  "subject_names": [
+    "IHG Hotels & Resorts",
+    "IHG"
+  ],
+  "peer_slots": [
+    [
+      "Accor"
+    ],
+    [
+      "Hilton"
+    ],
+    [
+      "Marriott International",
+      "Marriott"
+    ],
+    [
+      "Hyatt Hotels Corporation",
+      "Hyatt"
+    ],
+    [
+      "Wyndham Hotels & Resorts",
+      "Wyndham"
+    ],
+    [
+      "Choice Hotels International",
+      "Choice Hotels"
+    ],
+    [
+      "Radisson Hotel Group",
+      "Radisson"
+    ]
+  ],
+  "no_data_mark": "‡",
+  "remove_cover_picture": true,
+  "remove_texts": [],
+  "leak_terms": [
+    "IHG",
+    "Accor",
+    "Hilton",
+    "Marriott",
+    "Hyatt",
+    "Wyndham",
+    "Choice Hotels",
+    "Radisson",
+    "hotel",
+    "Hotel",
+    "room",
+    "Room",
+    "estate",
+    "hospitality",
+    "franchis"
+  ],
+  "terms": [
+    [
+      "1,000 hotels",
+      "1,000 {driver1}"
+    ],
+    [
+      "100k rooms",
+      "1,000 company staff"
+    ],
+    [
+      "hotel / room",
+      "{driver1_singular} / staff member"
+    ],
+    [
+      "hotels, rooms",
+      "{driver1}, staff"
+    ],
+    [
+      "Rooms (k)",
+      "Staff (k)"
+    ],
+    [
+      "Rooms k",
+      "Staff k"
+    ],
+    [
+      "Managed share of estate",
+      "Regional share"
+    ],
+    [
+      "Managed estate",
+      "Regional sites"
+    ],
+    [
+      "managed estate",
+      "regional sites"
+    ],
+    [
+      "hospitality sector",
+      "{sector_noun}"
+    ],
+    [
+      "hotel groups",
+      "{sector_label}"
+    ],
+    [
+      "franchise-heavy",
+      "partner-led"
+    ],
+    [
+      "Hotel-level",
+      "Site-level"
+    ],
+    [
+      "hotel-level",
+      "site-level"
+    ],
+    [
+      "hotel-based",
+      "site-based"
+    ],
+    [
+      "hotel-facing",
+      "site-facing"
+    ],
+    [
+      "hotel-dominated",
+      "site-dominated"
+    ],
+    [
+      "Hotels",
+      "{Driver1} (k)"
+    ],
+    [
+      "Hotel",
+      "Site"
+    ],
+    [
+      "hotels",
+      "{driver1}"
+    ],
+    [
+      "hotel",
+      "site"
+    ],
+    [
+      "Rooms",
+      "Staff"
+    ],
+    [
+      "rooms",
+      "staff"
+    ],
+    [
+      "room",
+      "seat"
+    ],
+    [
+      "estate",
+      "footprint"
+    ],
+    [
+      "franchise",
+      "partner"
+    ]
+  ],
+  "protect": [
+    "1,000 {driver1}",
+    "1,000 company staff"
+  ],
+  "carousel": {
+    "cover": 1,
+    "summary": 4,
+    "sizing": 5,
+    "structure": 7
+  },
+  "no_data_slots": [
+    6
+  ]
+}

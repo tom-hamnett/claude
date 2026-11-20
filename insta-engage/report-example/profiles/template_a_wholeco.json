@@ -1,0 +1,74 @@
+{
+  "_about": "Template A whole-company workforce deep-dive. Reference deck: HubSpot whole-company Template A (Drive, 2 Nov 2026). Never committed; put it at templates/template_a.pptx or set TEMPLATE_A.",
+  "view": "whole_company",
+  "template_file": "template_a.pptx",
+  "template_env": "TEMPLATE_A",
+  "base_function": null,
+  "subject_names": [
+    "HubSpot"
+  ],
+  "peer_slots": [
+    [
+      "Atlassian"
+    ],
+    [
+      "Snowflake"
+    ],
+    [
+      "Freshworks"
+    ],
+    [
+      "Smartsheet"
+    ],
+    [
+      "Asana"
+    ],
+    [
+      "Monday.com"
+    ],
+    [
+      "Pipedrive"
+    ]
+  ],
+  "no_data_mark": "†",
+  "remove_cover_picture": false,
+  "remove_texts": [
+    "DRAFT — REVIEW REQUIRED"
+  ],
+  "leak_terms": [
+    "HubSpot",
+    "Atlassian",
+    "Snowflake",
+    "Freshworks",
+    "Smartsheet",
+    "Asana",
+    "Monday.com",
+    "Pipedrive",
+    "DRAFT"
+  ],
+  "terms": [
+    [
+      "B2B SaaS software companies",
+      "{sector_label}"
+    ],
+    [
+      "B2B SaaS peers",
+      "{sector_short} peers"
+    ],
+    [
+      "B2B SaaS",
+      "{sector_short}"
+    ]
+  ],
+  "protect": [],
+  "carousel": {
+    "cover": 1,
+    "summary": 3,
+    "sizing": 4,
+    "structure": 5
+  },
+  "no_data_slots": [
+    3,
+    6
+  ]
+}

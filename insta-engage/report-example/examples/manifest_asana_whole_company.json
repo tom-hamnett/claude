@@ -1,0 +1,13 @@
+{
+  "view": "whole_company",
+  "function": null,
+  "reason": "headcount 3,000 < 5,000: whole-company view",
+  "pptx": "examples/example_asana_whole_company.pptx",
+  "pdf": "examples/example_asana_whole_company.pdf",
+  "carousel": [
+    "examples/carousel_asana_whole_company/01_cover.png",
+    "examples/carousel_asana_whole_company/02_summary.png",
+    "examples/carousel_asana_whole_company/03_sizing.png",
+    "examples/carousel_asana_whole_company/04_structure.png"
+  ]
+}

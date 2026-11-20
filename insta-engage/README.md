@@ -6,20 +6,36 @@ Status: planning. Built so far: `report-example/`.
 
 ## report-example/
 
-Turns a real Analyst's Edge Template B deep-dive (.pptx) into a redacted **EXAMPLE REPORT** for any subject company and peer set:
+Per-lead redacted **EXAMPLE REPORT**: the lead's own company (the subject) against plausible peers, built from a real Analyst's Edge deck with every number and all body prose redacted.
 
-- subject and 7 peers swapped in from a config; sector words swapped (no hotel terms survive)
-- every number redacted, body prose and footnotes greyed to word-shaped bars, headings kept
-- charts rebuilt from modelled values so bars sort in a plausible order; labels redacted; embedded chart data replaced
-- cover photo removed, speaker notes and document properties cleared
-- diagonal "EXAMPLE REPORT · illustrative layout · names for example only · not findings" on every slide
-- leak check over every XML part (slides, charts, embedded workbooks): fails on any original name, sector word or unredacted number
+**Cohort rule** (`cohort.py`, `choose_view(staff, interest_function=None, threshold=5000)`):
+- headcount < 5,000 → whole-company view (Template A, 14 slides)
+- headcount ≥ 5,000 → function view (Template B, 24 slides) for the lead's function (procurement, finance, hr, it), inferred from their interest or role; procurement by default
+- interest "whole company" → Template A at any size
 
+**One shot:** `python report-example/make_lead_report.py REQUEST.json OUTDIR [--threshold N]` checks the guardrail, picks the template, builds the PPTX, runs the leak check, converts to PDF (LibreOffice) and renders a 4-image 1080×1350 carousel plus `manifest_*.json`.
+
+Request JSON (sizes are rough public figures; they only set chart order, labels are redacted):
+```json
+{
+  "lead": "ig_handle", "interest": "Head of FP&A",
+  "view": "optional override", "function": "optional override",
+  "subject": {"name": "Atlassian", "short": "Atlassian", "staff": 12200, "rev_bn": 4.36, "driver1": 300},
+  "peers": [{"name": "HubSpot", "staff": 8300, "rev_bn": 2.63, "driver1": 250, "flag": "optional mark"}],
+  "sector": {"label": "enterprise software companies", "noun": "software sector", "short": "SaaS",
+             "driver1": "customers", "driver1_singular": "customer"}
+}
 ```
-python report-example/make_example_report.py TEMPLATE.pptx report-example/configs/saas_asana.json OUT.pptx
-soffice --headless --convert-to pdf OUT.pptx
-```
+Up to 7 peers; fewer drops the spare rows and bars. A peer with `rev_bn: null` gets the no-data mark and is left out of per-$ charts.
 
-The template deck is not in the repo (it lives in Drive with the engine outputs). Guardrail from the marketing plan v2: demo subjects only in non-conflict sectors (SaaS, F1, festivals), never a hotel group.
+**What the build does:** subject and peers swapped in one pass; Template B function relabelled (`functions.json`: finance, hr and it are draft label packs, as the PRISM registry only has a validated Purchasing taxonomy); sector words swapped (`profiles/*.json`); numbers → ███; prose greyed to word bars; company charts rebuilt from the full peer list with modelled values in the template's sort order; cover photo removed together with its image file; notes and properties cleared; diagonal "EXAMPLE REPORT · illustrative layout · names for example only · not findings" watermark.
 
-`examples/` holds the SaaS demo (PDF, PPTX) and a 6-image Instagram carousel (1080×1350).
+**Leak check:** every XML part including embedded chart workbooks and docProps; fails on any template name, sector word, relabelled-function word, unused-slot placeholder, leftover template image or unredacted number on a slide.
+
+**Guardrail:** `blocklist.json` refuses hotel / hospitality subjects or peers and IHG (marketing plan v2). Tom can lift entries.
+
+**Templates:** never committed. Put `template_a.pptx` (HubSpot whole-company, Drive) and `template_b.pptx` (IHG purchasing deep-dive, Drive) in `report-example/templates/` (git-ignored) or set `$TEMPLATE_A` / `$TEMPLATE_B`.
+
+**Tests:** `pytest insta-engage/report-example -q` (build tests skip without the templates).
+
+`examples/` holds three demos: Asana whole company, Atlassian procurement, Atlassian finance (PDF, PPTX, carousel).
