@@ -1,35 +1,55 @@
-# Paste into Claude in Chrome (first collection run, 20 Nov 2026)
+# Claude in Chrome prompts: collection runs
 
-Before you start: be logged in to instagram.com as @therationalstrategist in Chrome, and signed in to the Insta Engage app (More → Sync) in the same Chrome so the import syncs to your phone.
+Set-up once: in Chrome, be logged in to instagram.com as @therationalstrategist, and open https://insta-engage-tom-hamnetts-projects.vercel.app/more → Sync → Create account (then sign in with the same account on your phone).
+
+Two prompts. Run **Prompt 1** once (it is quick: lists only). Then run **Prompt 2** once or twice a day until everyone is enriched; each run does about 60 profiles, highest value first.
+
+Reels (counts as of 21 Nov 2026):
+
+| id | title | funnelId | likes / comments |
+|---|---|---|---|
+| Dfk8muKM4pb | defendable reason | ae-example-report | 173 / 9 |
+| DfEtmlnOhGC | five AIs | atlas-experiment | 168 / 4 |
+| De4B13VumdP | AI trading | atlas-experiment | 222 / 11 |
 
 ---
 
-You are collecting engagement data for my Instagram account @therationalstrategist. **Read only.** Never like, follow, comment, reply, send a message, or click any Send/Follow button. Wait 2–5 seconds between opening profiles. Stop and tell me if Instagram shows a warning, captcha or "try again later".
+## Prompt 1: who engaged (paste everything in the box)
 
-**Reels** (use these ids and titles exactly):
+```
+You are collecting engagement data for my Instagram account @therationalstrategist. READ ONLY: never like, follow, comment, reply, message, or click Follow/Send. Stop and tell me if Instagram shows a warning, captcha or "try again later".
 
-| id | url | title | funnelId |
-|---|---|---|---|
-| Dfk8muKM4pb | https://www.instagram.com/reel/Dfk8muKM4pb/ | defendable reason | ae-example-report |
-| DfEtmlnOhGC | https://www.instagram.com/reel/DfEtmlnOhGC/ | five AIs | atlas-experiment |
-| De4B13VumdP | https://www.instagram.com/reel/De4B13VumdP/ | AI trading | atlas-experiment |
+Reels:
+- Dfk8muKM4pb  https://www.instagram.com/reel/Dfk8muKM4pb/  title "defendable reason"  funnelId "ae-example-report"
+- DfEtmlnOhGC  https://www.instagram.com/reel/DfEtmlnOhGC/  title "five AIs"           funnelId "atlas-experiment"
+- De4B13VumdP  https://www.instagram.com/reel/De4B13VumdP/  title "AI trading"         funnelId "atlas-experiment"
 
-**Step 1, engagement.** For each reel: open it, open the likes list and record every handle (`type: "like"`). Read the comments and record handle + text (`type: "comment"`). Then open my followers list and note, for each person you found, whether they follow me (`followsUs`). Also record anyone in my 20 newest followers as `type: "follow"` (no contentId).
+1. For each reel open the likes list and scroll to the end, recording every handle (and the display name shown) as an engagement {"type":"like","contentId":<id>,"at":<today ISO>}. Pause a second or two between scrolls.
+2. For each reel read all comments: {"type":"comment","contentId":<id>,"at":<ISO>,"text":<comment>}. Ignore my own replies.
+3. Open my followers list and scroll through it. Set "followsUs": true for every handle from steps 1-2 that appears there, false otherwise.
+Do NOT open individual profiles in this run.
 
-**Step 2, profiles.** Open each person's profile. Record only what is on it (bio, name, link text, highlights titles): `name`, `bio`, `role`, `employer`, `seniority` (student | ic | senior_ic | manager | director | exec | founder | consultant | unknown), `func` (procurement, finance, hr, it, sales, operations, strategy, consulting, investing, other), `sector`, `location`, `interests` (from the bio), `challenges` (1–2, only if the bio or their comment suggests one, phrased as they would say it), `motivations` (make_a_case | promotion | sell | job_hunt | pitch | invest | board | learn; your best guess from the bio, or empty). If the employer is a known company, add `employerStaff` as an approximate headcount. Leave fields out rather than guessing. Skip anyone who looks under 18. Never record health, religion, politics or family details.
-
-**Step 3, output.** Produce one JSON object exactly in this shape (`at` = today's date in ISO format if the exact time isn't shown):
-
-```json
+Output one JSON object:
 {"version":1,
  "content":[{"id":"Dfk8muKM4pb","title":"defendable reason","url":"https://www.instagram.com/reel/Dfk8muKM4pb/","funnelId":"ae-example-report"},
             {"id":"DfEtmlnOhGC","title":"five AIs","url":"https://www.instagram.com/reel/DfEtmlnOhGC/","funnelId":"atlas-experiment"},
             {"id":"De4B13VumdP","title":"AI trading","url":"https://www.instagram.com/reel/De4B13VumdP/","funnelId":"atlas-experiment"}],
- "contacts":[{"handle":"someone","name":"…","bio":"…","role":"…","employer":"…","employerStaff":12000,"seniority":"manager",
-              "func":"procurement","sector":"…","location":"…","interests":[],"challenges":[],"motivations":[],
-              "followsUs":true,"source":"chrome-collect 2026-11-20",
-              "engagements":[{"type":"like","contentId":"Dfk8muKM4pb","at":"2026-11-20T09:00:00Z"},
-                             {"type":"comment","contentId":"De4B13VumdP","at":"2026-11-20T09:00:00Z","text":"…"}]}]}
+ "contacts":[{"handle":"…","name":"<display name if shown>","followsUs":true,"source":"chrome-collect <today>",
+              "engagements":[ … every like/comment by this person, merged across reels … ]}]}
+
+Then open https://insta-engage-tom-hamnetts-projects.vercel.app/more, paste the JSON into "Import a collection run", click Import, and tell me: the counts it reports, likes and comments found per reel, and how many follow me.
 ```
 
-**Step 4, import.** Open https://insta-engage-tom-hamnetts-projects.vercel.app/more, paste the JSON into the "Import a collection run" box and click **Import**. Tell me the counts it reports and list anyone you skipped and why.
+---
+
+## Prompt 2: profile details, ~60 per run (repeat until done)
+
+```
+You are enriching leads for my Instagram account @therationalstrategist. READ ONLY: never like, follow, comment, message, or click Follow/Send. Wait 3-6 seconds between profiles. Stop after 60 profiles, or at once if Instagram shows a warning, captcha or "try again later".
+
+1. Open https://insta-engage-tom-hamnetts-projects.vercel.app/leads. Work through people whose row shows no role or employer, in this order: anyone who commented, then anyone who follows me, then likers of "defendable reason", then everyone else.
+2. Open each person's Instagram profile (instagram.com/<handle>). Record only what is visible (bio, name, link text, highlight titles): name, bio, role, employer, seniority (student|ic|senior_ic|manager|director|exec|founder|consultant|unknown), func (procurement|finance|hr|it|sales|operations|strategy|consulting|investing|trading|other), sector, location, interests (from the bio), challenges (1-2, only if the bio or their comment suggests one, in their words), motivations (make_a_case|promotion|sell|job_hunt|pitch|invest|board|learn, best guess or empty). If the employer is a known company, add employerStaff as an approximate headcount. Leave out anything you would be guessing. If the account looks under 18 or is a business/bot/spam page, set "doNotContact": true with a note. Never record health, religion, politics or family details.
+
+Output: {"version":1,"contacts":[{"handle":"…", …fields above…, "source":"chrome-enrich <today>"}]}
+Then paste it into Import at https://insta-engage-tom-hamnetts-projects.vercel.app/more, click Import, and tell me how many you did, how many remain without a role or employer, and anyone you flagged.
+```
