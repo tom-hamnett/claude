@@ -98,6 +98,12 @@ export function MorePage() {
             <Field label="Blocked companies">
               <input className={inputCls} value={list(s.blockedCompanies)} onChange={(e) => setS({ ...s, blockedCompanies: parse(e.target.value) })} />
             </Field>
+            <Field label="Copy & open DM goes to" hint="Instagram app opens their profile: tap Message, paste, send. Usually smoother than the web sheet.">
+              <select className={inputCls} value={s.dmOpen ?? 'web'} onChange={(e) => setS({ ...s, dmOpen: e.target.value as 'web' | 'app' })}>
+                <option value="web">Instagram web DM (in-app browser)</option>
+                <option value="app">Instagram app (profile, then Message)</option>
+              </select>
+            </Field>
             <Field label="Salesy words to flag">
               <textarea className={inputCls} rows={3} value={list(s.bannedWords)} onChange={(e) => setS({ ...s, bannedWords: parse(e.target.value) })} />
             </Field>

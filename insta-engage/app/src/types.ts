@@ -139,4 +139,6 @@ export interface Settings {
   blockedSectors: string[];
   blockedCompanies: string[];
   bannedWords: string[];
+  /** Where Copy & open DM goes: the Instagram web DM ('web') or the Instagram app profile ('app'). */
+  dmOpen?: 'web' | 'app';
 }

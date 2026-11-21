@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db';
 import type { Contact, Funnel, Settings, Thread } from '../types';
-import { dmUrl, markSent, redraft, stageOf, stopThread, undoSent } from '../lib/actions';
+import { dmUrl, markResume, markSent, redraft, stageOf, stopThread, undoSent } from '../lib/actions';
 import { lintMessage, wordCount } from '../lib/draft';
 import { scoreContact, summariseEngagements } from '../lib/score';
 import { Button, Card, Chip, copyText, useToast } from './ui';
@@ -33,9 +33,11 @@ export function MessageCard({ thread, contact, funnel, settings }: { thread: Thr
     const snapshot = structuredClone(thread);
     await markSent(snapshot, text);
     toast(`Copied. Logged @${contact.handle} as contacted.`, () => undoSent(snapshot));
-    const url = dmUrl(contact.handle);
-    // On a phone the ig.me link hands over to the Instagram app.
-    if (/Android|iPhone|iPad/i.test(navigator.userAgent)) window.location.href = url;
+    const url = dmUrl(contact.handle, settings.dmOpen ?? 'web');
+    const phone = /Android|iPhone|iPad/i.test(navigator.userAgent);
+    // Coming back should land on Today with the next card on top, wherever the OS reopens us.
+    markResume();
+    if (phone) window.location.href = url;
     else window.open(url, '_blank', 'noopener');
   }
 

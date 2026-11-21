@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { ToastProvider } from './components/ui';
 import { TodayPage } from './pages/TodayPage';
@@ -8,6 +9,7 @@ import { ThreadPage } from './pages/ThreadPage';
 import { FunnelEditPage, FunnelsPage } from './pages/FunnelsPage';
 import { MorePage } from './pages/MorePage';
 import { useSyncState } from './components/SyncPanel';
+import { takeResume } from './lib/actions';
 
 const TABS = [
   { to: '/', label: 'Today', icon: 'M4 12h4l3-8 4 16 3-8h2' },
@@ -34,6 +36,21 @@ export default function App() {
   const title = TITLES.find(([r]) => r.test(loc.pathname))?.[1] ?? '';
   const isTab = TABS.some((t) => t.to === loc.pathname);
   const sync = useSyncState();
+  // After sending a DM, return to Today (next card on top) on reload, tab switch or bfcache restore.
+  useEffect(() => {
+    const resume = () => {
+      if (document.visibilityState !== 'visible' || !takeResume()) return;
+      nav('/', { replace: true });
+      window.scrollTo(0, 0);
+    };
+    resume();
+    document.addEventListener('visibilitychange', resume);
+    window.addEventListener('pageshow', resume);
+    return () => {
+      document.removeEventListener('visibilitychange', resume);
+      window.removeEventListener('pageshow', resume);
+    };
+  }, [nav]);
   return (
     <ToastProvider>
       <div className="mx-auto min-h-[100dvh] max-w-xl pb-28">

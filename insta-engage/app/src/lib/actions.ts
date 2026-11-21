@@ -314,7 +314,33 @@ export function scoreAll(contacts: Contact[], s: Settings) {
   return contacts.map((c) => ({ c, score: scoreContact(c, s) })).sort((a, b) => b.score.total - a.score.total);
 }
 
-/** Instagram deep link: opens the DM thread in the app on iOS/Android. */
-export function dmUrl(handle: string): string {
-  return `https://ig.me/m/${encodeURIComponent(handle)}`;
+/**
+ * Where to send Tom after copying a message. 'web' opens the DM thread (ig.me),
+ * which from a home-screen app lands in an in-app browser sheet. 'app' opens the
+ * person's profile in the Instagram app (one extra tap on Message, but signed in
+ * and native paste).
+ */
+export function dmUrl(handle: string, mode: 'web' | 'app' = 'web'): string {
+  const h = encodeURIComponent(handle);
+  return mode === 'app' ? `instagram://user?username=${h}` : `https://ig.me/m/${h}`;
+}
+
+/** Set before leaving for Instagram so the app comes back to Today, on the next card. */
+export const RESUME_KEY = 'ie-resume-today';
+export function markResume(): void {
+  try {
+    localStorage.setItem(RESUME_KEY, String(Date.now()));
+  } catch {
+    /* storage unavailable: nothing to resume */
+  }
+}
+/** True (and clears the flag) if we left for a DM in the last 30 minutes. */
+export function takeResume(): boolean {
+  try {
+    const at = Number(localStorage.getItem(RESUME_KEY) ?? 0);
+    localStorage.removeItem(RESUME_KEY);
+    return at > 0 && Date.now() - at < 30 * 60_000;
+  } catch {
+    return false;
+  }
 }
